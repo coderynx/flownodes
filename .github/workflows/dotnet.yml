@@ -1,0 +1,50 @@
+name: dotnet package
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      DOTNET_NOLOGO: true
+      DOTNET_GENERATE_ASPNET_CERTIFICATE: false
+      DOTNET_ADD_GLOBAL_TOOLS_TO_PATH: false
+      DOTNET_MULTILEVEL_LOOKUP: 0
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Update repos
+        run: sudo apt update -y
+
+      - uses: docker-practice/actions-setup-docker@master
+
+      - name: Install curl
+        run: sudo apt install curl -y
+
+      - name: Install libicu
+        run: sudo apt install libicu-dev -y
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Install dotnet tools
+        run: |
+          dotnet nuget list source
+          dotnet tool restore
+
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: src
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+        working-directory: src
+
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
+        working-directory: src
