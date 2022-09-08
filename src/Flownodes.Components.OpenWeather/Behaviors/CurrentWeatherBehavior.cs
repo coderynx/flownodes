@@ -20,9 +20,11 @@ public class CurrentWeatherBehavior : IDataCollectorBehavior
     public async Task<object?> UpdateAsync(string actionId, Dictionary<string, object?> parameters)
     {
         var latitude = parameters["latitude"]?.ToString();
+        latitude.ThrowIfNull();
         latitude.Throw().IfNullOrWhiteSpace(_ => latitude);
 
         var longitude = parameters["longitude"]?.ToString();
+        longitude.ThrowIfNull();
         longitude.Throw().IfNullOrWhiteSpace(_ => longitude);
 
         _token.Throw().IfNullOrWhiteSpace(_ => _token);

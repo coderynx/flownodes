@@ -4,5 +4,5 @@ namespace Flownodes.Edge.ApiGateway.Endpoints.GetDevice;
 
 public class GetDeviceRequest
 {
-    [FromRoute] public string Id { get; init; }
+    [FromRoute] public string? Id { get; init; }
 }

@@ -10,12 +10,12 @@ public class TelegramAlerterDriver : IAlerterDriver
 {
     private readonly TelegramBotClient _bot;
     private readonly ILogger<TelegramAlerterDriver> _logger;
-    private readonly string ChatId;
+    private readonly string _chatId;
 
     public TelegramAlerterDriver(IConfiguration configuration, ILogger<TelegramAlerterDriver> logger)
     {
         _bot = new TelegramBotClient(configuration["TelegramAlerterDriver:Token"]);
-        ChatId = configuration["TelegramAlerterDriver:ChatId"];
+        _chatId = configuration["TelegramAlerterDriver:ChatId"];
         _logger = logger;
     }
 
@@ -23,7 +23,7 @@ public class TelegramAlerterDriver : IAlerterDriver
     {
         var message = "<b>Flownodes</b> \n \n 🚨 New alert \n 📦 Flownodes Resource Name (FRN): " + alert.Frn +
                       " \n 🔖 Alert kind: " + alert.Kind + "\n 💬 Alert message: " + alert.Message;
-        await _bot.SendTextMessageAsync(ChatId, message, ParseMode.Html);
+        await _bot.SendTextMessageAsync(_chatId, message, ParseMode.Html);
         _logger.LogInformation("Sent alert from resource {Frn} to Telegram bot", alert.Frn);
     }
 }

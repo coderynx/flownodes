@@ -38,18 +38,18 @@ internal record HueLightConfiguration
 
 internal record HueLightStartup
 {
-    [AliasAs("mode")] public string Mode { get; set; }
+    [AliasAs("mode")] public string? Mode { get; set; }
 
-    [AliasAs("configured")] public string IsConfigured { get; set; }
+    [AliasAs("configured")] public string? IsConfigured { get; set; }
 }
 
 internal record HueLightState
 {
-    [AliasAs("on")] public bool IsOn { get; set; }
+    [AliasAs("on")] public bool? IsOn { get; set; }
 
-    [AliasAs("alert")] public string Alert { get; set; }
+    [AliasAs("alert")] public string? Alert { get; set; }
 
-    [AliasAs("mode")] public string Mode { get; set; }
+    [AliasAs("mode")] public string? Mode { get; set; }
 
-    [AliasAs("reachable")] public bool IsReachable { get; set; }
+    [AliasAs("reachable")] public bool? IsReachable { get; set; }
 }

@@ -34,7 +34,7 @@ public class HueBridgeConfiguration
 
     [AliasAs("datastoreversion")] public string? DataStoreVersion { get; set; }
 
-    [AliasAs("swversion")] public string? swversion { get; set; }
+    [AliasAs("swversion")] public string? SoftwareVersion { get; set; }
 
     [AliasAs("apiversion")] public string? ApiVersion { get; set; }
 }

@@ -21,12 +21,15 @@ public class GetDeviceEndpoint : Endpoint<GetDeviceRequest>
 
     public override async Task HandleAsync(GetDeviceRequest req, CancellationToken ct)
     {
-        var grain = await _resourceManager.GetDevice(req.Id);
+        if (req.Id is null)
+            await SendErrorsAsync(cancellation: ct);
+        
+        var grain = await _resourceManager.GetDevice(req.Id!);
 
         if (grain is null)
             await SendNotFoundAsync(ct);
 
-        var identityCard = await grain.GetIdentityCard();
+        var identityCard = await grain!.GetIdentityCard();
         var response = new GetDeviceResponse(DateTime.Now, identityCard);
         await SendAsync(response, cancellation: ct);
     }

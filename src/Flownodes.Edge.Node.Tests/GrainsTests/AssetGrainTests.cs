@@ -37,6 +37,6 @@ public class AssetGrainTests : IClassFixture<ClusterFixture>
         await grain.UpdateAsync(data);
 
         var result = await grain.QueryData("$.Test");
-        Assert.Equal(data.Test, result.ToString());
+        result?.ToString().Should().BeEquivalentTo(data.Test);
     }
 }

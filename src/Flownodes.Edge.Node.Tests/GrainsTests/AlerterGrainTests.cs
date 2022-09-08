@@ -22,7 +22,7 @@ public class AlerterGrainTests : IClassFixture<ClusterFixture>
         _fixture = new Fixture();
     }
 
-    private async Task<IAlerterGrain> ProvideAlerterAsync(params string[]? drivers)
+    private async Task<IAlerterGrain> ProvideAlerterAsync(params string[] drivers)
     {
         var grain = _cluster.GrainFactory.GetGrain<IAlerterGrain>(_fixture.Create<string>());
         await grain.ConfigureAsync(drivers);

@@ -79,8 +79,8 @@ public static class Program
 
     private record OrleansClusteringConfiguration
     {
-        public string ClusterId { get; init; }
-        public string ServiceId { get; init; }
+        public string? ClusterId { get; init; }
+        public string? ServiceId { get; init; }
     }
 
     private record OrleansEndpointsConfiguration
@@ -91,14 +91,14 @@ public static class Program
 
     private record RedisPersistenceConfiguration
     {
-        public string ConnectionString { get; init; }
+        public string? ConnectionString { get; init; }
         public int DatabaseId { get; init; }
         public bool UseJson { get; init; }
     }
 
     private record RedisClusteringConfiguration
     {
-        public string ConnectionString { get; init; }
+        public string? ConnectionString { get; init; }
         public int DatabaseId { get; init; }
     }
 }

@@ -39,9 +39,9 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
         {
             await grain.ConfigureAsync(behaviorId, configuration);
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            _logger.LogError("Error configuring device {DeviceId}: {Exception}", id, e);
+            _logger.LogError("Error configuring device {DeviceId}", id);
             throw;
         }
 
@@ -69,9 +69,9 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
         {
             await grain.ConfigureAsync(behaviorId, configuration);
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            _logger.LogError("Error configuring data collector {DataCollectorId}: {Exception}", id, e);
+            _logger.LogError("Error configuring data collector {DataCollectorId}", id);
             throw;
         }
 
@@ -173,16 +173,17 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public Task<IDeviceGrain?> GetDevice(string id)
     {
+        IDeviceGrain? grain = null;
         if (_persistence.State.DeviceRegistration.ContainsKey(id))
         {
-            var grain = _grainFactory.GetGrain<IDeviceGrain>(id);
-
+            grain = _grainFactory.GetGrain<IDeviceGrain>(id);
+            
             _logger.LogDebug("Returning device {DeviceId}", id);
-            return Task.FromResult(grain);
+            return Task.FromResult<IDeviceGrain?>(grain);
         }
 
         _logger.LogError("Cannot find a device with ID {DeviceId}", id);
-        return Task.FromResult<IDeviceGrain>(null);
+        return Task.FromResult(grain);
     }
 
     public Task<List<IDataCollectorGrain>> GetDataCollectors()
@@ -196,16 +197,17 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public Task<IDataCollectorGrain?> GetDataCollector(string id)
     {
+        IDataCollectorGrain? grain = null;
         if (_persistence.State.DataCollectorRegistrations.ContainsKey(id))
         {
-            var grain = _grainFactory.GetGrain<IDataCollectorGrain>(id);
+            grain = _grainFactory.GetGrain<IDataCollectorGrain>(id);
 
             _logger.LogDebug("Returning data collector {DataCollectorId}", id);
-            return Task.FromResult(grain);
+            return Task.FromResult<IDataCollectorGrain?>(grain);
         }
 
         _logger.LogError("Cannot find a data collector with ID {DeviceId}", id);
-        return Task.FromResult<IDataCollectorGrain>(null);
+        return Task.FromResult(grain);
     }
 
     public Task<List<IAssetGrain>> GetAssets()
@@ -219,17 +221,17 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public Task<IAssetGrain?> GetAsset(string id)
     {
+        IAssetGrain? grain = null;
         if (_persistence.State.AssetRegistrations.Contains(id))
         {
-            var grain = _grainFactory.GetGrain<IAssetGrain>(id);
+            grain = _grainFactory.GetGrain<IAssetGrain>(id);
 
             _logger.LogDebug("Returning asset {AssetId}", id);
-            return Task.FromResult(grain);
+            return Task.FromResult<IAssetGrain?>(grain);
         }
 
         _logger.LogError("Cannot find an asset with ID {AssetId}", id);
-
-        return Task.FromResult<IAssetGrain>(null);
+        return Task.FromResult(grain);
     }
 
     public override Task OnActivateAsync()

@@ -68,6 +68,7 @@ internal class DeviceGrain : Grain, IDeviceGrain
     {
         EnsureConfiguration();
 
+        _behavior.ThrowIfNull();
         Dictionary<string, object?> result;
         if (parameters is null)
         {
@@ -80,7 +81,7 @@ internal class DeviceGrain : Grain, IDeviceGrain
             result = await _behavior.PerformAction(actionName, newParams);
         }
 
-        _persistence.State.State.Properties!.MergeInPlace(result);
+        _persistence.State.State.Properties.MergeInPlace(result);
         _persistence.State.State.LastUpdate = DateTime.Now;
         await _persistence.WriteStateAsync();
 

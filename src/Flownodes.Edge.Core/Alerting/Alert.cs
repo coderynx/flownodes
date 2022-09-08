@@ -14,14 +14,7 @@ public record Alert
         Message = message;
     }
 
-    public string Frn { get; init; }
-    public AlertKind Kind { get; init; }
-    public string Message { get; init; }
-
-    public void Deconstruct(out string Frn, out AlertKind Kind, out string Message)
-    {
-        Frn = this.Frn;
-        Kind = this.Kind;
-        Message = this.Message;
-    }
+    public string Frn { get; }
+    public AlertKind Kind { get; }
+    public string Message { get; }
 }

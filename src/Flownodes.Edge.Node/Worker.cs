@@ -19,6 +19,8 @@ public class Worker : BackgroundService
     {
         var asset = await grain.CollectAsync("get-loco",
             new Dictionary<string, object?> { { "unit_number", "8090.0744" } });
+        if (asset is null) return;
+        
         var frn = await asset.GetFrn();
         var data = await asset.GetData();
         _logger.LogInformation("Data of asset {AssetFrn}: {AssetData}", frn, data.ToString());
@@ -27,12 +29,14 @@ public class Worker : BackgroundService
     private async Task FetchWeatherAsync(IDataCollectorGrain grain)
     {
         var asset = await grain.CollectAsync(string.Empty);
+        if (asset is null) return;
+        
         var city = await asset.QueryData("$.data.city");
         var main = await asset.QueryData("$.data.main");
         var description = await asset.QueryData("$.data.description");
 
-        _logger.LogInformation("Current sky in {CityName} is {Main} ({Description})", city.ToString(), main.ToString(),
-            description.ToString());
+        _logger.LogInformation("Current sky in {CityName} is {Main} ({Description})", city?.ToString(), main?.ToString(),
+            description?.ToString());
     }
 
     private async Task SwitchOffLightAsync(IDeviceGrain grain)

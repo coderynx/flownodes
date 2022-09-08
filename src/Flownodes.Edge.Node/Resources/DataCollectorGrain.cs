@@ -59,11 +59,12 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
         _logger.LogInformation("Configured data collector {DataCollectorGrainId}", Id);
     }
 
-    public async Task<IAssetGrain> CollectAsync(string actionId, Dictionary<string, object?>? parameters = null)
+    public async Task<IAssetGrain?> CollectAsync(string actionId, Dictionary<string, object?>? parameters = null)
     {
         EnsureConfiguration();
-
-        object result;
+        _behavior.ThrowIfNull();
+        
+        object? result;
         if (parameters is null)
         {
             result = await _behavior.UpdateAsync(actionId, _persistence.State.Configuration);
@@ -74,6 +75,8 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
             newParams.MergeInPlace(parameters);
             result = await _behavior.UpdateAsync(actionId, newParams);
         }
+
+        if (result is null) return null;
 
         var jToken = JToken.FromObject(result);
 
@@ -104,7 +107,6 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
 
     private void EnsureConfiguration()
     {
-        _behavior.ThrowIfNull();
         _persistence.State.Configuration.ThrowIfNull();
         _persistence.State.Throw().IfNullOrWhiteSpace(x => x.BehaviorId);
         _persistence.State.Throw().IfNull(x => x.CreatedAt);
