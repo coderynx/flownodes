@@ -45,7 +45,7 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
         }
         catch (Exception)
         {
-            _logger.LogError("Could not find the given device behavior {BehaviorId}", behaviorId);
+            _logger.LogError("Could not find the given data collector behavior {BehaviorId}", behaviorId);
             throw;
         }
 
@@ -56,7 +56,7 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
         _persistence.State.State = new ResourceState();
         await _persistence.WriteStateAsync();
 
-        _logger.LogInformation("Configured device {DataCollectorGrainId}", Id);
+        _logger.LogInformation("Configured data collector {DataCollectorGrainId}", Id);
     }
 
     public async Task<IAssetGrain> CollectAsync(string actionId, Dictionary<string, object?>? parameters = null)
@@ -84,8 +84,8 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
         var asset = await _resourceManager.GetAsset(assetName) ?? await _resourceManager.RegisterAssetAsync(assetName);
         await asset.UpdateAsync(new { from = _behavior.GetType().Name, data = result });
 
-        _logger.LogInformation("Performed action {ActionId} of asset {AssetId}", actionId, Id);
-        await ProduceInfoAlertAsync($"Performed action {actionId} of asset {Id}");
+        _logger.LogInformation("Performed action {ActionId} of data collector {DataCollectorId}", actionId, Id);
+        await ProduceInfoAlertAsync($"Performed action {actionId} of data collector {Id}");
 
         return asset;
     }
@@ -93,19 +93,19 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
     public Task<string> GetFrn()
     {
         EnsureConfiguration();
-        return Task.FromResult($"frn:flownodes:device:{_persistence.State.BehaviorId}:{Id}");
+        return Task.FromResult($"frn:flownodes:data_collector:{_persistence.State.BehaviorId}:{Id}");
     }
 
     public async Task SelfRemoveAsync()
     {
         await _persistence.ClearStateAsync();
-        _logger.LogInformation("Clear state for device {DeviceId}", Id);
+        _logger.LogInformation("Clear state for data collector {DataCollectorId}", Id);
     }
 
     private void EnsureConfiguration()
     {
         _behavior.ThrowIfNull();
-        _persistence.Throw().IfFalse(x => x.RecordExists);
+        _persistence.State.Configuration.ThrowIfNull();
         _persistence.State.Throw().IfNullOrWhiteSpace(x => x.BehaviorId);
         _persistence.State.Throw().IfNull(x => x.CreatedAt);
         _persistence.State.Throw().IfNull(x => x.Configuration);

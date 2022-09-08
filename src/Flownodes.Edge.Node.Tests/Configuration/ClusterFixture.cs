@@ -7,7 +7,6 @@ using DotNet.Testcontainers.Containers;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json.Converters;
 using NSubstitute;
 using Orleans.Hosting;
 using Orleans.TestingHost;
@@ -15,7 +14,7 @@ using Xunit;
 
 namespace Flownodes.Edge.Node.Tests.Configuration;
 
-internal static class Globals
+internal static class TestGlobals
 {
     public static string? ConnectionString { get; set; }
 }
@@ -33,7 +32,7 @@ public class ClusterFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _testContainer.StartAsync();
-        Globals.ConnectionString = _testContainer.ConnectionString;
+        TestGlobals.ConnectionString = _testContainer.ConnectionString;
 
         var builder = new TestClusterBuilder();
         builder.AddSiloBuilderConfigurator<SiloConfigurator>();
@@ -79,19 +78,21 @@ public class ClusterFixture : IAsyncLifetime
     {
         public void Configure(ISiloBuilder siloBuilder)
         {
-            siloBuilder.AddRedisGrainStorage("flownodes", optionsBuilder => optionsBuilder.Configure(options =>
+            siloBuilder
+                .UseRedisClustering(options =>
                 {
-                    options.ConnectionString = Globals.ConnectionString;
+                    options.ConnectionString = TestGlobals.ConnectionString;
+                    options.Database = 1;
+                })
+                .AddRedisGrainStorage("flownodes", optionsBuilder => optionsBuilder.Configure(options =>
+                {
+                    options.ConnectionString = TestGlobals.ConnectionString;
                     options.UseJson = true;
                     options.DatabaseNumber = 0;
-                    options.ConfigureJsonSerializerSettings = settings =>
-                    {
-                        settings.Converters.Add(new ExpandoObjectConverter());
-                    };
                 }))
                 .AddRedisGrainStorageAsDefault(optionsBuilder => optionsBuilder.Configure(options =>
                 {
-                    options.ConnectionString = Globals.ConnectionString;
+                    options.ConnectionString = TestGlobals.ConnectionString;
                     options.UseJson = true;
                     options.DatabaseNumber = 0;
                 }));

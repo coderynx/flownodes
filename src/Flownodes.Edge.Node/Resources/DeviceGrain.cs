@@ -127,7 +127,7 @@ internal class DeviceGrain : Grain, IDeviceGrain
     private void EnsureConfiguration()
     {
         _behavior.ThrowIfNull();
-        _persistence.Throw().IfFalse(x => x.RecordExists);
+        _persistence.State.Configuration.ThrowIfNull();
         _persistence.State.Throw().IfNullOrWhiteSpace(x => x.BehaviorId);
         _persistence.State.Throw().IfNull(x => x.CreatedAt);
         _persistence.State.Throw().IfNull(x => x.Configuration);
