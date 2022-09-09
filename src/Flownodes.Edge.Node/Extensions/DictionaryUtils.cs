@@ -6,9 +6,7 @@ public static class DictionaryUtils
         Dictionary<TKey, TValue?> right) where TKey : notnull
     {
         foreach (var (key, value) in right)
-        {
             if (!left.ContainsKey(key)) left.Add(key, value);
             else left[key] = value;
-        }
     }
 }

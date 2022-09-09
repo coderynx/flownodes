@@ -63,7 +63,7 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
     {
         EnsureConfiguration();
         _behavior.ThrowIfNull();
-        
+
         object? result;
         if (parameters is null)
         {

@@ -9,8 +9,8 @@ namespace Flownodes.Components.Telegram;
 public class TelegramAlerterDriver : IAlerterDriver
 {
     private readonly TelegramBotClient _bot;
-    private readonly ILogger<TelegramAlerterDriver> _logger;
     private readonly string _chatId;
+    private readonly ILogger<TelegramAlerterDriver> _logger;
 
     public TelegramAlerterDriver(IConfiguration configuration, ILogger<TelegramAlerterDriver> logger)
     {

@@ -1,6 +1,7 @@
 using System.Reflection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Flownodes.Edge.Node.Automation;
 using Flownodes.Edge.Node.Modules;
 using Orleans;
 using Orleans.Configuration;
@@ -37,11 +38,22 @@ public static class Program
                     .Get<RedisClusteringConfiguration>();
                 var redisPersistence = host.Configuration.GetSection("RedisPersistence")
                     .Get<RedisPersistenceConfiguration>();
+                var redisWorkflow = host.Configuration.GetSection("RedisWorkflow")
+                    .Get<RedisWorkflowConfiguration>();
 
                 builder
                     .ConfigureServices(services =>
                     {
                         services.AddOptions();
+                        services.AddWorkflow(options =>
+                        {
+                            options.UseRedisPersistence(redisWorkflow.ConnectionString, "flownodes");
+                            options.UseRedisLocking(redisWorkflow.ConnectionString, "flownodes");
+                            options.UseRedisQueues(redisWorkflow.ConnectionString, "flownodes");
+                            options.UseRedisEventHub(redisWorkflow.ConnectionString, "flownodes");
+                        });
+                        services.AddWorkflowDSL();
+                        services.AddTransient<LoggerStep>();
                         services.AddHostedService<Worker>();
                     })
                     .Configure<ClusterOptions>(options =>
@@ -100,5 +112,10 @@ public static class Program
     {
         public string? ConnectionString { get; init; }
         public int DatabaseId { get; init; }
+    }
+
+    private record RedisWorkflowConfiguration
+    {
+        public string? ConnectionString { get; set; }
     }
 }

@@ -20,7 +20,7 @@ public class Worker : BackgroundService
         var asset = await grain.CollectAsync("get-loco",
             new Dictionary<string, object?> { { "unit_number", "8090.0744" } });
         if (asset is null) return;
-        
+
         var frn = await asset.GetFrn();
         var data = await asset.GetData();
         _logger.LogInformation("Data of asset {AssetFrn}: {AssetData}", frn, data.ToString());
@@ -30,12 +30,13 @@ public class Worker : BackgroundService
     {
         var asset = await grain.CollectAsync(string.Empty);
         if (asset is null) return;
-        
+
         var city = await asset.QueryData("$.data.city");
         var main = await asset.QueryData("$.data.main");
         var description = await asset.QueryData("$.data.description");
 
-        _logger.LogInformation("Current sky in {CityName} is {Main} ({Description})", city?.ToString(), main?.ToString(),
+        _logger.LogInformation("Current sky in {CityName} is {Main} ({Description})", city?.ToString(),
+            main?.ToString(),
             description?.ToString());
     }
 
@@ -64,7 +65,7 @@ public class Worker : BackgroundService
     {
         var resourceManager = _factory.GetGrain<IResourceManagerGrain>(Globals.ResourceManagerGrainId);
 
-        var weatherConfiguration = new Dictionary<string, object?>
+        /*var weatherConfiguration = new Dictionary<string, object?>
         {
             { "latitude", "41.893333" },
             { "longitude", "12.482778" },
@@ -77,7 +78,7 @@ public class Worker : BackgroundService
         {
             { "lightId", 1 }
         };
-        var hueLight = await resourceManager.RegisterDeviceAsync("hueLight", "HueLightBehavior", hueLightConfiguration);
+        var hueLight = await resourceManager.RegisterDeviceAsync("hueLight", "HueLightBehavior", hueLightConfiguration);*/
 
         var lokFinderConfiguration = new Dictionary<string, object?>
         {
@@ -86,13 +87,23 @@ public class Worker : BackgroundService
         var lokFinder =
             await resourceManager.RegisterDataCollectorAsync("lokFinder", "LokFinderBehavior", lokFinderConfiguration);
 
+        var workflowManager = _factory.GetGrain<IWorkflowManagerGrain>("workflow-manager");
+        await workflowManager.LoadWorkflowAsync(GetTestWorkflowDefinition("LoggerWorkflow"));
+
         while (!stoppingToken.IsCancellationRequested)
         {
-            await FetchWeatherAsync(weather);
+            // await FetchWeatherAsync(weather);
             await FetchObbLocomotives(lokFinder);
-            await SwitchOffLightAsync(hueLight);
+            await workflowManager.RunWorkflowAsync("LoggerWorkflow");
+            // await SwitchOffLightAsync(hueLight);
 
             await Task.Delay(10000, stoppingToken);
         }
+    }
+
+    private string GetTestWorkflowDefinition(string name)
+    {
+        return "{\"Id\": \"" + name +
+               "\",\"Version\": 1,\"Steps\": [{\"Id\": \"LogHello\",\"StepType\": \"Flownodes.Edge.Node.Automation.LoggerStep, Flownodes.Edge.Node\"}]}";
     }
 }

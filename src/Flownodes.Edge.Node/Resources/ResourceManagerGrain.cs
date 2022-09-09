@@ -177,7 +177,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (_persistence.State.DeviceRegistration.ContainsKey(id))
         {
             grain = _grainFactory.GetGrain<IDeviceGrain>(id);
-            
+
             _logger.LogDebug("Returning device {DeviceId}", id);
             return Task.FromResult<IDeviceGrain?>(grain);
         }

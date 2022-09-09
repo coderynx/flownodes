@@ -6,6 +6,8 @@ using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
+using Flownodes.Edge.Node.Automation;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NSubstitute;
 using Orleans.Hosting;
@@ -16,12 +18,19 @@ namespace Flownodes.Edge.Node.Tests.Configuration;
 
 internal static class TestGlobals
 {
-    public static string? ConnectionString { get; set; }
+    public static string? OrleansConnectionString { get; set; }
+    public static string? WorkflowConnectionString { get; set; }
 }
 
 public class ClusterFixture : IAsyncLifetime
 {
-    private readonly RedisTestcontainer _testContainer = new TestcontainersBuilder<RedisTestcontainer>()
+    private readonly RedisTestcontainer _orleansRedis = new TestcontainersBuilder<RedisTestcontainer>()
+        .WithImage("redis:latest")
+        .WithDatabase(new RedisTestcontainerConfiguration())
+        .WithCleanUp(true)
+        .Build();
+
+    private readonly RedisTestcontainer _workflowRedis = new TestcontainersBuilder<RedisTestcontainer>()
         .WithImage("redis:latest")
         .WithDatabase(new RedisTestcontainerConfiguration())
         .WithCleanUp(true)
@@ -31,8 +40,11 @@ public class ClusterFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await _testContainer.StartAsync();
-        TestGlobals.ConnectionString = _testContainer.ConnectionString;
+        await _orleansRedis.StartAsync();
+        TestGlobals.OrleansConnectionString = _orleansRedis.ConnectionString;
+
+        await _workflowRedis.StartAsync();
+        TestGlobals.WorkflowConnectionString = _workflowRedis.ConnectionString;
 
         var builder = new TestClusterBuilder();
         builder.AddSiloBuilderConfigurator<SiloConfigurator>();
@@ -44,7 +56,7 @@ public class ClusterFixture : IAsyncLifetime
     public async Task DisposeAsync()
     {
         await Cluster.StopAllSilosAsync();
-        await _testContainer.StopAsync();
+        await _orleansRedis.StopAsync();
     }
 
     private class HostConfigurator : IHostConfigurator
@@ -78,21 +90,34 @@ public class ClusterFixture : IAsyncLifetime
     {
         public void Configure(ISiloBuilder siloBuilder)
         {
+            siloBuilder.ConfigureServices(services =>
+            {
+                services.AddWorkflow(options =>
+                {
+                    options.UseRedisPersistence(TestGlobals.WorkflowConnectionString, "flownodes");
+                    options.UseRedisLocking(TestGlobals.WorkflowConnectionString, "flownodes");
+                    options.UseRedisQueues(TestGlobals.WorkflowConnectionString, "flownodes");
+                    options.UseRedisEventHub(TestGlobals.WorkflowConnectionString, "flownodes");
+                });
+                services.AddWorkflowDSL();
+                services.AddTransient<LoggerStep>();
+            });
+
             siloBuilder
                 .UseRedisClustering(options =>
                 {
-                    options.ConnectionString = TestGlobals.ConnectionString;
+                    options.ConnectionString = TestGlobals.OrleansConnectionString;
                     options.Database = 1;
                 })
                 .AddRedisGrainStorage("flownodes", optionsBuilder => optionsBuilder.Configure(options =>
                 {
-                    options.ConnectionString = TestGlobals.ConnectionString;
+                    options.ConnectionString = TestGlobals.OrleansConnectionString;
                     options.UseJson = true;
                     options.DatabaseNumber = 0;
                 }))
                 .AddRedisGrainStorageAsDefault(optionsBuilder => optionsBuilder.Configure(options =>
                 {
-                    options.ConnectionString = TestGlobals.ConnectionString;
+                    options.ConnectionString = TestGlobals.OrleansConnectionString;
                     options.UseJson = true;
                     options.DatabaseNumber = 0;
                 }));

@@ -23,7 +23,7 @@ public class GetDeviceEndpoint : Endpoint<GetDeviceRequest>
     {
         if (req.Id is null)
             await SendErrorsAsync(cancellation: ct);
-        
+
         var grain = await _resourceManager.GetDevice(req.Id!);
 
         if (grain is null)
