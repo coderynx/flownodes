@@ -12,25 +12,19 @@ using Microsoft.Extensions.Hosting;
 using NSubstitute;
 using Orleans.Hosting;
 using Orleans.TestingHost;
+using WorkflowCore.Interface;
 using Xunit;
 
 namespace Flownodes.Edge.Node.Tests.Configuration;
 
 internal static class TestGlobals
 {
-    public static string? OrleansConnectionString { get; set; }
-    public static string? WorkflowConnectionString { get; set; }
+    public static string? RedisConnectionString { get; set; }
 }
 
 public class ClusterFixture : IAsyncLifetime
 {
-    private readonly RedisTestcontainer _orleansRedis = new TestcontainersBuilder<RedisTestcontainer>()
-        .WithImage("redis:latest")
-        .WithDatabase(new RedisTestcontainerConfiguration())
-        .WithCleanUp(true)
-        .Build();
-
-    private readonly RedisTestcontainer _workflowRedis = new TestcontainersBuilder<RedisTestcontainer>()
+    private readonly RedisTestcontainer _redisContainer = new TestcontainersBuilder<RedisTestcontainer>()
         .WithImage("redis:latest")
         .WithDatabase(new RedisTestcontainerConfiguration())
         .WithCleanUp(true)
@@ -40,11 +34,8 @@ public class ClusterFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await _orleansRedis.StartAsync();
-        TestGlobals.OrleansConnectionString = _orleansRedis.ConnectionString;
-
-        await _workflowRedis.StartAsync();
-        TestGlobals.WorkflowConnectionString = _workflowRedis.ConnectionString;
+        await _redisContainer.StartAsync();
+        TestGlobals.RedisConnectionString = _redisContainer.ConnectionString;
 
         var builder = new TestClusterBuilder();
         builder.AddSiloBuilderConfigurator<SiloConfigurator>();
@@ -55,8 +46,11 @@ public class ClusterFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
+        var workflowHost = Cluster.ServiceProvider.GetService<IWorkflowHost>();
+        workflowHost?.Stop();
+
         await Cluster.StopAllSilosAsync();
-        await _orleansRedis.StopAsync();
+        await _redisContainer.StopAsync();
     }
 
     private class HostConfigurator : IHostConfigurator
@@ -94,10 +88,10 @@ public class ClusterFixture : IAsyncLifetime
             {
                 services.AddWorkflow(options =>
                 {
-                    options.UseRedisPersistence(TestGlobals.WorkflowConnectionString, "flownodes");
-                    options.UseRedisLocking(TestGlobals.WorkflowConnectionString, "flownodes");
-                    options.UseRedisQueues(TestGlobals.WorkflowConnectionString, "flownodes");
-                    options.UseRedisEventHub(TestGlobals.WorkflowConnectionString, "flownodes");
+                    options.UseRedisPersistence(TestGlobals.RedisConnectionString, "flownodes");
+                    options.UseRedisLocking(TestGlobals.RedisConnectionString, "flownodes");
+                    options.UseRedisQueues(TestGlobals.RedisConnectionString, "flownodes");
+                    options.UseRedisEventHub(TestGlobals.RedisConnectionString, "flownodes");
                 });
                 services.AddWorkflowDSL();
                 services.AddTransient<LoggerStep>();
@@ -106,18 +100,18 @@ public class ClusterFixture : IAsyncLifetime
             siloBuilder
                 .UseRedisClustering(options =>
                 {
-                    options.ConnectionString = TestGlobals.OrleansConnectionString;
+                    options.ConnectionString = TestGlobals.RedisConnectionString;
                     options.Database = 1;
                 })
                 .AddRedisGrainStorage("flownodes", optionsBuilder => optionsBuilder.Configure(options =>
                 {
-                    options.ConnectionString = TestGlobals.OrleansConnectionString;
+                    options.ConnectionString = TestGlobals.RedisConnectionString;
                     options.UseJson = true;
                     options.DatabaseNumber = 0;
                 }))
                 .AddRedisGrainStorageAsDefault(optionsBuilder => optionsBuilder.Configure(options =>
                 {
-                    options.ConnectionString = TestGlobals.OrleansConnectionString;
+                    options.ConnectionString = TestGlobals.RedisConnectionString;
                     options.UseJson = true;
                     options.DatabaseNumber = 0;
                 }));

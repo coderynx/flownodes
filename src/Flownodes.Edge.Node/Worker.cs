@@ -94,7 +94,7 @@ public class Worker : BackgroundService
         {
             // await FetchWeatherAsync(weather);
             await FetchObbLocomotives(lokFinder);
-            await workflowManager.RunWorkflowAsync("LoggerWorkflow");
+            await workflowManager.StartWorkflowAsync("LoggerWorkflow");
             // await SwitchOffLightAsync(hueLight);
 
             await Task.Delay(10000, stoppingToken);

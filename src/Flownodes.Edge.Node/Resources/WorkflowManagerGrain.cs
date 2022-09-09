@@ -31,7 +31,7 @@ public class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
         return Task.CompletedTask;
     }
 
-    public async Task<string?> RunWorkflowAsync(string workflowId)
+    public async Task<string?> StartWorkflowAsync(string workflowId)
     {
         var id = await _workflowHost.StartWorkflow(workflowId);
 

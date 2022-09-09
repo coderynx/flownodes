@@ -3,11 +3,8 @@ using AutoFixture;
 using Flownodes.Edge.Core.Resources;
 using Flownodes.Edge.Node.Tests.Configuration;
 using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
 using Orleans;
 using Orleans.TestingHost;
-using WorkflowCore.Interface;
-using WorkflowCore.Models;
 using Xunit;
 
 namespace Flownodes.Edge.Node.Tests.GrainsTests;
@@ -53,22 +50,16 @@ public class WorkflowManagerGrainTests : IClassFixture<ClusterFixture>
     }
 
     [Fact]
-    public async Task ShouldRunWorkflow()
+    public async Task ShouldStartWorkflow()
     {
         // Arrange.
-        var service = _cluster.ServiceProvider.GetService<ILifeCycleEventHub>();
         var workflowManager = _cluster.GrainFactory.GetGrain<IWorkflowManagerGrain>("workflow-manager");
         var workflowId = _fixture.Create<string>();
         var workflowJson = GetTestWorkflowDefinition(workflowId);
         await workflowManager.LoadWorkflowAsync(workflowJson);
 
         // Act.
-        var id = await workflowManager.RunWorkflowAsync(workflowId);
-        service?.Subscribe(_ =>
-        {
-            // Assert.
-            var instance = workflowManager.GetInstanceAsync(id).Result;
-            instance?.Status.Should().Be(WorkflowStatus.Complete);
-        });
+        var id = await workflowManager.StartWorkflowAsync(workflowId);
+        id.Should().NotBeNull();
     }
 }
