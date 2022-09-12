@@ -1,4 +1,4 @@
-﻿using Flownodes.Edge.Core.Alerting;
+﻿using Flownodes.Cluster.Core.Alerting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
