@@ -24,7 +24,7 @@ public class WorkflowManagerGrainTests : IClassFixture<ClusterFixture>
     private static string GetTestWorkflowDefinition(string name)
     {
         return "{\"Id\": \"" + name +
-               "\",\"Version\": 1,\"Steps\": [{\"Id\": \"LogHello\",\"StepType\": \"Flownodes.Edge.Node.Automation.LoggerStep, Flownodes.Edge.Node\"}]}";
+               "\",\"Version\": 1,\"Steps\": [{\"Id\": \"LogHello\",\"StepType\": \"Flownodes.Cluster.Node.Automation.LoggerStep, Flownodes.Cluster.Node\"}]}";
     }
 
     [Fact]
