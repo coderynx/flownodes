@@ -26,7 +26,7 @@ public class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
     public Task LoadWorkflowAsync(string workflowJson)
     {
         var workflowDefinition = _definitionLoader.LoadDefinition(workflowJson, Deserializers.Json);
-        
+
         _logger.LogInformation("Loaded workflow {WorkflowDefinitionId}", workflowDefinition.Id);
         return Task.CompletedTask;
     }

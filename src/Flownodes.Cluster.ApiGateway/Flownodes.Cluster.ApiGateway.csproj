@@ -8,14 +8,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="FastEndpoints" Version="5.0.0" />
-        <PackageReference Include="FastEndpoints.Swagger" Version="5.0.0" />
-        <PackageReference Include="Microsoft.Orleans.Client" Version="3.6.5" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+        <PackageReference Include="FastEndpoints" Version="5.0.0"/>
+        <PackageReference Include="FastEndpoints.Swagger" Version="5.0.0"/>
+        <PackageReference Include="Microsoft.Orleans.Client" Version="3.6.5"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Flownodes.Cluster.Core\Flownodes.Cluster.Core.csproj" />
+        <ProjectReference Include="..\Flownodes.Cluster.Core\Flownodes.Cluster.Core.csproj"/>
     </ItemGroup>
 
 </Project>

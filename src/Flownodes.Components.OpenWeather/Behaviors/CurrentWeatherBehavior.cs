@@ -1,5 +1,5 @@
-using Flownodes.Components.OpenWeather.ApiSchemas;
 using Flownodes.Cluster.Core.Resources;
+using Flownodes.Components.OpenWeather.ApiSchemas;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Refit;
