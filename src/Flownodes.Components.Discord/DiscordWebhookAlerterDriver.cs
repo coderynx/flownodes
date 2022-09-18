@@ -1,5 +1,5 @@
 ﻿using System.Net.Http.Json;
-using Flownodes.Cluster.Core.Alerting;
+using Flownodes.Edge.Core.Alerting;
 using Microsoft.Extensions.Configuration;
 
 namespace Flownodes.Components.Discord;

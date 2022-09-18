@@ -1,4 +1,4 @@
-using Flownodes.Cluster.Core.Resources;
+using Flownodes.Edge.Core.Resources;
 using Flownodes.Components.PhilipsHue.ApiSchemas;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
