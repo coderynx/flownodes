@@ -3,6 +3,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Flownodes.Edge.Node.Automation;
 using Flownodes.Edge.Node.Modules;
+using Microsoft.AspNetCore.Mvc.Diagnostics;
 using Orleans;
 using Orleans.Configuration;
 using Orleans.Hosting;
@@ -38,6 +39,8 @@ public static class Program
                 builder
                     .ConfigureServices(services =>
                     {
+                        services.AddSingleton<IBehaviorProvider, BehaviorProvider>();
+                        
                         services.AddOptions();
                         services.AddWorkflow(options =>
                         {

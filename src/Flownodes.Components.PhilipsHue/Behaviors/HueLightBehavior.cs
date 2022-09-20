@@ -1,5 +1,5 @@
-using Flownodes.Edge.Core.Resources;
 using Flownodes.Components.PhilipsHue.ApiSchemas;
+using Flownodes.Edge.Core.Resources;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Refit;

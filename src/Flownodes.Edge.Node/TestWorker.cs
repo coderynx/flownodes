@@ -72,15 +72,15 @@ public class TestWorker : BackgroundService
             { "assetNameJsonPath", "$.city" }
         };
         var weather =
-            await resourceManager.RegisterDataCollectorAsync("weather", "CurrentWeatherBehavior", weatherConfiguration);
+            await resourceManager.RegisterDataCollectorAsync("weather", "CurrentWeatherBehavior", weatherConfiguration);*/
 
         var hueLightConfiguration = new Dictionary<string, object?>
         {
             { "lightId", 1 }
         };
-        var hueLight = await resourceManager.RegisterDeviceAsync("hueLight", "HueLightBehavior", hueLightConfiguration);*/
+        var hueLight = await resourceManager.RegisterDeviceAsync("hueLight", "HueLightBehavior", hueLightConfiguration);
 
-        var lokFinderConfiguration = new Dictionary<string, object?>
+        /*var lokFinderConfiguration = new Dictionary<string, object?>
         {
             { "assetNameJsonPath", "$.unit_number" }
         };
@@ -88,14 +88,14 @@ public class TestWorker : BackgroundService
             await resourceManager.RegisterDataCollectorAsync("lokFinder", "LokFinderBehavior", lokFinderConfiguration);
 
         var workflowManager = _factory.GetGrain<IWorkflowManagerGrain>("workflow-manager");
-        await workflowManager.LoadWorkflowAsync(GetTestWorkflowDefinition("LoggerWorkflow"));
+        await workflowManager.LoadWorkflowAsync(GetTestWorkflowDefinition("LoggerWorkflow"));*/
 
         while (!stoppingToken.IsCancellationRequested)
         {
             // await FetchWeatherAsync(weather);
-            await FetchObbLocomotives(lokFinder);
-            await workflowManager.StartWorkflowAsync("LoggerWorkflow");
-            // await SwitchOffLightAsync(hueLight);
+            // await FetchObbLocomotives(lokFinder);
+            // await workflowManager.StartWorkflowAsync("LoggerWorkflow");
+            await SwitchOffLightAsync(hueLight);
 
             await Task.Delay(10000, stoppingToken);
         }

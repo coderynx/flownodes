@@ -15,15 +15,15 @@ internal class DeviceGrain : Grain, IDeviceGrain
     private readonly IAlerterGrain _alerter;
     private readonly ILogger<DeviceGrain> _logger;
     private readonly IPersistentState<ResourcePersistence> _persistence;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IBehaviorProvider _behaviorProvider;
     private IDeviceBehavior? _behavior;
 
-    public DeviceGrain(IServiceProvider serviceProvider,
+    public DeviceGrain(IBehaviorProvider behaviorProvider,
         [PersistentState("devicePersistence", "flownodes")]
         IPersistentState<ResourcePersistence> persistence,
         ILogger<DeviceGrain> logger, IGrainFactory grainFactory)
     {
-        _serviceProvider = serviceProvider;
+        _behaviorProvider = behaviorProvider;
         _persistence = persistence;
         _logger = logger;
 
@@ -44,17 +44,11 @@ internal class DeviceGrain : Grain, IDeviceGrain
     public async Task ConfigureAsync(string behaviorId, Dictionary<string, object?>? configuration = null,
         Dictionary<string, string>? metadata = null)
     {
-        // TODO: Use TryResolveKeyed.
-        try
-        {
-            _behavior = _serviceProvider.GetAutofacRoot().ResolveKeyed<IDeviceBehavior>(behaviorId);
-        }
-        catch (Exception)
-        {
-            _logger.LogError("Could not find the given device behavior {BehaviorId}", behaviorId);
-            throw;
-        }
+        _logger.LogInformation("Configuring device {DeviceId} with behavior {BehaviorId}", Id, behaviorId);
 
+        _behavior = _behaviorProvider.GetDeviceBehavior(behaviorId);
+        _behavior.ThrowIfNull();
+        
         _persistence.State.BehaviorId = behaviorId;
         _persistence.State.CreatedAt = DateTime.Now;
         _persistence.State.Configuration = configuration ?? new Dictionary<string, object?>();

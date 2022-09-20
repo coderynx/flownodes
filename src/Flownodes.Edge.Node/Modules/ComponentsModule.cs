@@ -14,6 +14,7 @@ public class ComponentsModule : Module
         Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
         var scannerPattern = new[] { "Flownodes.Components.*.dll" };
         var componentsPath = Path.Combine(Directory.GetCurrentDirectory(), "components");
+
         if (!Directory.Exists(componentsPath)) Directory.CreateDirectory(componentsPath);
 
         var assemblies = Directory.EnumerateFiles(componentsPath, "*.dll", SearchOption.AllDirectories)

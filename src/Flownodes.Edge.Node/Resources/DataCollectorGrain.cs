@@ -18,15 +18,15 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
     private readonly ILogger<DataCollectorGrain> _logger;
     private readonly IPersistentState<ResourcePersistence> _persistence;
     private readonly IResourceManagerGrain _resourceManager;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IBehaviorProvider _behaviorProvider;
     private IDataCollectorBehavior? _behavior;
 
-    public DataCollectorGrain(IServiceProvider serviceProvider,
+    public DataCollectorGrain(IBehaviorProvider behaviorProvider,
         [PersistentState("dataCollectorPersistence", "flownodes")]
         IPersistentState<ResourcePersistence> persistence,
         ILogger<DataCollectorGrain> logger, IGrainFactory grainFactory)
     {
-        _serviceProvider = serviceProvider;
+        _behaviorProvider = behaviorProvider;
         _persistence = persistence;
         _logger = logger;
 
@@ -39,15 +39,8 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
     public async Task ConfigureAsync(string behaviorId, Dictionary<string, object?>? configuration = null,
         Dictionary<string, string>? metadata = null)
     {
-        try
-        {
-            _behavior = _serviceProvider.GetAutofacRoot().ResolveKeyed<IDataCollectorBehavior>(behaviorId);
-        }
-        catch (Exception)
-        {
-            _logger.LogError("Could not find the given data collector behavior {BehaviorId}", behaviorId);
-            throw;
-        }
+        _behavior = _behaviorProvider.GetDataCollectorBehavior(behaviorId);
+        _behavior.ThrowIfNull();
 
         _persistence.State.BehaviorId = behaviorId;
         _persistence.State.CreatedAt = DateTime.Now;

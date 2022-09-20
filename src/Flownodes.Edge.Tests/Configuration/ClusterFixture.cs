@@ -6,6 +6,7 @@ using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
+using Flownodes.Edge.Node;
 using Flownodes.Edge.Node.Automation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,7 +16,7 @@ using Orleans.TestingHost;
 using WorkflowCore.Interface;
 using Xunit;
 
-namespace Flownodes.Cluster.Edge.Tests.Configuration;
+namespace Flownodes.Edge.Tests.Configuration;
 
 internal static class TestGlobals
 {
@@ -86,6 +87,8 @@ public class ClusterFixture : IAsyncLifetime
         {
             siloBuilder.ConfigureServices(services =>
             {
+                services.AddSingleton<IBehaviorProvider, BehaviorProvider>();
+                
                 services.AddWorkflow(options =>
                 {
                     options.UseRedisPersistence(TestGlobals.RedisConnectionString, "flownodes");

@@ -1,4 +1,4 @@
-namespace Flownodes.Cluster.Edge.Tests;
+namespace Flownodes.Edge.Tests;
 
 public static class Globals
 {

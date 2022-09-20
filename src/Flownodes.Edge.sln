@@ -14,7 +14,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Components.Discor
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Components", "Components", "{874C2FE9-67D1-4F37-B087-4B53169674B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Cluster.Edge.Tests", "Flownodes.Cluster.Edge.Tests\Flownodes.Cluster.Edge.Tests.csproj", "{E29D2462-E962-4532-A138-FC978E4603C9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Edge.Tests", "Flownodes.Edge.Tests\Flownodes.Edge.Tests.csproj", "{E29D2462-E962-4532-A138-FC978E4603C9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Edge.ApiGateway", "Flownodes.Edge.ApiGateway\Flownodes.Edge.ApiGateway.csproj", "{98E06037-0071-4332-A138-63B4789921BB}"
 EndProject

@@ -1,13 +1,13 @@
 using System.Threading.Tasks;
 using AutoFixture;
-using Flownodes.Cluster.Edge.Tests.Configuration;
 using Flownodes.Edge.Core.Resources;
+using Flownodes.Edge.Tests.Configuration;
 using FluentAssertions;
 using Orleans;
 using Orleans.TestingHost;
 using Xunit;
 
-namespace Flownodes.Cluster.Edge.Tests.GrainsTests;
+namespace Flownodes.Edge.Tests.GrainsTests;
 
 [Collection("TestCluster")]
 public class WorkflowManagerGrainTests : IClassFixture<ClusterFixture>

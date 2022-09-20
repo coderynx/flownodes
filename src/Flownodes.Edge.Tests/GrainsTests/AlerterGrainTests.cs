@@ -1,14 +1,14 @@
 using System;
 using System.Threading.Tasks;
 using AutoFixture;
-using Flownodes.Cluster.Edge.Tests.Configuration;
 using Flownodes.Edge.Core.Alerting;
+using Flownodes.Edge.Tests.Configuration;
 using FluentAssertions;
 using Orleans;
 using Orleans.TestingHost;
 using Xunit;
 
-namespace Flownodes.Cluster.Edge.Tests.GrainsTests;
+namespace Flownodes.Edge.Tests.GrainsTests;
 
 [Collection(nameof(ClusterFixture))]
 public class AlerterGrainTests : IClassFixture<ClusterFixture>
