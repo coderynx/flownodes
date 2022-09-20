@@ -32,7 +32,7 @@ public static class Program
             {
                 var redisConnectionString = $"{Environment.GetEnvironmentVariable("REDIS")}:6379";
 
-                var configurationConnectionString = host.Configuration.GetConnectionString("Redis");
+                var configurationConnectionString = host.Configuration.GetConnectionString("redis");
                 if (configurationConnectionString is not null) redisConnectionString = configurationConnectionString;
 
                 builder
@@ -48,19 +48,24 @@ public static class Program
                         });
                         services.AddWorkflowDSL();
                         services.AddTransient<LoggerStep>();
+                        services.AddHostedService<TestWorker>();
                     });
-
+                
                 if (Environment.GetEnvironmentVariable("KUBERNETES_SERVICE_HOST") is not null)
                 {
                     builder.UseKubernetesHosting();
                 }
+
                 else
                 {
-                    builder.ConfigureEndpoints(11111, 30000);
+                    var siloPort = Environment.GetEnvironmentVariable("SILO_PORT") ?? "11111";
+                    var gatewayPort = Environment.GetEnvironmentVariable("GATEWAY_PORT") ?? "30000";
+                    builder.ConfigureEndpoints(int.Parse(siloPort), int.Parse(gatewayPort));
+                    
                     builder.Configure<ClusterOptions>(options =>
                     {
-                        options.ClusterId = host.Configuration["ClusterConfiguration:ClusterId"];
-                        options.ServiceId = host.Configuration["ClusterConfiguration:ServiceId"];
+                        options.ClusterId = Environment.GetEnvironmentVariable("CLUSTER-ID");
+                        options.ServiceId = Environment.GetEnvironmentVariable("SERVICE-ID");
                     });
                 }
 
