@@ -6,14 +6,14 @@ namespace Flownodes.Edge.Node;
 
 public class BehaviorProvider : IBehaviorProvider
 {
+    private readonly ILifetimeScope _lifetimeScope;
+    private readonly ILogger<BehaviorProvider> _logger;
+
     public BehaviorProvider(IServiceProvider serviceProvider, ILogger<BehaviorProvider> logger)
     {
         _logger = logger;
         _lifetimeScope = serviceProvider.GetAutofacRoot();
     }
-
-    private readonly ILifetimeScope _lifetimeScope;
-    private readonly ILogger<BehaviorProvider> _logger;
 
     public IDeviceBehavior? GetDeviceBehavior(string id)
     {

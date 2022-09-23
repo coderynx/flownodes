@@ -88,7 +88,7 @@ public class ClusterFixture : IAsyncLifetime
             siloBuilder.ConfigureServices(services =>
             {
                 services.AddSingleton<IBehaviorProvider, BehaviorProvider>();
-                
+
                 services.AddWorkflow(options =>
                 {
                     options.UseRedisPersistence(TestGlobals.RedisConnectionString, "flownodes");

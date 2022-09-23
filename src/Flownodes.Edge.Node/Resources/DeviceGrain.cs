@@ -1,5 +1,3 @@
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
 using Flownodes.Edge.Node.Extensions;
@@ -13,9 +11,9 @@ namespace Flownodes.Edge.Node.Resources;
 internal class DeviceGrain : Grain, IDeviceGrain
 {
     private readonly IAlerterGrain _alerter;
+    private readonly IBehaviorProvider _behaviorProvider;
     private readonly ILogger<DeviceGrain> _logger;
     private readonly IPersistentState<ResourcePersistence> _persistence;
-    private readonly IBehaviorProvider _behaviorProvider;
     private IDeviceBehavior? _behavior;
 
     public DeviceGrain(IBehaviorProvider behaviorProvider,
@@ -35,7 +33,7 @@ internal class DeviceGrain : Grain, IDeviceGrain
     public async Task<ResourceIdentityCard> GetIdentityCard()
     {
         EnsureConfiguration();
-        
+
         var frn = await GetFrn();
         return new ResourceIdentityCard(frn, Id, _persistence.State.CreatedAt!.Value, _persistence.State.BehaviorId,
             _persistence.State.State.LastUpdate);
@@ -48,7 +46,7 @@ internal class DeviceGrain : Grain, IDeviceGrain
 
         _behavior = _behaviorProvider.GetDeviceBehavior(behaviorId);
         _behavior.ThrowIfNull();
-        
+
         _persistence.State.BehaviorId = behaviorId;
         _persistence.State.CreatedAt = DateTime.Now;
         _persistence.State.Configuration = configuration ?? new Dictionary<string, object?>();

@@ -28,15 +28,13 @@ public class ClusterClientService : IHostedService
     {
         var attempt = 0;
         const int maxAttempts = 5;
-        
+
         await Client.Connect(async exception =>
         {
             attempt++;
-            Console.WriteLine($"Cluster client attempt {attempt} of {maxAttempts} failed to connect to cluster.  Exception: {exception}");
-            if (attempt > maxAttempts)
-            {
-                return false;
-            }
+            Console.WriteLine(
+                $"Cluster client attempt {attempt} of {maxAttempts} failed to connect to cluster.  Exception: {exception}");
+            if (attempt > maxAttempts) return false;
 
             await Task.Delay(TimeSpan.FromSeconds(4), cancellationToken);
             return true;

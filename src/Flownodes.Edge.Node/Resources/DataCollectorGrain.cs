@@ -1,5 +1,3 @@
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using Flownodes.Edge.Core;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
@@ -15,10 +13,10 @@ namespace Flownodes.Edge.Node.Resources;
 public class DataCollectorGrain : Grain, IDataCollectorGrain
 {
     private readonly IAlerterGrain _alerter;
+    private readonly IBehaviorProvider _behaviorProvider;
     private readonly ILogger<DataCollectorGrain> _logger;
     private readonly IPersistentState<ResourcePersistence> _persistence;
     private readonly IResourceManagerGrain _resourceManager;
-    private readonly IBehaviorProvider _behaviorProvider;
     private IDataCollectorBehavior? _behavior;
 
     public DataCollectorGrain(IBehaviorProvider behaviorProvider,
