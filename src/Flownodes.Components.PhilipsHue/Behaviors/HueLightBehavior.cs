@@ -1,9 +1,9 @@
+using Ardalis.GuardClauses;
 using Flownodes.Components.PhilipsHue.ApiSchemas;
 using Flownodes.Edge.Core.Resources;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Refit;
-using Throw;
 
 namespace Flownodes.Components.PhilipsHue.Behaviors;
 
@@ -23,10 +23,10 @@ public class HueLightBehavior : IDeviceBehavior
     public async Task<Dictionary<string, object?>> PerformAction(string actionId,
         Dictionary<string, object?>? parameters = null)
     {
-        parameters.ThrowIfNull();
+        Guard.Against.Null(parameters, nameof(parameters));
 
         var lightId = parameters["lightId"]?.ToString();
-        lightId.ThrowIfNull();
+        Guard.Against.NullOrWhiteSpace(lightId, nameof(lightId));
 
         var result = new Dictionary<string, object?>();
 

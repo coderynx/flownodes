@@ -1,4 +1,4 @@
-using Throw;
+using Ardalis.GuardClauses;
 
 namespace Flownodes.Edge.Core.Alerting;
 
@@ -6,8 +6,8 @@ public record Alert
 {
     public Alert(string frn, AlertKind kind, string message)
     {
-        frn.Throw().IfWhiteSpace();
-        message.Throw().IfWhiteSpace();
+        Guard.Against.NullOrWhiteSpace(frn, nameof(frn));
+        Guard.Against.NullOrWhiteSpace(message, nameof(message));
 
         Frn = frn;
         Kind = kind;

@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Flownodes.Edge.Core;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
@@ -6,7 +7,6 @@ using Flownodes.Edge.Node.Models;
 using Newtonsoft.Json.Linq;
 using Orleans;
 using Orleans.Runtime;
-using Throw;
 
 namespace Flownodes.Edge.Node.Resources;
 
@@ -38,7 +38,7 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
         Dictionary<string, string>? metadata = null)
     {
         _behavior = _behaviorProvider.GetDataCollectorBehavior(behaviorId);
-        _behavior.ThrowIfNull();
+        Guard.Against.Null(_behavior, nameof(_behavior));
 
         _persistence.State.BehaviorId = behaviorId;
         _persistence.State.CreatedAt = DateTime.Now;
@@ -53,7 +53,7 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
     public async Task<object> CollectAsync(string actionId, Dictionary<string, object?>? parameters = null)
     {
         EnsureConfiguration();
-        _behavior.ThrowIfNull();
+        Guard.Against.Null(_behavior, nameof(_behavior));
 
         object? result;
         if (parameters is null)
@@ -84,12 +84,7 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
 
     private void EnsureConfiguration()
     {
-        _persistence.State.Configuration.ThrowIfNull();
-        _persistence.State.Throw().IfNullOrWhiteSpace(x => x.BehaviorId);
-        _persistence.State.Throw().IfNull(x => x.CreatedAt);
-        _persistence.State.Throw().IfNull(x => x.Configuration);
-        _persistence.State.Throw().IfNull(x => x.Metadata);
-        _persistence.State.Throw().IfNull(x => x.State);
+        Guard.Against.Null(_persistence.State.BehaviorId, nameof(_persistence.State.BehaviorId));
     }
 
     private async Task ProduceInfoAlertAsync(string message)

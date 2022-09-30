@@ -1,10 +1,10 @@
+using Ardalis.GuardClauses;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
 using Flownodes.Edge.Node.Extensions;
 using Flownodes.Edge.Node.Models;
 using Orleans;
 using Orleans.Runtime;
-using Throw;
 
 namespace Flownodes.Edge.Node.Resources;
 
@@ -45,7 +45,7 @@ internal class DeviceGrain : Grain, IDeviceGrain
         _logger.LogInformation("Configuring device {DeviceId} with behavior {BehaviorId}", Id, behaviorId);
 
         _behavior = _behaviorProvider.GetDeviceBehavior(behaviorId);
-        _behavior.ThrowIfNull();
+        Guard.Against.Null(_behavior, nameof(_behavior));
 
         _persistence.State.BehaviorId = behaviorId;
         _persistence.State.CreatedAt = DateTime.Now;
@@ -61,7 +61,7 @@ internal class DeviceGrain : Grain, IDeviceGrain
     {
         EnsureConfiguration();
 
-        _behavior.ThrowIfNull();
+        Guard.Against.Null(_behavior, nameof(_behavior));
         Dictionary<string, object?> result;
         if (parameters is null)
         {
@@ -120,13 +120,8 @@ internal class DeviceGrain : Grain, IDeviceGrain
 
     private void EnsureConfiguration()
     {
-        _behavior.ThrowIfNull();
-        _persistence.State.Configuration.ThrowIfNull();
-        _persistence.State.Throw().IfNullOrWhiteSpace(x => x.BehaviorId);
-        _persistence.State.Throw().IfNull(x => x.CreatedAt);
-        _persistence.State.Throw().IfNull(x => x.Configuration);
-        _persistence.State.Throw().IfNull(x => x.Metadata);
-        _persistence.State.Throw().IfNull(x => x.State);
+        Guard.Against.Null(_behavior, nameof(_behavior));
+        Guard.Against.Null(_persistence.State.BehaviorId, nameof(_persistence.State.BehaviorId));
     }
 
     private async Task ProduceInfoAlertAsync(string message)

@@ -1,9 +1,9 @@
+using Ardalis.GuardClauses;
 using Flownodes.Components.OpenWeather.ApiSchemas;
 using Flownodes.Edge.Core.Resources;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Refit;
-using Throw;
 
 namespace Flownodes.Components.OpenWeather.Behaviors;
 
@@ -20,14 +20,12 @@ public class CurrentWeatherBehavior : IDataCollectorBehavior
     public async Task<object?> UpdateAsync(string actionId, Dictionary<string, object?> parameters)
     {
         var latitude = parameters["latitude"]?.ToString();
-        latitude.ThrowIfNull();
-        latitude.Throw().IfNullOrWhiteSpace(_ => latitude);
+        Guard.Against.NullOrWhiteSpace(latitude, nameof(latitude));
 
         var longitude = parameters["longitude"]?.ToString();
-        longitude.ThrowIfNull();
-        longitude.Throw().IfNullOrWhiteSpace(_ => longitude);
+        Guard.Against.NullOrWhiteSpace(longitude, nameof(longitude));
 
-        _token.Throw().IfNullOrWhiteSpace(_ => _token);
+        Guard.Against.NullOrWhiteSpace(_token, nameof(_token));
 
         var openWeatherApi = RestService.For<IOpenWeatherApi>(WeatherBaseUrl, new RefitSettings
         {
@@ -35,8 +33,9 @@ public class CurrentWeatherBehavior : IDataCollectorBehavior
         });
         var response = await openWeatherApi.GetWeather(latitude, longitude, _token);
 
-        response.IsSuccessStatusCode.Throw().IfFalse();
-        response.Content.ThrowIfNull();
+        if (!response.IsSuccessStatusCode) throw new Exception($"OpenWeather API returned {response.StatusCode}");
+
+        Guard.Against.Null(response.Content);
 
         var obj = JObject.Parse(response.Content);
 

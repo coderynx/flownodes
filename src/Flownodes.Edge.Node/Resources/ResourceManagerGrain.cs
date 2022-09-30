@@ -1,9 +1,9 @@
+using Ardalis.GuardClauses;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
 using Flownodes.Edge.Node.Models;
 using Orleans;
 using Orleans.Runtime;
-using Throw;
 
 namespace Flownodes.Edge.Node.Resources;
 
@@ -28,10 +28,11 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async Task<IDeviceGrain> RegisterDeviceAsync(string id, string behaviorId,
         Dictionary<string, object?>? configuration = null)
     {
-        id.Throw().IfNullOrWhiteSpace(_ => behaviorId);
-        behaviorId.Throw().IfNullOrWhiteSpace(_ => behaviorId);
+        Guard.Against.Null(id);
+        Guard.Against.Null(behaviorId);
 
-        _persistence.State.DeviceRegistration.ContainsKey(id).Throw().IfTrue();
+        if (_persistence.State.DeviceRegistration.ContainsKey(id))
+            throw new InvalidOperationException($"Device {id} is already registered");
 
         var grain = _grainFactory.GetGrain<IDeviceGrain>(id);
 
@@ -58,10 +59,11 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async Task<IDataCollectorGrain> RegisterDataCollectorAsync(string id, string behaviorId,
         Dictionary<string, object?>? configuration = null)
     {
-        id.Throw().IfNullOrWhiteSpace(_ => behaviorId);
-        behaviorId.Throw().IfNullOrWhiteSpace(_ => behaviorId);
+        Guard.Against.NullOrWhiteSpace(id, nameof(id));
+        Guard.Against.NullOrWhiteSpace(behaviorId, nameof(behaviorId));
 
-        _persistence.State.DataCollectorRegistrations.ContainsKey(id).Throw().IfTrue();
+        if (_persistence.State.DataCollectorRegistrations.ContainsKey(id))
+            throw new InvalidOperationException($"Data collector {id} is already registered");
 
         var grain = _grainFactory.GetGrain<IDataCollectorGrain>(id);
 
@@ -88,7 +90,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async Task RemoveDeviceAsync(string id)
     {
-        id.Throw().IfNullOrWhiteSpace(_ => id);
+        Guard.Against.NullOrWhiteSpace(id, nameof(id));
 
         if (!_persistence.State.DeviceRegistration.ContainsKey(id))
             throw new KeyNotFoundException("The given device id was not found in the registry");
@@ -108,7 +110,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async Task RemoveDataCollectorAsync(string id)
     {
-        id.Throw().IfNullOrWhiteSpace(_ => id);
+        Guard.Against.NullOrWhiteSpace(id, nameof(id));
 
         if (!_persistence.State.DataCollectorRegistrations.ContainsKey(id))
             throw new KeyNotFoundException("The given data collector id was not found in the registry");
@@ -128,9 +130,10 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async Task<IAssetGrain> RegisterAssetAsync(string id)
     {
-        id.Throw().IfNullOrWhiteSpace(_ => id);
+        Guard.Against.Null(id, nameof(id));
 
-        _persistence.State.AssetRegistrations.Contains(id).Throw().IfTrue();
+        if (_persistence.State.AssetRegistrations.Contains(id))
+            throw new InvalidOperationException($"Asset {id} is already registered");
 
         var grain = _grainFactory.GetGrain<IAssetGrain>(id);
 
@@ -146,7 +149,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async Task RemoveAssetAsync(string id)
     {
-        id.Throw().IfNullOrWhiteSpace(_ => id);
+        Guard.Against.NullOrWhiteSpace(id, nameof(id));
 
         if (!_persistence.State.AssetRegistrations.Contains(id))
             throw new KeyNotFoundException("The given asset id was not found in the registry");
