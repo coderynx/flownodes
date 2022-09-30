@@ -20,32 +20,19 @@ public class TestWorker : BackgroundService
         var asset = await grain.CollectAsync("get-loco",
             new Dictionary<string, object?> { { "unit_number", "8090.0744" } });
         if (asset is null) return;
-
-        var frn = await asset.GetFrn();
-        var data = await asset.GetData();
-        _logger.LogInformation("Data of asset {AssetFrn}: {AssetData}", frn, data.ToString());
-    }
-
-    private async Task FetchWeatherAsync(IDataCollectorGrain grain)
-    {
-        var asset = await grain.CollectAsync(string.Empty);
-        if (asset is null) return;
-
-        var city = await asset.QueryData("$.data.city");
-        var main = await asset.QueryData("$.data.main");
-        var description = await asset.QueryData("$.data.description");
-
-        _logger.LogInformation("Current sky in {CityName} is {Main} ({Description})", city?.ToString(),
-            main?.ToString(),
-            description?.ToString());
     }
 
     private async Task SwitchOffLightAsync(IDeviceGrain grain)
     {
         await grain.PerformAction("switch-off");
-
         var power = grain.GetStateProperty("power").Result;
+        _logger.LogInformation("Current status for HueLight {Id} is power {Power}", 1, power);
+    }
 
+    private async Task SwitchOnLightAsync(IDeviceGrain grain)
+    {
+        await grain.PerformAction("switch-on");
+        var power = grain.GetStateProperty("power").Result;
         _logger.LogInformation("Current status for HueLight {Id} is power {Power}", 1, power);
     }
 
@@ -65,14 +52,14 @@ public class TestWorker : BackgroundService
     {
         var resourceManager = _factory.GetGrain<IResourceManagerGrain>(Globals.ResourceManagerGrainId);
 
-        /*var weatherConfiguration = new Dictionary<string, object?>
+        var weatherConfiguration = new Dictionary<string, object?>
         {
             { "latitude", "41.893333" },
             { "longitude", "12.482778" },
             { "assetNameJsonPath", "$.city" }
         };
         var weather =
-            await resourceManager.RegisterDataCollectorAsync("weather", "CurrentWeatherBehavior", weatherConfiguration);*/
+            await resourceManager.RegisterDataCollectorAsync("weather", "CurrentWeatherBehavior", weatherConfiguration);
 
         var hueLightConfiguration = new Dictionary<string, object?>
         {
@@ -85,10 +72,7 @@ public class TestWorker : BackgroundService
             { "assetNameJsonPath", "$.unit_number" }
         };
         var lokFinder =
-            await resourceManager.RegisterDataCollectorAsync("lokFinder", "LokFinderBehavior", lokFinderConfiguration);
-
-        var workflowManager = _factory.GetGrain<IWorkflowManagerGrain>("workflow-manager");
-        await workflowManager.LoadWorkflowAsync(GetTestWorkflowDefinition("LoggerWorkflow"));*/
+            await resourceManager.RegisterDataCollectorAsync("lokFinder", "LokFinderBehavior", lokFinderConfiguration);*/
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -97,13 +81,7 @@ public class TestWorker : BackgroundService
             // await workflowManager.StartWorkflowAsync("LoggerWorkflow");
             await SwitchOffLightAsync(hueLight);
 
-            await Task.Delay(10000, stoppingToken);
+            await Task.Delay(5000, stoppingToken);
         }
-    }
-
-    private string GetTestWorkflowDefinition(string name)
-    {
-        return "{\"Id\": \"" + name +
-               "\",\"Version\": 1,\"Steps\": [{\"Id\": \"LogHello\",\"StepType\": \"Flownodes.Edge.Node.Automation.LoggerStep, Flownodes.Edge.Node\"}]}";
     }
 }

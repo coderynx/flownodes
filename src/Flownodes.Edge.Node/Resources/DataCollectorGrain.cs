@@ -50,7 +50,7 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
         _logger.LogInformation("Configured data collector {DataCollectorGrainId}", Id);
     }
 
-    public async Task<IAssetGrain?> CollectAsync(string actionId, Dictionary<string, object?>? parameters = null)
+    public async Task<object> CollectAsync(string actionId, Dictionary<string, object?>? parameters = null)
     {
         EnsureConfiguration();
         _behavior.ThrowIfNull();
@@ -67,21 +67,7 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
             result = await _behavior.UpdateAsync(actionId, newParams);
         }
 
-        if (result is null) return null;
-
-        var jToken = JToken.FromObject(result);
-
-        var assetNamePath = _persistence.State.Configuration["assetNameJsonPath"]?.ToString();
-        var assetName = assetNamePath is null ? null : $"{Id}_{jToken.SelectToken(assetNamePath)}";
-        assetName.ThrowIfNull();
-
-        var asset = await _resourceManager.GetAsset(assetName) ?? await _resourceManager.RegisterAssetAsync(assetName);
-        await asset.UpdateAsync(new { from = _behavior.GetType().Name, data = result });
-
-        _logger.LogInformation("Performed action {ActionId} of data collector {DataCollectorId}", actionId, Id);
-        await ProduceInfoAlertAsync($"Performed action {actionId} of data collector {Id}");
-
-        return asset;
+        return result is null ? null : JToken.FromObject(result);
     }
 
     public Task<string> GetFrn()

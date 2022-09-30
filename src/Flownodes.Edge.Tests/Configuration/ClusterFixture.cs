@@ -7,13 +7,11 @@ using DotNet.Testcontainers.Containers;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
 using Flownodes.Edge.Node;
-using Flownodes.Edge.Node.Automation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NSubstitute;
 using Orleans.Hosting;
 using Orleans.TestingHost;
-using WorkflowCore.Interface;
 using Xunit;
 
 namespace Flownodes.Edge.Tests.Configuration;
@@ -41,15 +39,13 @@ public class ClusterFixture : IAsyncLifetime
         var builder = new TestClusterBuilder();
         builder.AddSiloBuilderConfigurator<SiloConfigurator>();
         builder.AddSiloBuilderConfigurator<HostConfigurator>();
+
         Cluster = builder.Build();
         await Cluster.DeployAsync();
     }
 
     public async Task DisposeAsync()
     {
-        var workflowHost = Cluster.ServiceProvider.GetService<IWorkflowHost>();
-        workflowHost?.Stop();
-
         await Cluster.StopAllSilosAsync();
         await _redisContainer.StopAsync();
     }
@@ -88,16 +84,6 @@ public class ClusterFixture : IAsyncLifetime
             siloBuilder.ConfigureServices(services =>
             {
                 services.AddSingleton<IBehaviorProvider, BehaviorProvider>();
-
-                services.AddWorkflow(options =>
-                {
-                    options.UseRedisPersistence(TestGlobals.RedisConnectionString, "flownodes");
-                    options.UseRedisLocking(TestGlobals.RedisConnectionString, "flownodes");
-                    options.UseRedisQueues(TestGlobals.RedisConnectionString, "flownodes");
-                    options.UseRedisEventHub(TestGlobals.RedisConnectionString, "flownodes");
-                });
-                services.AddWorkflowDSL();
-                services.AddTransient<LoggerStep>();
             });
 
             siloBuilder

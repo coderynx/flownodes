@@ -1,6 +1,5 @@
 using System.Reflection;
 using Autofac;
-using Flownodes.Edge.Node.Automation;
 using Flownodes.Edge.Node.Modules;
 using Orleans;
 using Orleans.Configuration;
@@ -25,33 +24,6 @@ public static partial class Program
         var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         builder.SetBasePath(appPath)
             .AddJsonFile("configuration.json", true);
-    }
-
-    private static ISiloBuilder ConfigureDevelopmentWorkflow(this ISiloBuilder builder)
-    {
-        return builder.ConfigureServices(services =>
-        {
-            services.AddWorkflow();
-            services.AddWorkflowDSL();
-            services.AddTransient<LoggerStep>();
-        });
-    }
-
-    private static void ConfigureProductionWorkflow(this ISiloBuilder builder)
-    {
-        builder.ConfigureServices(services =>
-        {
-            services.AddWorkflow(options =>
-            {
-                options.UseRedisPersistence(_redisConnectionString, "flownodes");
-                options.UseRedisLocking(_redisConnectionString, "flownodes");
-                options.UseRedisQueues(_redisConnectionString, "flownodes");
-                options.UseRedisEventHub(_redisConnectionString, "flownodes");
-            });
-
-            services.AddWorkflowDSL();
-            services.AddTransient<LoggerStep>();
-        });
     }
 
     private static void ConfigureServices(IServiceCollection services)
@@ -108,7 +80,6 @@ public static partial class Program
         // Initialize node with localhost clustering and in-memory persistence.
         if (context.HostingEnvironment.IsDevelopment())
         {
-            builder.ConfigureDevelopmentWorkflow();
             builder
                 .AddMemoryGrainStorage("flownodes")
                 .UseLocalhostClustering()
@@ -117,7 +88,6 @@ public static partial class Program
         }
 
         // Initialize node with redis clustering and redis persistence.
-        builder.ConfigureProductionWorkflow();
         builder.ConfigureProductionStorage();
 
         // Check if the node is deployed on a Kubernetes cluster.
@@ -130,7 +100,6 @@ public static partial class Program
     private static void ConfigureLogging(HostBuilderContext context, IServiceProvider provider,
         LoggerConfiguration configuration)
     {
-        configuration.ReadFrom.Configuration(context.Configuration)
-            .Enrich.FromLogContext();
+        configuration.ReadFrom.Configuration(context.Configuration).Enrich.FromLogContext();
     }
 }

@@ -26,8 +26,6 @@
         <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0"/>
         <PackageReference Include="Serilog.Sinks.SpectreConsole" Version="0.1.1"/>
         <PackageReference Include="Throw" Version="1.3.0"/>
-        <PackageReference Include="WorkflowCore.DSL" Version="3.7.0"/>
-        <PackageReference Include="WorkflowCore.Providers.Redis" Version="3.7.0"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -36,9 +34,5 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="Flownodes.Cluster.Node.Tests"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Orleans_CodeGenInputs Remove="Configurations\RedisConfiguration.cs"/>
     </ItemGroup>
 </Project>
