@@ -31,7 +31,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
         Guard.Against.Null(id);
         Guard.Against.Null(behaviorId);
 
-        if (_persistence.State.DeviceRegistration.ContainsKey(id))
+        if (_persistence.State.ResourceRegistrations.ContainsKey(id))
             throw new InvalidOperationException($"Device {id} is already registered");
 
         var grain = _grainFactory.GetGrain<IDeviceGrain>(id);
@@ -46,7 +46,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
             throw;
         }
 
-        _persistence.State.DeviceRegistration.Add(id, behaviorId);
+        _persistence.State.ResourceRegistrations.Add(id, behaviorId);
         await _persistence.WriteStateAsync();
 
         await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
@@ -62,7 +62,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
         Guard.Against.NullOrWhiteSpace(id, nameof(id));
         Guard.Against.NullOrWhiteSpace(behaviorId, nameof(behaviorId));
 
-        if (_persistence.State.DataCollectorRegistrations.ContainsKey(id))
+        if (_persistence.State.ResourceRegistrations.ContainsKey(id))
             throw new InvalidOperationException($"Data collector {id} is already registered");
 
         var grain = _grainFactory.GetGrain<IDataCollectorGrain>(id);
@@ -77,7 +77,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
             throw;
         }
 
-        _persistence.State.DataCollectorRegistrations.Add(id, behaviorId);
+        _persistence.State.ResourceRegistrations.Add(id, behaviorId);
         await _persistence.WriteStateAsync();
 
         await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
@@ -92,15 +92,15 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         Guard.Against.NullOrWhiteSpace(id, nameof(id));
 
-        if (!_persistence.State.DeviceRegistration.ContainsKey(id))
+        if (!_persistence.State.ResourceRegistrations.ContainsKey(id))
             throw new KeyNotFoundException("The given device id was not found in the registry");
 
         var grain = _grainFactory.GetGrain<IDeviceGrain>(id);
         await grain.SelfRemoveAsync();
 
-        var behaviorId = _persistence.State.DeviceRegistration[id];
+        var behaviorId = _persistence.State.ResourceRegistrations[id];
 
-        _persistence.State.DeviceRegistration.Remove(id);
+        _persistence.State.ResourceRegistrations.Remove(id);
         await _persistence.WriteStateAsync();
 
         await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
@@ -112,15 +112,15 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         Guard.Against.NullOrWhiteSpace(id, nameof(id));
 
-        if (!_persistence.State.DataCollectorRegistrations.ContainsKey(id))
+        if (!_persistence.State.ResourceRegistrations.ContainsKey(id))
             throw new KeyNotFoundException("The given data collector id was not found in the registry");
 
         var grain = _grainFactory.GetGrain<IDataCollectorGrain>(id);
         await grain.SelfRemoveAsync();
 
-        var behaviorId = _persistence.State.DataCollectorRegistrations[id];
+        var behaviorId = _persistence.State.ResourceRegistrations[id];
 
-        _persistence.State.DataCollectorRegistrations.Remove(id);
+        _persistence.State.ResourceRegistrations.Remove(id);
         await _persistence.WriteStateAsync();
 
         await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
@@ -132,12 +132,12 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         Guard.Against.Null(id, nameof(id));
 
-        if (_persistence.State.AssetRegistrations.Contains(id))
+        if (_persistence.State.ResourceRegistrations.ContainsKey(id))
             throw new InvalidOperationException($"Asset {id} is already registered");
 
         var grain = _grainFactory.GetGrain<IAssetGrain>(id);
 
-        _persistence.State.AssetRegistrations.Add(id);
+        _persistence.State.ResourceRegistrations.Add(id, null);
         await _persistence.WriteStateAsync();
 
         await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
@@ -151,13 +151,13 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         Guard.Against.NullOrWhiteSpace(id, nameof(id));
 
-        if (!_persistence.State.AssetRegistrations.Contains(id))
+        if (!_persistence.State.ResourceRegistrations.ContainsKey(id))
             throw new KeyNotFoundException("The given asset id was not found in the registry");
 
         var grain = _grainFactory.GetGrain<IAssetGrain>(id);
         await grain.SelfRemoveAsync();
 
-        _persistence.State.AssetRegistrations.Remove(id);
+        _persistence.State.ResourceRegistrations.Remove(id);
         await _persistence.WriteStateAsync();
 
         await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
@@ -167,7 +167,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public Task<List<IDeviceGrain>> GetDevices()
     {
-        var grains = _persistence.State.DeviceRegistration.Keys.Select(registration =>
+        var grains = _persistence.State.ResourceRegistrations.Keys.Select(registration =>
             _grainFactory.GetGrain<IDeviceGrain>(registration)).ToList();
 
         _logger.LogDebug("Returning {DevicesCount} devices", grains.Count);
@@ -177,7 +177,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
     public Task<IDeviceGrain?> GetDevice(string id)
     {
         IDeviceGrain? grain = null;
-        if (_persistence.State.DeviceRegistration.ContainsKey(id))
+        if (_persistence.State.ResourceRegistrations.ContainsKey(id))
         {
             grain = _grainFactory.GetGrain<IDeviceGrain>(id);
 
@@ -191,7 +191,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public Task<List<IDataCollectorGrain>> GetDataCollectors()
     {
-        var grains = _persistence.State.DataCollectorRegistrations.Keys.Select(registration =>
+        var grains = _persistence.State.ResourceRegistrations.Keys.Select(registration =>
             _grainFactory.GetGrain<IDataCollectorGrain>(registration)).ToList();
 
         _logger.LogDebug("Returning {DataCollectorsCount} data collectors", grains.Count);
@@ -201,7 +201,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
     public Task<IDataCollectorGrain?> GetDataCollector(string id)
     {
         IDataCollectorGrain? grain = null;
-        if (_persistence.State.DataCollectorRegistrations.ContainsKey(id))
+        if (_persistence.State.ResourceRegistrations.ContainsKey(id))
         {
             grain = _grainFactory.GetGrain<IDataCollectorGrain>(id);
 
@@ -215,8 +215,8 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public Task<List<IAssetGrain>> GetAssets()
     {
-        var grains = _persistence.State.AssetRegistrations.Select(id =>
-            _grainFactory.GetGrain<IAssetGrain>(id)).ToList();
+        var grains = _persistence.State.ResourceRegistrations.Select(registration =>
+            _grainFactory.GetGrain<IAssetGrain>(registration.Key)).ToList();
 
         _logger.LogDebug("Returning {AssetsCount} assets", grains.Count);
         return Task.FromResult(grains);
@@ -225,7 +225,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
     public Task<IAssetGrain?> GetAsset(string id)
     {
         IAssetGrain? grain = null;
-        if (_persistence.State.AssetRegistrations.Contains(id))
+        if (_persistence.State.ResourceRegistrations.ContainsKey(id))
         {
             grain = _grainFactory.GetGrain<IAssetGrain>(id);
 

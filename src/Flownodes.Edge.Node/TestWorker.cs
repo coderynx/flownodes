@@ -17,9 +17,8 @@ public class TestWorker : BackgroundService
 
     private async Task FetchObbLocomotives(IDataCollectorGrain grain)
     {
-        var asset = await grain.CollectAsync("get-loco",
+        var data = await grain.CollectAsync("get-loco",
             new Dictionary<string, object?> { { "unit_number", "8090.0744" } });
-        if (asset is null) return;
     }
 
     private async Task SwitchOffLightAsync(IDeviceGrain grain)
