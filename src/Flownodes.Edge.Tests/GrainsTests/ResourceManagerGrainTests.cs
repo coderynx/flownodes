@@ -34,7 +34,7 @@ public class ResourceManagerGrainTests : IClassFixture<ClusterFixture>
         var resourceManager = _cluster.GrainFactory.GetGrain<IResourceManagerGrain>(_fixture.Create<string>());
 
         // Assert.
-        resourceManager.GetGrainIdentity().Should().NotBeNull();
+        resourceManager.GetGrainId().Should().NotBeNull();
     }
 
     [Fact]

@@ -7,12 +7,14 @@ using DotNet.Testcontainers.Containers;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
 using Flownodes.Edge.Node;
+using Flownodes.Edge.Node.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NSubstitute;
 using Orleans.Hosting;
 using Orleans.TestingHost;
 using Xunit;
+using EnvironmentOptions = Flownodes.Edge.Node.EnvironmentOptions;
 
 namespace Flownodes.Edge.Tests.Configuration;
 
@@ -46,7 +48,7 @@ public class ClusterFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        await Cluster.StopAllSilosAsync();
+        await Cluster.KillSiloAsync(Cluster.Primary);
         await _redisContainer.StopAsync();
     }
 
@@ -84,6 +86,7 @@ public class ClusterFixture : IAsyncLifetime
             siloBuilder.ConfigureServices(services =>
             {
                 services.AddSingleton<IBehaviorProvider, BehaviorProvider>();
+                services.AddSingleton<IEnvironmentService, EnvironmentService>();
             });
 
             siloBuilder
@@ -95,13 +98,10 @@ public class ClusterFixture : IAsyncLifetime
                 .AddRedisGrainStorage("flownodes", optionsBuilder => optionsBuilder.Configure(options =>
                 {
                     options.ConnectionString = TestGlobals.RedisConnectionString;
-                    options.UseJson = true;
                     options.DatabaseNumber = 0;
-                }))
-                .AddRedisGrainStorageAsDefault(optionsBuilder => optionsBuilder.Configure(options =>
+                })).AddRedisGrainStorageAsDefault(optionsBuilder => optionsBuilder.Configure(options =>
                 {
                     options.ConnectionString = TestGlobals.RedisConnectionString;
-                    options.UseJson = true;
                     options.DatabaseNumber = 0;
                 }));
         }

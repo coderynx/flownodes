@@ -1,3 +1,5 @@
 namespace Flownodes.Edge.Core.Resources;
 
-public record ResourceIdentityCard(string Frn, string Id, DateTime CreatedAt, string BehaviorId, DateTime? LastUpdate);
+[GenerateSerializer]
+public record ResourceIdentityCard([property: Id(0)] string Frn, [property: Id(1)] string Id,
+    [property: Id(2)] DateTime CreatedAt, [property: Id(3)] string BehaviorId, [property: Id(4)] DateTime? LastUpdate);

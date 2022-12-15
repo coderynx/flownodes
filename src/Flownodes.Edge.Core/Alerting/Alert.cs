@@ -2,6 +2,7 @@ using Ardalis.GuardClauses;
 
 namespace Flownodes.Edge.Core.Alerting;
 
+[GenerateSerializer]
 public record Alert
 {
     public Alert(string frn, AlertKind kind, string message)
@@ -14,7 +15,7 @@ public record Alert
         Message = message;
     }
 
-    public string Frn { get; }
-    public AlertKind Kind { get; }
-    public string Message { get; }
+    [Id(0)] public string Frn { get; }
+    [Id(1)] public AlertKind Kind { get; }
+    [Id(2)] public string Message { get; }
 }

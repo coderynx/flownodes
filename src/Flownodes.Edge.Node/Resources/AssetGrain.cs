@@ -1,25 +1,24 @@
-using Flownodes.Edge.Core;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
 using Flownodes.Edge.Node.Models;
+using Flownodes.Edge.Node.Services;
 using Newtonsoft.Json.Linq;
-using Orleans;
 using Orleans.Runtime;
 
 namespace Flownodes.Edge.Node.Resources;
 
-internal class AssetGrain : Grain, IAssetGrain
+public class AssetGrain : Grain, IAssetGrain
 {
     private readonly IAlerterGrain _alerter;
     private readonly ILogger<AssetGrain> _logger;
     private readonly IPersistentState<AssetPersistence> _persistence;
 
     public AssetGrain([PersistentState("assetPersistence", "flownodes")] IPersistentState<AssetPersistence> persistence,
-        ILogger<AssetGrain> logger, IGrainFactory grainFactory)
+        ILogger<AssetGrain> logger, IGrainFactory grainFactory, IEnvironmentService environmentService)
     {
         _persistence = persistence;
         _logger = logger;
-        _alerter = grainFactory.GetGrain<IAlerterGrain>(Globals.AlerterGrainId);
+        _alerter = environmentService.GetAlertManagerGrain();
     }
 
     private string Id => this.GetPrimaryKeyString();
@@ -39,12 +38,6 @@ internal class AssetGrain : Grain, IAssetGrain
         var data = _persistence.State.State.Data;
         var result = data.SelectToken(jsonPath);
         return Task.FromResult(result);
-    }
-
-    public Task<JObject> GetData()
-    {
-        var data = _persistence.State.State.Data;
-        return Task.FromResult(data);
     }
 
     public Task<string> GetFrn()

@@ -1,9 +1,10 @@
 namespace Flownodes.Edge.Node.Models;
 
+[GenerateSerializer]
 public class ResourceState
 {
-    public DateTime? LastUpdate { get; set; }
-    public Dictionary<string, object?> Properties { get; } = new();
+    [Id(0)] public DateTime? LastUpdate { get; set; }
+    [Id(1)] public Dictionary<string, object?> Properties { get; } = new();
 
     public object? GetPropertyValue(string key)
     {

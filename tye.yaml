@@ -1,0 +1,31 @@
+name: flownodes-edge
+services:
+  - name: redis
+    image: redis
+    bindings:
+      - port: 6379
+        connectionString: "${host}:${port}"
+
+  - name: redis-cli
+    image: redis
+    args: "redis-cli -h redis MONITOR"
+
+  - name: node
+    project: src/Flownodes.Edge.Node/Flownodes.Edge.Node.csproj
+    env:
+      - DOTNET_ENVIRONMENT=Staging
+      - ORLEANS_CLUSTER_ID=dev
+      - ORLEANS_SERVICE_ID=flownodes
+      - RESOURCE_MANAGER_NAME=resource_manager
+      - ALERT_MANAGER_NAME=alert_manager
+
+  - name: api
+    project: src/Flownodes.Edge.ApiGateway/Flownodes.Edge.ApiGateway.csproj
+    env:
+      - ORLEANS_CLUSTER_ID=dev
+      - ORLEANS_SERVICE_ID=flownodes
+      - RESOURCE_MANAGER_NAME=resource_manager
+      - ALERT_MANAGER_NAME=alert_manager
+    bindings:
+      - port: 5000
+        protocol: http

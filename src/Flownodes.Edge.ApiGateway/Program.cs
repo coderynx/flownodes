@@ -1,31 +1,54 @@
-using FastEndpoints;
-using FastEndpoints.Swagger;
-using Flownodes.Edge.ApiGateway.Services;
-using Orleans;
+using Flownodes.Edge.ApiGateway;
+using Flownodes.Edge.Core;
+using Microsoft.AspNetCore.Mvc;
+using Orleans.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddFastEndpoints();
-builder.Services.AddSwaggerDoc();
+builder.Services.AddOrleansClient(clientBuilder =>
+{
+    clientBuilder
+        .Configure<ClusterOptions>(options =>
+        {
+            options.ClusterId = Environment.GetEnvironmentVariable("ORLEANS_CLUSTER_ID") ?? "dev";
+            options.ServiceId = Environment.GetEnvironmentVariable("ORLEANS_SERVICE_ID") ?? "flownodes";
+        })
+        .UseRedisClustering(options =>
+        {
+            options.ConnectionString = builder.Configuration.GetConnectionString("redis");
+            options.Database = 0;
+        })
+        .UseConnectionRetryFilter(async (_, token) =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(4), token);
+            return true;
+        });
+});
 
-builder.Services.AddSingleton<ClusterClientService>();
-builder.Services.AddSingleton<IHostedService>(sp => sp.GetService<ClusterClientService>()!);
-builder.Services.AddSingleton(sp => sp.GetService<ClusterClientService>()!.Client);
-builder.Services.AddSingleton<IGrainFactory>(sp => sp.GetService<ClusterClientService>()!.Client);
-builder.Services.AddSingleton<IEdgeService, EdgeService>();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddAuthorization();
+builder.Services.Configure<EnvironmentOptions>(options =>
+{
+    options.AlertManagerName = Environment.GetEnvironmentVariable("ALERT_MANAGER_NAME") ?? "alert_manager";
+    options.ResourceManagerName = Environment.GetEnvironmentVariable("RESOURCE_MANAGER_NAME") ?? "resource_manager";
+});
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseOpenApi();
-    app.UseSwaggerUi3(s => s.ConfigureDefaults());
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-app.UseFastEndpoints();
 
+app.MapGet("/api/cluster", async ([FromServices] IClusterClient clusterClient) =>
+{
+    var grain = clusterClient.GetGrain<IClusterGrain>(0);
+    return await grain.GetClusterInformation();
+});
 
 app.Run();

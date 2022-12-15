@@ -3,12 +3,11 @@ using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
 using Flownodes.Edge.Node.Extensions;
 using Flownodes.Edge.Node.Models;
-using Orleans;
 using Orleans.Runtime;
 
 namespace Flownodes.Edge.Node.Resources;
 
-internal class DeviceGrain : Grain, IDeviceGrain
+public class DeviceGrain : Grain, IDeviceGrain
 {
     private readonly IAlerterGrain _alerter;
     private readonly IBehaviorProvider _behaviorProvider;
@@ -106,16 +105,16 @@ internal class DeviceGrain : Grain, IDeviceGrain
         _logger.LogInformation("Clear state for device {DeviceId}", Id);
     }
 
-    public override Task OnActivateAsync()
+    public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Activated device {DeviceId}", Id);
-        return base.OnActivateAsync();
+        return base.OnActivateAsync(cancellationToken);
     }
 
-    public override Task OnDeactivateAsync()
+    public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Deactivated device {DeviceId}", Id);
-        return base.OnDeactivateAsync();
+        return base.OnDeactivateAsync(reason, cancellationToken);
     }
 
     private void EnsureConfiguration()

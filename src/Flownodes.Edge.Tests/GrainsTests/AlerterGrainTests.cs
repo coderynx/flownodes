@@ -36,7 +36,7 @@ public class AlerterGrainTests : IClassFixture<ClusterFixture>
         var grain = _cluster.GrainFactory.GetGrain<IAlerterGrain>(_fixture.Create<string>());
 
         // Assert.
-        grain.GetGrainIdentity().Should().NotBeNull();
+        grain.GetGrainId().Should().NotBeNull();
     }
 
     [Fact]

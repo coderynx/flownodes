@@ -1,11 +1,9 @@
 using System.Reflection;
 using Autofac;
 using Flownodes.Edge.Node.Modules;
-using Orleans;
+using Flownodes.Edge.Node.Services;
 using Orleans.Configuration;
-using Orleans.Hosting;
 using Serilog;
-using HostBuilderContext = Microsoft.Extensions.Hosting.HostBuilderContext;
 
 namespace Flownodes.Edge.Node;
 
@@ -30,6 +28,17 @@ public static partial class Program
     {
         services.AddOptions();
         services.AddSingleton<IBehaviorProvider, BehaviorProvider>();
+
+        // Setting up environment.
+        var alertManagerName = Environment.GetEnvironmentVariable("ALERT_MANAGER_NAME") ?? "alert_manager";
+        var resourceManagerName = Environment.GetEnvironmentVariable("RESOURCE_MANAGER_NAME") ?? "resource_manager";
+        services.Configure<EnvironmentOptions>(options =>
+        {
+            options.AlertManagerName = alertManagerName;
+            options.ResourceManagerName = resourceManagerName;
+        });
+        services.AddSingleton<IEnvironmentService, EnvironmentService>();
+
         services.AddHostedService<TestWorker>();
     }
 
@@ -45,27 +54,14 @@ public static partial class Program
             {
                 options.ConnectionString = _redisConnectionString;
                 options.DatabaseNumber = 1;
-                options.UseJson = true;
-            })
-            .AddRedisGrainStorageAsDefault(options =>
-            {
-                options.ConnectionString = _redisConnectionString;
-                options.DatabaseNumber = 2;
-                options.UseJson = true;
             });
     }
 
     private static void UseManualConfiguration(this ISiloBuilder builder)
     {
-        var siloPort = Environment.GetEnvironmentVariable("SILO_PORT") ?? "11111";
-        var gatewayPort = Environment.GetEnvironmentVariable("GATEWAY_PORT") ?? "30000";
+        var siloPort = Environment.GetEnvironmentVariable("ORLEANS_SILO_PORT") ?? "11111";
+        var gatewayPort = Environment.GetEnvironmentVariable("ORLEANS_GATEWAY_PORT") ?? "30000";
         builder.ConfigureEndpoints(int.Parse(siloPort), int.Parse(gatewayPort));
-
-        builder.Configure<ClusterOptions>(options =>
-        {
-            options.ClusterId = Environment.GetEnvironmentVariable("CLUSTER-ID");
-            options.ServiceId = Environment.GetEnvironmentVariable("SERVICE-ID");
-        });
     }
 
     private static void ConfigureOrleans(HostBuilderContext context, ISiloBuilder builder)
@@ -77,13 +73,21 @@ public static partial class Program
 
         builder.ConfigureServices(ConfigureServices);
 
+        var clusterId = Environment.GetEnvironmentVariable("ORLEANS_CLUSTER_ID") ?? "dev";
+        var serviceId = Environment.GetEnvironmentVariable("ORLEANS_SERVICE_ID") ?? "flownodes";
+        builder.Configure<ClusterOptions>(options =>
+        {
+            options.ClusterId = clusterId;
+            options.ServiceId = serviceId;
+        });
+
         // Initialize node with localhost clustering and in-memory persistence.
         if (context.HostingEnvironment.IsDevelopment())
         {
             builder
                 .AddMemoryGrainStorage("flownodes")
-                .UseLocalhostClustering()
-                .UseDashboard();
+                .AddMemoryGrainStorageAsDefault()
+                .UseLocalhostClustering();
             return;
         }
 

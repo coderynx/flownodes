@@ -1,6 +1,4 @@
-using Flownodes.Edge.Core;
 using Flownodes.Edge.Core.Resources;
-using Orleans;
 
 namespace Flownodes.Edge.Node;
 
@@ -49,9 +47,9 @@ public class TestWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var resourceManager = _factory.GetGrain<IResourceManagerGrain>(Globals.ResourceManagerGrainId);
+        // var resourceManager = _factory.GetGrain<IResourceManagerGrain>(Globals.ResourceManagerGrainId);
 
-        var weatherConfiguration = new Dictionary<string, object?>
+        /*var weatherConfiguration = new Dictionary<string, object?>
         {
             { "latitude", "41.893333" },
             { "longitude", "12.482778" },
@@ -66,12 +64,12 @@ public class TestWorker : BackgroundService
         };
         var hueLight = await resourceManager.RegisterDeviceAsync("hueLight", "HueLightBehavior", hueLightConfiguration);
 
-        /*var lokFinderConfiguration = new Dictionary<string, object?>
+        var lokFinderConfiguration = new Dictionary<string, object?>
         {
             { "assetNameJsonPath", "$.unit_number" }
         };
         var lokFinder =
-            await resourceManager.RegisterDataCollectorAsync("lokFinder", "LokFinderBehavior", lokFinderConfiguration);*/
+            await resourceManager.RegisterDataCollectorAsync("lokFinder", "LokFinderBehavior", lokFinderConfiguration);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -81,6 +79,6 @@ public class TestWorker : BackgroundService
             await SwitchOffLightAsync(hueLight);
 
             await Task.Delay(5000, stoppingToken);
-        }
+        }*/
     }
 }

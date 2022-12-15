@@ -1,11 +1,10 @@
 using Ardalis.GuardClauses;
-using Flownodes.Edge.Core;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
 using Flownodes.Edge.Node.Extensions;
 using Flownodes.Edge.Node.Models;
+using Flownodes.Edge.Node.Services;
 using Newtonsoft.Json.Linq;
-using Orleans;
 using Orleans.Runtime;
 
 namespace Flownodes.Edge.Node.Resources;
@@ -16,20 +15,17 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
     private readonly IBehaviorProvider _behaviorProvider;
     private readonly ILogger<DataCollectorGrain> _logger;
     private readonly IPersistentState<ResourcePersistence> _persistence;
-    private readonly IResourceManagerGrain _resourceManager;
     private IDataCollectorBehavior? _behavior;
 
     public DataCollectorGrain(IBehaviorProvider behaviorProvider,
         [PersistentState("dataCollectorPersistence", "flownodes")]
         IPersistentState<ResourcePersistence> persistence,
-        ILogger<DataCollectorGrain> logger, IGrainFactory grainFactory)
+        ILogger<DataCollectorGrain> logger, IEnvironmentService environmentService)
     {
         _behaviorProvider = behaviorProvider;
         _persistence = persistence;
         _logger = logger;
-
-        _resourceManager = grainFactory.GetGrain<IResourceManagerGrain>(Globals.ResourceManagerGrainId);
-        _alerter = grainFactory.GetGrain<IAlerterGrain>(Globals.AlerterGrainId);
+        _alerter = environmentService.GetAlertManagerGrain();
     }
 
     private string Id => this.GetPrimaryKeyString();

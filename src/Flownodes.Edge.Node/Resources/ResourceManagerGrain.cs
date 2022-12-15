@@ -2,12 +2,11 @@ using Ardalis.GuardClauses;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
 using Flownodes.Edge.Node.Models;
-using Orleans;
 using Orleans.Runtime;
 
 namespace Flownodes.Edge.Node.Resources;
 
-internal class ResourceManagerGrain : Grain, IResourceManagerGrain
+public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 {
     private readonly IAlerterGrain _alerterGrain;
     private readonly IGrainFactory _grainFactory;
@@ -130,7 +129,7 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async Task<IAssetGrain> RegisterAssetAsync(string id)
     {
-        Guard.Against.Null(id, nameof(id));
+        Guard.Against.NullOrWhiteSpace(id, nameof(id));
 
         if (_persistence.State.ResourceRegistrations.ContainsKey(id))
             throw new InvalidOperationException($"Asset {id} is already registered");
@@ -237,15 +236,15 @@ internal class ResourceManagerGrain : Grain, IResourceManagerGrain
         return Task.FromResult(grain);
     }
 
-    public override Task OnActivateAsync()
+    public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Resource manager activated");
-        return base.OnActivateAsync();
+        return base.OnActivateAsync(cancellationToken);
     }
 
-    public override Task OnDeactivateAsync()
+    public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Resource manager deactivated");
-        return base.OnDeactivateAsync();
+        return base.OnDeactivateAsync(reason, cancellationToken);
     }
 }
