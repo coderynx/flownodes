@@ -1,6 +1,6 @@
 using Ardalis.GuardClauses;
 
-namespace Flownodes.Core.Alerting;
+namespace Flownodes.Core.Models;
 
 [GenerateSerializer]
 public record Alert

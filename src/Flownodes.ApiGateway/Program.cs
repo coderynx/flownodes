@@ -1,5 +1,5 @@
 using Flownodes.ApiGateway;
-using Flownodes.Core;
+using Flownodes.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Orleans.Configuration;
 

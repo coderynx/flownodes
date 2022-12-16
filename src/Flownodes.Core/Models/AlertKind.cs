@@ -1,4 +1,4 @@
-namespace Flownodes.Core.Alerting;
+namespace Flownodes.Core.Models;
 
 public enum AlertKind
 {

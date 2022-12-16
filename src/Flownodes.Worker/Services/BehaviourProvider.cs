@@ -1,8 +1,8 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using Flownodes.Core.Resources;
+using Flownodes.Core.Interfaces;
 
-namespace Flownodes.Worker;
+namespace Flownodes.Worker.Services;
 
 public class BehaviourProvider : IBehaviourProvider
 {

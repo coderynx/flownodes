@@ -1,13 +1,13 @@
 using Ardalis.GuardClauses;
-using Flownodes.Core.Alerting;
-using Flownodes.Core.Resources;
+using Flownodes.Core.Interfaces;
+using Flownodes.Core.Models;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Newtonsoft.Json.Linq;
 using Orleans.Runtime;
 
-namespace Flownodes.Worker.Resources;
+namespace Flownodes.Worker.Implementations;
 
 public class DataCollectorGrain : Grain, IDataCollectorGrain
 {

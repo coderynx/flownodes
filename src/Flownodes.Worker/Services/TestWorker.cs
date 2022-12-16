@@ -1,7 +1,7 @@
-using Flownodes.Core.Resources;
-using Flownodes.Worker.Services;
+using Flownodes.Core.Interfaces;
+using Flownodes.Core.Models;
 
-namespace Flownodes.Worker;
+namespace Flownodes.Worker.Services;
 
 public class TestWorker : BackgroundService
 {

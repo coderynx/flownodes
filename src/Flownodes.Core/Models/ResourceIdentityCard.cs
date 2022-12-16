@@ -1,4 +1,4 @@
-namespace Flownodes.Core.Resources;
+namespace Flownodes.Core.Models;
 
 [GenerateSerializer]
 public record ResourceIdentityCard([property: Id(0)] string Frn, [property: Id(1)] string Id,

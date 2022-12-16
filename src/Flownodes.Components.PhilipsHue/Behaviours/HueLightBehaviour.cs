@@ -1,5 +1,6 @@
 using Ardalis.GuardClauses;
-using Flownodes.Core.Resources;
+using Flownodes.Core.Interfaces;
+using Flownodes.Core.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 

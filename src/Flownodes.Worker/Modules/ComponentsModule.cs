@@ -2,8 +2,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Ardalis.GuardClauses;
 using Autofac;
-using Flownodes.Core.Alerting;
-using Flownodes.Core.Resources;
+using Flownodes.Core.Interfaces;
 using Module = Autofac.Module;
 
 namespace Flownodes.Worker.Modules;

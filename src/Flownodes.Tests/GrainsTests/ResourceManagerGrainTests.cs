@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using AutoFixture;
-using Flownodes.Core.Resources;
+using Flownodes.Core.Interfaces;
 using Flownodes.Tests.Configuration;
 using FluentAssertions;
 using Orleans;

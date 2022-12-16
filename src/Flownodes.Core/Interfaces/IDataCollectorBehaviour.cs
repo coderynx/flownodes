@@ -1,4 +1,4 @@
-namespace Flownodes.Core.Resources;
+namespace Flownodes.Core.Interfaces;
 
 public interface IDataCollectorBehaviour
 {

@@ -1,6 +1,6 @@
-using Flownodes.Core.Resources;
+using Flownodes.Core.Interfaces;
 
-namespace Flownodes.Worker;
+namespace Flownodes.Worker.Services;
 
 public interface IBehaviourProvider
 {

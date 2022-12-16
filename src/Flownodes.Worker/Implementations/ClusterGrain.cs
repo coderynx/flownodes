@@ -1,8 +1,8 @@
-using Flownodes.Core;
+using Flownodes.Core.Interfaces;
 using Flownodes.Worker.Services;
 using Orleans.Concurrency;
 
-namespace Flownodes.Worker;
+namespace Flownodes.Worker.Implementations;
 
 [StatelessWorker(1)]
 public class ClusterGrain : Grain, IClusterGrain

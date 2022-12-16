@@ -1,10 +1,11 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using Flownodes.Core.Alerting;
+using Flownodes.Core.Interfaces;
+using Flownodes.Core.Models;
 using Flownodes.Worker.Models;
 using Orleans.Runtime;
 
-namespace Flownodes.Worker.Alerting;
+namespace Flownodes.Worker.Implementations;
 
 public class AlerterGrain : Grain, IAlerterGrain
 {

@@ -1,4 +1,6 @@
-namespace Flownodes.Core.Resources;
+using Flownodes.Core.Models;
+
+namespace Flownodes.Core.Interfaces;
 
 /// <summary>
 ///     The device grain is a resource that represents the "digital twin" of a specific device.

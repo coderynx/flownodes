@@ -1,10 +1,11 @@
 using Ardalis.GuardClauses;
-using Flownodes.Core.Alerting;
-using Flownodes.Core.Resources;
+using Flownodes.Core.Interfaces;
+using Flownodes.Core.Models;
 using Flownodes.Worker.Models;
+using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
-namespace Flownodes.Worker.Resources;
+namespace Flownodes.Worker.Implementations;
 
 public class DeviceGrain : Grain, IDeviceGrain
 {

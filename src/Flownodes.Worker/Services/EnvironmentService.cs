@@ -1,5 +1,4 @@
-using Flownodes.Core.Alerting;
-using Flownodes.Core.Resources;
+using Flownodes.Core.Interfaces;
 using Microsoft.Extensions.Options;
 using Orleans.Configuration;
 

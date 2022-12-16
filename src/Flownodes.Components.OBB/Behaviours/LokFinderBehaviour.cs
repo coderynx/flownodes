@@ -1,5 +1,5 @@
 ﻿using Flownodes.Components.OBB.ApiSchemas;
-using Flownodes.Core.Resources;
+using Flownodes.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 using Refit;
 

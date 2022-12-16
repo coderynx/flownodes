@@ -1,4 +1,4 @@
-namespace Flownodes.Core;
+namespace Flownodes.Core.Interfaces;
 
 [GenerateSerializer]
 public record ClusterInformation([property: Id(0)] string ClusterId, [property: Id(1)] string ServiceId);

@@ -1,4 +1,6 @@
-namespace Flownodes.Core.Alerting;
+using Flownodes.Core.Models;
+
+namespace Flownodes.Core.Interfaces;
 
 public interface IAlerterDriver
 {

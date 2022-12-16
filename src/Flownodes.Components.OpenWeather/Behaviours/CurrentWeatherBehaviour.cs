@@ -1,6 +1,6 @@
 using Ardalis.GuardClauses;
 using Flownodes.Components.OpenWeather.ApiSchemas;
-using Flownodes.Core.Resources;
+using Flownodes.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Refit;

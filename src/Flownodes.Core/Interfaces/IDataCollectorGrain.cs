@@ -1,4 +1,6 @@
-namespace Flownodes.Core.Resources;
+using Flownodes.Core.Models;
+
+namespace Flownodes.Core.Interfaces;
 
 public interface IDataCollectorGrain : IGrainWithStringKey
 {
