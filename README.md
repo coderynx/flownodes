@@ -1,6 +1,6 @@
 <h1 align="center">Flownodes</h1>
 
-<p align="center">The distributed automation platform</p>
+<p align="center">🦾 A modern distributed automation platform.</p>
 
 ## Introduction
 
