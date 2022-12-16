@@ -25,7 +25,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     }
 
     public async Task<IDeviceGrain> RegisterDeviceAsync(string id, string behaviorId,
-        Dictionary<string, object?>? configuration = null)
+        ResourceConfiguration configuration)
     {
         Guard.Against.Null(id);
         Guard.Against.Null(behaviorId);
@@ -56,7 +56,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     }
 
     public async Task<IDataCollectorGrain> RegisterDataCollectorAsync(string id, string behaviorId,
-        Dictionary<string, object?>? configuration = null)
+        ResourceConfiguration? configuration = null)
     {
         Guard.Against.NullOrWhiteSpace(id, nameof(id));
         Guard.Against.NullOrWhiteSpace(behaviorId, nameof(behaviorId));

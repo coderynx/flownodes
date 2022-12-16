@@ -30,7 +30,7 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
 
     private string Id => this.GetPrimaryKeyString();
 
-    public async Task ConfigureAsync(string behaviorId, Dictionary<string, object?>? configuration = null,
+    public async Task ConfigureAsync(string behaviorId, ResourceConfiguration? configuration = null,
         Dictionary<string, string>? metadata = null)
     {
         _behavior = _behaviorProvider.GetDataCollectorBehavior(behaviorId);
@@ -38,7 +38,7 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
 
         _persistence.State.BehaviorId = behaviorId;
         _persistence.State.CreatedAt = DateTime.Now;
-        _persistence.State.Configuration = configuration ?? new Dictionary<string, object?>();
+        _persistence.State.Configuration = configuration ?? new ResourceConfiguration();
         _persistence.State.Metadata = metadata ?? new Dictionary<string, string>();
         _persistence.State.State = new ResourceState();
         await _persistence.WriteStateAsync();
@@ -54,11 +54,11 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
         object? result;
         if (parameters is null)
         {
-            result = await _behavior.UpdateAsync(actionId, _persistence.State.Configuration);
+            result = await _behavior.UpdateAsync(actionId, _persistence.State.Configuration.Dictionary);
         }
         else
         {
-            var newParams = new Dictionary<string, object?>(_persistence.State.Configuration);
+            var newParams = new Dictionary<string, object?>(_persistence.State.Configuration.Dictionary);
             newParams.MergeInPlace(parameters);
             result = await _behavior.UpdateAsync(actionId, newParams);
         }

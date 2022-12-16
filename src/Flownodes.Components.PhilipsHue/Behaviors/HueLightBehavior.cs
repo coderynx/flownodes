@@ -1,43 +1,49 @@
 using Ardalis.GuardClauses;
-using Flownodes.Components.PhilipsHue.ApiSchemas;
 using Flownodes.Edge.Core.Resources;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Refit;
 
 namespace Flownodes.Components.PhilipsHue.Behaviors;
 
+[BehaviorId("hue_light")]
 public class HueLightBehavior : IDeviceBehavior
 {
-    private readonly IHueBridgeApi _hueBridgeApi;
+    private readonly HttpClient _httpClient;
     private readonly ILogger<HueLightBehavior> _logger;
-    private readonly string _token;
 
-    public HueLightBehavior(IConfiguration configuration, ILogger<HueLightBehavior> logger)
+    public HueLightBehavior(IConfiguration configuration, ILogger<HueLightBehavior> logger,
+        IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
-        _hueBridgeApi = RestService.For<IHueBridgeApi>(configuration["PhilipsHue:HueBridge:Address"]);
-        _token = configuration["PhilipsHue:HueBridge:Token"];
+        _httpClient = httpClientFactory.CreateClient();
+
+        var bridgeAddress = configuration["PhilipsHue:HueBridge:Address"];
+        var bridgeToken = configuration["PhilipsHue:HueBridge:Token"];
+
+        var url = $"{bridgeAddress}/api/{bridgeToken}/";
+        _httpClient.BaseAddress = new Uri(url);
     }
 
     public async Task<Dictionary<string, object?>> PerformAction(string actionId,
-        Dictionary<string, object?>? parameters = null)
+        Dictionary<string, object?>? parameters = null, ResourceConfiguration? configuration = null,
+        ResourceState? state = null)
     {
-        Guard.Against.Null(parameters, nameof(parameters));
-
-        var lightId = parameters["lightId"]?.ToString();
+        var lightId = configuration.Dictionary["lightId"]?.ToString();
         Guard.Against.NullOrWhiteSpace(lightId, nameof(lightId));
 
         var result = new Dictionary<string, object?>();
+        HttpResponseMessage response;
+        string? content;
 
-        ApiResponse<string> response;
         switch (actionId)
         {
-            case "switch-on":
-                response = await _hueBridgeApi.UpdateHueLightState(_token, lightId, "{\"on\":true}");
-                if (response.IsSuccessStatusCode && response.Content.Contains("success"))
+            case "switch_on":
+                response = await _httpClient.PutAsync("lights/1/state", new StringContent("{\"on\":true}"));
+                content = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode && content.Contains("success"))
                 {
-                    result.Add("power", "on");
+                    state["power"] = true;
                     _logger.LogInformation("Updated light power state of {LightId} to on", lightId);
                 }
                 else
@@ -47,11 +53,13 @@ public class HueLightBehavior : IDeviceBehavior
 
                 break;
 
-            case "switch-off":
-                response = await _hueBridgeApi.UpdateHueLightState(_token, lightId, "{\"on\":false}");
-                if (response.IsSuccessStatusCode && response.Content.Contains("success"))
+            case "switch_off":
+                response = await _httpClient.PutAsync("lights/1/state", new StringContent("{\"on\":false}"));
+                content = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode && content.Contains("success"))
                 {
-                    result.Add("power", "off");
+                    state["power"] = false;
                     _logger.LogInformation("Updated light power state of {LightId} to off", lightId);
                 }
                 else

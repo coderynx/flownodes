@@ -8,7 +8,7 @@ public interface IDeviceGrain : IGrainWithStringKey
     Task<ResourceIdentityCard> GetIdentityCard();
     Task PerformAction(string actionName, Dictionary<string, object?>? parameters = null);
 
-    Task ConfigureAsync(string behaviorId, Dictionary<string, object?>? configuration = null,
+    Task ConfigureAsync(string behaviorId, ResourceConfiguration configuration,
         Dictionary<string, string>? metadata = null);
 
     Task<object?> GetStateProperty(string key);

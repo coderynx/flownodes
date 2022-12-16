@@ -1,16 +1,17 @@
 using Flownodes.Edge.Core.Resources;
+using Flownodes.Edge.Node.Services;
 
 namespace Flownodes.Edge.Node;
 
 public class TestWorker : BackgroundService
 {
-    private readonly IGrainFactory _factory;
+    private readonly IEnvironmentService _environmentService;
     private readonly ILogger<TestWorker> _logger;
 
-    public TestWorker(ILogger<TestWorker> logger, IGrainFactory factory)
+    public TestWorker(ILogger<TestWorker> logger, IEnvironmentService environmentService)
     {
         _logger = logger;
-        _factory = factory;
+        _environmentService = environmentService;
     }
 
     private async Task FetchObbLocomotives(IDataCollectorGrain grain)
@@ -47,7 +48,7 @@ public class TestWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // var resourceManager = _factory.GetGrain<IResourceManagerGrain>(Globals.ResourceManagerGrainId);
+        var resourceManager = _environmentService.GetResourceManagerGrain();
 
         /*var weatherConfiguration = new Dictionary<string, object?>
         {
@@ -56,29 +57,38 @@ public class TestWorker : BackgroundService
             { "assetNameJsonPath", "$.city" }
         };
         var weather =
-            await resourceManager.RegisterDataCollectorAsync("weather", "CurrentWeatherBehavior", weatherConfiguration);
+            await resourceManager.RegisterDataCollectorAsync("weather", "CurrentWeatherBehavior", weatherConfiguration);*/
 
         var hueLightConfiguration = new Dictionary<string, object?>
         {
             { "lightId", 1 }
         };
-        var hueLight = await resourceManager.RegisterDeviceAsync("hueLight", "HueLightBehavior", hueLightConfiguration);
-
-        var lokFinderConfiguration = new Dictionary<string, object?>
+        var resourceConfiguration = new ResourceConfiguration
         {
-            { "assetNameJsonPath", "$.unit_number" }
+            Dictionary = hueLightConfiguration
         };
-        var lokFinder =
-            await resourceManager.RegisterDataCollectorAsync("lokFinder", "LokFinderBehavior", lokFinderConfiguration);
 
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            // await FetchWeatherAsync(weather);
-            // await FetchObbLocomotives(lokFinder);
-            // await workflowManager.StartWorkflowAsync("LoggerWorkflow");
-            await SwitchOffLightAsync(hueLight);
+        var hueLight = await resourceManager.RegisterDeviceAsync("hueLight", "hue_light", resourceConfiguration);
+        await hueLight.PerformAction("switch_off");
 
-            await Task.Delay(5000, stoppingToken);
-        }*/
+        var state = await hueLight.GetStateProperty("power");
+        _logger.LogInformation("State: {State}", state);
+
+        /* var lokFinderConfiguration = new Dictionary<string, object?>
+         {
+             { "assetNameJsonPath", "$.unit_number" }
+         };
+         var lokFinder =
+             await resourceManager.RegisterDataCollectorAsync("lokFinder", "LokFinderBehavior", lokFinderConfiguration);
+ 
+         while (!stoppingToken.IsCancellationRequested)
+         {
+             // await FetchWeatherAsync(weather);
+             // await FetchObbLocomotives(lokFinder);
+             // await workflowManager.StartWorkflowAsync("LoggerWorkflow");
+             await SwitchOffLightAsync(hueLight);
+ 
+             await Task.Delay(5000, stoppingToken);
+         }*/
     }
 }

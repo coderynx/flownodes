@@ -1,7 +1,6 @@
 using Ardalis.GuardClauses;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
-using Flownodes.Edge.Node.Extensions;
 using Flownodes.Edge.Node.Models;
 using Orleans.Runtime;
 
@@ -34,11 +33,10 @@ public class DeviceGrain : Grain, IDeviceGrain
         EnsureConfiguration();
 
         var frn = await GetFrn();
-        return new ResourceIdentityCard(frn, Id, _persistence.State.CreatedAt!.Value, _persistence.State.BehaviorId,
-            _persistence.State.State.LastUpdate);
+        return new ResourceIdentityCard(frn, Id, _persistence.State.CreatedAt!.Value, _persistence.State.BehaviorId);
     }
 
-    public async Task ConfigureAsync(string behaviorId, Dictionary<string, object?>? configuration = null,
+    public async Task ConfigureAsync(string behaviorId, ResourceConfiguration configuration,
         Dictionary<string, string>? metadata = null)
     {
         _logger.LogInformation("Configuring device {DeviceId} with behavior {BehaviorId}", Id, behaviorId);
@@ -48,9 +46,8 @@ public class DeviceGrain : Grain, IDeviceGrain
 
         _persistence.State.BehaviorId = behaviorId;
         _persistence.State.CreatedAt = DateTime.Now;
-        _persistence.State.Configuration = configuration ?? new Dictionary<string, object?>();
+        _persistence.State.Configuration = configuration;
         _persistence.State.Metadata = metadata ?? new Dictionary<string, string>();
-        _persistence.State.State = new ResourceState();
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Configured device {DeviceId}", Id);
@@ -61,20 +58,8 @@ public class DeviceGrain : Grain, IDeviceGrain
         EnsureConfiguration();
 
         Guard.Against.Null(_behavior, nameof(_behavior));
-        Dictionary<string, object?> result;
-        if (parameters is null)
-        {
-            result = await _behavior.PerformAction(actionName, _persistence.State.Configuration);
-        }
-        else
-        {
-            var newParams = new Dictionary<string, object?>(_persistence.State.Configuration);
-            newParams.MergeInPlace(parameters);
-            result = await _behavior.PerformAction(actionName, newParams);
-        }
-
-        _persistence.State.State.Properties.MergeInPlace(result);
-        _persistence.State.State.LastUpdate = DateTime.Now;
+        await _behavior.PerformAction(actionName, parameters, _persistence.State.Configuration,
+            _persistence.State.State);
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Performed action {ActionName} of device {DeviceId}", actionName, Id);
@@ -84,13 +69,13 @@ public class DeviceGrain : Grain, IDeviceGrain
     public Task<object?> GetStateProperty(string key)
     {
         EnsureConfiguration();
-        return Task.FromResult(_persistence.State.State.GetPropertyValue(key));
+        return Task.FromResult(_persistence.State.State.GetValue(key));
     }
 
     public Task<Dictionary<string, object?>> GetStateProperties()
     {
         EnsureConfiguration();
-        return Task.FromResult(_persistence.State.State.Properties);
+        return Task.FromResult(_persistence.State.State.Dictionary);
     }
 
     public Task<string> GetFrn()

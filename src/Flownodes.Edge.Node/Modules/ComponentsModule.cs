@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Ardalis.GuardClauses;
 using Autofac;
 using Flownodes.Edge.Core.Alerting;
 using Flownodes.Edge.Core.Resources;
@@ -9,6 +10,13 @@ namespace Flownodes.Edge.Node.Modules;
 
 public class ComponentsModule : Module
 {
+    private static string GetAttributeName(MemberInfo type)
+    {
+        var attribute = type.GetCustomAttribute(typeof(BehaviorIdAttribute)) as BehaviorIdAttribute;
+        Guard.Against.Null(attribute.Id, nameof(attribute.Id));
+        return attribute.Id;
+    }
+
     protected override void Load(ContainerBuilder builder)
     {
         Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
@@ -25,16 +33,16 @@ public class ComponentsModule : Module
         builder.RegisterAssemblyTypes(assemblies)
             .Where(x => typeof(IDataCollectorBehavior).IsAssignableFrom(x))
             .As<IDataCollectorBehavior>()
-            .Keyed<IDataCollectorBehavior>(x => x.Name);
+            .Keyed<IDataCollectorBehavior>(x => GetAttributeName(x));
 
         builder.RegisterAssemblyTypes(assemblies)
             .Where(x => typeof(IDeviceBehavior).IsAssignableFrom(x))
             .As<IDeviceBehavior>()
-            .Keyed<IDeviceBehavior>(x => x.Name);
+            .Keyed<IDeviceBehavior>(x => GetAttributeName(x));
 
         builder.RegisterAssemblyTypes(assemblies)
             .Where(x => typeof(IAlerterDriver).IsAssignableFrom(x))
             .As<IAlerterDriver>()
-            .Keyed<IAlerterDriver>(x => x.Name);
+            .Keyed<IAlerterDriver>(x => GetAttributeName(x));
     }
 }

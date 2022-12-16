@@ -3,10 +3,10 @@ namespace Flownodes.Edge.Core.Resources;
 public interface IResourceManagerGrain : IGrainWithStringKey
 {
     Task<IDeviceGrain> RegisterDeviceAsync(string id, string behaviorId,
-        Dictionary<string, object?>? configuration = null);
+        ResourceConfiguration? configuration = null);
 
     Task<IDataCollectorGrain> RegisterDataCollectorAsync(string id, string behaviorId,
-        Dictionary<string, object?>? configuration = null);
+        ResourceConfiguration? configuration = null);
 
     Task<IAssetGrain> RegisterAssetAsync(string id);
 

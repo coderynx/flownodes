@@ -29,6 +29,8 @@ public static partial class Program
         services.AddOptions();
         services.AddSingleton<IBehaviorProvider, BehaviorProvider>();
 
+        services.AddHttpClient();
+
         // Setting up environment.
         var alertManagerName = Environment.GetEnvironmentVariable("ALERT_MANAGER_NAME") ?? "alert_manager";
         var resourceManagerName = Environment.GetEnvironmentVariable("RESOURCE_MANAGER_NAME") ?? "resource_manager";

@@ -14,7 +14,6 @@ using NSubstitute;
 using Orleans.Hosting;
 using Orleans.TestingHost;
 using Xunit;
-using EnvironmentOptions = Flownodes.Edge.Node.EnvironmentOptions;
 
 namespace Flownodes.Edge.Tests.Configuration;
 
