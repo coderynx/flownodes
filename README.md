@@ -1,4 +1,4 @@
-<h1 align="center">Flownodes Edge</h1>
+<h1 align="center">Flownodes</h1>
 
 <p align="center">The distributed automation platform</p>
 
@@ -20,11 +20,11 @@ Flownodes is also highly extendable by providing developers an SDK to develop a 
 
 ```mermaid
 graph TD
-    Devices(Devices) --- Edge
-    WebServices(Web services) --- Edge
-    Edge(Flownodes Edge) --- OperationalDatabase("Operational database (Redis)")
-    Edge --- StorageDatabase("Storage Database (Postgres)")
-    Edge --- ApiGateway(Api Gateway)
+    Devices(Devices) --- Flownodes
+    WebServices(Web services) --- Flownodes
+    Flownodes --- OperationalDatabase("Operational database (Redis)")
+    Flownodes --- StorageDatabase("Storage Database (Postgres)")
+    Flownodes --- ApiGateway(Api Gateway)
     ApiGateway --- WebInterface(Web Interface)
 ```
 
