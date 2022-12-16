@@ -27,7 +27,7 @@ public static partial class Program
     private static void ConfigureServices(IServiceCollection services)
     {
         services.AddOptions();
-        services.AddSingleton<IBehaviorProvider, BehaviorProvider>();
+        services.AddSingleton<IBehaviourProvider, BehaviourProvider>();
 
         services.AddHttpClient();
 

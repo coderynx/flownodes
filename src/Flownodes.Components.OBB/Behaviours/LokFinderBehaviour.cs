@@ -3,14 +3,14 @@ using Flownodes.Edge.Core.Resources;
 using Microsoft.Extensions.Logging;
 using Refit;
 
-namespace Flownodes.Components.OBB.Behaviors;
+namespace Flownodes.Components.OBB.Behaviours;
 
-public class LokFinderBehavior : IDataCollectorBehavior
+public class LokFinderBehaviour : IDataCollectorBehaviour
 {
-    private readonly ILogger<LokFinderBehavior> _logger;
+    private readonly ILogger<LokFinderBehaviour> _logger;
     private readonly ILokFinderApi _lokFinderApi;
 
-    public LokFinderBehavior(ILogger<LokFinderBehavior> logger)
+    public LokFinderBehaviour(ILogger<LokFinderBehaviour> logger)
     {
         _logger = logger;
         _lokFinderApi = RestService.For<ILokFinderApi>("https://konzern-apps.web.oebb.at/", new RefitSettings

@@ -64,7 +64,7 @@ public class ResourceManagerGrainTests : IClassFixture<ClusterFixture>
     }
 
     [Fact]
-    public async Task ShouldThrowOnRegisterDevice_WhenBehaviorIdDoesNotExists()
+    public async Task ShouldThrowOnRegisterDevice_WhenBehaviourIdDoesNotExists()
     {
         // Arrange.
         var resourceManager = ProvideResourceManager();
@@ -75,7 +75,7 @@ public class ResourceManagerGrainTests : IClassFixture<ClusterFixture>
     }
 
     [Fact]
-    public async Task ShouldThrowOnRegisterDevice_WhenIdOrBehaviorIdAreNullOrWhitespace()
+    public async Task ShouldThrowOnRegisterDevice_WhenIdOrBehaviourIdAreNullOrWhitespace()
     {
         // Arrange.
         var resourceManager = ProvideResourceManager();

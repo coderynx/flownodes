@@ -61,15 +61,15 @@ public class ClusterFixture : IAsyncLifetime
 
         private static void ConfigureContainer(ContainerBuilder builder)
         {
-            var dataObjectBehaviorTest = Substitute.For<IDataCollectorBehavior>();
+            var dataObjectBehaviorTest = Substitute.For<IDataCollectorBehaviour>();
             builder.RegisterInstance(dataObjectBehaviorTest)
-                .As<IDataCollectorBehavior>()
-                .Keyed<IDataCollectorBehavior>("TestDataObjectBehavior");
+                .As<IDataCollectorBehaviour>()
+                .Keyed<IDataCollectorBehaviour>("TestDataObjectBehavior");
 
-            var deviceBehaviorTest = Substitute.For<IDeviceBehavior>();
+            var deviceBehaviorTest = Substitute.For<IDeviceBehaviour>();
             builder.RegisterInstance(deviceBehaviorTest)
-                .As<IDeviceBehavior>()
-                .Keyed<IDeviceBehavior>("TestDeviceBehavior");
+                .As<IDeviceBehaviour>()
+                .Keyed<IDeviceBehaviour>("TestDeviceBehavior");
 
             var alertBehaviorTest = Substitute.For<IAlerterDriver>();
             builder.RegisterInstance(alertBehaviorTest)
@@ -84,7 +84,7 @@ public class ClusterFixture : IAsyncLifetime
         {
             siloBuilder.ConfigureServices(services =>
             {
-                services.AddSingleton<IBehaviorProvider, BehaviorProvider>();
+                services.AddSingleton<IBehaviourProvider, BehaviourProvider>();
                 services.AddSingleton<IEnvironmentService, EnvironmentService>();
             });
 

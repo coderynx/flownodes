@@ -12,17 +12,17 @@ namespace Flownodes.Edge.Node.Resources;
 public class DataCollectorGrain : Grain, IDataCollectorGrain
 {
     private readonly IAlerterGrain _alerter;
-    private readonly IBehaviorProvider _behaviorProvider;
+    private readonly IBehaviourProvider _behaviourProvider;
     private readonly ILogger<DataCollectorGrain> _logger;
     private readonly IPersistentState<ResourcePersistence> _persistence;
-    private IDataCollectorBehavior? _behavior;
+    private IDataCollectorBehaviour? _behaviour;
 
-    public DataCollectorGrain(IBehaviorProvider behaviorProvider,
+    public DataCollectorGrain(IBehaviourProvider behaviourProvider,
         [PersistentState("dataCollectorPersistence", "flownodes")]
         IPersistentState<ResourcePersistence> persistence,
         ILogger<DataCollectorGrain> logger, IEnvironmentService environmentService)
     {
-        _behaviorProvider = behaviorProvider;
+        _behaviourProvider = behaviourProvider;
         _persistence = persistence;
         _logger = logger;
         _alerter = environmentService.GetAlertManagerGrain();
@@ -33,10 +33,10 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
     public async Task ConfigureAsync(string behaviorId, ResourceConfiguration? configuration = null,
         Dictionary<string, string>? metadata = null)
     {
-        _behavior = _behaviorProvider.GetDataCollectorBehavior(behaviorId);
-        Guard.Against.Null(_behavior, nameof(_behavior));
+        _behaviour = _behaviourProvider.GetDataCollectorBehaviour(behaviorId);
+        Guard.Against.Null(_behaviour, nameof(_behaviour));
 
-        _persistence.State.BehaviorId = behaviorId;
+        _persistence.State.BehaviourId = behaviorId;
         _persistence.State.CreatedAt = DateTime.Now;
         _persistence.State.Configuration = configuration ?? new ResourceConfiguration();
         _persistence.State.Metadata = metadata ?? new Dictionary<string, string>();
@@ -49,18 +49,18 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
     public async Task<object> CollectAsync(string actionId, Dictionary<string, object?>? parameters = null)
     {
         EnsureConfiguration();
-        Guard.Against.Null(_behavior, nameof(_behavior));
+        Guard.Against.Null(_behaviour, nameof(_behaviour));
 
         object? result;
         if (parameters is null)
         {
-            result = await _behavior.UpdateAsync(actionId, _persistence.State.Configuration.Dictionary);
+            result = await _behaviour.UpdateAsync(actionId, _persistence.State.Configuration.Dictionary);
         }
         else
         {
             var newParams = new Dictionary<string, object?>(_persistence.State.Configuration.Dictionary);
             newParams.MergeInPlace(parameters);
-            result = await _behavior.UpdateAsync(actionId, newParams);
+            result = await _behaviour.UpdateAsync(actionId, newParams);
         }
 
         return result is null ? null : JToken.FromObject(result);
@@ -69,7 +69,7 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
     public Task<string> GetFrn()
     {
         EnsureConfiguration();
-        return Task.FromResult($"frn:flownodes:data_collector:{_persistence.State.BehaviorId}:{Id}");
+        return Task.FromResult($"frn:flownodes:data_collector:{_persistence.State.BehaviourId}:{Id}");
     }
 
     public async Task SelfRemoveAsync()
@@ -80,7 +80,7 @@ public class DataCollectorGrain : Grain, IDataCollectorGrain
 
     private void EnsureConfiguration()
     {
-        Guard.Against.Null(_persistence.State.BehaviorId, nameof(_persistence.State.BehaviorId));
+        Guard.Against.Null(_persistence.State.BehaviourId, nameof(_persistence.State.BehaviourId));
     }
 
     private async Task ProduceInfoAlertAsync(string message)

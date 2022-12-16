@@ -3,15 +3,15 @@ using Flownodes.Edge.Core.Resources;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Flownodes.Components.PhilipsHue.Behaviors;
+namespace Flownodes.Components.PhilipsHue.Behaviours;
 
-[BehaviorId("hue_light")]
-public class HueLightBehavior : IDeviceBehavior
+[BehaviourId("hue_light")]
+public class HueLightBehaviour : IDeviceBehaviour
 {
     private readonly HttpClient _httpClient;
-    private readonly ILogger<HueLightBehavior> _logger;
+    private readonly ILogger<HueLightBehaviour> _logger;
 
-    public HueLightBehavior(IConfiguration configuration, ILogger<HueLightBehavior> logger,
+    public HueLightBehaviour(IConfiguration configuration, ILogger<HueLightBehaviour> logger,
         IHttpClientFactory httpClientFactory)
     {
         _logger = logger;

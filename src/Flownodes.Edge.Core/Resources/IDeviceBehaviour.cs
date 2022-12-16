@@ -1,8 +1,8 @@
 namespace Flownodes.Edge.Core.Resources;
 
-public class BehaviorIdAttribute : Attribute
+public class BehaviourIdAttribute : Attribute
 {
-    public BehaviorIdAttribute(string id)
+    public BehaviourIdAttribute(string id)
     {
         Id = id;
     }
@@ -10,7 +10,7 @@ public class BehaviorIdAttribute : Attribute
     public string Id { get; set; }
 }
 
-public interface IDeviceBehavior
+public interface IDeviceBehaviour
 {
     // TODO: Encapsulate result in a class.
     Task<Dictionary<string, object?>> PerformAction(string actionId, Dictionary<string, object?>? parameters = null,

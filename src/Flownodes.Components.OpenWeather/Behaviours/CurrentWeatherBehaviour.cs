@@ -5,14 +5,14 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Refit;
 
-namespace Flownodes.Components.OpenWeather.Behaviors;
+namespace Flownodes.Components.OpenWeather.Behaviours;
 
-public class CurrentWeatherBehavior : IDataCollectorBehavior
+public class CurrentWeatherBehaviour : IDataCollectorBehaviour
 {
     private const string WeatherBaseUrl = "https://api.openweathermap.org";
     private readonly string _token;
 
-    public CurrentWeatherBehavior(IConfiguration configuration)
+    public CurrentWeatherBehaviour(IConfiguration configuration)
     {
         _token = configuration["OpenWeather:Token"];
     }
