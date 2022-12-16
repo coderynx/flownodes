@@ -27,8 +27,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async Task<IDeviceGrain> RegisterDeviceAsync(string id, string behaviorId,
         ResourceConfiguration configuration)
     {
-        Guard.Against.Null(id);
-        Guard.Against.Null(behaviorId);
+        Guard.Against.NullOrWhiteSpace(id);
+        Guard.Against.NullOrWhiteSpace(behaviorId);
 
         if (_persistence.State.ResourceRegistrations.ContainsKey(id))
             throw new InvalidOperationException($"Device {id} is already registered");

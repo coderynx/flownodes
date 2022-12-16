@@ -11,7 +11,7 @@ using Xunit;
 namespace Flownodes.Tests.GrainsTests;
 
 [Collection("TestCluster")]
-public class ResourceManagerGrainTests : IClassFixture<ClusterFixture>
+public class ResourceManagerGrainTests
 {
     private readonly TestCluster _cluster;
     private readonly IFixture _fixture;

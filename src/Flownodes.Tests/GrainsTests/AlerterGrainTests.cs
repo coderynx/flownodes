@@ -10,8 +10,8 @@ using Xunit;
 
 namespace Flownodes.Tests.GrainsTests;
 
-[Collection(nameof(ClusterFixture))]
-public class AlerterGrainTests : IClassFixture<ClusterFixture>
+[Collection("TestCluster")]
+public class AlerterGrainTests
 {
     private readonly TestCluster _cluster;
     private readonly IFixture _fixture;

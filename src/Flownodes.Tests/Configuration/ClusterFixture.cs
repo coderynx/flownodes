@@ -105,7 +105,7 @@ public class ClusterFixture : IAsyncLifetime
     }
 }
 
-[CollectionDefinition(nameof(ClusterFixture))]
+[CollectionDefinition("TestCluster")]
 public class ClusterCollection : ICollectionFixture<ClusterFixture>
 {
 }
