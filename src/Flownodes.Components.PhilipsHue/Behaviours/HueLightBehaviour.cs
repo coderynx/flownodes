@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 namespace Flownodes.Components.PhilipsHue.Behaviours;
 
 [BehaviourId("hue_light")]
+[BehaviourDescription("Behaviour for the Philips Hue Light")]
 public class HueLightBehaviour : IDeviceBehaviour
 {
     private readonly HttpClient _httpClient;

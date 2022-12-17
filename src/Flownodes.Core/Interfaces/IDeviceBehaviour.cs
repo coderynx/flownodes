@@ -5,6 +5,7 @@ namespace Flownodes.Core.Interfaces;
 public record BehaviourActionRequest(string Id, Dictionary<string, object?>? Parameters = null);
 public record BehaviourResourceContext(ResourceConfiguration? Configuration, ResourceState? State);
 
+[AttributeUsage(AttributeTargets.Class)]
 public class BehaviourIdAttribute : Attribute
 {
     public BehaviourIdAttribute(string id)
@@ -12,7 +13,17 @@ public class BehaviourIdAttribute : Attribute
         Id = id;
     }
 
-    public string Id { get; set; }
+    public string Id { get; init; }
+}
+
+public class BehaviourDescriptionAttribute : Attribute
+{
+    public BehaviourDescriptionAttribute(string description)
+    {
+        Description = description;
+    }
+    
+    public string Description { get; init; }
 }
 
 public interface IDeviceBehaviour

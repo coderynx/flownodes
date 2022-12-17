@@ -45,10 +45,7 @@ public class DeviceGrain : Grain, IDeviceGrain
         _behaviourId = _behaviourProvider.GetDeviceBehaviour(behaviourId);
         Guard.Against.Null(_behaviourId, nameof(_behaviourId));
 
-        _persistence.State.BehaviourId = behaviourId;
-        _persistence.State.CreatedAt = DateTime.Now;
-        _persistence.State.Configuration = configuration;
-        _persistence.State.Metadata = metadata ?? new Dictionary<string, string>();
+        _persistence.State.Initialize(behaviourId, configuration, metadata);
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Configured device {DeviceId}", Id);
@@ -65,7 +62,7 @@ public class DeviceGrain : Grain, IDeviceGrain
         await _behaviourId.PerformAction(request, context);
         await _persistence.WriteStateAsync();
 
-        _logger.LogInformation("Performed action {ActionName} of device {DeviceId}", id, Id);
+        _logger.LogInformation("Performed action {ActionId} of device {DeviceId}", id, Id);
         await ProduceInfoAlertAsync($"Performed action {id} of device {Id}");
     }
 
