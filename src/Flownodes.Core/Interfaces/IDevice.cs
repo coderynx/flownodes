@@ -31,9 +31,6 @@ public class DeviceDescriptionAttribute : Attribute
 
 public interface IDevice
 {
-    // TODO: Encapsulate result in a class.
-    Task<Dictionary<string, object?>> PerformAction(ActionRequest request, ResourceContext context);
-
     Task OnSetupAsync(ResourceContext context);
     Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context);
 }

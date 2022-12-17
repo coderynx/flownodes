@@ -71,22 +71,6 @@ public class DeviceGrain : Grain, IDeviceGrain
         _logger.LogInformation("Updates state for {DeviceId}", Id);
     }
 
-    public async Task PerformAction(string id, Dictionary<string, object?>? parameters = null)
-    {
-        EnsureConfiguration();
-        Guard.Against.Null(_behaviour, nameof(_behaviour));
-
-        var request = new ActionRequest(id, parameters);
-        var context = new ResourceContext(_persistence.State.Configuration, _persistence.State.Metadata,
-            _persistence.State.State);
-
-        await _behaviour.PerformAction(request, context);
-        await _persistence.WriteStateAsync();
-
-        _logger.LogInformation("Performed action {ActionId} of device {DeviceId}", id, Id);
-        await ProduceInfoAlertAsync($"Performed action {id} of device {Id}");
-    }
-
     public ValueTask<Dictionary<string, string>> GetMetadata()
     {
         return ValueTask.FromResult(_persistence.State.Metadata);

@@ -8,7 +8,6 @@ namespace Flownodes.Core.Interfaces;
 public interface IDeviceGrain : IGrainWithStringKey
 {
     Task<ResourceIdentityCard> GetIdentityCard();
-    Task PerformAction(string id, Dictionary<string, object?>? parameters = null);
 
     Task SetupAsync(string behaviourId, ResourceConfiguration configuration,
         Dictionary<string, string>? metadata = null);

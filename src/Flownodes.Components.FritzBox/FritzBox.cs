@@ -34,11 +34,6 @@ public class FritzBox : IDevice
         _httpClient.BaseAddress = new Uri(url);
     }
 
-    public async Task<Dictionary<string, object?>> PerformAction(ActionRequest request, ResourceContext context)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task OnSetupAsync(ResourceContext context)
     {
         _sid = GetSessionId(_username, _password);
@@ -92,7 +87,7 @@ public class FritzBox : IDevice
         return sb.ToString();
     }
 
-    private static string GetValue(XDocument doc, string name)
+    private static string GetValue(XContainer doc, string name)
     {
         var info = doc.FirstNode as XElement;
         return info.Element(name).Value;
