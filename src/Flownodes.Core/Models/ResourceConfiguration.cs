@@ -17,6 +17,14 @@ public class ResourceConfiguration
 
     public IEnumerable<object?> Values => Dictionary.Values;
 
+    public static ResourceConfiguration FromDictionary(Dictionary<string, object?> dictionary)
+    {
+        return new ResourceConfiguration
+        {
+            Dictionary = dictionary
+        };
+    }
+
     public void Add(string key, object? value)
     {
         Dictionary.Add(key, value);

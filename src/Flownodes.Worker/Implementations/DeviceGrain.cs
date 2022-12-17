@@ -37,7 +37,7 @@ public class DeviceGrain : Grain, IDeviceGrain
         return new ResourceIdentityCard(frn, Id, _persistence.State.CreatedAt!.Value, _persistence.State.BehaviourId);
     }
 
-    public async Task ConfigureAsync(string behaviourId, ResourceConfiguration configuration,
+    public async Task SetupAsync(string behaviourId, ResourceConfiguration configuration,
         Dictionary<string, string>? metadata = null)
     {
         _logger.LogInformation("Configuring device {DeviceId} with behaviour {BehaviourId}", Id, behaviourId);

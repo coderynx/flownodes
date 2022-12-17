@@ -37,7 +37,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         try
         {
-            await grain.ConfigureAsync(behaviourId, configuration);
+            await grain.SetupAsync(behaviourId, configuration);
         }
         catch (Exception)
         {

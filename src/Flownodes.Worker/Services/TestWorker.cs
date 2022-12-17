@@ -1,4 +1,3 @@
-using Flownodes.Core.Interfaces;
 using Flownodes.Core.Models;
 
 namespace Flownodes.Worker.Services;
@@ -17,15 +16,12 @@ public class TestWorker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var resourceManager = _environmentService.GetResourceManagerGrain();
-        
-        var hueLightConfiguration = new Dictionary<string, object?>
+
+        var dictionary = new Dictionary<string, object?>
         {
             { "lightId", 1 }
         };
-        var resourceConfiguration = new ResourceConfiguration
-        {
-            Dictionary = hueLightConfiguration
-        };
+        var resourceConfiguration = ResourceConfiguration.FromDictionary(dictionary);
 
         var hueLight = await resourceManager.RegisterDeviceAsync("hueLight", "hue_light", resourceConfiguration);
         await hueLight.PerformAction("switch_off");

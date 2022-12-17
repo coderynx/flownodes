@@ -25,7 +25,8 @@ public class HueLightBehaviour : IDeviceBehaviour
         _httpClient.BaseAddress = new Uri(url);
     }
 
-    public async Task<Dictionary<string, object?>> PerformAction(BehaviourActionRequest request, BehaviourResourceContext context)
+    public async Task<Dictionary<string, object?>> PerformAction(BehaviourActionRequest request,
+        BehaviourResourceContext context)
     {
         var lightId = context.Configuration["lightId"]?.ToString();
         Guard.Against.NullOrWhiteSpace(lightId, nameof(lightId));

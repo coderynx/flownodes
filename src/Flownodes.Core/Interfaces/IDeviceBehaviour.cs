@@ -3,6 +3,7 @@ using Flownodes.Core.Models;
 namespace Flownodes.Core.Interfaces;
 
 public record BehaviourActionRequest(string Id, Dictionary<string, object?>? Parameters = null);
+
 public record BehaviourResourceContext(ResourceConfiguration? Configuration, ResourceState? State);
 
 [AttributeUsage(AttributeTargets.Class)]
@@ -22,7 +23,7 @@ public class BehaviourDescriptionAttribute : Attribute
     {
         Description = description;
     }
-    
+
     public string Description { get; init; }
 }
 
