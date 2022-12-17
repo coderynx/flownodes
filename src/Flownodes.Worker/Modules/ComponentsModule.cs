@@ -11,7 +11,7 @@ public class ComponentsModule : Module
 {
     private static string GetAttributeName(MemberInfo type)
     {
-        var attribute = type.GetCustomAttribute(typeof(BehaviourIdAttribute)) as BehaviourIdAttribute;
+        var attribute = type.GetCustomAttribute(typeof(DeviceIdAttribute)) as DeviceIdAttribute;
         Guard.Against.Null(attribute.Id, nameof(attribute.Id));
         return attribute.Id;
     }
@@ -30,14 +30,14 @@ public class ComponentsModule : Module
             .ToArray();
 
         builder.RegisterAssemblyTypes(assemblies)
+            .Where(x => typeof(IDevice).IsAssignableFrom(x))
+            .As<IDevice>()
+            .Keyed<IDevice>(x => GetAttributeName(x));
+
+        builder.RegisterAssemblyTypes(assemblies)
             .Where(x => typeof(IDataCollectorBehaviour).IsAssignableFrom(x))
             .As<IDataCollectorBehaviour>()
             .Keyed<IDataCollectorBehaviour>(x => GetAttributeName(x));
-
-        builder.RegisterAssemblyTypes(assemblies)
-            .Where(x => typeof(IDeviceBehaviour).IsAssignableFrom(x))
-            .As<IDeviceBehaviour>()
-            .Keyed<IDeviceBehaviour>(x => GetAttributeName(x));
 
         builder.RegisterAssemblyTypes(assemblies)
             .Where(x => typeof(IAlerterDriver).IsAssignableFrom(x))

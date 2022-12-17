@@ -14,7 +14,7 @@ public class DeviceGrain : Grain, IDeviceGrain
     private readonly IBehaviourProvider _behaviourProvider;
     private readonly ILogger<DeviceGrain> _logger;
     private readonly IPersistentState<ResourcePersistence> _persistence;
-    private IDeviceBehaviour? _behaviour;
+    private IDevice? _behaviour;
 
     public DeviceGrain(IBehaviourProvider behaviourProvider,
         [PersistentState("devicePersistence", "flownodes")]
@@ -46,10 +46,19 @@ public class DeviceGrain : Grain, IDeviceGrain
         _behaviour = _behaviourProvider.GetDeviceBehaviour(behaviourId);
         Guard.Against.Null(_behaviour, nameof(_behaviour));
 
+        metadata ??= new Dictionary<string, string>();
         _persistence.State.Initialize(behaviourId, configuration, metadata);
+        var context = new ResourceContext(_persistence.State.Configuration, _persistence.State.Metadata,
+            _persistence.State.State);
+        await _behaviour.OnSetupAsync(context);
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Configured device {DeviceId}", Id);
+    }
+
+    public ValueTask<ResourceConfiguration> GetConfiguration()
+    {
+        return ValueTask.FromResult(_persistence.State.Configuration);
     }
 
     public async Task UpdateStateAsync(Dictionary<string, object?> newState)
@@ -67,8 +76,9 @@ public class DeviceGrain : Grain, IDeviceGrain
         EnsureConfiguration();
         Guard.Against.Null(_behaviour, nameof(_behaviour));
 
-        var request = new BehaviourActionRequest(id, parameters);
-        var context = new BehaviourResourceContext(_persistence.State.Configuration, _persistence.State.State);
+        var request = new ActionRequest(id, parameters);
+        var context = new ResourceContext(_persistence.State.Configuration, _persistence.State.Metadata,
+            _persistence.State.State);
 
         await _behaviour.PerformAction(request, context);
         await _persistence.WriteStateAsync();
@@ -77,16 +87,21 @@ public class DeviceGrain : Grain, IDeviceGrain
         await ProduceInfoAlertAsync($"Performed action {id} of device {Id}");
     }
 
+    public ValueTask<Dictionary<string, string>> GetMetadata()
+    {
+        return ValueTask.FromResult(_persistence.State.Metadata);
+    }
+
     public Task<object?> GetStateProperty(string key)
     {
         EnsureConfiguration();
         return Task.FromResult(_persistence.State.State.GetValue(key));
     }
 
-    public Task<Dictionary<string, object?>> GetStateProperties()
+    public Task<ResourceState> GetState()
     {
         EnsureConfiguration();
-        return Task.FromResult(_persistence.State.State.Dictionary);
+        return Task.FromResult(_persistence.State.State);
     }
 
     public Task<string> GetFrn()
@@ -95,7 +110,7 @@ public class DeviceGrain : Grain, IDeviceGrain
         return Task.FromResult($"frn:flownodes:device:{_persistence.State.BehaviourId}:{Id}");
     }
 
-    public async Task SelfRemoveAsync()
+    public async Task RemoveAsync()
     {
         await _persistence.ClearStateAsync();
         _logger.LogInformation("Clear state for device {DeviceId}", Id);
@@ -105,8 +120,9 @@ public class DeviceGrain : Grain, IDeviceGrain
     {
         EnsureConfiguration();
 
-        var context = new BehaviourResourceContext(_persistence.State.Configuration, _persistence.State.State);
-        await _behaviour.ApplyStateAsync(newState, context);
+        var context = new ResourceContext(_persistence.State.Configuration, _persistence.State.Metadata,
+            _persistence.State.State);
+        await _behaviour.OnStateChangeAsync(newState, context);
 
         _logger.LogInformation("Applied new state for device {DeviceId}", Id);
     }

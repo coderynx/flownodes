@@ -95,7 +95,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             throw new KeyNotFoundException("The given device id was not found in the registry");
 
         var grain = _grainFactory.GetGrain<IDeviceGrain>(id);
-        await grain.SelfRemoveAsync();
+        await grain.RemoveAsync();
 
         var behaviorId = _persistence.State.ResourceRegistrations[id];
 

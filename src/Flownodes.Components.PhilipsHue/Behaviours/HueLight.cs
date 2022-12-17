@@ -1,3 +1,5 @@
+using System.Net.Http.Json;
+using System.Text.Json.Nodes;
 using Ardalis.GuardClauses;
 using Flownodes.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -5,14 +7,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Flownodes.Components.PhilipsHue.Behaviours;
 
-[BehaviourId("hue_light")]
-[BehaviourDescription("Behaviour for the Philips Hue Light")]
-public class HueLightBehaviour : IDeviceBehaviour
+[DeviceId("hue_light")]
+[DeviceDescription("Device behaviour for the Philips Hue Light")]
+public class HueLight : IDevice
 {
     private readonly HttpClient _httpClient;
-    private readonly ILogger<HueLightBehaviour> _logger;
+    private readonly ILogger<HueLight> _logger;
 
-    public HueLightBehaviour(IConfiguration configuration, ILogger<HueLightBehaviour> logger,
+    public HueLight(IConfiguration configuration, ILogger<HueLight> logger,
         IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
@@ -25,7 +27,26 @@ public class HueLightBehaviour : IDeviceBehaviour
         _httpClient.BaseAddress = new Uri(url);
     }
 
-    public async Task ApplyStateAsync(Dictionary<string, object?> newState, BehaviourResourceContext context)
+    public async Task OnSetupAsync(ResourceContext context)
+    {
+        var lightId = context.Configuration["lightId"]?.ToString();
+
+        var response = await _httpClient.GetAsync($"lights/{lightId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadFromJsonAsync<JsonNode>();
+
+            context.Metadata["name"] = json["name"].GetValue<string>();
+            context.Metadata["model_id"] = json["modelid"].GetValue<string>();
+            context.Metadata["manufacturer_name"] = json["manufacturername"].GetValue<string>();
+            context.Metadata["product_name"] = json["productname"].GetValue<string>();
+
+            context.State["reachable"] = json["state"]["reachable"].GetValue<bool>();
+        }
+    }
+
+    public async Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context)
     {
         var lightId = context.Configuration["lightId"]?.ToString();
         Guard.Against.NullOrWhiteSpace(lightId, nameof(lightId));
@@ -43,8 +64,8 @@ public class HueLightBehaviour : IDeviceBehaviour
         }
     }
 
-    public async Task<Dictionary<string, object?>> PerformAction(BehaviourActionRequest request,
-        BehaviourResourceContext context)
+    public async Task<Dictionary<string, object?>> PerformAction(ActionRequest request,
+        ResourceContext context)
     {
         var lightId = context.Configuration["lightId"]?.ToString();
         Guard.Against.NullOrWhiteSpace(lightId, nameof(lightId));

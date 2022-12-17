@@ -23,27 +23,25 @@ public class TestWorker : BackgroundService
         };
         var resourceConfiguration = ResourceConfiguration.FromDictionary(dictionary);
 
-        var hueLight = await resourceManager.RegisterDeviceAsync("hueLight", "hue_light", resourceConfiguration);
-        // await hueLight.PerformAction("switch_off");
+        var hueLight = await resourceManager.RegisterDeviceAsync("hue_light_1", "hue_light", resourceConfiguration);
 
         var newState = new Dictionary<string, object?>
-        {
-            { "power", true }
-        };
-        await hueLight.UpdateStateAsync(newState);
-
-        var state = await hueLight.GetStateProperty("power");
-        _logger.LogInformation("State: {State}", state);
-
-        await Task.Delay(3000, stoppingToken);
-
-        newState = new Dictionary<string, object?>
         {
             { "power", false }
         };
         await hueLight.UpdateStateAsync(newState);
 
-        state = await hueLight.GetStateProperty("power");
-        _logger.LogInformation("State: {State}", state);
+        var configuration = await hueLight.GetConfiguration();
+        _logger.LogInformation("Metadata: {@Configuration}", configuration);
+        var metadata = await hueLight.GetMetadata();
+        _logger.LogInformation("Metadata: {Metadata}", metadata);
+        var currentState = await hueLight.GetState();
+        _logger.LogInformation("State: {State}", currentState.Dictionary);
+
+        var fritzConfiguration = new ResourceConfiguration();
+        var fritzBox = await resourceManager.RegisterDeviceAsync("fritz_box_1", "fritz_box", fritzConfiguration);
+
+        var state = await fritzBox.GetState();
+        _logger.LogInformation("State: {State}", state.Dictionary);
     }
 }

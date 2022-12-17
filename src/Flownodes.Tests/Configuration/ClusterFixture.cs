@@ -64,10 +64,10 @@ public class ClusterFixture : IAsyncLifetime
                 .As<IDataCollectorBehaviour>()
                 .Keyed<IDataCollectorBehaviour>("TestDataObjectBehavior");
 
-            var deviceBehaviorTest = Substitute.For<IDeviceBehaviour>();
+            var deviceBehaviorTest = Substitute.For<IDevice>();
             builder.RegisterInstance(deviceBehaviorTest)
-                .As<IDeviceBehaviour>()
-                .Keyed<IDeviceBehaviour>("TestDeviceBehavior");
+                .As<IDevice>()
+                .Keyed<IDevice>("TestDeviceBehavior");
 
             var alertBehaviorTest = Substitute.For<IAlerterDriver>();
             builder.RegisterInstance(alertBehaviorTest)

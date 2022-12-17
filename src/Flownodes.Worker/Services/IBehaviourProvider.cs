@@ -4,6 +4,6 @@ namespace Flownodes.Worker.Services;
 
 public interface IBehaviourProvider
 {
-    IDeviceBehaviour? GetDeviceBehaviour(string id);
+    IDevice? GetDeviceBehaviour(string id);
     IDataCollectorBehaviour GetDataCollectorBehaviour(string id);
 }
