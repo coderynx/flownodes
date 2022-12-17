@@ -1,6 +1,7 @@
 using Ardalis.GuardClauses;
 using Flownodes.Core.Interfaces;
 using Flownodes.Core.Models;
+using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
@@ -13,7 +14,7 @@ public class DeviceGrain : Grain, IDeviceGrain
     private readonly IBehaviourProvider _behaviourProvider;
     private readonly ILogger<DeviceGrain> _logger;
     private readonly IPersistentState<ResourcePersistence> _persistence;
-    private IDeviceBehaviour? _behaviourId;
+    private IDeviceBehaviour? _behaviour;
 
     public DeviceGrain(IBehaviourProvider behaviourProvider,
         [PersistentState("devicePersistence", "flownodes")]
@@ -42,8 +43,8 @@ public class DeviceGrain : Grain, IDeviceGrain
     {
         _logger.LogInformation("Configuring device {DeviceId} with behaviour {BehaviourId}", Id, behaviourId);
 
-        _behaviourId = _behaviourProvider.GetDeviceBehaviour(behaviourId);
-        Guard.Against.Null(_behaviourId, nameof(_behaviourId));
+        _behaviour = _behaviourProvider.GetDeviceBehaviour(behaviourId);
+        Guard.Against.Null(_behaviour, nameof(_behaviour));
 
         _persistence.State.Initialize(behaviourId, configuration, metadata);
         await _persistence.WriteStateAsync();
@@ -51,15 +52,25 @@ public class DeviceGrain : Grain, IDeviceGrain
         _logger.LogInformation("Configured device {DeviceId}", Id);
     }
 
+    public async Task UpdateStateAsync(Dictionary<string, object?> newState)
+    {
+        _persistence.State.State.Dictionary.MergeInPlace(newState);
+        await _persistence.WriteStateAsync();
+
+        await SendStateAsync(newState);
+
+        _logger.LogInformation("Updates state for {DeviceId}", Id);
+    }
+
     public async Task PerformAction(string id, Dictionary<string, object?>? parameters = null)
     {
         EnsureConfiguration();
-        Guard.Against.Null(_behaviourId, nameof(_behaviourId));
+        Guard.Against.Null(_behaviour, nameof(_behaviour));
 
         var request = new BehaviourActionRequest(id, parameters);
         var context = new BehaviourResourceContext(_persistence.State.Configuration, _persistence.State.State);
 
-        await _behaviourId.PerformAction(request, context);
+        await _behaviour.PerformAction(request, context);
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Performed action {ActionId} of device {DeviceId}", id, Id);
@@ -90,6 +101,16 @@ public class DeviceGrain : Grain, IDeviceGrain
         _logger.LogInformation("Clear state for device {DeviceId}", Id);
     }
 
+    private async Task SendStateAsync(Dictionary<string, object?> newState)
+    {
+        EnsureConfiguration();
+
+        var context = new BehaviourResourceContext(_persistence.State.Configuration, _persistence.State.State);
+        await _behaviour.ApplyStateAsync(newState, context);
+
+        _logger.LogInformation("Applied new state for device {DeviceId}", Id);
+    }
+
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Activated device {DeviceId}", Id);
@@ -104,7 +125,7 @@ public class DeviceGrain : Grain, IDeviceGrain
 
     private void EnsureConfiguration()
     {
-        Guard.Against.Null(_behaviourId, nameof(_behaviourId));
+        Guard.Against.Null(_behaviour, nameof(_behaviour));
         Guard.Against.Null(_persistence.State.BehaviourId, nameof(_persistence.State.BehaviourId));
     }
 

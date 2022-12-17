@@ -25,6 +25,24 @@ public class HueLightBehaviour : IDeviceBehaviour
         _httpClient.BaseAddress = new Uri(url);
     }
 
+    public async Task ApplyStateAsync(Dictionary<string, object?> newState, BehaviourResourceContext context)
+    {
+        var lightId = context.Configuration["lightId"]?.ToString();
+        Guard.Against.NullOrWhiteSpace(lightId, nameof(lightId));
+
+        if (newState.TryGetValue("power", out var value))
+        {
+            var request = $"{{\"on\": {value.ToString().ToLower()}}}";
+            var response = await _httpClient.PutAsync("lights/1/state", new StringContent(request));
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode && content.Contains("success"))
+                _logger.LogInformation("Updated light power state of {LightId} to on", lightId);
+            else
+                _logger.LogError("Failed to update light power state of {LightId} to on", lightId);
+        }
+    }
+
     public async Task<Dictionary<string, object?>> PerformAction(BehaviourActionRequest request,
         BehaviourResourceContext context)
     {

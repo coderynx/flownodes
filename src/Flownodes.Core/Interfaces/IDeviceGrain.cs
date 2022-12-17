@@ -17,4 +17,10 @@ public interface IDeviceGrain : IGrainWithStringKey
     Task<Dictionary<string, object?>> GetStateProperties();
     Task<string> GetFrn();
     Task SelfRemoveAsync();
+
+    /// <summary>
+    ///     Updates the state of the device by storing the new state and applying it.
+    /// </summary>
+    /// <param name="newState">The new state of the device to store.</param>
+    Task UpdateStateAsync(Dictionary<string, object?> newState);
 }

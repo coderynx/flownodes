@@ -31,4 +31,5 @@ public interface IDeviceBehaviour
 {
     // TODO: Encapsulate result in a class.
     Task<Dictionary<string, object?>> PerformAction(BehaviourActionRequest request, BehaviourResourceContext context);
+    Task ApplyStateAsync(Dictionary<string, object?> newState, BehaviourResourceContext context);
 }

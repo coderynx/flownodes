@@ -1,3 +1,5 @@
+using System.Runtime.Serialization;
+
 namespace Flownodes.Core.Models;
 
 [GenerateSerializer]
@@ -16,11 +18,11 @@ public class ResourceState
         }
     }
 
-    public int Count => Dictionary.Count;
+    [IgnoreDataMember] public int Count => Dictionary.Count;
 
-    public IEnumerable<string> Keys => Dictionary.Keys;
+    [IgnoreDataMember] public IEnumerable<string> Keys => Dictionary.Keys;
 
-    public IEnumerable<object?> Values => Dictionary.Values;
+    [IgnoreDataMember] public IEnumerable<object?> Values => Dictionary.Values;
 
     public void Add(string key, object? value)
     {

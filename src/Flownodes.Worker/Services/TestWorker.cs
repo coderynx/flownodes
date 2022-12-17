@@ -24,9 +24,26 @@ public class TestWorker : BackgroundService
         var resourceConfiguration = ResourceConfiguration.FromDictionary(dictionary);
 
         var hueLight = await resourceManager.RegisterDeviceAsync("hueLight", "hue_light", resourceConfiguration);
-        await hueLight.PerformAction("switch_off");
+        // await hueLight.PerformAction("switch_off");
+
+        var newState = new Dictionary<string, object?>
+        {
+            { "power", true }
+        };
+        await hueLight.UpdateStateAsync(newState);
 
         var state = await hueLight.GetStateProperty("power");
+        _logger.LogInformation("State: {State}", state);
+
+        await Task.Delay(3000, stoppingToken);
+
+        newState = new Dictionary<string, object?>
+        {
+            { "power", false }
+        };
+        await hueLight.UpdateStateAsync(newState);
+
+        state = await hueLight.GetStateProperty("power");
         _logger.LogInformation("State: {State}", state);
     }
 }
