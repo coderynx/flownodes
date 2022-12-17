@@ -11,7 +11,7 @@ public class ResourcePersistence
     [Id(3)] public Dictionary<string, string> Metadata { get; set; } = new();
     [Id(4)] public ResourceState State { get; set; } = new();
 
-    public void Initialize(string behaviourId, ResourceConfiguration configuration, Dictionary<string, string> metadata)
+    public void Setup(string behaviourId, ResourceConfiguration configuration, Dictionary<string, string> metadata)
     {
         BehaviourId = behaviourId;
         Configuration = configuration;

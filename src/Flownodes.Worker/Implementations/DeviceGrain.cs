@@ -24,18 +24,23 @@ public class DeviceGrain : Grain, IDeviceGrain
         _behaviourProvider = behaviourProvider;
         _persistence = persistence;
         _logger = logger;
-
         _alerter = grainFactory.GetGrain<IAlerterGrain>("alerter");
     }
 
     private string Id => this.GetPrimaryKeyString();
+    private string BehaviourId => _persistence.State.BehaviourId;
+    private ResourcePersistence Persistence => _persistence.State;
+    private ResourceConfiguration Configuration => _persistence.State.Configuration;
+    private Dictionary<string, string> Metadata => _persistence.State.Metadata;
+    private ResourceState State => _persistence.State.State;
+    private ResourceContext Context => new(Configuration, Metadata, State);
 
     public async Task<ResourceIdentityCard> GetIdentityCard()
     {
         EnsureConfiguration();
 
         var frn = await GetFrn();
-        return new ResourceIdentityCard(frn, Id, _persistence.State.CreatedAt!.Value, _persistence.State.BehaviourId);
+        return new ResourceIdentityCard(frn, Id, Persistence.CreatedAt!.Value, BehaviourId);
     }
 
     public async Task SetupAsync(string behaviourId, ResourceConfiguration configuration,
@@ -47,10 +52,8 @@ public class DeviceGrain : Grain, IDeviceGrain
         Guard.Against.Null(_behaviour, nameof(_behaviour));
 
         metadata ??= new Dictionary<string, string>();
-        _persistence.State.Initialize(behaviourId, configuration, metadata);
-        var context = new ResourceContext(_persistence.State.Configuration, _persistence.State.Metadata,
-            _persistence.State.State);
-        await _behaviour.OnSetupAsync(context);
+        Persistence.Setup(behaviourId, configuration, metadata);
+        await _behaviour.OnSetupAsync(Context);
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Configured device {DeviceId}", Id);
@@ -58,40 +61,40 @@ public class DeviceGrain : Grain, IDeviceGrain
 
     public ValueTask<ResourceConfiguration> GetConfiguration()
     {
-        return ValueTask.FromResult(_persistence.State.Configuration);
+        return ValueTask.FromResult(Configuration);
     }
 
     public async Task UpdateStateAsync(Dictionary<string, object?> newState)
     {
-        _persistence.State.State.Dictionary.MergeInPlace(newState);
+        State.Dictionary.MergeInPlace(newState);
         await _persistence.WriteStateAsync();
 
         await SendStateAsync(newState);
 
-        _logger.LogInformation("Updates state for {DeviceId}", Id);
+        _logger.LogInformation("Updated state for {DeviceId}", Id);
     }
 
     public ValueTask<Dictionary<string, string>> GetMetadata()
     {
-        return ValueTask.FromResult(_persistence.State.Metadata);
+        return ValueTask.FromResult(Metadata);
     }
 
     public Task<object?> GetStateProperty(string key)
     {
         EnsureConfiguration();
-        return Task.FromResult(_persistence.State.State.GetValue(key));
+        return Task.FromResult(State.GetValue(key));
     }
 
     public Task<ResourceState> GetState()
     {
         EnsureConfiguration();
-        return Task.FromResult(_persistence.State.State);
+        return Task.FromResult(State);
     }
 
     public Task<string> GetFrn()
     {
         EnsureConfiguration();
-        return Task.FromResult($"frn:flownodes:device:{_persistence.State.BehaviourId}:{Id}");
+        return Task.FromResult($"frn:flownodes:device:{BehaviourId}:{Id}");
     }
 
     public async Task RemoveAsync()
@@ -104,9 +107,7 @@ public class DeviceGrain : Grain, IDeviceGrain
     {
         EnsureConfiguration();
 
-        var context = new ResourceContext(_persistence.State.Configuration, _persistence.State.Metadata,
-            _persistence.State.State);
-        await _behaviour.OnStateChangeAsync(newState, context);
+        await _behaviour.OnStateChangeAsync(newState, Context);
 
         _logger.LogInformation("Applied new state for device {DeviceId}", Id);
     }
@@ -126,7 +127,7 @@ public class DeviceGrain : Grain, IDeviceGrain
     private void EnsureConfiguration()
     {
         Guard.Against.Null(_behaviour, nameof(_behaviour));
-        Guard.Against.Null(_persistence.State.BehaviourId, nameof(_persistence.State.BehaviourId));
+        Guard.Against.Null(BehaviourId, nameof(BehaviourId));
     }
 
     private async Task ProduceInfoAlertAsync(string message)
