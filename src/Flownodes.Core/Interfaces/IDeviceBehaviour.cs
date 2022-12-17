@@ -2,6 +2,9 @@ using Flownodes.Core.Models;
 
 namespace Flownodes.Core.Interfaces;
 
+public record BehaviourActionRequest(string Id, Dictionary<string, object?>? Parameters = null);
+public record BehaviourResourceContext(ResourceConfiguration? Configuration, ResourceState? State);
+
 public class BehaviourIdAttribute : Attribute
 {
     public BehaviourIdAttribute(string id)
@@ -15,6 +18,5 @@ public class BehaviourIdAttribute : Attribute
 public interface IDeviceBehaviour
 {
     // TODO: Encapsulate result in a class.
-    Task<Dictionary<string, object?>> PerformAction(string actionId, Dictionary<string, object?>? parameters = null,
-        ResourceConfiguration? resourceConfiguration = null, ResourceState? resourceState = null);
+    Task<Dictionary<string, object?>> PerformAction(BehaviourActionRequest request, BehaviourResourceContext context);
 }

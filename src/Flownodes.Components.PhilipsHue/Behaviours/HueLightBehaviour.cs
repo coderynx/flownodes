@@ -1,6 +1,5 @@
 using Ardalis.GuardClauses;
 using Flownodes.Core.Interfaces;
-using Flownodes.Core.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -25,18 +24,16 @@ public class HueLightBehaviour : IDeviceBehaviour
         _httpClient.BaseAddress = new Uri(url);
     }
 
-    public async Task<Dictionary<string, object?>> PerformAction(string actionId,
-        Dictionary<string, object?>? parameters = null, ResourceConfiguration? configuration = null,
-        ResourceState? state = null)
+    public async Task<Dictionary<string, object?>> PerformAction(BehaviourActionRequest request, BehaviourResourceContext context)
     {
-        var lightId = configuration.Dictionary["lightId"]?.ToString();
+        var lightId = context.Configuration["lightId"]?.ToString();
         Guard.Against.NullOrWhiteSpace(lightId, nameof(lightId));
 
         var result = new Dictionary<string, object?>();
         HttpResponseMessage response;
         string? content;
 
-        switch (actionId)
+        switch (request.Id)
         {
             case "switch_on":
                 response = await _httpClient.PutAsync("lights/1/state", new StringContent("{\"on\":true}"));
@@ -44,7 +41,7 @@ public class HueLightBehaviour : IDeviceBehaviour
 
                 if (response.IsSuccessStatusCode && content.Contains("success"))
                 {
-                    state["power"] = true;
+                    context.State["power"] = true;
                     _logger.LogInformation("Updated light power state of {LightId} to on", lightId);
                 }
                 else
@@ -60,7 +57,7 @@ public class HueLightBehaviour : IDeviceBehaviour
 
                 if (response.IsSuccessStatusCode && content.Contains("success"))
                 {
-                    state["power"] = false;
+                    context.State["power"] = false;
                     _logger.LogInformation("Updated light power state of {LightId} to off", lightId);
                 }
                 else

@@ -37,15 +37,15 @@ public class DeviceGrain : Grain, IDeviceGrain
         return new ResourceIdentityCard(frn, Id, _persistence.State.CreatedAt!.Value, _persistence.State.BehaviourId);
     }
 
-    public async Task ConfigureAsync(string behaviorId, ResourceConfiguration configuration,
+    public async Task ConfigureAsync(string behaviourId, ResourceConfiguration configuration,
         Dictionary<string, string>? metadata = null)
     {
-        _logger.LogInformation("Configuring device {DeviceId} with behaviour {BehaviourId}", Id, behaviorId);
+        _logger.LogInformation("Configuring device {DeviceId} with behaviour {BehaviourId}", Id, behaviourId);
 
-        _behaviourId = _behaviourProvider.GetDeviceBehaviour(behaviorId);
+        _behaviourId = _behaviourProvider.GetDeviceBehaviour(behaviourId);
         Guard.Against.Null(_behaviourId, nameof(_behaviourId));
 
-        _persistence.State.BehaviourId = behaviorId;
+        _persistence.State.BehaviourId = behaviourId;
         _persistence.State.CreatedAt = DateTime.Now;
         _persistence.State.Configuration = configuration;
         _persistence.State.Metadata = metadata ?? new Dictionary<string, string>();
@@ -54,17 +54,19 @@ public class DeviceGrain : Grain, IDeviceGrain
         _logger.LogInformation("Configured device {DeviceId}", Id);
     }
 
-    public async Task PerformAction(string actionName, Dictionary<string, object?>? parameters = null)
+    public async Task PerformAction(string id, Dictionary<string, object?>? parameters = null)
     {
         EnsureConfiguration();
-
         Guard.Against.Null(_behaviourId, nameof(_behaviourId));
-        await _behaviourId.PerformAction(actionName, parameters, _persistence.State.Configuration,
-            _persistence.State.State);
+
+        var request = new BehaviourActionRequest(id, parameters);
+        var context = new BehaviourResourceContext(_persistence.State.Configuration, _persistence.State.State);
+
+        await _behaviourId.PerformAction(request, context);
         await _persistence.WriteStateAsync();
 
-        _logger.LogInformation("Performed action {ActionName} of device {DeviceId}", actionName, Id);
-        await ProduceInfoAlertAsync($"Performed action {actionName} of device {Id}");
+        _logger.LogInformation("Performed action {ActionName} of device {DeviceId}", id, Id);
+        await ProduceInfoAlertAsync($"Performed action {id} of device {Id}");
     }
 
     public Task<object?> GetStateProperty(string key)

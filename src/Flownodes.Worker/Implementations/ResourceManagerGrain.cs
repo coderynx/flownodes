@@ -24,11 +24,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _alerterGrain = _grainFactory.GetGrain<IAlerterGrain>("alerter");
     }
 
-    public async Task<IDeviceGrain> RegisterDeviceAsync(string id, string behaviorId,
+    public async Task<IDeviceGrain> RegisterDeviceAsync(string id, string behaviourId,
         ResourceConfiguration configuration)
     {
         Guard.Against.NullOrWhiteSpace(id);
-        Guard.Against.NullOrWhiteSpace(behaviorId);
+        Guard.Against.NullOrWhiteSpace(behaviourId);
 
         if (_persistence.State.ResourceRegistrations.ContainsKey(id))
             throw new InvalidOperationException($"Device {id} is already registered");
@@ -37,7 +37,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         try
         {
-            await grain.ConfigureAsync(behaviorId, configuration);
+            await grain.ConfigureAsync(behaviourId, configuration);
         }
         catch (Exception)
         {
@@ -45,12 +45,12 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             throw;
         }
 
-        _persistence.State.ResourceRegistrations.Add(id, behaviorId);
+        _persistence.State.ResourceRegistrations.Add(id, behaviourId);
         await _persistence.WriteStateAsync();
 
         await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
-            $"Registered device {id} with behavior {behaviorId}");
-        _logger.LogInformation("Registered device {DeviceId} with behavior {BehaviorId}", id, behaviorId);
+            $"Registered device {id} with behavior {behaviourId}");
+        _logger.LogInformation("Registered device {DeviceId} with behavior {BehaviorId}", id, behaviourId);
 
         return grain;
     }

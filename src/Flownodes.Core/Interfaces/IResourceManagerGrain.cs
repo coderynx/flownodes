@@ -4,7 +4,7 @@ namespace Flownodes.Core.Interfaces;
 
 public interface IResourceManagerGrain : IGrainWithStringKey
 {
-    Task<IDeviceGrain> RegisterDeviceAsync(string id, string behaviorId,
+    Task<IDeviceGrain> RegisterDeviceAsync(string id, string behaviourId,
         ResourceConfiguration? configuration = null);
 
     Task<IDataCollectorGrain> RegisterDataCollectorAsync(string id, string behaviorId,
