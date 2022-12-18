@@ -1,3 +1,4 @@
+using Flownodes.Core.Interfaces;
 using Flownodes.Core.Models;
 
 namespace Flownodes.Worker.Services;
@@ -24,7 +25,7 @@ public class TestWorker : BackgroundService
         var resourceConfiguration = ResourceConfiguration.FromDictionary(dictionary);
         resourceConfiguration.BehaviourId = "hue_light";
 
-        var hueLight = await resourceManager.RegisterDeviceAsync("hue_light_1", resourceConfiguration);
+        var hueLight = await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light_1", resourceConfiguration);
 
         var newState = new Dictionary<string, object?>
         {
@@ -43,7 +44,7 @@ public class TestWorker : BackgroundService
         {
             BehaviourId = "fritz_box"
         };
-        var fritzBox = await resourceManager.RegisterDeviceAsync("fritz_box_1", fritzConfiguration);
+        var fritzBox = await resourceManager.DeployResourceAsync<IDeviceGrain>("fritz_box_1", fritzConfiguration);
 
         var state = await fritzBox.GetState();
         _logger.LogInformation("State: {State}", state.Dictionary);

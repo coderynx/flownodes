@@ -97,6 +97,8 @@ public abstract class ResourceGrain : Grain
             Behaviour = _behaviourProvider.GetBehaviour(configuration.BehaviourId);
             Guard.Against.Null(Behaviour, nameof(Behaviour));
 
+            await Behaviour.OnSetupAsync(Context);
+
             Logger.LogInformation("Configured behaviour {BehaviourId} for resource {ResourceId}",
                 configuration.BehaviourId, Id);
         }

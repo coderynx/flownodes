@@ -4,15 +4,11 @@ namespace Flownodes.Core.Interfaces;
 
 public interface IResourceManagerGrain : IGrainWithStringKey
 {
-    Task<IDeviceGrain> RegisterDeviceAsync(string id, ResourceConfiguration configuration);
+    ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string id) where TResourceGrain : IResourceGrain;
 
-    Task<IAssetGrain> RegisterAssetAsync(string id);
+    ValueTask<TResource> DeployResourceAsync<TResource>(string id, ResourceConfiguration configuration)
+        where TResource : IResourceGrain;
 
-    Task RemoveDeviceAsync(string id);
-    Task RemoveAssetAsync(string id);
-
-    Task<List<IDeviceGrain>> GetDevices();
-    Task<IDeviceGrain?> GetDevice(string id);
-    Task<List<IAssetGrain>> GetAssets();
-    Task<IAssetGrain?> GetAsset(string id);
+    Task RemoveResourceAsync(string id);
+    Task RemoveAllResourcesAsync();
 }

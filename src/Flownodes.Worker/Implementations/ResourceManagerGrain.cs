@@ -1,4 +1,5 @@
 using Ardalis.GuardClauses;
+using Flownodes.Core.Attributes;
 using Flownodes.Core.Interfaces;
 using Flownodes.Core.Models;
 using Flownodes.Worker.Models;
@@ -24,140 +25,95 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _alerterGrain = _grainFactory.GetGrain<IAlerterGrain>("alerter");
     }
 
-    public async Task<IDeviceGrain> RegisterDeviceAsync(string id, ResourceConfiguration configuration)
+    public async ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string id)
+        where TResourceGrain : IResourceGrain
     {
-        Guard.Against.NullOrWhiteSpace(id);
+        Guard.Against.NullOrWhiteSpace(id, nameof(id));
+
+        if (_persistence.State.Registrations.FirstOrDefault(x => x.Id.Equals(id)) is null)
+        {
+            _logger.LogError("Could not find a resource with ID {Id}", id);
+            return default;
+        }
+
+        var grain = _grainFactory.GetGrain<TResourceGrain>(id);
+
+        var frn = await grain.GetFrn();
+
+        _logger.LogDebug("Retrieved resource with FRN {Frn}", frn);
+        return grain;
+    }
+
+    public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string id,
+        ResourceConfiguration configuration) where TResourceGrain : IResourceGrain
+    {
+        Guard.Against.NullOrWhiteSpace(id, nameof(id));
         Guard.Against.Null(configuration, nameof(configuration));
 
-        if (_persistence.State.ResourceRegistrations.ContainsKey(id))
-            throw new InvalidOperationException($"Device {id} is already registered");
+        if (_persistence.State.Registrations.FirstOrDefault(x => x.Id.Equals(id)) is not null)
+            throw new InvalidOperationException($"Resource with ID {id} already exists");
 
-        var grain = _grainFactory.GetGrain<IDeviceGrain>(id);
+        var grain = _grainFactory.GetGrain<TResourceGrain>(id);
 
-        try
+        if (Attribute.IsDefined(typeof(TResourceGrain), typeof(SingletonResourceAttribute)))
         {
-            await grain.UpdateConfigurationAsync(configuration);
-        }
-        catch (Exception)
-        {
-            _logger.LogError("Error configuring device {DeviceId}", id);
-            throw;
+            var kind = await grain.GetKind();
+            if (_persistence.State.Registrations.FirstOrDefault(x => x.Kind.Equals(kind)) is not null)
+            {
+                await grain.SelfRemoveAsync();
+                throw new InvalidOperationException($"Singleton resource with Kind {kind} already exists");
+            }
         }
 
-        _persistence.State.ResourceRegistrations.Add(id, configuration.BehaviourId);
+        await grain.UpdateConfigurationAsync(configuration);
+        var frn = await grain.GetFrn();
+
+        var registration = new ResourceRegistration
+        {
+            Id = id,
+            Kind = await grain.GetKind(),
+            Frn = frn
+        };
+        _persistence.State.Registrations.Add(registration);
         await _persistence.WriteStateAsync();
 
-        await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
-            $"Registered device {id} with behavior {configuration.BehaviourId}");
-        _logger.LogInformation("Registered device {DeviceId} with behavior {BehaviorId}", id,
-            configuration.BehaviourId);
-
+        _logger.LogInformation("Deployed resource with FRN {Frn}", frn);
         return grain;
     }
 
-    public async Task RemoveDeviceAsync(string id)
+    public async Task RemoveResourceAsync(string id)
     {
         Guard.Against.NullOrWhiteSpace(id, nameof(id));
 
-        if (!_persistence.State.ResourceRegistrations.ContainsKey(id))
-            throw new KeyNotFoundException("The given device id was not found in the registry");
+        if (_persistence.State.Registrations.FirstOrDefault(x => x.Id.Equals(id)) is null)
+            throw new InvalidOperationException($"Resource with ID {id} does not exist");
 
-        var grain = _grainFactory.GetGrain<IDeviceGrain>(id);
+        var toRemove = _persistence.State.Registrations.FirstOrDefault(x => x.Id.Equals(id));
+        if (toRemove is not null)
+            _persistence.State.Registrations.Remove(toRemove);
+        await _persistence.WriteStateAsync();
+
+        var grain = _grainFactory.GetGrain<IResourceGrain>(id,
+            "FlownodesCloud.Worker.Implementations.DummyResourceGrain");
         await grain.SelfRemoveAsync();
 
-        var behaviorId = _persistence.State.ResourceRegistrations[id];
+        var frn = await grain.GetFrn();
 
-        _persistence.State.ResourceRegistrations.Remove(id);
+        _logger.LogInformation("Removed resource with FRN {Frn}", frn);
+    }
+
+    public async Task RemoveAllResourcesAsync()
+    {
+        var grains = _persistence.State.Registrations
+            .Select(registration => _grainFactory.GetGrain<IResourceGrain>(registration.Id,
+                "FlownodesCloud.Worker.Implementations.DummyResourceGrain"));
+
+        foreach (var grain in grains) await grain.SelfRemoveAsync();
+
+        _persistence.State.Registrations.Clear();
         await _persistence.WriteStateAsync();
 
-        await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
-            $"Removed device {id} with behavior {behaviorId}");
-        _logger.LogInformation("Removed device {DeviceId} with behavior {BehaviorId}", id, behaviorId);
-    }
-
-    public async Task<IAssetGrain> RegisterAssetAsync(string id)
-    {
-        Guard.Against.NullOrWhiteSpace(id, nameof(id));
-
-        if (_persistence.State.ResourceRegistrations.ContainsKey(id))
-            throw new InvalidOperationException($"Asset {id} is already registered");
-
-        var grain = _grainFactory.GetGrain<IAssetGrain>(id);
-
-        _persistence.State.ResourceRegistrations.Add(id, null);
-        await _persistence.WriteStateAsync();
-
-        await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
-            $"Registered asset {id}");
-        _logger.LogInformation("Registered asset {AssetId}", id);
-
-        return grain;
-    }
-
-    public async Task RemoveAssetAsync(string id)
-    {
-        Guard.Against.NullOrWhiteSpace(id, nameof(id));
-
-        if (!_persistence.State.ResourceRegistrations.ContainsKey(id))
-            throw new KeyNotFoundException("The given asset id was not found in the registry");
-
-        var grain = _grainFactory.GetGrain<IAssetGrain>(id);
-        await grain.SelfRemoveAsync();
-
-        _persistence.State.ResourceRegistrations.Remove(id);
-        await _persistence.WriteStateAsync();
-
-        await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
-            $"Removed asset {id}");
-        _logger.LogInformation("Removed asset {AssetId}", id);
-    }
-
-    public Task<List<IDeviceGrain>> GetDevices()
-    {
-        var grains = _persistence.State.ResourceRegistrations.Keys.Select(registration =>
-            _grainFactory.GetGrain<IDeviceGrain>(registration)).ToList();
-
-        _logger.LogDebug("Returning {DevicesCount} devices", grains.Count);
-        return Task.FromResult(grains);
-    }
-
-    public Task<IDeviceGrain?> GetDevice(string id)
-    {
-        IDeviceGrain? grain = null;
-        if (_persistence.State.ResourceRegistrations.ContainsKey(id))
-        {
-            grain = _grainFactory.GetGrain<IDeviceGrain>(id);
-
-            _logger.LogDebug("Returning device {DeviceId}", id);
-            return Task.FromResult<IDeviceGrain?>(grain);
-        }
-
-        _logger.LogError("Cannot find a device with ID {DeviceId}", id);
-        return Task.FromResult(grain);
-    }
-
-    public Task<List<IAssetGrain>> GetAssets()
-    {
-        var grains = _persistence.State.ResourceRegistrations.Select(registration =>
-            _grainFactory.GetGrain<IAssetGrain>(registration.Key)).ToList();
-
-        _logger.LogDebug("Returning {AssetsCount} assets", grains.Count);
-        return Task.FromResult(grains);
-    }
-
-    public Task<IAssetGrain?> GetAsset(string id)
-    {
-        IAssetGrain? grain = null;
-        if (_persistence.State.ResourceRegistrations.ContainsKey(id))
-        {
-            grain = _grainFactory.GetGrain<IAssetGrain>(id);
-
-            _logger.LogDebug("Returning asset {AssetId}", id);
-            return Task.FromResult<IAssetGrain?>(grain);
-        }
-
-        _logger.LogError("Cannot find an asset with ID {AssetId}", id);
-        return Task.FromResult(grain);
+        _logger.LogInformation("Removed all resources");
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)

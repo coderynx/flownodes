@@ -32,7 +32,7 @@ public class DeviceGrain : ResourceGrain, IDeviceGrain
 
     private async Task SendStateAsync(Dictionary<string, object?> newState)
     {
-        EnsureConfiguration();
+        EnsureBehaviour();
 
         await Behaviour.OnStateChangeAsync(newState, Context);
 
@@ -51,7 +51,7 @@ public class DeviceGrain : ResourceGrain, IDeviceGrain
         return base.OnDeactivateAsync(reason, cancellationToken);
     }
 
-    private void EnsureConfiguration()
+    private void EnsureBehaviour()
     {
         Guard.Against.Null(base.Behaviour, nameof(base.Behaviour));
         Guard.Against.Null(BehaviourId, nameof(BehaviourId));
