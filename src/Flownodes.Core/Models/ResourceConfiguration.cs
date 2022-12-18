@@ -5,6 +5,8 @@ public class ResourceConfiguration
 {
     [Id(0)] public Dictionary<string, object?> Dictionary { get; init; } = new();
 
+    [Id(1)] public string? BehaviourId { get; set; }
+
     public object? this[string key]
     {
         get => Dictionary[key];

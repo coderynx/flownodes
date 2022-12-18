@@ -29,8 +29,12 @@ public class DeviceDescriptionAttribute : Attribute
     public string Description { get; init; }
 }
 
-public interface IDevice
+public interface IDevice : IBehaviour
+{
+    Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context);
+}
+
+public interface IBehaviour
 {
     Task OnSetupAsync(ResourceContext context);
-    Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context);
 }

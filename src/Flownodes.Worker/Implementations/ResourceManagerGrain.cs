@@ -24,11 +24,10 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _alerterGrain = _grainFactory.GetGrain<IAlerterGrain>("alerter");
     }
 
-    public async Task<IDeviceGrain> RegisterDeviceAsync(string id, string behaviourId,
-        ResourceConfiguration configuration)
+    public async Task<IDeviceGrain> RegisterDeviceAsync(string id, ResourceConfiguration configuration)
     {
         Guard.Against.NullOrWhiteSpace(id);
-        Guard.Against.NullOrWhiteSpace(behaviourId);
+        Guard.Against.Null(configuration, nameof(configuration));
 
         if (_persistence.State.ResourceRegistrations.ContainsKey(id))
             throw new InvalidOperationException($"Device {id} is already registered");
@@ -37,7 +36,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         try
         {
-            await grain.SetupAsync(behaviourId, configuration);
+            await grain.UpdateConfigurationAsync(configuration);
         }
         catch (Exception)
         {
@@ -45,44 +44,13 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             throw;
         }
 
-        _persistence.State.ResourceRegistrations.Add(id, behaviourId);
+        _persistence.State.ResourceRegistrations.Add(id, configuration.BehaviourId);
         await _persistence.WriteStateAsync();
 
         await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
-            $"Registered device {id} with behavior {behaviourId}");
-        _logger.LogInformation("Registered device {DeviceId} with behavior {BehaviorId}", id, behaviourId);
-
-        return grain;
-    }
-
-    public async Task<IDataCollectorGrain> RegisterDataCollectorAsync(string id, string behaviorId,
-        ResourceConfiguration? configuration = null)
-    {
-        Guard.Against.NullOrWhiteSpace(id, nameof(id));
-        Guard.Against.NullOrWhiteSpace(behaviorId, nameof(behaviorId));
-
-        if (_persistence.State.ResourceRegistrations.ContainsKey(id))
-            throw new InvalidOperationException($"Data collector {id} is already registered");
-
-        var grain = _grainFactory.GetGrain<IDataCollectorGrain>(id);
-
-        try
-        {
-            await grain.ConfigureAsync(behaviorId, configuration);
-        }
-        catch (Exception)
-        {
-            _logger.LogError("Error configuring data collector {DataCollectorId}", id);
-            throw;
-        }
-
-        _persistence.State.ResourceRegistrations.Add(id, behaviorId);
-        await _persistence.WriteStateAsync();
-
-        await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
-            $"Registered data collector {id} with behavior {behaviorId}");
-        _logger.LogInformation("Registered data collector {DataCollectorId} with behavior {BehaviorId}", id,
-            behaviorId);
+            $"Registered device {id} with behavior {configuration.BehaviourId}");
+        _logger.LogInformation("Registered device {DeviceId} with behavior {BehaviorId}", id,
+            configuration.BehaviourId);
 
         return grain;
     }
@@ -95,7 +63,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             throw new KeyNotFoundException("The given device id was not found in the registry");
 
         var grain = _grainFactory.GetGrain<IDeviceGrain>(id);
-        await grain.RemoveAsync();
+        await grain.SelfRemoveAsync();
 
         var behaviorId = _persistence.State.ResourceRegistrations[id];
 
@@ -105,26 +73,6 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
             $"Removed device {id} with behavior {behaviorId}");
         _logger.LogInformation("Removed device {DeviceId} with behavior {BehaviorId}", id, behaviorId);
-    }
-
-    public async Task RemoveDataCollectorAsync(string id)
-    {
-        Guard.Against.NullOrWhiteSpace(id, nameof(id));
-
-        if (!_persistence.State.ResourceRegistrations.ContainsKey(id))
-            throw new KeyNotFoundException("The given data collector id was not found in the registry");
-
-        var grain = _grainFactory.GetGrain<IDataCollectorGrain>(id);
-        await grain.SelfRemoveAsync();
-
-        var behaviorId = _persistence.State.ResourceRegistrations[id];
-
-        _persistence.State.ResourceRegistrations.Remove(id);
-        await _persistence.WriteStateAsync();
-
-        await _alerterGrain.ProduceInfoAlertAsync("frn:flownodes:resourceManager",
-            $"Removed data collector {id} with behavior {behaviorId}");
-        _logger.LogInformation("Removed data collector {DataCollectorId} with behavior {BehaviorId}", id, behaviorId);
     }
 
     public async Task<IAssetGrain> RegisterAssetAsync(string id)
@@ -185,30 +133,6 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         }
 
         _logger.LogError("Cannot find a device with ID {DeviceId}", id);
-        return Task.FromResult(grain);
-    }
-
-    public Task<List<IDataCollectorGrain>> GetDataCollectors()
-    {
-        var grains = _persistence.State.ResourceRegistrations.Keys.Select(registration =>
-            _grainFactory.GetGrain<IDataCollectorGrain>(registration)).ToList();
-
-        _logger.LogDebug("Returning {DataCollectorsCount} data collectors", grains.Count);
-        return Task.FromResult(grains);
-    }
-
-    public Task<IDataCollectorGrain?> GetDataCollector(string id)
-    {
-        IDataCollectorGrain? grain = null;
-        if (_persistence.State.ResourceRegistrations.ContainsKey(id))
-        {
-            grain = _grainFactory.GetGrain<IDataCollectorGrain>(id);
-
-            _logger.LogDebug("Returning data collector {DataCollectorId}", id);
-            return Task.FromResult<IDataCollectorGrain?>(grain);
-        }
-
-        _logger.LogError("Cannot find a data collector with ID {DeviceId}", id);
         return Task.FromResult(grain);
     }
 

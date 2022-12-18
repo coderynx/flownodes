@@ -59,15 +59,10 @@ public class ClusterFixture : IAsyncLifetime
 
         private static void ConfigureContainer(ContainerBuilder builder)
         {
-            var dataObjectBehaviorTest = Substitute.For<IDataCollectorBehaviour>();
-            builder.RegisterInstance(dataObjectBehaviorTest)
-                .As<IDataCollectorBehaviour>()
-                .Keyed<IDataCollectorBehaviour>("TestDataObjectBehavior");
-
             var deviceBehaviorTest = Substitute.For<IDevice>();
             builder.RegisterInstance(deviceBehaviorTest)
-                .As<IDevice>()
-                .Keyed<IDevice>("TestDeviceBehavior");
+                .As<IBehaviour>()
+                .Keyed<IBehaviour>("TestDeviceBehavior");
 
             var alertBehaviorTest = Substitute.For<IAlerterDriver>();
             builder.RegisterInstance(alertBehaviorTest)

@@ -15,15 +15,9 @@ public class BehaviourProvider : IBehaviourProvider
         _lifetimeScope = serviceProvider.GetAutofacRoot();
     }
 
-    public IDevice? GetDeviceBehaviour(string id)
+    public IBehaviour? GetBehaviour(string id)
     {
-        _logger.LogDebug("Retrieving device behavior {DeviceBehaviourId}", id);
-        return _lifetimeScope.ResolveOptionalKeyed<IDevice>(id);
-    }
-
-    public IDataCollectorBehaviour GetDataCollectorBehaviour(string id)
-    {
-        _logger.LogDebug("Retrieving data collector behavior {DataCollectorBehaviorId}", id);
-        return _lifetimeScope.ResolveKeyed<IDataCollectorBehaviour>(id);
+        _logger.LogDebug("Retrieving behavior {DeviceBehaviourId}", id);
+        return _lifetimeScope.ResolveOptionalKeyed<IBehaviour>(id);
     }
 }

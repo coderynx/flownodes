@@ -30,18 +30,8 @@ public class ComponentsModule : Module
             .ToArray();
 
         builder.RegisterAssemblyTypes(assemblies)
-            .Where(x => typeof(IDevice).IsAssignableFrom(x))
-            .As<IDevice>()
-            .Keyed<IDevice>(x => GetAttributeName(x));
-
-        builder.RegisterAssemblyTypes(assemblies)
-            .Where(x => typeof(IDataCollectorBehaviour).IsAssignableFrom(x))
-            .As<IDataCollectorBehaviour>()
-            .Keyed<IDataCollectorBehaviour>(x => GetAttributeName(x));
-
-        builder.RegisterAssemblyTypes(assemblies)
-            .Where(x => typeof(IAlerterDriver).IsAssignableFrom(x))
-            .As<IAlerterDriver>()
-            .Keyed<IAlerterDriver>(x => GetAttributeName(x));
+            .Where(x => typeof(IBehaviour).IsAssignableFrom(x))
+            .As<IBehaviour>()
+            .Keyed<IBehaviour>(x => GetAttributeName(x));
     }
 }

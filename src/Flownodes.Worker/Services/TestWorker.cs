@@ -22,8 +22,9 @@ public class TestWorker : BackgroundService
             { "lightId", 1 }
         };
         var resourceConfiguration = ResourceConfiguration.FromDictionary(dictionary);
+        resourceConfiguration.BehaviourId = "hue_light";
 
-        var hueLight = await resourceManager.RegisterDeviceAsync("hue_light_1", "hue_light", resourceConfiguration);
+        var hueLight = await resourceManager.RegisterDeviceAsync("hue_light_1", resourceConfiguration);
 
         var newState = new Dictionary<string, object?>
         {
@@ -38,8 +39,11 @@ public class TestWorker : BackgroundService
         var currentState = await hueLight.GetState();
         _logger.LogInformation("State: {State}", currentState.Dictionary);
 
-        var fritzConfiguration = new ResourceConfiguration();
-        var fritzBox = await resourceManager.RegisterDeviceAsync("fritz_box_1", "fritz_box", fritzConfiguration);
+        var fritzConfiguration = new ResourceConfiguration
+        {
+            BehaviourId = "fritz_box"
+        };
+        var fritzBox = await resourceManager.RegisterDeviceAsync("fritz_box_1", fritzConfiguration);
 
         var state = await fritzBox.GetState();
         _logger.LogInformation("State: {State}", state.Dictionary);

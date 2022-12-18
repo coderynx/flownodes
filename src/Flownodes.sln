@@ -4,8 +4,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Worker", "Flownod
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Components.PhilipsHue", "Flownodes.Components.PhilipsHue\Flownodes.Components.PhilipsHue.csproj", "{9215735E-A685-4AFD-B588-936487E6A157}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Components.OpenWeather", "Flownodes.Components.OpenWeather\Flownodes.Components.OpenWeather.csproj", "{5015E561-72B8-4A1B-AA61-C42063A61EB4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Core", "Flownodes.Core\Flownodes.Core.csproj", "{B778E35A-3ED3-4A2D-B422-6B08ADE02B4D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Components.Telegram", "Flownodes.Components.Telegram\Flownodes.Components.Telegram.csproj", "{A2C2F6DF-035C-430A-B5B4-84C7B227DB71}"
@@ -36,10 +34,6 @@ Global
 		{9215735E-A685-4AFD-B588-936487E6A157}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9215735E-A685-4AFD-B588-936487E6A157}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9215735E-A685-4AFD-B588-936487E6A157}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5015E561-72B8-4A1B-AA61-C42063A61EB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5015E561-72B8-4A1B-AA61-C42063A61EB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5015E561-72B8-4A1B-AA61-C42063A61EB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5015E561-72B8-4A1B-AA61-C42063A61EB4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B778E35A-3ED3-4A2D-B422-6B08ADE02B4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B778E35A-3ED3-4A2D-B422-6B08ADE02B4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B778E35A-3ED3-4A2D-B422-6B08ADE02B4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -71,7 +65,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{241C53CA-48CE-4894-926C-DA65D0A0A9D8} = {874C2FE9-67D1-4F37-B087-4B53169674B2}
-		{5015E561-72B8-4A1B-AA61-C42063A61EB4} = {874C2FE9-67D1-4F37-B087-4B53169674B2}
 		{9215735E-A685-4AFD-B588-936487E6A157} = {874C2FE9-67D1-4F37-B087-4B53169674B2}
 		{A2C2F6DF-035C-430A-B5B4-84C7B227DB71} = {874C2FE9-67D1-4F37-B087-4B53169674B2}
 		{FE792971-04CE-42E9-BDB5-7E7AA0608400} = {874C2FE9-67D1-4F37-B087-4B53169674B2}
