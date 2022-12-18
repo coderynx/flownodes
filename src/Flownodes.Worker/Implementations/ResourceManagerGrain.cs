@@ -29,7 +29,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         Guard.Against.NullOrWhiteSpace(id, nameof(id));
 
-        if (_persistence.State.Registrations.FirstOrDefault(x => x.Id.Equals(id)) is null)
+        if (_persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id)) is null)
         {
             _logger.LogError("Could not find a resource with ID {Id}", id);
             return default;
@@ -49,7 +49,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         Guard.Against.NullOrWhiteSpace(id, nameof(id));
         Guard.Against.Null(configuration, nameof(configuration));
 
-        if (_persistence.State.Registrations.FirstOrDefault(x => x.Id.Equals(id)) is not null)
+        if (_persistence.State.Registrations.FirstOrDefault(x => x.GrainId.Equals(id)) is not null)
             throw new InvalidOperationException($"Resource with ID {id} already exists");
 
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
@@ -65,7 +65,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         await grain.UpdateConfigurationAsync(configuration);
         var frn = await grain.GetFrn();
 
-        _persistence.State.AddRegistration(grain.GetGrainId(), kind, frn);
+        _persistence.State.AddRegistration(id, grain.GetGrainId(), kind, frn);
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Deployed resource with FRN {Frn}", frn);
@@ -76,11 +76,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         Guard.Against.NullOrWhiteSpace(id, nameof(id));
 
-        var toRemove = _persistence.State.Registrations.FirstOrDefault(x => x.Id.Equals(id));
+        var toRemove = _persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id));
         if (toRemove is null)
             throw new InvalidOperationException($"Resource with ID {id} does not exist");
 
-        var grain = _grainFactory.GetGrain(toRemove.Id).AsReference<IResourceGrain>();
+        var grain = _grainFactory.GetGrain(toRemove.GrainId).AsReference<IResourceGrain>();
         await grain.SelfRemoveAsync();
 
         var frn = await grain.GetFrn();
@@ -96,7 +96,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var dummyName = typeof(DummyResourceGrain).AssemblyQualifiedName;
 
         var grains = _persistence.State.Registrations
-            .Select(registration => _grainFactory.GetGrain(registration.Id).AsReference<IResourceGrain>());
+            .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>());
 
         foreach (var grain in grains) await grain.SelfRemoveAsync();
 
