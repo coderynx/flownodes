@@ -7,15 +7,15 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-public class AlerterGrain : Grain, IAlerterGrain
+public class AlertManagerGrain : Grain, IAlerManagerGrain
 {
     private readonly List<IAlerterDriver> _alerterDrivers = new();
 
-    private readonly ILogger<AlerterGrain> _logger;
+    private readonly ILogger<AlertManagerGrain> _logger;
     private readonly IPersistentState<AlerterPersistence> _persistence;
     private readonly IServiceProvider _serviceProvider;
 
-    public AlerterGrain(ILogger<AlerterGrain> logger,
+    public AlertManagerGrain(ILogger<AlertManagerGrain> logger,
         [PersistentState("alerterStore", "flownodes")]
         IPersistentState<AlerterPersistence> persistence,
         IServiceProvider serviceProvider)

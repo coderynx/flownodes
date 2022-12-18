@@ -1,5 +1,6 @@
 using Flownodes.Core.Interfaces;
 using Flownodes.Core.Models;
+using OpenTelemetry.Resources;
 
 namespace Flownodes.Worker.Services;
 
@@ -48,6 +49,21 @@ public class TestWorker : BackgroundService
 
         var state = await fritzBox.GetState();
         _logger.LogInformation("State: {State}", state.Dictionary);
+
+        dictionary = new Dictionary<string, object?>
+        {
+            { "code", "context.LogInformation('Hello from ClearScript!');" }
+        };
+        var scriptResource = await resourceManager.DeployResourceAsync<IScriptResourceGrain>("script_resource_00",
+            ResourceConfiguration.FromDictionary(dictionary));
+        await scriptResource.ExecuteAsync();
+
+        dictionary = new Dictionary<string, object?>
+        {
+            { "code", "context.LogInformation('Hello from ClearScript part 2!');" }
+        };
+        await scriptResource.UpdateConfigurationAsync(ResourceConfiguration.FromDictionary(dictionary));
+        await scriptResource.ExecuteAsync();
 
         await resourceManager.RemoveAllResourcesAsync();
     }

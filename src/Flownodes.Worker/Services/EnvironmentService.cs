@@ -10,7 +10,7 @@ public interface IEnvironmentService
     string ServiceId { get; }
     string ClusterId { get; }
     IResourceManagerGrain GetResourceManagerGrain();
-    IAlerterGrain GetAlertManagerGrain();
+    IAlerManagerGrain GetAlertManagerGrain();
 }
 
 public record EnvironmentOptions
@@ -42,8 +42,8 @@ public class EnvironmentService : IEnvironmentService
     public string ClusterId => _clusterOptions.ClusterId;
     public string BaseFrn => $"frn:{ServiceId}:{ClusterId}";
 
-    public IAlerterGrain GetAlertManagerGrain()
+    public IAlerManagerGrain GetAlertManagerGrain()
     {
-        return _grainFactory.GetGrain<IAlerterGrain>(_environmentOptions.AlertManagerName);
+        return _grainFactory.GetGrain<IAlerManagerGrain>(_environmentOptions.AlertManagerName);
     }
 }

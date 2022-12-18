@@ -111,7 +111,7 @@ public class ResourceManagerTests
         grain.Should().BeNull();
     }
 
-    [Fact] 
+    [Fact]
     public async Task RemoveAllResources_ShouldRemoveAllResources()
     {
         // Arrange.
@@ -123,7 +123,7 @@ public class ResourceManagerTests
 
         // Act.
         await manager.RemoveAllResourcesAsync();
-        
+
         // Assert.
         var grain1 = await manager.GetResourceAsync<IDummyResourceGrain>(id1);
         grain1.Should().BeNull();

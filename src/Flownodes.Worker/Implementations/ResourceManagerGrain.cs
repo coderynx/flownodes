@@ -21,7 +21,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _logger = logger;
         _persistence = persistence;
         _grainFactory = grainFactory;
-        _grainFactory.GetGrain<IAlerterGrain>("alerter");
+        _grainFactory.GetGrain<IAlerManagerGrain>("alerter");
     }
 
     public async ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string id)
