@@ -110,4 +110,24 @@ public class ResourceManagerTests
         var grain = await manager.GetResourceAsync<IDummyResourceGrain>(id);
         grain.Should().BeNull();
     }
+
+    [Fact] 
+    public async Task RemoveAllResources_ShouldRemoveAllResources()
+    {
+        // Arrange.
+        var manager = ProvideResourceManager();
+        var id1 = _fixture.Create<string>();
+        await manager.DeployResourceAsync<IDummyResourceGrain>(id1, new ResourceConfiguration());
+        var id2 = _fixture.Create<string>();
+        await manager.DeployResourceAsync<IDummyResourceGrain>(id2, new ResourceConfiguration());
+
+        // Act.
+        await manager.RemoveAllResourcesAsync();
+        
+        // Assert.
+        var grain1 = await manager.GetResourceAsync<IDummyResourceGrain>(id1);
+        grain1.Should().BeNull();
+        var grain2 = await manager.GetResourceAsync<IDummyResourceGrain>(id2);
+        grain2.Should().BeNull();
+    }
 }
