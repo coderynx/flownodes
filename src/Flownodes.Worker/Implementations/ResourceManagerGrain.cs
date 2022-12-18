@@ -9,7 +9,6 @@ namespace Flownodes.Worker.Implementations;
 
 public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 {
-    private readonly IAlerterGrain _alerterGrain;
     private readonly IGrainFactory _grainFactory;
 
     private readonly ILogger<ResourceManagerGrain> _logger;
@@ -22,7 +21,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _logger = logger;
         _persistence = persistence;
         _grainFactory = grainFactory;
-        _alerterGrain = _grainFactory.GetGrain<IAlerterGrain>("alerter");
+        _grainFactory.GetGrain<IAlerterGrain>("alerter");
     }
 
     public async ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string id)
@@ -54,27 +53,19 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             throw new InvalidOperationException($"Resource with ID {id} already exists");
 
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
+        var kind = await grain.GetKind();
 
         if (Attribute.IsDefined(typeof(TResourceGrain), typeof(SingletonResourceAttribute)))
-        {
-            var kind = await grain.GetKind();
             if (_persistence.State.Registrations.FirstOrDefault(x => x.Kind.Equals(kind)) is not null)
             {
                 await grain.SelfRemoveAsync();
                 throw new InvalidOperationException($"Singleton resource with Kind {kind} already exists");
             }
-        }
 
         await grain.UpdateConfigurationAsync(configuration);
         var frn = await grain.GetFrn();
 
-        var registration = new ResourceRegistration
-        {
-            Id = id,
-            Kind = await grain.GetKind(),
-            Frn = frn
-        };
-        _persistence.State.Registrations.Add(registration);
+        _persistence.State.AddRegistration(grain.GetGrainId(), kind, frn);
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Deployed resource with FRN {Frn}", frn);
@@ -85,28 +76,27 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         Guard.Against.NullOrWhiteSpace(id, nameof(id));
 
-        if (_persistence.State.Registrations.FirstOrDefault(x => x.Id.Equals(id)) is null)
+        var toRemove = _persistence.State.Registrations.FirstOrDefault(x => x.Id.Equals(id));
+        if (toRemove is null)
             throw new InvalidOperationException($"Resource with ID {id} does not exist");
 
-        var toRemove = _persistence.State.Registrations.FirstOrDefault(x => x.Id.Equals(id));
-        if (toRemove is not null)
-            _persistence.State.Registrations.Remove(toRemove);
-        await _persistence.WriteStateAsync();
-
-        var grain = _grainFactory.GetGrain<IResourceGrain>(id,
-            "FlownodesCloud.Worker.Implementations.DummyResourceGrain");
+        var grain = _grainFactory.GetGrain(toRemove.Id).AsReference<IResourceGrain>();
         await grain.SelfRemoveAsync();
 
         var frn = await grain.GetFrn();
+
+        _persistence.State.Registrations.Remove(toRemove);
+        await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Removed resource with FRN {Frn}", frn);
     }
 
     public async Task RemoveAllResourcesAsync()
     {
+        var dummyName = typeof(DummyResourceGrain).AssemblyQualifiedName;
+
         var grains = _persistence.State.Registrations
-            .Select(registration => _grainFactory.GetGrain<IResourceGrain>(registration.Id,
-                "FlownodesCloud.Worker.Implementations.DummyResourceGrain"));
+            .Select(registration => _grainFactory.GetGrain(registration.Id).AsReference<IResourceGrain>());
 
         foreach (var grain in grains) await grain.SelfRemoveAsync();
 

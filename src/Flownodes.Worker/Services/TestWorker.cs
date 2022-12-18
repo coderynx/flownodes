@@ -48,5 +48,7 @@ public class TestWorker : BackgroundService
 
         var state = await fritzBox.GetState();
         _logger.LogInformation("State: {State}", state.Dictionary);
+
+        await resourceManager.RemoveAllResourcesAsync();
     }
 }
