@@ -2,7 +2,7 @@ using Flownodes.Core.Models;
 
 namespace Flownodes.Core.Interfaces;
 
-public interface IAlerManagerGrain : IGrainWithStringKey
+public interface IAlertManagerGrain : IGrainWithStringKey
 {
     ValueTask<Alert> AlertInfoAsync(string frn, string message);
     ValueTask<Alert> AlertWarningAsync(string frn, string message);

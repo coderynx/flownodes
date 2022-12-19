@@ -22,9 +22,9 @@ public class AlerterGrainTests
         _fixture = new Fixture();
     }
 
-    private async Task<IAlerManagerGrain> ProvideAlerterAsync(params string[] drivers)
+    private async Task<IAlertManagerGrain> ProvideAlerterAsync(params string[] drivers)
     {
-        var grain = _cluster.GrainFactory.GetGrain<IAlerManagerGrain>(_fixture.Create<string>());
+        var grain = _cluster.GrainFactory.GetGrain<IAlertManagerGrain>(_fixture.Create<string>());
         await grain.ConfigureAsync(drivers);
         return grain;
     }
@@ -33,7 +33,7 @@ public class AlerterGrainTests
     public void ShouldActivate()
     {
         // Arrange & act.
-        var grain = _cluster.GrainFactory.GetGrain<IAlerManagerGrain>(_fixture.Create<string>());
+        var grain = _cluster.GrainFactory.GetGrain<IAlertManagerGrain>(_fixture.Create<string>());
 
         // Assert.
         grain.GetGrainId().Should().NotBeNull();

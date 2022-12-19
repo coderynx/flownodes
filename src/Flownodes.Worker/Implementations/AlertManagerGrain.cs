@@ -8,7 +8,7 @@ using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
-public class AlertManagerGrain : Grain, IAlerManagerGrain
+public class AlertManagerGrain : Grain, IAlertManagerGrain
 {
     private readonly List<IAlerterDriver> _alerterDrivers = new();
 
