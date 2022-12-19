@@ -1,4 +1,4 @@
-using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Flownodes.Core.Models;
 
@@ -18,11 +18,11 @@ public class ResourceState
         }
     }
 
-    [IgnoreDataMember] public int Count => Dictionary.Count;
+    [JsonIgnore] public int Count => Dictionary.Count;
 
-    [IgnoreDataMember] public IEnumerable<string> Keys => Dictionary.Keys;
+    [JsonIgnore] public IEnumerable<string> Keys => Dictionary.Keys;
 
-    [IgnoreDataMember] public IEnumerable<object?> Values => Dictionary.Values;
+    [JsonIgnore] public IEnumerable<object?> Values => Dictionary.Values;
 
     public void Add(string key, object? value)
     {

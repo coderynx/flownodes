@@ -29,7 +29,7 @@ public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
     protected string Id => this.GetPrimaryKeyString();
     protected string BehaviourId => Configuration.BehaviourId;
     protected string Frn => $"{EnvironmentService.BaseFrn}:{Kind}:{Id}";
-    protected DateTime? CreatedAt => Persistence.State.CreatedAt;
+    protected DateTime CreatedAt => Persistence.State.CreatedAt;
     protected ResourceContext Context => new(Configuration, Metadata, State);
     protected IResourceManagerGrain ResourceManagerGrain => EnvironmentService.GetResourceManagerGrain();
 
@@ -58,6 +58,11 @@ public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
             throw new InvalidOperationException($"The grain {Id} is not initialized");
 
         await context.Invoke();
+    }
+
+    public ValueTask<ResourceSummary> GetSummary()
+    {
+        return ValueTask.FromResult(new ResourceSummary(Id, CreatedAt, Configuration, Metadata, State));
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)

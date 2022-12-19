@@ -16,7 +16,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Tests", "Flownode
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.ApiGateway", "Flownodes.ApiGateway\Flownodes.ApiGateway.csproj", "{98E06037-0071-4332-A138-63B4789921BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.CliClient", "Flownodes.CliClient\Flownodes.CliClient.csproj", "{75FDDB51-FE09-404E-ADEB-575B310810BA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Ctl", "Flownodes.Ctl\Flownodes.Ctl.csproj", "{75FDDB51-FE09-404E-ADEB-575B310810BA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Components.FritzBox", "Flownodes.Components.FritzBox\Flownodes.Components.FritzBox.csproj", "{FE792971-04CE-42E9-BDB5-7E7AA0608400}"
 EndProject

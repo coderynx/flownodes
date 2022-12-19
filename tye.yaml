@@ -1,4 +1,4 @@
-name: flownodes-edge
+name: flownodes
 services:
   - name: redis
     image: redis
@@ -10,8 +10,8 @@ services:
     image: redis
     args: "redis-cli -h redis MONITOR"
 
-  - name: node
-    project: src/Flownodes.Edge.Node/Flownodes.Edge.Node.csproj
+  - name: worker
+    project: src/Flownodes.Worker/Flownodes.Worker.csproj
     env:
       - DOTNET_ENVIRONMENT=Staging
       - ORLEANS_CLUSTER_ID=dev
@@ -20,7 +20,7 @@ services:
       - ALERT_MANAGER_NAME=alert_manager
 
   - name: api
-    project: src/Flownodes.Edge.ApiGateway/Flownodes.Edge.ApiGateway.csproj
+    project: src/Flownodes.ApiGateway/Flownodes.ApiGateway.csproj
     env:
       - ORLEANS_CLUSTER_ID=dev
       - ORLEANS_SERVICE_ID=flownodes

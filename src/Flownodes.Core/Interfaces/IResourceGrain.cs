@@ -8,6 +8,13 @@ namespace Flownodes.Core.Interfaces;
 public interface IResourceGrain : IGrainWithStringKey
 {
     /// <summary>
+    ///     Gets the resource summary.
+    /// </summary>
+    /// <returns>
+    ///     <The resource summary./ returns>
+    public ValueTask<ResourceSummary> GetSummary();
+
+    /// <summary>
     ///     Get the resource kind.
     /// </summary>
     /// <returns>The resource kind.</returns>

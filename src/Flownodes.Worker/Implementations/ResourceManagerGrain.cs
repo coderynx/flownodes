@@ -24,6 +24,29 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _grainFactory.GetGrain<IAlertManagerGrain>("alerter");
     }
 
+    public async ValueTask<ResourceSummary> GetResourceSummary(string id)
+    {
+        var registration = _persistence.State.Registrations.SingleOrDefault(x => x.ResourceId.Equals(id));
+        if (registration is null) return default;
+
+        var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
+        var summary = await grain.GetSummary();
+        return summary;
+    }
+
+    public async ValueTask<IEnumerable<ResourceSummary>> GetAllResourceSummaries()
+    {
+        var summaries = new List<ResourceSummary>();
+        foreach (var grain in _persistence.State.Registrations.Select(registration =>
+                     _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>()))
+        {
+            var summary = await grain.GetSummary();
+            summaries.Add(summary);
+        }
+
+        return summaries;
+    }
+
     public async ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string id)
         where TResourceGrain : IResourceGrain
     {

@@ -1,5 +1,6 @@
 using Flownodes.ApiGateway;
 using Flownodes.Core.Interfaces;
+using Flownodes.Worker.Services;
 using Microsoft.AspNetCore.Mvc;
 using Orleans.Configuration;
 
@@ -33,6 +34,7 @@ builder.Services.Configure<EnvironmentOptions>(options =>
     options.AlertManagerName = Environment.GetEnvironmentVariable("ALERT_MANAGER_NAME") ?? "alert_manager";
     options.ResourceManagerName = Environment.GetEnvironmentVariable("RESOURCE_MANAGER_NAME") ?? "resource_manager";
 });
+builder.Services.AddSingleton<IEnvironmentService, EnvironmentService>();
 
 var app = builder.Build();
 
@@ -50,5 +52,20 @@ app.MapGet("/api/cluster", async ([FromServices] IClusterClient clusterClient) =
     var grain = clusterClient.GetGrain<IClusterGrain>(0);
     return await grain.GetClusterInformation();
 });
+
+app.MapGet("/api/resources/{id}", async ([FromServices] IEnvironmentService environmentService, string id) =>
+{
+    var manager = environmentService.GetResourceManagerGrain();
+    var summary = await manager.GetResourceSummary(id);
+    return summary;
+});
+
+app.MapGet("/api/resources", async ([FromServices] IEnvironmentService environmentService) =>
+{
+    var manager = environmentService.GetResourceManagerGrain();
+    var summaries = await manager.GetAllResourceSummaries();
+    return summaries;
+});
+
 
 app.Run();

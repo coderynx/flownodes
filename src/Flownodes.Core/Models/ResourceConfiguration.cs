@@ -1,49 +1,51 @@
+using System.Text.Json.Serialization;
+
 namespace Flownodes.Core.Models;
 
 [GenerateSerializer]
 public class ResourceConfiguration
 {
-    [Id(0)] public Dictionary<string, object?> Dictionary { get; init; } = new();
+    [Id(0)] public Dictionary<string, object?> Properties { get; init; } = new();
 
     [Id(1)] public string? BehaviourId { get; set; }
 
     public object? this[string key]
     {
-        get => Dictionary[key];
-        set => Dictionary[key] = value;
+        get => Properties[key];
+        set => Properties[key] = value;
     }
 
-    public int Count => Dictionary.Count;
+    [JsonIgnore] public int Count => Properties.Count;
 
-    public IEnumerable<string> Keys => Dictionary.Keys;
+    [JsonIgnore] public IEnumerable<string> Keys => Properties.Keys;
 
-    public IEnumerable<object?> Values => Dictionary.Values;
+    [JsonIgnore] public IEnumerable<object?> Values => Properties.Values;
 
     public static ResourceConfiguration FromDictionary(Dictionary<string, object?> dictionary)
     {
         return new ResourceConfiguration
         {
-            Dictionary = dictionary
+            Properties = dictionary
         };
     }
 
     public void Add(string key, object? value)
     {
-        Dictionary.Add(key, value);
+        Properties.Add(key, value);
     }
 
     public bool ContainsKey(string key)
     {
-        return Dictionary.ContainsKey(key);
+        return Properties.ContainsKey(key);
     }
 
     public bool Remove(string key)
     {
-        return Dictionary.Remove(key);
+        return Properties.Remove(key);
     }
 
     public bool TryGetValue(string key, out object? value)
     {
-        return Dictionary.TryGetValue(key, out value);
+        return Properties.TryGetValue(key, out value);
     }
 }
