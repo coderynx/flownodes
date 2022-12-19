@@ -4,10 +4,10 @@ namespace Flownodes.Core.Interfaces;
 
 public interface IAlerManagerGrain : IGrainWithStringKey
 {
-    Task<Alert> ProduceInfoAlertAsync(string frn, string message);
-    Task<Alert> ProduceWarningAlertAsync(string frn, string message);
-    Task<Alert> ProduceErrorAlertAsync(string frn, string message);
+    ValueTask<Alert> ProduceInfoAlertAsync(string frn, string message);
+    ValueTask<Alert> ProduceWarningAlertAsync(string frn, string message);
+    ValueTask<Alert> ProduceErrorAlertAsync(string frn, string message);
     Task ConfigureAsync(params string[] alertDriverIds);
     Task ClearAlertsAsync();
-    Task<IEnumerable<Alert>> GetAlerts();
+    ValueTask<IEnumerable<Alert>> GetAlerts();
 }

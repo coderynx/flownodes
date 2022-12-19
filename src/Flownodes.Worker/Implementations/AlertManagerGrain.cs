@@ -45,24 +45,24 @@ public class AlertManagerGrain : Grain, IAlerManagerGrain
         _logger.LogInformation("Alerter configured");
     }
 
-    public async Task<Alert> ProduceInfoAlertAsync(string frn, string message)
+    public async ValueTask<Alert> ProduceInfoAlertAsync(string frn, string message)
     {
         return await ProduceAlertAsync(frn, AlertKind.Info, message);
     }
 
-    public async Task<Alert> ProduceWarningAlertAsync(string frn, string message)
+    public async ValueTask<Alert> ProduceWarningAlertAsync(string frn, string message)
     {
         return await ProduceAlertAsync(frn, AlertKind.Warning, message);
     }
 
-    public async Task<Alert> ProduceErrorAlertAsync(string frn, string message)
+    public async ValueTask<Alert> ProduceErrorAlertAsync(string frn, string message)
     {
         return await ProduceAlertAsync(frn, AlertKind.Error, message);
     }
 
-    public Task<IEnumerable<Alert>> GetAlerts()
+    public ValueTask<IEnumerable<Alert>> GetAlerts()
     {
-        return Task.FromResult<IEnumerable<Alert>>(_persistence.State.Alerts);
+        return ValueTask.FromResult<IEnumerable<Alert>>(_persistence.State.Alerts);
     }
 
     public async Task ClearAlertsAsync()
@@ -99,7 +99,7 @@ public class AlertManagerGrain : Grain, IAlerManagerGrain
         _logger.LogInformation("Drivers loaded");
     }
 
-    private async Task<Alert> ProduceAlertAsync(string frn, AlertKind kind, string message)
+    private async ValueTask<Alert> ProduceAlertAsync(string frn, AlertKind kind, string message)
     {
         frn.ThrowIfNull().IfWhiteSpace();
         message.ThrowIfNull().IfWhiteSpace();

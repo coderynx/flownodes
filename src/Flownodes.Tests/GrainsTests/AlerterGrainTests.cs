@@ -4,8 +4,10 @@ using AutoFixture;
 using Flownodes.Core.Interfaces;
 using Flownodes.Tests.Configuration;
 using FluentAssertions;
+using NSubstitute.Core;
 using Orleans;
 using Orleans.TestingHost;
+using Throw;
 using Xunit;
 
 namespace Flownodes.Tests.GrainsTests;
@@ -88,16 +90,31 @@ public class AlerterGrainTests
     }
 
     [Fact]
-    public async Task ShouldThrowOnProduceInfoAlert_WhenFrnOrMessageAreEmpty()
+    public async Task ShouldThrowOnProduceAlert_WhenFrnIsWhitespace()
     {
         // Arrange.
         var grain = await ProvideAlerterAsync();
-
+        
         // Act & Assert.
-        await grain.Invoking(g => g.ProduceInfoAlertAsync(string.Empty, "Test")).Should()
-            .ThrowAsync<ArgumentException>();
-        await grain.Invoking(g => g.ProduceInfoAlertAsync(Globals.TestingFrn, string.Empty)).Should()
-            .ThrowAsync<ArgumentException>();
+        var act = async () =>
+        {
+            await grain.ProduceInfoAlertAsync(" ", "Test");
+        };
+        await act.Should().ThrowAsync<ArgumentException>();
+    }
+    
+    [Fact]
+    public async Task ShouldThrowOnProduceAlert_WhenMessageIsWhitespace()
+    {
+        // Arrange.
+        var grain = await ProvideAlerterAsync();
+        
+        // Act & Assert.
+        var act = async () =>
+        {
+            await grain.ProduceInfoAlertAsync(_fixture.Create<string>(), " ");
+        };
+        await act.Should().ThrowAsync<ArgumentException>();
     }
 
     [Fact]
@@ -133,19 +150,6 @@ public class AlerterGrainTests
     }
 
     [Fact]
-    public async Task ShouldThrowOnProduceWarningAlert_WhenFrnOrMessageAreEmpty()
-    {
-        // Arrange.
-        var grain = await ProvideAlerterAsync();
-
-        // Act & Assert.
-        await grain.Invoking(g => g.ProduceWarningAlertAsync(string.Empty, "Test")).Should()
-            .ThrowAsync<ArgumentException>();
-        await grain.Invoking(g => g.ProduceWarningAlertAsync(Globals.TestingFrn, string.Empty)).Should()
-            .ThrowAsync<ArgumentException>();
-    }
-
-    [Fact]
     public async Task ShouldProduceErrorAlert()
     {
         // Arrange.
@@ -176,20 +180,7 @@ public class AlerterGrainTests
         var alerts = await grain.GetAlerts();
         alerts.Should().NotBeEmpty();
     }
-
-    [Fact]
-    public async Task ShouldThrowOnProduceErrorAlert_WhenFrnOrMessageAreEmpty()
-    {
-        // Arrange.
-        var grain = await ProvideAlerterAsync();
-
-        // Act & Assert.
-        await grain.Invoking(g => g.ProduceErrorAlertAsync(string.Empty, "Test")).Should()
-            .ThrowAsync<ArgumentException>();
-        await grain.Invoking(g => g.ProduceErrorAlertAsync(Globals.TestingFrn, string.Empty)).Should()
-            .ThrowAsync<ArgumentException>();
-    }
-
+    
     [Fact]
     public async Task ShouldClearAlerts()
     {
