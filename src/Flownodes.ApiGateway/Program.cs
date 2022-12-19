@@ -67,5 +67,4 @@ app.MapGet("/api/resources", async ([FromServices] IEnvironmentService environme
     return summaries;
 });
 
-
 app.Run();

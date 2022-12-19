@@ -31,7 +31,21 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
         var summary = await grain.GetSummary();
+
+        _logger.LogDebug("Retrieved resource summary with FRN {Id}", id);
         return summary;
+    }
+
+    public async ValueTask<IResourceGrain> GetResourceAsync(string id)
+    {
+        var registration = _persistence.State.Registrations.SingleOrDefault(x => x.ResourceId.Equals(id));
+        if (registration is null) return default;
+
+        var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
+        var frn = await grain.GetFrn();
+
+        _logger.LogDebug("Retrieved resource with FRN {Frn}", frn);
+        return grain;
     }
 
     public async ValueTask<IEnumerable<ResourceSummary>> GetAllResourceSummaries()
@@ -52,7 +66,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         id.ThrowIfNull().IfWhiteSpace();
 
-        if (_persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id)) is null)
+        if (!_persistence.State.Registrations.Any(x => x.ResourceId.Equals(id)))
         {
             _logger.LogError("Could not find a resource with ID {Id}", id);
             return default;

@@ -25,7 +25,7 @@ public class AlerterGrainTests
     private async Task<IAlertManagerGrain> ProvideAlerterAsync(params string[] drivers)
     {
         var grain = _cluster.GrainFactory.GetGrain<IAlertManagerGrain>(_fixture.Create<string>());
-        await grain.ConfigureAsync(drivers);
+        await grain.SetupAsync(drivers);
         return grain;
     }
 
@@ -56,13 +56,13 @@ public class AlerterGrainTests
     }
 
     [Fact]
-    public async Task ShouldProduceInfoAlert()
+    public async Task ShouldProduceAlert()
     {
         // Arrange.
         var grain = await ProvideAlerterAsync();
 
         // Act.
-        var alert = await grain.AlertInfoAsync(Globals.TestingFrn, "Test");
+        var alert = await grain.FireInfoAsync(_fixture.Create<string>(), "Test");
 
         // Assert.
         alert.Should().NotBeNull();
@@ -72,13 +72,13 @@ public class AlerterGrainTests
     }
 
     [Fact]
-    public async Task ShouldProduceInfoAlert_WithDrivers()
+    public async Task ShouldProduceAlert_WithDrivers()
     {
         // Arrange.
         var grain = await ProvideAlerterAsync("TestAlerterDriver");
 
         // Act.
-        var alert = await grain.AlertInfoAsync(Globals.TestingFrn, "Test");
+        var alert = await grain.FireInfoAsync(_fixture.Create<string>(), "Test");
 
         // Assert.
         alert.Should().NotBeNull();
@@ -94,7 +94,7 @@ public class AlerterGrainTests
         var grain = await ProvideAlerterAsync();
 
         // Act & Assert.
-        var act = async () => { await grain.AlertInfoAsync(" ", "Test"); };
+        var act = async () => { await grain.FireInfoAsync(" ", "Test"); };
         await act.Should().ThrowAsync<ArgumentException>();
     }
 
@@ -105,72 +105,8 @@ public class AlerterGrainTests
         var grain = await ProvideAlerterAsync();
 
         // Act & Assert.
-        var act = async () => { await grain.AlertInfoAsync(_fixture.Create<string>(), " "); };
+        var act = async () => { await grain.FireInfoAsync(_fixture.Create<string>(), " "); };
         await act.Should().ThrowAsync<ArgumentException>();
-    }
-
-    [Fact]
-    public async Task ShouldProduceWarningAlert()
-    {
-        // Arrange.
-        var grain = await ProvideAlerterAsync();
-
-        // Act.
-        var alert = await grain.AlertWarningAsync(Globals.TestingFrn, "Test");
-
-        // Assert.
-        alert.Should().NotBeNull();
-
-        var alerts = await grain.GetAlerts();
-        alerts.Should().NotBeEmpty();
-    }
-
-    [Fact]
-    public async Task ShouldProduceWarningAlert_WithDrivers()
-    {
-        // Arrange.
-        var grain = await ProvideAlerterAsync("TestAlerterDriver");
-
-        // Act.
-        var alert = await grain.AlertWarningAsync(Globals.TestingFrn, "Test");
-
-        // Assert.
-        alert.Should().NotBeNull();
-
-        var alerts = await grain.GetAlerts();
-        alerts.Should().NotBeEmpty();
-    }
-
-    [Fact]
-    public async Task ShouldProduceErrorAlert()
-    {
-        // Arrange.
-        var grain = await ProvideAlerterAsync();
-
-        // Act.
-        var alert = await grain.AlertErrorAsync(Globals.TestingFrn, "Test");
-
-        // Assert.
-        alert.Should().NotBeNull();
-
-        var alerts = await grain.GetAlerts();
-        alerts.Should().NotBeEmpty();
-    }
-
-    [Fact]
-    public async Task ShouldProduceErrorAlert_WithDrivers()
-    {
-        // Arrange.
-        var grain = await ProvideAlerterAsync("TestAlerterDriver");
-
-        // Act.
-        var alert = await grain.AlertErrorAsync(Globals.TestingFrn, "Test");
-
-        // Assert.
-        alert.Should().NotBeNull();
-
-        var alerts = await grain.GetAlerts();
-        alerts.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -178,7 +114,7 @@ public class AlerterGrainTests
     {
         // Arrange.
         var grain = await ProvideAlerterAsync();
-        await grain.AlertInfoAsync(Globals.TestingFrn, "Test");
+        await grain.FireInfoAsync(_fixture.Create<string>(), "Test");
 
         // Act.
         await grain.ClearAlertsAsync();

@@ -2,23 +2,28 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Flownodes.Core.Interfaces;
 using Flownodes.Core.Models;
-using Flownodes.Worker.Models;
 using Orleans.Runtime;
 using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
+[GenerateSerializer]
+public sealed record AlertManagerPersistence
+{
+    [Id(0)] public List<Alert> Registrations { get; set; } = new();
+    [Id(1)] public List<string> DriversNames { get; set; } = new();
+}
+
 public class AlertManagerGrain : Grain, IAlertManagerGrain
 {
-    private readonly List<IAlerterDriver> _alerterDrivers = new();
-
+    private readonly List<IAlerterDriver> _drivers = new();
     private readonly ILogger<AlertManagerGrain> _logger;
-    private readonly IPersistentState<AlerterPersistence> _persistence;
+    private readonly IPersistentState<AlertManagerPersistence> _persistence;
     private readonly IServiceProvider _serviceProvider;
 
     public AlertManagerGrain(ILogger<AlertManagerGrain> logger,
         [PersistentState("alerterStore", "flownodes")]
-        IPersistentState<AlerterPersistence> persistence,
+        IPersistentState<AlertManagerPersistence> persistence,
         IServiceProvider serviceProvider)
     {
         _logger = logger;
@@ -26,16 +31,15 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
         _serviceProvider = serviceProvider;
     }
 
-    public async Task ConfigureAsync(params string[] alertDriverIds)
+    public async Task SetupAsync(params string[] alertDriverIds)
     {
         if (alertDriverIds.Length > 0)
         {
             foreach (var alertDriverId in alertDriverIds)
             {
                 var alertDriver = _serviceProvider.GetAutofacRoot().ResolveKeyed<IAlerterDriver>(alertDriverId);
-
-                _alerterDrivers.Add(alertDriver);
-                _persistence.State.AlerterDrivers.Add(alertDriverId);
+                _drivers.Add(alertDriver);
+                _persistence.State.DriversNames.Add(alertDriverId);
                 _logger.LogInformation("Loaded alerter driver {AlerterDriverId}", alertDriverId);
             }
 
@@ -45,29 +49,29 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
         _logger.LogInformation("Alerter configured");
     }
 
-    public async ValueTask<Alert> AlertInfoAsync(string frn, string message)
+    public async ValueTask<Alert> FireInfoAsync(string targetResourceId, string description)
     {
-        return await AlertAsync(frn, AlertKind.Info, message);
+        return await FireAlertAsync(targetResourceId, AlertSeverity.Informational, description);
     }
 
-    public async ValueTask<Alert> AlertWarningAsync(string frn, string message)
+    public async ValueTask<Alert> FireWarningAsync(string targetResourceId, string description)
     {
-        return await AlertAsync(frn, AlertKind.Warning, message);
+        return await FireAlertAsync(targetResourceId, AlertSeverity.Warning, description);
     }
 
-    public async ValueTask<Alert> AlertErrorAsync(string frn, string message)
+    public async ValueTask<Alert> FireErrorAsync(string targetResourceId, string description)
     {
-        return await AlertAsync(frn, AlertKind.Error, message);
+        return await FireAlertAsync(targetResourceId, AlertSeverity.Error, description);
     }
 
     public ValueTask<IEnumerable<Alert>> GetAlerts()
     {
-        return ValueTask.FromResult<IEnumerable<Alert>>(_persistence.State.Alerts);
+        return ValueTask.FromResult<IEnumerable<Alert>>(_persistence.State.Registrations);
     }
 
     public async Task ClearAlertsAsync()
     {
-        _persistence.State.Alerts.Clear();
+        _persistence.State.Registrations.Clear();
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Cleared stored alerts");
@@ -75,46 +79,47 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Alerter activated");
+        _logger.LogInformation("Alert manager activated");
         return base.OnActivateAsync(cancellationToken);
     }
 
     public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Alerter deactivated");
+        _logger.LogInformation("Alert manager deactivated");
         return base.OnDeactivateAsync(reason, cancellationToken);
     }
 
     private void LoadDrivers()
     {
-        if (_alerterDrivers.Count > 0) return;
+        if (_drivers.Count > 0) return;
 
         // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var alertDriverId in _persistence.State.AlerterDrivers)
+        foreach (var alertDriverId in _persistence.State.DriversNames)
         {
             var alertDriver = _serviceProvider.GetAutofacRoot().ResolveKeyed<IAlerterDriver>(alertDriverId);
-            _alerterDrivers.Add(alertDriver);
+            _drivers.Add(alertDriver);
         }
 
         _logger.LogInformation("Drivers loaded");
     }
 
-    private async ValueTask<Alert> AlertAsync(string frn, AlertKind kind, string message)
+    private async ValueTask<Alert> FireAlertAsync(string targetResourceId, AlertSeverity severity,
+        string description)
     {
-        frn.ThrowIfNull().IfWhiteSpace();
-        message.ThrowIfNull().IfWhiteSpace();
+        targetResourceId.ThrowIfNull().IfWhiteSpace();
+        description.ThrowIfNull().IfWhiteSpace();
 
         LoadDrivers();
 
-        var alert = new Alert(frn, kind, message);
-        _persistence.State.Alerts.Add(alert);
+        var alert = new Alert(Guid.NewGuid(), targetResourceId, severity, DateTime.Now, description);
+
+        foreach (var driver in _drivers) await driver.SendAlertAsync(alert);
+
+        _persistence.State.Registrations.Add(alert);
         await _persistence.WriteStateAsync();
-        _logger.LogInformation("Stored {AlertKind} alert of resource {Frn}", alert.Kind, alert.Frn);
 
-        if (_persistence.State.Alerts.Count is 0) return alert;
-
-        foreach (var alerterDriver in _alerterDrivers) await alerterDriver.SendAlertAsync(alert);
-        _logger.LogInformation("Dispatched {AlertKind} alert of resource {Frn} to all drivers", alert.Kind, alert.Frn);
+        _logger.LogInformation("Dispatched alert {AlertId} of resource {TargeResourceId} to all drivers", alert.Id,
+            targetResourceId);
 
         return alert;
     }

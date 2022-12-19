@@ -17,6 +17,9 @@ public class TestWorker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var resourceManager = _environmentService.GetResourceManagerGrain();
+        var alertManager = _environmentService.GetAlertManagerGrain();
+        await alertManager.SetupAsync("telegram");
+        await alertManager.FireInfoAsync("resource_manager", "Started Flownodes");
 
         var dictionary = new Dictionary<string, object?>
         {

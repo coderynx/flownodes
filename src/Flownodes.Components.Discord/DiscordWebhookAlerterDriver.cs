@@ -1,6 +1,5 @@
 ﻿using System.Net.Http.Json;
 using Flownodes.Core.Interfaces;
-using Flownodes.Core.Models;
 using Microsoft.Extensions.Configuration;
 
 namespace Flownodes.Components.Discord;
@@ -19,8 +18,8 @@ public class DiscordWebhookAlerterDriver : IAlerterDriver
     public Task SendAlertAsync(Alert alert)
     {
         // TODO: Format the message.
-        var embed = new DiscordWebhookEmbed("Flownodes alert", alert.Message);
-        var message = new DiscordWebhookMessage(alert.Message, new[] { embed });
+        var embed = new DiscordWebhookEmbed("Flownodes alert", alert.Description);
+        var message = new DiscordWebhookMessage(alert.Description, new[] { embed });
         _httpClient.PostAsJsonAsync(_url, message);
 
         return Task.CompletedTask;

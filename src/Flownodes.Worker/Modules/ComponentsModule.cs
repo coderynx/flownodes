@@ -10,9 +10,16 @@ namespace Flownodes.Worker.Modules;
 
 public class ComponentsModule : Module
 {
-    private static string GetAttributeName(MemberInfo type)
+    private static string GetBehaviourName(MemberInfo type)
     {
         var attribute = type.GetCustomAttribute(typeof(BehaviourIdAttribute)) as BehaviourIdAttribute;
+        attribute.ThrowIfNull();
+        return attribute.Id;
+    }
+
+    private static string GetAlerterDriverName(MemberInfo type)
+    {
+        var attribute = type.GetCustomAttribute(typeof(AlerterDriverIdAttribute)) as AlerterDriverIdAttribute;
         attribute.ThrowIfNull();
         return attribute.Id;
     }
@@ -33,6 +40,11 @@ public class ComponentsModule : Module
         builder.RegisterAssemblyTypes(assemblies)
             .Where(x => typeof(IBehaviour).IsAssignableFrom(x))
             .As<IBehaviour>()
-            .Keyed<IBehaviour>(x => GetAttributeName(x));
+            .Keyed<IBehaviour>(x => GetBehaviourName(x));
+
+        builder.RegisterAssemblyTypes(assemblies)
+            .Where(x => typeof(IAlerterDriver).IsAssignableFrom(x))
+            .As<IAlerterDriver>()
+            .Keyed<IAlerterDriver>(x => GetAlerterDriverName(x));
     }
 }
