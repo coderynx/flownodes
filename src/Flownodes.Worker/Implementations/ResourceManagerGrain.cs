@@ -1,9 +1,9 @@
-using Ardalis.GuardClauses;
 using Flownodes.Core.Attributes;
 using Flownodes.Core.Interfaces;
 using Flownodes.Core.Models;
 using Flownodes.Worker.Models;
 using Orleans.Runtime;
+using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
@@ -27,7 +27,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string id)
         where TResourceGrain : IResourceGrain
     {
-        Guard.Against.NullOrWhiteSpace(id, nameof(id));
+        id.ThrowIfNull().IfWhiteSpace();
 
         if (_persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id)) is null)
         {
@@ -46,8 +46,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string id,
         ResourceConfiguration configuration) where TResourceGrain : IResourceGrain
     {
-        Guard.Against.NullOrWhiteSpace(id, nameof(id));
-        Guard.Against.Null(configuration, nameof(configuration));
+        id.ThrowIfNull().IfWhiteSpace();
+        configuration.ThrowIfNull();
 
         if (_persistence.State.Registrations.FirstOrDefault(x => x.GrainId.Equals(id)) is not null)
             throw new InvalidOperationException($"Resource with ID {id} already exists");
@@ -74,7 +74,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async Task RemoveResourceAsync(string id)
     {
-        Guard.Against.NullOrWhiteSpace(id, nameof(id));
+        id.ThrowIfNull().IfWhiteSpace();
 
         var toRemove = _persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id));
         if (toRemove is null)

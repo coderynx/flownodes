@@ -48,11 +48,12 @@ public class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
 {
     private readonly IScriptContext _scriptContext;
     private readonly V8ScriptEngine _scriptEngine;
-    
+
     public ScriptResourceGrain(ILogger<ScriptResourceGrain> logger,
         [PersistentState("scriptStore", "flownodes")]
         IPersistentState<ResourcePersistence> persistence,
-        IEnvironmentService environmentService, IBehaviourProvider behaviourProvider, IScriptContext scriptContext, V8ScriptEngine scriptEngine) : base(logger, persistence,
+        IEnvironmentService environmentService, IBehaviourProvider behaviourProvider, IScriptContext scriptContext,
+        V8ScriptEngine scriptEngine) : base(logger, persistence,
         environmentService, behaviourProvider)
     {
         _scriptContext = scriptContext;

@@ -1,6 +1,5 @@
 using Flownodes.Core.Interfaces;
 using Flownodes.Core.Models;
-using OpenTelemetry.Resources;
 
 namespace Flownodes.Worker.Services;
 

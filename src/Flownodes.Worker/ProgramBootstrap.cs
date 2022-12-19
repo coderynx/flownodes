@@ -41,7 +41,7 @@ public static partial class Program
             options.AlertManagerName = alertManagerName;
             options.ResourceManagerName = resourceManagerName;
         });
-        
+
         services.AddSingleton<IEnvironmentService, EnvironmentService>();
         services.AddSingleton<IScriptContext, ScriptContext>();
         services.AddTransient<V8ScriptEngine>();

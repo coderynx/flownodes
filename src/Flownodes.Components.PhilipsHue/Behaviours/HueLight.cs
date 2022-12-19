@@ -1,9 +1,9 @@
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
-using Ardalis.GuardClauses;
 using Flownodes.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Throw;
 
 namespace Flownodes.Components.PhilipsHue.Behaviours;
 
@@ -49,7 +49,7 @@ public class HueLight : IDevice
     public async Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context)
     {
         var lightId = context.Configuration["lightId"]?.ToString();
-        Guard.Against.NullOrWhiteSpace(lightId, nameof(lightId));
+        lightId.ThrowIfNull();
 
         if (newState.TryGetValue("power", out var value))
         {

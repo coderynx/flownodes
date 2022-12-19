@@ -1,14 +1,14 @@
-using Ardalis.GuardClauses;
 using Flownodes.Core.Interfaces;
 using Flownodes.Core.Models;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
+using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
-public abstract class ResourceGrain : Grain
+public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
 {
     private readonly IBehaviourProvider _behaviourProvider;
     protected readonly IEnvironmentService EnvironmentService;
@@ -27,6 +27,7 @@ public abstract class ResourceGrain : Grain
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
     protected string Id => this.GetPrimaryKeyString();
+    protected string BehaviourId => Configuration.BehaviourId;
     protected string Frn => $"{EnvironmentService.BaseFrn}:{Kind}:{Id}";
     protected DateTime? CreatedAt => Persistence.State.CreatedAt;
     protected ResourceContext Context => new(Configuration, Metadata, State);
@@ -47,6 +48,15 @@ public abstract class ResourceGrain : Grain
     {
         get => Persistence.State.State;
         private set => Persistence.State.State = value;
+    }
+
+    public async Task Invoke(IIncomingGrainCallContext context)
+    {
+        // TODO: Evaluate if the method is useless.
+        if (context.ImplementationMethod.Name is not "SetupAsync" && Persistence.State is null)
+            throw new InvalidOperationException($"The grain {Id} is not initialized");
+
+        await context.Invoke();
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
@@ -88,14 +98,14 @@ public abstract class ResourceGrain : Grain
 
     public virtual async Task UpdateConfigurationAsync(ResourceConfiguration configuration)
     {
-        Guard.Against.Null(configuration, nameof(configuration));
+        configuration.ThrowIfNull();
 
         Configuration = configuration;
 
         if (Configuration.BehaviourId is not null)
         {
             Behaviour = _behaviourProvider.GetBehaviour(configuration.BehaviourId);
-            Guard.Against.Null(Behaviour, nameof(Behaviour));
+            Behaviour.ThrowIfNull();
 
             await Behaviour.OnSetupAsync(Context);
 
@@ -110,7 +120,7 @@ public abstract class ResourceGrain : Grain
 
     public virtual async Task UpdateMetadataAsync(Dictionary<string, string> metadata)
     {
-        Guard.Against.Null(metadata, nameof(metadata));
+        metadata.ThrowIfNull();
 
         Metadata.MergeInPlace(metadata);
         await Persistence.WriteStateAsync();

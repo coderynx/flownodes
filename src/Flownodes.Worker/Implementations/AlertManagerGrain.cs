@@ -4,6 +4,7 @@ using Flownodes.Core.Interfaces;
 using Flownodes.Core.Models;
 using Flownodes.Worker.Models;
 using Orleans.Runtime;
+using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
@@ -46,41 +47,17 @@ public class AlertManagerGrain : Grain, IAlerManagerGrain
 
     public async Task<Alert> ProduceInfoAlertAsync(string frn, string message)
     {
-        try
-        {
-            return await ProduceAlertAsync(frn, AlertKind.Info, message);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError("Error producing alert: {ErrorMessage}", e.Message);
-            throw;
-        }
+        return await ProduceAlertAsync(frn, AlertKind.Info, message);
     }
 
     public async Task<Alert> ProduceWarningAlertAsync(string frn, string message)
     {
-        try
-        {
-            return await ProduceAlertAsync(frn, AlertKind.Warning, message);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError("Error producing alert: {ErrorMessage}", e.Message);
-            throw;
-        }
+        return await ProduceAlertAsync(frn, AlertKind.Warning, message);
     }
 
     public async Task<Alert> ProduceErrorAlertAsync(string frn, string message)
     {
-        try
-        {
-            return await ProduceAlertAsync(frn, AlertKind.Error, message);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError("Error producing alert: {ErrorMessage}", e.Message);
-            throw;
-        }
+        return await ProduceAlertAsync(frn, AlertKind.Error, message);
     }
 
     public Task<IEnumerable<Alert>> GetAlerts()
@@ -124,6 +101,9 @@ public class AlertManagerGrain : Grain, IAlerManagerGrain
 
     private async Task<Alert> ProduceAlertAsync(string frn, AlertKind kind, string message)
     {
+        frn.ThrowIfNull().IfWhiteSpace();
+        message.ThrowIfNull().IfWhiteSpace();
+
         LoadDrivers();
 
         var alert = new Alert(frn, kind, message);

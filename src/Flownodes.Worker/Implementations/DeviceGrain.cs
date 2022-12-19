@@ -1,4 +1,3 @@
-using Ardalis.GuardClauses;
 using Flownodes.Core.Interfaces;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Models;
@@ -17,7 +16,6 @@ public class DeviceGrain : ResourceGrain, IDeviceGrain
     {
     }
 
-    private string BehaviourId => Configuration.BehaviourId;
     private new IDevice? Behaviour => base.Behaviour as IDevice;
 
     public async Task UpdateStateAsync(Dictionary<string, object?> newState)
@@ -32,8 +30,6 @@ public class DeviceGrain : ResourceGrain, IDeviceGrain
 
     private async Task SendStateAsync(Dictionary<string, object?> newState)
     {
-        EnsureBehaviour();
-
         await Behaviour.OnStateChangeAsync(newState, Context);
 
         Logger.LogInformation("Applied new state for device {DeviceId}", Id);
@@ -49,11 +45,5 @@ public class DeviceGrain : ResourceGrain, IDeviceGrain
     {
         Logger.LogInformation("Deactivated device {DeviceId}", Id);
         return base.OnDeactivateAsync(reason, cancellationToken);
-    }
-
-    private void EnsureBehaviour()
-    {
-        Guard.Against.Null(base.Behaviour, nameof(base.Behaviour));
-        Guard.Against.Null(BehaviourId, nameof(BehaviourId));
     }
 }

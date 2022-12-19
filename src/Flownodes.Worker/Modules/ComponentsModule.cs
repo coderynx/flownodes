@@ -1,8 +1,8 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Ardalis.GuardClauses;
 using Autofac;
 using Flownodes.Core.Interfaces;
+using Throw;
 using Module = Autofac.Module;
 
 namespace Flownodes.Worker.Modules;
@@ -12,7 +12,7 @@ public class ComponentsModule : Module
     private static string GetAttributeName(MemberInfo type)
     {
         var attribute = type.GetCustomAttribute(typeof(DeviceIdAttribute)) as DeviceIdAttribute;
-        Guard.Against.Null(attribute.Id, nameof(attribute.Id));
+        attribute.ThrowIfNull();
         return attribute.Id;
     }
 
