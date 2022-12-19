@@ -1,21 +1,24 @@
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
+using Flownodes.Core;
+using Flownodes.Core.Attributes;
 using Flownodes.Core.Interfaces;
+using Flownodes.Core.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Throw;
 
 namespace Flownodes.Components.PhilipsHue.Behaviours;
 
-[DeviceId("hue_light")]
-[DeviceDescription("Device behaviour for the Philips Hue Light")]
-public class HueLight : IDevice
+[BehaviourId("hue_light")]
+[BehaviourDescription("Device behaviour for the Philips Hue Light")]
+public class HueLight : BaseDevice
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<HueLight> _logger;
 
     public HueLight(IConfiguration configuration, ILogger<HueLight> logger,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory) : base(logger)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
@@ -27,7 +30,7 @@ public class HueLight : IDevice
         _httpClient.BaseAddress = new Uri(url);
     }
 
-    public async Task OnSetupAsync(ResourceContext context)
+    public override async Task OnSetupAsync(ResourceContext context)
     {
         var lightId = context.Configuration["lightId"]?.ToString();
 
@@ -46,7 +49,7 @@ public class HueLight : IDevice
         }
     }
 
-    public async Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context)
+    public override async Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context)
     {
         var lightId = context.Configuration["lightId"]?.ToString();
         lightId.ThrowIfNull();

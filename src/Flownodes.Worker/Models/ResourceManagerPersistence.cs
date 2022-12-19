@@ -16,4 +16,9 @@ public class ResourceManagerPersistence
     {
         Registrations.Add(new ResourceRegistration(resourceId, grainId, kind, frn));
     }
+
+    public bool IsKindRegistered(string kind)
+    {
+        return Registrations.Any(x => x.Kind.Equals(kind));
+    }
 }

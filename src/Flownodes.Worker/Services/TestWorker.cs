@@ -24,8 +24,15 @@ public class TestWorker : BackgroundService
         };
         var resourceConfiguration = ResourceConfiguration.FromDictionary(dictionary);
         resourceConfiguration.BehaviourId = "hue_light";
-
         var hueLight = await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light_1", resourceConfiguration);
+
+        var weatherConfiguration = new ResourceConfiguration
+        {
+            BehaviourId = "open_weather_map"
+        };
+        var weather =
+            await resourceManager.DeployResourceAsync<IDataSourceGrain>("open_weather_1", weatherConfiguration);
+        await weather.GetData("get_by_city", new Dictionary<string, object?> { { "city", "Roma" } });
 
         var newState = new Dictionary<string, object?>
         {
@@ -34,11 +41,11 @@ public class TestWorker : BackgroundService
         await hueLight.UpdateStateAsync(newState);
 
         var configuration = await hueLight.GetConfiguration();
-        _logger.LogInformation("Metadata: {@Configuration}", configuration);
+        _logger.LogInformation("Configuration: {@Configuration}", configuration);
         var metadata = await hueLight.GetMetadata();
         _logger.LogInformation("Metadata: {Metadata}", metadata);
         var currentState = await hueLight.GetState();
-        _logger.LogInformation("State: {State}", currentState.Dictionary);
+        _logger.LogInformation("State: {@State}", currentState.Dictionary);
 
         var fritzConfiguration = new ResourceConfiguration
         {

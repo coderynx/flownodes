@@ -55,12 +55,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
         var kind = await grain.GetKind();
 
+        // TODO: Verify if singleton is needed.
         if (Attribute.IsDefined(typeof(TResourceGrain), typeof(SingletonResourceAttribute)))
-            if (_persistence.State.Registrations.FirstOrDefault(x => x.Kind.Equals(kind)) is not null)
-            {
-                await grain.SelfRemoveAsync();
-                throw new InvalidOperationException($"Singleton resource with Kind {kind} already exists");
-            }
+            _persistence.State.IsKindRegistered(kind)
+                .Throw($"Singleton resource of Kind {kind} already exists")
+                .IfFalse();
 
         await grain.UpdateConfigurationAsync(configuration);
         var frn = await grain.GetFrn();
@@ -93,8 +92,6 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async Task RemoveAllResourcesAsync()
     {
-        var dummyName = typeof(DummyResourceGrain).AssemblyQualifiedName;
-
         var grains = _persistence.State.Registrations
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>());
 

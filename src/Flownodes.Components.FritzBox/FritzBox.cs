@@ -3,15 +3,18 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
+using Flownodes.Core;
+using Flownodes.Core.Attributes;
 using Flownodes.Core.Interfaces;
+using Flownodes.Core.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Flownodes.Components.FritzBox;
 
-[DeviceId("fritz_box")]
-[DeviceDescription("FritzBox behaviour for Flownodes.")]
-public class FritzBox : IDevice
+[BehaviourId("fritz_box")]
+[BehaviourDescription("FritzBox behaviour for Flownodes.")]
+public class FritzBox : BaseDevice
 {
     private readonly string _address;
     private readonly HttpClient _httpClient;
@@ -21,7 +24,8 @@ public class FritzBox : IDevice
     private readonly string _username;
     private string _sid;
 
-    public FritzBox(ILogger<FritzBox> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public FritzBox(ILogger<FritzBox> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration) :
+        base(logger)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
@@ -34,7 +38,7 @@ public class FritzBox : IDevice
         _httpClient.BaseAddress = new Uri(url);
     }
 
-    public async Task OnSetupAsync(ResourceContext context)
+    public override async Task OnSetupAsync(ResourceContext context)
     {
         _sid = GetSessionId(_username, _password);
         _logger.LogInformation("Successfully logged-in FritzBox at {Address}", _address);
@@ -56,7 +60,7 @@ public class FritzBox : IDevice
         }
     }
 
-    public async Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context)
+    public override async Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context)
     {
         throw new NotImplementedException();
     }

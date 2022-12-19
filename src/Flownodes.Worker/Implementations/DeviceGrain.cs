@@ -1,3 +1,4 @@
+using Flownodes.Core;
 using Flownodes.Core.Interfaces;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Models;
@@ -6,7 +7,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-public class DeviceGrain : ResourceGrain, IDeviceGrain
+public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
     public DeviceGrain(IBehaviourProvider behaviourProvider,
         [PersistentState("devicePersistence", "flownodes")]
@@ -16,7 +17,7 @@ public class DeviceGrain : ResourceGrain, IDeviceGrain
     {
     }
 
-    private new IDevice? Behaviour => base.Behaviour as IDevice;
+    private new BaseDevice? Behaviour => base.Behaviour as BaseDevice;
 
     public async Task UpdateStateAsync(Dictionary<string, object?> newState)
     {

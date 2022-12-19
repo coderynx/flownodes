@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Autofac;
+using Flownodes.Core.Attributes;
 using Flownodes.Core.Interfaces;
 using Throw;
 using Module = Autofac.Module;
@@ -11,7 +12,7 @@ public class ComponentsModule : Module
 {
     private static string GetAttributeName(MemberInfo type)
     {
-        var attribute = type.GetCustomAttribute(typeof(DeviceIdAttribute)) as DeviceIdAttribute;
+        var attribute = type.GetCustomAttribute(typeof(BehaviourIdAttribute)) as BehaviourIdAttribute;
         attribute.ThrowIfNull();
         return attribute.Id;
     }

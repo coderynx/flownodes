@@ -1,6 +1,6 @@
 namespace Flownodes.Worker.Extensions;
 
-public static class DictionaryUtils
+public static class DictionaryExtensions
 {
     public static void MergeInPlace<TKey, TValue>(this Dictionary<TKey, TValue?> left,
         Dictionary<TKey, TValue?> right) where TKey : notnull
