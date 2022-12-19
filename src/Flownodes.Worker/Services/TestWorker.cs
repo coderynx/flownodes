@@ -24,9 +24,27 @@ public class TestWorker : BackgroundService
         };
         var resourceConfiguration = ResourceConfiguration.FromDictionary(dictionary);
         resourceConfiguration.BehaviourId = "hue_light";
-        var hueLight = await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light_1", resourceConfiguration);
+        await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light_1", resourceConfiguration);
 
-        var weatherConfiguration = new ResourceConfiguration
+        const string code = """
+            (async function () {
+                    var newState = host.newObj(deviceState);
+                    newState.Add('power', false);
+                    var hueLight = await context.GetDevice("hue_light_1");
+                    await hueLight.UpdateStateAsync(newState);
+                    context.LogInformation("Script executed successfully");
+            })();
+      """;
+
+        dictionary = new Dictionary<string, object?>
+        {
+            { "code", code }
+        };
+        var scriptResource = await resourceManager.DeployResourceAsync<IScriptResourceGrain>("script_01",
+            ResourceConfiguration.FromDictionary(dictionary));
+        await scriptResource.ExecuteAsync();
+
+        /*var weatherConfiguration = new ResourceConfiguration
         {
             BehaviourId = "open_weather_map"
         };
@@ -70,7 +88,6 @@ public class TestWorker : BackgroundService
         };
         await scriptResource.UpdateConfigurationAsync(ResourceConfiguration.FromDictionary(dictionary));
         await scriptResource.ExecuteAsync();
-
-        await resourceManager.RemoveAllResourcesAsync();
+        */
     }
 }

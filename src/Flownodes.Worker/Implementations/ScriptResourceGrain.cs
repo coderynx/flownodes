@@ -1,71 +1,46 @@
 using Flownodes.Core.Interfaces;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
+using Microsoft.ClearScript;
 using Microsoft.ClearScript.V8;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-public interface IScriptContext
-{
-    void LogInformation(string text);
-    void LogWarning(string text);
-    void LogError(string text);
-    void LogCritical(string text);
-}
-
-public class ScriptContext : IScriptContext
-{
-    private readonly ILogger<ScriptContext> _logger;
-
-    public ScriptContext(ILogger<ScriptContext> logger)
-    {
-        _logger = logger;
-    }
-
-    public void LogInformation(string text)
-    {
-        _logger.LogInformation(text);
-    }
-
-    public void LogWarning(string text)
-    {
-        _logger.LogWarning(text);
-    }
-
-    public void LogError(string text)
-    {
-        _logger.LogError(text);
-    }
-
-    public void LogCritical(string text)
-    {
-        _logger.LogCritical(text);
-    }
-}
-
 public class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
 {
-    private readonly IScriptContext _scriptContext;
-    private readonly V8ScriptEngine _scriptEngine;
+    private readonly ILoggerFactory _loggerFactory;
+    private readonly V8ScriptEngine _scriptEngine = new(V8ScriptEngineFlags.EnableTaskPromiseConversion);
 
     public ScriptResourceGrain(ILogger<ScriptResourceGrain> logger,
         [PersistentState("scriptStore", "flownodes")]
         IPersistentState<ResourcePersistence> persistence,
-        IEnvironmentService environmentService, IBehaviourProvider behaviourProvider, IScriptContext scriptContext,
-        V8ScriptEngine scriptEngine) : base(logger, persistence,
-        environmentService, behaviourProvider)
+        IEnvironmentService environmentService, IBehaviourProvider behaviourProvider, ILoggerFactory loggerFactory) :
+        base(logger, persistence,
+            environmentService, behaviourProvider)
     {
-        _scriptContext = scriptContext;
-        _scriptEngine = scriptEngine;
+        _loggerFactory = loggerFactory;
     }
 
     public Task ExecuteAsync(Dictionary<string, object?>? parameters = null)
     {
-        _scriptEngine.AddRestrictedHostObject("context", _scriptContext);
-        _scriptEngine.Execute(Configuration["code"].ToString());
+        var context = GetScriptContext();
+        var code = Configuration["code"].ToString();
+
+        _scriptEngine.AddHostObject("host", new HostFunctions());
+        _scriptEngine.AddHostObject("context", context);
+        _scriptEngine.AddHostType(typeof(Console));
+        _scriptEngine.AddHostType("deviceState", typeof(Dictionary<string, object?>));
+        _scriptEngine.AddHostType(typeof(IDeviceGrain));
+        _scriptEngine.Execute(code);
 
         Logger.LogInformation("Executed script with {Frn}", Frn);
         return Task.CompletedTask;
+    }
+
+    private ScriptContext GetScriptContext()
+    {
+        var logger = _loggerFactory.CreateLogger<ScriptContext>();
+        return new ScriptContext(logger, ResourceManagerGrain);
     }
 }

@@ -1,9 +1,7 @@
 using System.Reflection;
 using Autofac;
-using Flownodes.Worker.Implementations;
 using Flownodes.Worker.Modules;
 using Flownodes.Worker.Services;
-using Microsoft.ClearScript.V8;
 using Orleans.Configuration;
 using Serilog;
 
@@ -43,8 +41,6 @@ public static partial class Program
         });
 
         services.AddSingleton<IEnvironmentService, EnvironmentService>();
-        services.AddSingleton<IScriptContext, ScriptContext>();
-        services.AddTransient<V8ScriptEngine>();
         services.AddHostedService<TestWorker>();
     }
 

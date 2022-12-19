@@ -31,6 +31,7 @@ public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
     protected string Frn => $"{EnvironmentService.BaseFrn}:{Kind}:{Id}";
     protected DateTime? CreatedAt => Persistence.State.CreatedAt;
     protected ResourceContext Context => new(Configuration, Metadata, State);
+    protected IResourceManagerGrain ResourceManagerGrain => EnvironmentService.GetResourceManagerGrain();
 
     protected Dictionary<string, string> Metadata
     {
