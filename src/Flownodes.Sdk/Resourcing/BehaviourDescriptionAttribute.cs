@@ -1,4 +1,4 @@
-namespace Flownodes.Core.Attributes;
+namespace Flownodes.Sdk.Resourcing;
 
 [AttributeUsage(AttributeTargets.Class)]
 public class BehaviourDescriptionAttribute : Attribute

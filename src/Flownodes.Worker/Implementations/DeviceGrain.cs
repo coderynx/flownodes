@@ -1,8 +1,9 @@
-using Flownodes.Core;
 using Flownodes.Core.Interfaces;
+using Flownodes.Sdk.Resourcing;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
+using MapsterMapper;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
@@ -12,8 +13,8 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     public DeviceGrain(IBehaviourProvider behaviourProvider,
         [PersistentState("devicePersistence", "flownodes")]
         IPersistentState<ResourcePersistence> persistence,
-        ILogger<DeviceGrain> logger, IEnvironmentService environmentService) : base(logger, persistence,
-        environmentService, behaviourProvider)
+        ILogger<DeviceGrain> logger, IEnvironmentService environmentService, IMapper mapper) : base(logger, persistence,
+        environmentService, behaviourProvider, mapper)
     {
     }
 
@@ -31,7 +32,7 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 
     private async Task SendStateAsync(Dictionary<string, object?> newState)
     {
-        await Behaviour.OnStateChangeAsync(newState, Context);
+        await Behaviour.OnStateChangeAsync(newState, GetResourceContext());
 
         Logger.LogInformation("Applied new state for device {DeviceId}", Id);
     }

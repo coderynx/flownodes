@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Components.FritzB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Components.OpenWeatherMap", "Flownodes.Components.OpenWeatherMap\Flownodes.Components.OpenWeatherMap.csproj", "{02F18657-D1CF-4299-BF0A-8D9C9CD61F6D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Sdk", "Flownodes.Sdk\Flownodes.Sdk.csproj", "{799FED55-5697-4FA4-B6AD-E1ED9D0C492C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,6 +70,10 @@ Global
 		{02F18657-D1CF-4299-BF0A-8D9C9CD61F6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02F18657-D1CF-4299-BF0A-8D9C9CD61F6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02F18657-D1CF-4299-BF0A-8D9C9CD61F6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{799FED55-5697-4FA4-B6AD-E1ED9D0C492C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{799FED55-5697-4FA4-B6AD-E1ED9D0C492C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{799FED55-5697-4FA4-B6AD-E1ED9D0C492C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{799FED55-5697-4FA4-B6AD-E1ED9D0C492C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{241C53CA-48CE-4894-926C-DA65D0A0A9D8} = {874C2FE9-67D1-4F37-B087-4B53169674B2}

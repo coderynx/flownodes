@@ -2,6 +2,8 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Flownodes.Core.Interfaces;
 using Flownodes.Core.Models;
+using Flownodes.Sdk.Alerting;
+using MapsterMapper;
 using Orleans.Runtime;
 using Throw;
 
@@ -18,17 +20,19 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
 {
     private readonly List<IAlerterDriver> _drivers = new();
     private readonly ILogger<AlertManagerGrain> _logger;
+    private readonly IMapper _mapper;
     private readonly IPersistentState<AlertManagerPersistence> _persistence;
     private readonly IServiceProvider _serviceProvider;
 
     public AlertManagerGrain(ILogger<AlertManagerGrain> logger,
         [PersistentState("alerterStore", "flownodes")]
         IPersistentState<AlertManagerPersistence> persistence,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider, IMapper mapper)
     {
         _logger = logger;
         _persistence = persistence;
         _serviceProvider = serviceProvider;
+        _mapper = mapper;
     }
 
     public async Task SetupAsync(params string[] alertDriverIds)
@@ -113,7 +117,8 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
 
         var alert = new Alert(Guid.NewGuid(), targetResourceId, severity, DateTime.Now, description);
 
-        foreach (var driver in _drivers) await driver.SendAlertAsync(alert);
+        var alertToFire = _mapper.Map<AlertToFire>(alert);
+        foreach (var driver in _drivers) await driver.SendAlertAsync(alertToFire);
 
         _persistence.State.Registrations.Add(alert);
         await _persistence.WriteStateAsync();

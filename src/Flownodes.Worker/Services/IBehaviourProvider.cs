@@ -1,4 +1,4 @@
-using Flownodes.Core.Interfaces;
+using Flownodes.Sdk.Resourcing;
 
 namespace Flownodes.Worker.Services;
 

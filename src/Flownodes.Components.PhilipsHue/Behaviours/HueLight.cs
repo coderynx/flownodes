@@ -1,8 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
-using Flownodes.Core;
-using Flownodes.Core.Attributes;
-using Flownodes.Core.Models;
+using Flownodes.Sdk.Resourcing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Throw;

@@ -2,6 +2,8 @@ using System.Reflection;
 using Autofac;
 using Flownodes.Worker.Modules;
 using Flownodes.Worker.Services;
+using Mapster;
+using MapsterMapper;
 using Orleans.Configuration;
 using Serilog;
 
@@ -39,6 +41,10 @@ public static partial class Program
             options.AlertManagerName = alertManagerName;
             options.ResourceManagerName = resourceManagerName;
         });
+
+        var config = new TypeAdapterConfig();
+        services.AddSingleton(config);
+        services.AddScoped<IMapper, ServiceMapper>();
 
         services.AddSingleton<IEnvironmentService, EnvironmentService>();
         services.AddHostedService<TestWorker>();

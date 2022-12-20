@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0"/>
+        <PackageReference Include="Mapster.DependencyInjection" Version="1.0.0"/>
         <PackageReference Include="Microsoft.ClearScript.V8" Version="7.3.5"/>
         <PackageReference Include="Microsoft.ClearScript.V8.Native.osx-arm64" Version="7.3.5"/>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0"/>
@@ -22,8 +23,8 @@
         <PackageReference Include="Microsoft.Orleans.Persistence.Memory" Version="7.0.0"/>
         <PackageReference Include="Orleans.Clustering.Redis" Version="7.0.0"/>
         <PackageReference Include="Orleans.Persistence.Redis" Version="7.0.0"/>
-        <PackageReference Include="OrleansDashboard" Version="7.0.2"/>
         <PackageReference Include="Microsoft.Tye.Extensions.Configuration" Version="0.10.0-alpha.21420.1"/>
+        <PackageReference Include="OrleansDashboard" Version="7.0.2"/>
         <PackageReference Include="Serilog.Extensions.Hosting" Version="5.0.1"/>
         <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0"/>
         <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0"/>
@@ -32,6 +33,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Flownodes.Core\Flownodes.Core.csproj"/>
+        <ProjectReference Include="..\Flownodes.Sdk\Flownodes.Sdk.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

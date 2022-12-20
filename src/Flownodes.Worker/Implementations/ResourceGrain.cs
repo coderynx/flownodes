@@ -1,8 +1,10 @@
 using Flownodes.Core.Interfaces;
 using Flownodes.Core.Models;
+using Flownodes.Sdk.Resourcing;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
+using MapsterMapper;
 using Orleans.Runtime;
 using Throw;
 
@@ -11,18 +13,20 @@ namespace Flownodes.Worker.Implementations;
 public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
 {
     private readonly IBehaviourProvider _behaviourProvider;
+    private readonly IMapper _mapper;
     protected readonly IEnvironmentService EnvironmentService;
     protected readonly ILogger<ResourceGrain> Logger;
     protected readonly IPersistentState<ResourcePersistence> Persistence;
     protected IBehaviour? Behaviour;
 
     protected ResourceGrain(ILogger<ResourceGrain> logger, IPersistentState<ResourcePersistence> persistence,
-        IEnvironmentService environmentService, IBehaviourProvider behaviourProvider)
+        IEnvironmentService environmentService, IBehaviourProvider behaviourProvider, IMapper mapper)
     {
         Logger = logger;
         Persistence = persistence;
         EnvironmentService = environmentService;
         _behaviourProvider = behaviourProvider;
+        _mapper = mapper;
     }
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
@@ -30,7 +34,6 @@ public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
     protected string BehaviourId => Configuration.BehaviourId;
     protected string Frn => $"{EnvironmentService.BaseFrn}:{Kind}:{Id}";
     protected DateTime CreatedAt => Persistence.State.CreatedAt;
-    protected ResourceContext Context => new(Configuration, Metadata, State);
     protected IResourceManagerGrain ResourceManagerGrain => EnvironmentService.GetResourceManagerGrain();
 
     protected Dictionary<string, string> Metadata
@@ -102,6 +105,14 @@ public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
         return ValueTask.FromResult(Configuration);
     }
 
+    protected ResourceContext GetResourceContext()
+    {
+        var actualConfiguration = _mapper.Map<ActualResourceConfiguration>(Configuration);
+        var actualState = _mapper.Map<ActualResourceState>(State);
+
+        return new ResourceContext(actualConfiguration, Metadata, actualState);
+    }
+
     public virtual async Task UpdateConfigurationAsync(ResourceConfiguration configuration)
     {
         configuration.ThrowIfNull();
@@ -113,7 +124,8 @@ public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
             Behaviour = _behaviourProvider.GetBehaviour(configuration.BehaviourId);
             Behaviour.ThrowIfNull();
 
-            await Behaviour.OnSetupAsync(Context);
+            var context = GetResourceContext();
+            await Behaviour.OnSetupAsync(context);
 
             Logger.LogInformation("Configured behaviour {BehaviourId} for resource {ResourceId}",
                 configuration.BehaviourId, Id);

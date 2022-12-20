@@ -4,8 +4,11 @@ using Autofac.Extensions.DependencyInjection;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
-using Flownodes.Core.Interfaces;
+using Flownodes.Sdk.Alerting;
+using Flownodes.Sdk.Resourcing;
 using Flownodes.Worker.Services;
+using Mapster;
+using MapsterMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NSubstitute;
@@ -79,6 +82,10 @@ public class ClusterFixture : IAsyncLifetime
             {
                 services.AddSingleton<IBehaviourProvider, BehaviourProvider>();
                 services.AddSingleton<IEnvironmentService, EnvironmentService>();
+
+                var config = new TypeAdapterConfig();
+                services.AddSingleton(config);
+                services.AddScoped<IMapper, ServiceMapper>();
             });
 
             siloBuilder

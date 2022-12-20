@@ -1,9 +1,8 @@
-using Flownodes.ApiGateway;
 using Flownodes.Core.Interfaces;
 using Microsoft.Extensions.Options;
 using Orleans.Configuration;
 
-namespace Flownodes.Worker.Services;
+namespace Flownodes.ApiGateway.Services;
 
 public interface IEnvironmentService
 {

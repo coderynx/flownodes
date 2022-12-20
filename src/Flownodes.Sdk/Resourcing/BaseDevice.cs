@@ -1,8 +1,6 @@
-using Flownodes.Core.Interfaces;
-using Flownodes.Core.Models;
 using Microsoft.Extensions.Logging;
 
-namespace Flownodes.Core;
+namespace Flownodes.Sdk.Resourcing;
 
 public abstract class BaseDevice : IBehaviour
 {

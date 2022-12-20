@@ -1,4 +1,4 @@
-﻿using Flownodes.Core.Interfaces;
+﻿using Flownodes.Sdk.Alerting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
@@ -20,7 +20,7 @@ public class TelegramAlerterDriver : IAlerterDriver
         _logger = logger;
     }
 
-    public async Task SendAlertAsync(Alert alert)
+    public async Task SendAlertAsync(AlertToFire alert)
     {
         var message = "<b>Flownodes</b> \n \n 🚨 New alert \n 📦 Resource Id: " + alert.TargetResourceId +
                       " \n 🔖 Alert kind: " + alert.Severity + "\n 💬 Alert message: " + alert.Description;

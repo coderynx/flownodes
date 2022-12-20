@@ -1,6 +1,4 @@
-using Flownodes.Core.Models;
-
-namespace Flownodes.Core.Interfaces;
+namespace Flownodes.Sdk.Resourcing;
 
 public interface IBehaviour
 {
