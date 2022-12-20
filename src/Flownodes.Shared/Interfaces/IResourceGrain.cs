@@ -1,6 +1,6 @@
-using Flownodes.Core.Models;
+using Flownodes.Shared.Models;
 
-namespace Flownodes.Core.Interfaces;
+namespace Flownodes.Shared.Interfaces;
 
 /// <summary>
 ///     Marker interface for a resource grain.

@@ -1,6 +1,6 @@
 using Newtonsoft.Json.Linq;
 
-namespace Flownodes.Core.Interfaces;
+namespace Flownodes.Shared.Interfaces;
 
 /// <summary>
 ///     The data object grain is a resource that allows to store custom data.

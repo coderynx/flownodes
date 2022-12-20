@@ -1,5 +1,5 @@
-using Flownodes.Core.Interfaces;
 using Flownodes.Sdk.Resourcing;
+using Flownodes.Shared.Interfaces;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using MapsterMapper;

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Flownodes.Core.Models;
+namespace Flownodes.Shared.Models;
 
 [GenerateSerializer]
 public class ResourceState

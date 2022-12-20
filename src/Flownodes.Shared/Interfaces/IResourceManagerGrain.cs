@@ -1,6 +1,6 @@
-using Flownodes.Core.Models;
+using Flownodes.Shared.Models;
 
-namespace Flownodes.Core.Interfaces;
+namespace Flownodes.Shared.Interfaces;
 
 public interface IResourceManagerGrain : IGrainWithStringKey
 {

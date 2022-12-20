@@ -1,6 +1,6 @@
 using Flownodes.ApiGateway;
 using Flownodes.ApiGateway.Services;
-using Flownodes.Core.Interfaces;
+using Flownodes.Shared.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Orleans.Configuration;
 

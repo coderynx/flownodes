@@ -1,4 +1,4 @@
-namespace Flownodes.Core.Attributes;
+namespace Flownodes.Shared.Attributes;
 
 [AttributeUsage(AttributeTargets.Interface)]
 public class SingletonResourceAttribute : Attribute

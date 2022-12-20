@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Flownodes.Core.Interfaces;
+namespace Flownodes.Shared.Interfaces;
 
 public class ScriptContext
 {

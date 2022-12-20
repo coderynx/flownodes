@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
 using AutoFixture;
-using Flownodes.Core.Interfaces;
-using Flownodes.Core.Models;
+using Flownodes.Shared.Interfaces;
+using Flownodes.Shared.Models;
 using Flownodes.Tests.Configuration;
 using Flownodes.Worker.Interfaces;
 using FluentAssertions;

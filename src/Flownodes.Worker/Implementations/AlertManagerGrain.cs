@@ -1,8 +1,8 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using Flownodes.Core.Interfaces;
-using Flownodes.Core.Models;
 using Flownodes.Sdk.Alerting;
+using Flownodes.Shared.Interfaces;
+using Flownodes.Shared.Models;
 using MapsterMapper;
 using Orleans.Runtime;
 using Throw;

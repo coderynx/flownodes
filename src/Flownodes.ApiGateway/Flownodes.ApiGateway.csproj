@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Flownodes.Core\Flownodes.Core.csproj"/>
+        <ProjectReference Include="..\Flownodes.Shared\Flownodes.Shared.csproj"/>
     </ItemGroup>
 
 </Project>

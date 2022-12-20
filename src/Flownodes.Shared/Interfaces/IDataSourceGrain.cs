@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Flownodes.Core.Interfaces;
+namespace Flownodes.Shared.Interfaces;
 
 [GenerateSerializer]
 public record DataSourceResult

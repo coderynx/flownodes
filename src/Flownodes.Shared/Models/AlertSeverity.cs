@@ -1,4 +1,4 @@
-namespace Flownodes.Core.Models;
+namespace Flownodes.Shared.Models;
 
 public enum AlertSeverity
 {

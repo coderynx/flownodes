@@ -1,4 +1,4 @@
-namespace Flownodes.Core.Interfaces;
+namespace Flownodes.Shared.Interfaces;
 
 public interface IAlertManagerGrain : IGrainWithStringKey
 {

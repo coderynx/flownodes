@@ -1,4 +1,4 @@
-using Flownodes.Core.Models;
+using Flownodes.Shared.Models;
 
 namespace Flownodes.Worker.Models;
 

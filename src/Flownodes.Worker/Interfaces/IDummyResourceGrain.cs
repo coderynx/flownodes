@@ -1,4 +1,4 @@
-using Flownodes.Core.Interfaces;
+using Flownodes.Shared.Interfaces;
 
 namespace Flownodes.Worker.Interfaces;
 

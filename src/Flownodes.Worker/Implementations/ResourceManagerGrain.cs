@@ -1,6 +1,6 @@
-using Flownodes.Core.Attributes;
-using Flownodes.Core.Interfaces;
-using Flownodes.Core.Models;
+using Flownodes.Shared.Attributes;
+using Flownodes.Shared.Interfaces;
+using Flownodes.Shared.Models;
 using Flownodes.Worker.Models;
 using Orleans.Runtime;
 using Throw;

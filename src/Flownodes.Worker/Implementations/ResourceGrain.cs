@@ -1,6 +1,6 @@
-using Flownodes.Core.Interfaces;
-using Flownodes.Core.Models;
 using Flownodes.Sdk.Resourcing;
+using Flownodes.Shared.Interfaces;
+using Flownodes.Shared.Models;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;

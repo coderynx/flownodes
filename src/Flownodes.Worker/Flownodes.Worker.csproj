@@ -32,7 +32,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Flownodes.Core\Flownodes.Core.csproj"/>
+        <ProjectReference Include="..\Flownodes.Shared\Flownodes.Shared.csproj"/>
         <ProjectReference Include="..\Flownodes.Sdk\Flownodes.Sdk.csproj"/>
     </ItemGroup>
 

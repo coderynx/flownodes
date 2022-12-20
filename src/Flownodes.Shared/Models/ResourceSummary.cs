@@ -1,4 +1,4 @@
-namespace Flownodes.Core.Models;
+namespace Flownodes.Shared.Models;
 
 [GenerateSerializer]
 public record ResourceSummary([property: Id(0)] string Id,
