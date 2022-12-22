@@ -3,7 +3,6 @@ using Flownodes.Shared.Interfaces;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
-using MapsterMapper;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
@@ -13,8 +12,8 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     public DeviceGrain(IBehaviourProvider behaviourProvider,
         [PersistentState("devicePersistence", "flownodes")]
         IPersistentState<ResourcePersistence> persistence,
-        ILogger<DeviceGrain> logger, IEnvironmentService environmentService, IMapper mapper) : base(logger, persistence,
-        environmentService, behaviourProvider, mapper)
+        ILogger<DeviceGrain> logger, IEnvironmentService environmentService) : base(logger, persistence,
+        environmentService, behaviourProvider)
     {
     }
 
@@ -22,7 +21,7 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 
     public async Task UpdateStateAsync(Dictionary<string, object?> newState)
     {
-        State?.Properties.MergeInPlace(newState);
+        State.Properties.MergeInPlace(newState);
         await Persistence.WriteStateAsync();
 
         await SendStateAsync(newState);
@@ -33,7 +32,7 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     private async Task ExecuteTimerBehaviourAsync(object arg)
     {
         var context = GetResourceContext();
-        await Behaviour?.OnUpdateAsync(context);
+        await Behaviour?.OnUpdateAsync(context)!;
 
         // TODO: Evaluate if always writing causes performance issues.
         await Persistence.WriteStateAsync();
@@ -52,7 +51,7 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 
     private async Task SendStateAsync(Dictionary<string, object?> newState)
     {
-        await Behaviour?.OnStateChangeAsync(newState, GetResourceContext());
+        await Behaviour?.OnStateChangeAsync(newState, GetResourceContext())!;
 
         Logger.LogInformation("Applied new state for device {DeviceId}", Id);
     }

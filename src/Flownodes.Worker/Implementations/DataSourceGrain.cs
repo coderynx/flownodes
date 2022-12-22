@@ -2,18 +2,17 @@ using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
-using MapsterMapper;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
 public sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
-    public DataSourceGrain(ILogger<ResourceGrain> logger,
+    public DataSourceGrain(ILogger<DataSourceGrain> logger,
         [PersistentState("dataSourceStore", "flownodes")]
         IPersistentState<ResourcePersistence> persistence, IEnvironmentService environmentService,
-        IBehaviourProvider behaviourProvider, IMapper mapper) : base(logger, persistence, environmentService,
-        behaviourProvider, mapper)
+        IBehaviourProvider behaviourProvider) : base(logger, persistence, environmentService,
+        behaviourProvider)
     {
     }
 

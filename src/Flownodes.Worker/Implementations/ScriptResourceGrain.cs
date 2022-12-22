@@ -1,7 +1,6 @@
 using Flownodes.Shared.Interfaces;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
-using MapsterMapper;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.V8;
 using Orleans.Runtime;
@@ -16,10 +15,9 @@ public class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
     public ScriptResourceGrain(ILogger<ScriptResourceGrain> logger,
         [PersistentState("scriptStore", "flownodes")]
         IPersistentState<ResourcePersistence> persistence,
-        IEnvironmentService environmentService, IBehaviourProvider behaviourProvider, ILoggerFactory loggerFactory,
-        IMapper mapper) :
+        IEnvironmentService environmentService, IBehaviourProvider behaviourProvider, ILoggerFactory loggerFactory) :
         base(logger, persistence,
-            environmentService, behaviourProvider, mapper)
+            environmentService, behaviourProvider)
     {
         _loggerFactory = loggerFactory;
     }

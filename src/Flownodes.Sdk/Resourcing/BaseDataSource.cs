@@ -17,9 +17,9 @@ public abstract class BaseDataSource : IBehaviour
         return Task.CompletedTask;
     }
 
-    public virtual async ValueTask<object?> GetDataAsync(string actionId,
+    public virtual ValueTask<object?> GetDataAsync(string actionId,
         Dictionary<string, object?>? parameters = null)
     {
-        throw new NotImplementedException();
+        return default;
     }
 }

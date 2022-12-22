@@ -37,12 +37,12 @@ public class HueLight : BaseDevice
         {
             var json = await response.Content.ReadFromJsonAsync<JsonNode>();
 
-            context.Metadata["name"] = json["name"].GetValue<string>();
-            context.Metadata["model_id"] = json["modelid"].GetValue<string>();
-            context.Metadata["manufacturer_name"] = json["manufacturername"].GetValue<string>();
-            context.Metadata["product_name"] = json["productname"].GetValue<string>();
+            context.Metadata["name"] = json?["name"]?.GetValue<string>();
+            context.Metadata["model_id"] = json?["modelid"]?.GetValue<string>();
+            context.Metadata["manufacturer_name"] = json?["manufacturername"]?.GetValue<string>();
+            context.Metadata["product_name"] = json?["productname"]?.GetValue<string>();
 
-            context.State["reachable"] = json["state"]["reachable"].GetValue<bool>();
+            context.State["reachable"] = json?["state"]?["reachable"]?.GetValue<bool>();
         }
     }
 
@@ -53,7 +53,7 @@ public class HueLight : BaseDevice
 
         if (newState.TryGetValue("power", out var value))
         {
-            var request = $"{{\"on\": {value.ToString().ToLower()}}}";
+            var request = $"{{\"on\": {value?.ToString()?.ToLower()}}}";
             var response = await _httpClient.PutAsync("lights/1/state", new StringContent(request));
             var content = await response.Content.ReadAsStringAsync();
 
@@ -74,8 +74,8 @@ public class HueLight : BaseDevice
         {
             var json = await response.Content.ReadFromJsonAsync<JsonNode>();
 
-            context.State["power"] = json["state"]["on"].GetValue<bool>();
-            context.State["reachable"] = json["state"]["reachable"].GetValue<bool>();
+            context.State["power"] = json?["state"]?["on"]?.GetValue<bool>();
+            context.State["reachable"] = json?["state"]?["reachable"]?.GetValue<bool>();
         }
     }
 }

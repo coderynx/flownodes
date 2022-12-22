@@ -24,7 +24,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _grainFactory.GetGrain<IAlertManagerGrain>("alerter");
     }
 
-    public async ValueTask<ResourceSummary> GetResourceSummary(string id)
+    public async ValueTask<ResourceSummary?> GetResourceSummary(string id)
     {
         var registration = _persistence.State.Registrations.SingleOrDefault(x => x.ResourceId.Equals(id));
         if (registration is null) return default;
@@ -36,7 +36,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return summary;
     }
 
-    public async ValueTask<IResourceGrain> GetResourceAsync(string id)
+    public async ValueTask<IResourceGrain?> GetResourceAsync(string id)
     {
         var registration = _persistence.State.Registrations.SingleOrDefault(x => x.ResourceId.Equals(id));
         if (registration is null) return default;
@@ -48,9 +48,9 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return grain;
     }
 
-    public async ValueTask<IEnumerable<ResourceSummary>> GetAllResourceSummaries()
+    public async ValueTask<IEnumerable<ResourceSummary?>> GetAllResourceSummaries()
     {
-        var summaries = new List<ResourceSummary>();
+        var summaries = new List<ResourceSummary?>();
         foreach (var grain in _persistence.State.Registrations.Select(registration =>
                      _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>()))
         {
@@ -86,7 +86,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         id.ThrowIfNull().IfWhiteSpace();
         configuration.ThrowIfNull();
 
-        if (_persistence.State.Registrations.FirstOrDefault(x => x.GrainId.Equals(id)) is not null)
+        if (_persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id)) is not null)
             throw new InvalidOperationException($"Resource with ID {id} already exists");
 
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);

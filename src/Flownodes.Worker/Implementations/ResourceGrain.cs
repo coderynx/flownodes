@@ -4,7 +4,6 @@ using Flownodes.Shared.Models;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
-using MapsterMapper;
 using Orleans.Concurrency;
 using Orleans.Runtime;
 using Throw;
@@ -21,7 +20,7 @@ public abstract class ResourceGrain : Grain
     protected IBehaviour? Behaviour;
 
     protected ResourceGrain(ILogger<ResourceGrain> logger, IPersistentState<ResourcePersistence> persistence,
-        IEnvironmentService environmentService, IBehaviourProvider behaviourProvider, IMapper mapper)
+        IEnvironmentService environmentService, IBehaviourProvider behaviourProvider)
     {
         Logger = logger;
         Persistence = persistence;
@@ -31,12 +30,12 @@ public abstract class ResourceGrain : Grain
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
     protected string Id => this.GetPrimaryKeyString();
-    protected string BehaviourId => Configuration.BehaviourId;
+    protected string? BehaviourId => Configuration.BehaviourId;
     protected string Frn => $"{EnvironmentService.BaseFrn}:{Kind}:{Id}";
     protected DateTime CreatedAt => Persistence.State.CreatedAt;
     protected IResourceManagerGrain ResourceManagerGrain => EnvironmentService.GetResourceManagerGrain();
 
-    protected Dictionary<string, string> Metadata
+    protected Dictionary<string, string?> Metadata
     {
         get => Persistence.State.Metadata;
         private set => Persistence.State.Metadata = value;
@@ -86,12 +85,12 @@ public abstract class ResourceGrain : Grain
         return ValueTask.FromResult(Frn);
     }
 
-    public virtual ValueTask<Dictionary<string, string>> GetMetadata()
+    public virtual ValueTask<Dictionary<string, string?>> GetMetadata()
     {
         return ValueTask.FromResult(Persistence.State.Metadata);
     }
 
-    public ValueTask<ResourceConfiguration?> GetConfiguration()
+    public ValueTask<ResourceConfiguration> GetConfiguration()
     {
         return ValueTask.FromResult(Configuration);
     }
@@ -116,9 +115,9 @@ public abstract class ResourceGrain : Grain
 
         Configuration = configuration;
 
-        if (Configuration.BehaviourId is not null)
+        if (BehaviourId is not null)
         {
-            Behaviour = _behaviourProvider.GetBehaviour(configuration.BehaviourId);
+            Behaviour = _behaviourProvider.GetBehaviour(BehaviourId);
             Behaviour.ThrowIfNull();
 
             var context = GetResourceContext();
@@ -140,7 +139,7 @@ public abstract class ResourceGrain : Grain
         return Task.CompletedTask;
     }
 
-    public virtual async Task UpdateMetadataAsync(Dictionary<string, string> metadata)
+    public virtual async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
     {
         metadata.ThrowIfNull();
 
@@ -162,7 +161,7 @@ public abstract class ResourceGrain : Grain
 
     public virtual async Task ClearMetadataAsync()
     {
-        Metadata = new Dictionary<string, string>();
+        Metadata = new Dictionary<string, string?>();
         await Persistence.WriteStateAsync();
 
         Logger.LogInformation("Cleared metadata for resource with FRN {Frn}", Frn);
