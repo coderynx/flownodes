@@ -22,4 +22,10 @@ public abstract class BaseDevice : IBehaviour
         Logger.LogInformation("Updated state with {BehaviourId}", context.Configuration?.BehaviourId);
         return Task.CompletedTask;
     }
+
+    public virtual Task OnUpdateAsync(ResourceContext context)
+    {
+        Logger.LogInformation("Updating state from device with {BehaviourId}", context.Configuration?.BehaviourId);
+        return default;
+    }
 }

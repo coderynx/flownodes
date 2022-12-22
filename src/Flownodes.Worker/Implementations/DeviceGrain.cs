@@ -22,7 +22,7 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 
     public async Task UpdateStateAsync(Dictionary<string, object?> newState)
     {
-        State.Dictionary.MergeInPlace(newState);
+        State?.Properties.MergeInPlace(newState);
         await Persistence.WriteStateAsync();
 
         await SendStateAsync(newState);
@@ -30,9 +30,29 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         Logger.LogInformation("Updated state for {DeviceId}", Id);
     }
 
+    private async Task ExecuteTimerBehaviourAsync(object arg)
+    {
+        var context = GetResourceContext();
+        await Behaviour?.OnUpdateAsync(context);
+
+        // TODO: Evaluate if always writing causes performance issues.
+        await Persistence.WriteStateAsync();
+
+        Logger.LogDebug("Updated state for device {Id}: {State}", Id, State.Properties);
+    }
+
+    protected override Task OnBehaviourUpdateAsync()
+    {
+        var overridden = typeof(BaseDevice).GetMethod("OnUpdateAsync")?.DeclaringType == typeof(BaseDevice);
+        if (overridden)
+            RegisterTimer(ExecuteTimerBehaviourAsync, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+
+        return base.OnBehaviourUpdateAsync();
+    }
+
     private async Task SendStateAsync(Dictionary<string, object?> newState)
     {
-        await Behaviour.OnStateChangeAsync(newState, GetResourceContext());
+        await Behaviour?.OnStateChangeAsync(newState, GetResourceContext());
 
         Logger.LogInformation("Applied new state for device {DeviceId}", Id);
     }

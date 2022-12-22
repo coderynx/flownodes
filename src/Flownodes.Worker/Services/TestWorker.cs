@@ -19,7 +19,7 @@ public class TestWorker : BackgroundService
         var resourceManager = _environmentService.GetResourceManagerGrain();
         var alertManager = _environmentService.GetAlertManagerGrain();
         await alertManager.SetupAsync("telegram");
-        await alertManager.FireInfoAsync("resource_manager", "Started Flownodes");
+        // await alertManager.FireInfoAsync("resource_manager", "Started Flownodes");
 
         var dictionary = new Dictionary<string, object?>
         {

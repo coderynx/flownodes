@@ -5,15 +5,16 @@ using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using MapsterMapper;
+using Orleans.Concurrency;
 using Orleans.Runtime;
 using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
-public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
+[Reentrant]
+public abstract class ResourceGrain : Grain
 {
     private readonly IBehaviourProvider _behaviourProvider;
-    private readonly IMapper _mapper;
     protected readonly IEnvironmentService EnvironmentService;
     protected readonly ILogger<ResourceGrain> Logger;
     protected readonly IPersistentState<ResourcePersistence> Persistence;
@@ -26,7 +27,6 @@ public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
         Persistence = persistence;
         EnvironmentService = environmentService;
         _behaviourProvider = behaviourProvider;
-        _mapper = mapper;
     }
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
@@ -42,25 +42,16 @@ public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
         private set => Persistence.State.Metadata = value;
     }
 
-    protected ResourceConfiguration? Configuration
+    protected ResourceConfiguration Configuration
     {
         get => Persistence.State.Configuration;
         private set => Persistence.State.Configuration = value;
     }
 
-    protected ResourceState? State
+    protected ResourceState State
     {
         get => Persistence.State.State;
         private set => Persistence.State.State = value;
-    }
-
-    public async Task Invoke(IIncomingGrainCallContext context)
-    {
-        // TODO: Evaluate if the method is useless.
-        if (context.ImplementationMethod.Name is not "SetupAsync" && Persistence.State is null)
-            throw new InvalidOperationException($"The grain {Id} is not initialized");
-
-        await context.Invoke();
     }
 
     public ValueTask<ResourceSummary> GetSummary()
@@ -107,8 +98,14 @@ public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
 
     protected ResourceContext GetResourceContext()
     {
-        var actualConfiguration = _mapper.Map<ActualResourceConfiguration>(Configuration);
-        var actualState = _mapper.Map<ActualResourceState>(State);
+        var actualConfiguration = new ActualResourceConfiguration
+        {
+            Properties = Configuration.Properties
+        };
+        var actualState = new ActualResourceState
+        {
+            Properties = State.Properties
+        };
 
         return new ResourceContext(actualConfiguration, Metadata, actualState);
     }
@@ -127,6 +124,8 @@ public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
             var context = GetResourceContext();
             await Behaviour.OnSetupAsync(context);
 
+            await OnBehaviourUpdateAsync();
+
             Logger.LogInformation("Configured behaviour {BehaviourId} for resource {ResourceId}",
                 configuration.BehaviourId, Id);
         }
@@ -134,6 +133,11 @@ public abstract class ResourceGrain : Grain, IIncomingGrainCallFilter
         await Persistence.WriteStateAsync();
 
         Logger.LogInformation("Configured resource with FRN {Frn}", Frn);
+    }
+
+    protected virtual Task OnBehaviourUpdateAsync()
+    {
+        return Task.CompletedTask;
     }
 
     public virtual async Task UpdateMetadataAsync(Dictionary<string, string> metadata)

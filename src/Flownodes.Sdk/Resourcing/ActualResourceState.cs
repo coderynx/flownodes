@@ -3,38 +3,38 @@ namespace Flownodes.Sdk.Resourcing;
 public class ActualResourceState
 {
     public DateTime? LastUpdate { get; private set; }
-    public Dictionary<string, object?> Dictionary { get; init; } = new();
+    public Dictionary<string, object?> Properties { get; init; } = new();
 
     public object? this[string key]
     {
-        get => Dictionary[key];
+        get => Properties[key];
         set
         {
-            Dictionary[key] = value;
+            Properties[key] = value;
             LastUpdate = DateTime.Now;
         }
     }
 
-    public int Count => Dictionary.Count;
+    public int Count => Properties.Count;
 
-    public IEnumerable<string> Keys => Dictionary.Keys;
+    public IEnumerable<string> Keys => Properties.Keys;
 
-    public IEnumerable<object?> Values => Dictionary.Values;
+    public IEnumerable<object?> Values => Properties.Values;
 
     public void Add(string key, object? value)
     {
-        Dictionary.Add(key, value);
+        Properties.Add(key, value);
         LastUpdate = DateTime.Now;
     }
 
     public bool ContainsKey(string key)
     {
-        return Dictionary.ContainsKey(key);
+        return Properties.ContainsKey(key);
     }
 
     public bool Remove(string key)
     {
-        var result = Dictionary.Remove(key);
+        var result = Properties.Remove(key);
         if (!result) return false;
 
         LastUpdate = DateTime.Now;
@@ -43,11 +43,11 @@ public class ActualResourceState
 
     public bool TryGetValue(string key, out object? value)
     {
-        return Dictionary.TryGetValue(key, out value);
+        return Properties.TryGetValue(key, out value);
     }
 
     public object? GetValue(string key)
     {
-        return Dictionary.GetValueOrDefault(key);
+        return Properties.GetValueOrDefault(key);
     }
 }

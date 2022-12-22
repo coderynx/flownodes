@@ -63,4 +63,19 @@ public class HueLight : BaseDevice
                 _logger.LogError("Failed to update light power state of {LightId} to on", lightId);
         }
     }
+
+    public override async Task OnUpdateAsync(ResourceContext context)
+    {
+        var lightId = context.Configuration["lightId"]?.ToString();
+
+        var response = await _httpClient.GetAsync($"lights/{lightId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadFromJsonAsync<JsonNode>();
+
+            context.State["power"] = json["state"]["on"].GetValue<bool>();
+            context.State["reachable"] = json["state"]["reachable"].GetValue<bool>();
+        }
+    }
 }
