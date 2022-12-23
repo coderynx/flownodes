@@ -21,7 +21,7 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 
     public async Task UpdateStateAsync(Dictionary<string, object?> newState)
     {
-        State.Properties.MergeInPlace(newState);
+        StateStore.Properties.MergeInPlace(newState);
         await Persistence.WriteStateAsync();
 
         await SendStateAsync(newState);
@@ -37,7 +37,7 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         // TODO: Evaluate if always writing causes performance issues.
         await Persistence.WriteStateAsync();
 
-        Logger.LogDebug("Updated state for device {Id}: {State}", Id, State.Properties);
+        Logger.LogDebug("Updated state for device {Id}: {State}", Id, StateStore.Properties);
     }
 
     protected override Task OnBehaviourUpdateAsync()

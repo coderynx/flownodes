@@ -1,6 +1,6 @@
 namespace Flownodes.Sdk.Resourcing;
 
-public class ActualResourceConfiguration
+public class ResourceConfiguration
 {
     public Dictionary<string, object?> Properties { get; init; } = new();
 
@@ -18,9 +18,9 @@ public class ActualResourceConfiguration
 
     public IEnumerable<object?> Values => Properties.Values;
 
-    public static ActualResourceConfiguration FromDictionary(Dictionary<string, object?> dictionary)
+    public static ResourceConfiguration FromDictionary(Dictionary<string, object?> dictionary)
     {
-        return new ActualResourceConfiguration
+        return new ResourceConfiguration
         {
             Properties = dictionary
         };

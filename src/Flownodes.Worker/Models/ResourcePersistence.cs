@@ -6,7 +6,7 @@ namespace Flownodes.Worker.Models;
 public class ResourcePersistence
 {
     [Id(1)] public DateTime CreatedAt { get; set; } = DateTime.Now;
-    [Id(2)] public ResourceConfiguration Configuration { get; set; } = new();
+    [Id(2)] public ResourceConfigurationStore ConfigurationStore { get; set; } = new();
     [Id(3)] public Dictionary<string, string?> Metadata { get; set; } = new();
-    [Id(4)] public ResourceState State { get; set; } = new();
+    [Id(4)] public ResourceStateStore StateStore { get; set; } = new();
 }

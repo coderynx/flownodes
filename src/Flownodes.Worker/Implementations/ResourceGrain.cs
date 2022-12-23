@@ -30,7 +30,7 @@ public abstract class ResourceGrain : Grain
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
     protected string Id => this.GetPrimaryKeyString();
-    protected string? BehaviourId => Configuration.BehaviourId;
+    protected string? BehaviourId => ConfigurationStore.BehaviourId;
     protected string Frn => $"{EnvironmentService.BaseFrn}:{Kind}:{Id}";
     protected DateTime CreatedAt => Persistence.State.CreatedAt;
     protected IResourceManagerGrain ResourceManagerGrain => EnvironmentService.GetResourceManagerGrain();
@@ -41,21 +41,21 @@ public abstract class ResourceGrain : Grain
         private set => Persistence.State.Metadata = value;
     }
 
-    protected ResourceConfiguration Configuration
+    protected ResourceConfigurationStore ConfigurationStore
     {
-        get => Persistence.State.Configuration;
-        private set => Persistence.State.Configuration = value;
+        get => Persistence.State.ConfigurationStore;
+        private set => Persistence.State.ConfigurationStore = value;
     }
 
-    protected ResourceState State
+    protected ResourceStateStore StateStore
     {
-        get => Persistence.State.State;
-        private set => Persistence.State.State = value;
+        get => Persistence.State.StateStore;
+        private set => Persistence.State.StateStore = value;
     }
 
     public ValueTask<ResourceSummary> GetSummary()
     {
-        return ValueTask.FromResult(new ResourceSummary(Id, CreatedAt, Configuration, Metadata, State));
+        return ValueTask.FromResult(new ResourceSummary(Id, CreatedAt, ConfigurationStore, Metadata, StateStore));
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
@@ -90,30 +90,30 @@ public abstract class ResourceGrain : Grain
         return ValueTask.FromResult(Persistence.State.Metadata);
     }
 
-    public ValueTask<ResourceConfiguration> GetConfiguration()
+    public ValueTask<ResourceConfigurationStore> GetConfiguration()
     {
-        return ValueTask.FromResult(Configuration);
+        return ValueTask.FromResult(ConfigurationStore);
     }
 
     protected ResourceContext GetResourceContext()
     {
-        var actualConfiguration = new ActualResourceConfiguration
+        var actualConfiguration = new ResourceConfiguration
         {
-            Properties = Configuration.Properties
+            Properties = ConfigurationStore.Properties
         };
-        var actualState = new ActualResourceState
+        var actualState = new ResourceState
         {
-            Properties = State.Properties
+            Properties = StateStore.Properties
         };
 
         return new ResourceContext(actualConfiguration, Metadata, actualState);
     }
 
-    public virtual async Task UpdateConfigurationAsync(ResourceConfiguration configuration)
+    public virtual async Task UpdateConfigurationAsync(ResourceConfigurationStore configurationStore)
     {
-        configuration.ThrowIfNull();
+        configurationStore.ThrowIfNull();
 
-        Configuration = configuration;
+        ConfigurationStore = configurationStore;
 
         if (BehaviourId is not null)
         {
@@ -126,7 +126,7 @@ public abstract class ResourceGrain : Grain
             await OnBehaviourUpdateAsync();
 
             Logger.LogInformation("Configured behaviour {BehaviourId} for resource {ResourceId}",
-                configuration.BehaviourId, Id);
+                configurationStore.BehaviourId, Id);
         }
 
         await Persistence.WriteStateAsync();
@@ -151,7 +151,7 @@ public abstract class ResourceGrain : Grain
 
     public virtual async Task ClearConfigurationAsync()
     {
-        Configuration = new ResourceConfiguration();
+        ConfigurationStore = new ResourceConfigurationStore();
         await Persistence.WriteStateAsync();
 
         Behaviour = null;
@@ -167,14 +167,14 @@ public abstract class ResourceGrain : Grain
         Logger.LogInformation("Cleared metadata for resource with FRN {Frn}", Frn);
     }
 
-    public virtual ValueTask<ResourceState> GetState()
+    public virtual ValueTask<ResourceStateStore> GetState()
     {
-        return ValueTask.FromResult(State);
+        return ValueTask.FromResult(StateStore);
     }
 
     public virtual async Task ClearStateAsync()
     {
-        State = new ResourceState();
+        StateStore = new ResourceStateStore();
         await Persistence.WriteStateAsync();
 
         Logger.LogInformation("Cleared state for resource with FRN {Frn}", Frn);

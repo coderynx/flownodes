@@ -42,8 +42,8 @@ public interface IResourceGrain : IGrainWithStringKey
     /// <summary>
     ///     Configures the resource.
     /// </summary>
-    /// <param name="configuration">The resource configuration to store.</param>
-    Task UpdateConfigurationAsync(ResourceConfiguration configuration);
+    /// <param name="configurationStore">The resource configuration to store.</param>
+    Task UpdateConfigurationAsync(ResourceConfigurationStore configurationStore);
 
     /// <summary>
     ///     Gets the stored resource metadata.
@@ -61,7 +61,7 @@ public interface IResourceGrain : IGrainWithStringKey
     ///     Gets the stored configuration of the resource.
     /// </summary>
     /// <returns>The current resource configuration.</returns>
-    ValueTask<ResourceConfiguration> GetConfiguration();
+    ValueTask<ResourceConfigurationStore> GetConfiguration();
 
     /// <summary>
     ///     Clears the resource configuration.
@@ -72,7 +72,7 @@ public interface IResourceGrain : IGrainWithStringKey
     ///     Gets the stored state of the resource.
     /// </summary>
     /// <returns>Thea stored state of the resource.</returns>
-    ValueTask<ResourceState> GetState();
+    ValueTask<ResourceStateStore> GetState();
 
     /// <summary>
     ///     Clears the state from the resource store.

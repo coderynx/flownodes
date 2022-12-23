@@ -3,30 +3,16 @@ using System.Text.Json.Serialization;
 namespace Flownodes.Shared.Models;
 
 [GenerateSerializer]
-public class ResourceState
+public class ResourceConfigurationStore
 {
-    private Dictionary<string, object?> _properties = new();
-    [Id(0)] public DateTime? LastUpdate { get; private set; }
+    [Id(0)] public Dictionary<string, object?> Properties { get; set; } = new();
 
-    [Id(1)]
-    public Dictionary<string, object?> Properties
-    {
-        get => _properties;
-        set
-        {
-            _properties = value;
-            LastUpdate = DateTime.Now;
-        }
-    }
+    [Id(1)] public string? BehaviourId { get; set; }
 
     public object? this[string key]
     {
         get => Properties[key];
-        set
-        {
-            Properties[key] = value;
-            LastUpdate = DateTime.Now;
-        }
+        set => Properties[key] = value;
     }
 
     [JsonIgnore] public int Count => Properties.Count;
@@ -35,10 +21,17 @@ public class ResourceState
 
     [JsonIgnore] public IEnumerable<object?> Values => Properties.Values;
 
+    public static ResourceConfigurationStore FromDictionary(Dictionary<string, object?> dictionary)
+    {
+        return new ResourceConfigurationStore
+        {
+            Properties = dictionary
+        };
+    }
+
     public void Add(string key, object? value)
     {
         Properties.Add(key, value);
-        LastUpdate = DateTime.Now;
     }
 
     public bool ContainsKey(string key)
@@ -48,20 +41,11 @@ public class ResourceState
 
     public bool Remove(string key)
     {
-        var result = Properties.Remove(key);
-        if (!result) return false;
-
-        LastUpdate = DateTime.Now;
-        return true;
+        return Properties.Remove(key);
     }
 
     public bool TryGetValue(string key, out object? value)
     {
         return Properties.TryGetValue(key, out value);
-    }
-
-    public object? GetValue(string key)
-    {
-        return Properties.GetValueOrDefault(key);
     }
 }

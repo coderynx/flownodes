@@ -1,6 +1,6 @@
 namespace Flownodes.Sdk.Resourcing;
 
-public class ActualResourceState
+public class ResourceState
 {
     public DateTime? LastUpdate { get; private set; }
     public Dictionary<string, object?> Properties { get; init; } = new();

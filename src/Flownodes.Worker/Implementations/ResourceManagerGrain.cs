@@ -81,10 +81,10 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     }
 
     public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string id,
-        ResourceConfiguration configuration) where TResourceGrain : IResourceGrain
+        ResourceConfigurationStore configurationStore) where TResourceGrain : IResourceGrain
     {
         id.ThrowIfNull().IfWhiteSpace();
-        configuration.ThrowIfNull();
+        configurationStore.ThrowIfNull();
 
         if (_persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id)) is not null)
             throw new InvalidOperationException($"Resource with ID {id} already exists");
@@ -98,7 +98,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
                 .Throw($"Singleton resource of Kind {kind} already exists")
                 .IfFalse();
 
-        await grain.UpdateConfigurationAsync(configuration);
+        await grain.UpdateConfigurationAsync(configurationStore);
         var frn = await grain.GetFrn();
 
         _persistence.State.AddRegistration(id, grain.GetGrainId(), kind, frn);

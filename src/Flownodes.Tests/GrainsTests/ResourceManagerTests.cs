@@ -36,7 +36,7 @@ public class ResourceManagerTests
         var manager = ProvideResourceManager();
 
         // Act & Assert.
-        await manager.DeployResourceAsync<IDummyResourceGrain>(_fixture.Create<string>(), new ResourceConfiguration());
+        await manager.DeployResourceAsync<IDummyResourceGrain>(_fixture.Create<string>(), new ResourceConfigurationStore());
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class ResourceManagerTests
         // Act & Assert.
         var act = async () =>
         {
-            await manager.DeployResourceAsync<IDummyResourceGrain>(" ", new ResourceConfiguration());
+            await manager.DeployResourceAsync<IDummyResourceGrain>(" ", new ResourceConfigurationStore());
         };
         await act.Should().ThrowAsync<ArgumentException>();
     }
@@ -73,7 +73,7 @@ public class ResourceManagerTests
         // Arrange.
         var manager = ProvideResourceManager();
         var id = _fixture.Create<string>();
-        await manager.DeployResourceAsync<IDummyResourceGrain>(id, new ResourceConfiguration());
+        await manager.DeployResourceAsync<IDummyResourceGrain>(id, new ResourceConfigurationStore());
 
         // Act.
         var grain = await manager.GetResourceAsync<IDummyResourceGrain>(id);
@@ -87,7 +87,7 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>(_fixture.Create<string>(), new ResourceConfiguration());
+        await manager.DeployResourceAsync<IDummyResourceGrain>(_fixture.Create<string>(), new ResourceConfigurationStore());
 
         // Act.
         var grain = await manager.GetResourceAsync<IDummyResourceGrain>(_fixture.Create<string>());
@@ -102,7 +102,7 @@ public class ResourceManagerTests
         // Arrange.
         var manager = ProvideResourceManager();
         var id = _fixture.Create<string>();
-        await manager.DeployResourceAsync<IDummyResourceGrain>(id, new ResourceConfiguration());
+        await manager.DeployResourceAsync<IDummyResourceGrain>(id, new ResourceConfigurationStore());
 
         // Act.
         await manager.RemoveResourceAsync(id);
@@ -117,9 +117,9 @@ public class ResourceManagerTests
         // Arrange.
         var manager = ProvideResourceManager();
         var id1 = _fixture.Create<string>();
-        await manager.DeployResourceAsync<IDummyResourceGrain>(id1, new ResourceConfiguration());
+        await manager.DeployResourceAsync<IDummyResourceGrain>(id1, new ResourceConfigurationStore());
         var id2 = _fixture.Create<string>();
-        await manager.DeployResourceAsync<IDummyResourceGrain>(id2, new ResourceConfiguration());
+        await manager.DeployResourceAsync<IDummyResourceGrain>(id2, new ResourceConfigurationStore());
 
         // Act.
         await manager.RemoveAllResourcesAsync();

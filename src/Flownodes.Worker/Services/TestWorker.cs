@@ -25,7 +25,7 @@ public class TestWorker : BackgroundService
         {
             { "lightId", 1 }
         };
-        var resourceConfiguration = ResourceConfiguration.FromDictionary(dictionary);
+        var resourceConfiguration = ResourceConfigurationStore.FromDictionary(dictionary);
         resourceConfiguration.BehaviourId = "hue_light";
         await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light_1", resourceConfiguration);
 
@@ -44,7 +44,7 @@ public class TestWorker : BackgroundService
             { "code", code }
         };
         var scriptResource = await resourceManager.DeployResourceAsync<IScriptResourceGrain>("script_01",
-            ResourceConfiguration.FromDictionary(dictionary));
+            ResourceConfigurationStore.FromDictionary(dictionary));
         await scriptResource.ExecuteAsync();
 
         /*var weatherConfiguration = new ResourceConfiguration

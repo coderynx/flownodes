@@ -23,9 +23,9 @@ public class ResourceGrainTests
         _fixture = new Fixture();
     }
 
-    private ResourceConfiguration ProvideResourceConfiguration()
+    private ResourceConfigurationStore ProvideResourceConfiguration()
     {
-        var configuration = _fixture.Create<ResourceConfiguration>();
+        var configuration = _fixture.Create<ResourceConfigurationStore>();
         configuration.BehaviourId = "TestDeviceBehavior";
         return configuration;
     }
@@ -47,7 +47,7 @@ public class ResourceGrainTests
     {
         var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(_fixture.Create<string>());
 
-        var configuration = _fixture.Create<ResourceConfiguration>();
+        var configuration = _fixture.Create<ResourceConfigurationStore>();
         configuration.BehaviourId = "InvalidBehaviour";
 
         var act = async () => { await grain.UpdateConfigurationAsync(configuration); };
