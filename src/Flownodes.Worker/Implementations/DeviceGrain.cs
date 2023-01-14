@@ -42,7 +42,8 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 
     protected override Task OnBehaviourUpdateAsync()
     {
-        var overridden = typeof(BaseDevice).GetMethod("OnUpdateAsync")?.DeclaringType == typeof(BaseDevice);
+        // Check if method is overriden
+        var overridden = Behaviour.GetType().GetMethod("OnUpdateAsync")?.DeclaringType == Behaviour.GetType();
         if (overridden)
             RegisterTimer(ExecuteTimerBehaviourAsync, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
 

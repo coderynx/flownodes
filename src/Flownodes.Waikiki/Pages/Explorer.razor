@@ -1,0 +1,34 @@
+﻿@page "/explorer"
+@using Flownodes.Shared.Interfaces
+@using Flownodes.Shared.Models
+@using Flownodes.Waikiki.Services
+@inject IContextService ContextService;
+
+<PageTitle>Flownodes Web - Explorer</PageTitle>
+<MudText Typo="Typo.h5" GutterBottom="true">Explorer</MudText>
+
+<MudTreeView T="string">
+    <MudTreeViewItem Value='"Flownodes"' Icon="@Icons.Material.Outlined.Label" IconColor="Color.Primary" Expanded="true">
+        <MudTreeViewItem Value='"site-01"' Icon="@Icons.Material.Outlined.Label" Expanded="true">
+            <MudTreeViewItem Value='"Resources"' Icon="@Icons.Material.Outlined.Label" Expanded="true">
+                <MudTreeViewItem Value='"hue-light-01"' Icon="@Icons.Material.Outlined.Square"/>
+                <MudTreeViewItem Value='"router"' Icon="@Icons.Material.Outlined.Square"/>
+                <MudVirtualize T="ResourceSummary?" Items="@_resourceSummaries">
+                    <MudTreeViewItem Value="@context.Id" Icon="@Icons.Material.Outlined.Square"/>
+                </MudVirtualize>
+            </MudTreeViewItem>
+        </MudTreeViewItem>
+    </MudTreeViewItem>
+</MudTreeView>
+
+@code {
+
+    private IResourceManagerGrain? _resourceManagerGrain;
+    private List<ResourceSummary?> _resourceSummaries = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _resourceManagerGrain = await ContextService.GetResourceManagerAsync();
+        _resourceSummaries = (List<ResourceSummary?>) await _resourceManagerGrain.GetAllResourceSummaries();
+    }
+}

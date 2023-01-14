@@ -17,7 +17,12 @@ public class TestWorker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var resourceManager = _environmentService.GetResourceManagerGrain();
-        var alertManager = _environmentService.GetAlertManagerGrain();
+        var configuration = new ResourceConfigurationStore
+        {
+            BehaviourId = "minecraft_lever"
+        };
+        var resource = await resourceManager.DeployResourceAsync<IDeviceGrain>("lever", configuration);
+        /*var alertManager = _environmentService.GetAlertManagerGrain();
         await alertManager.SetupAsync("telegram");
         // await alertManager.FireInfoAsync("resource_manager", "Started Flownodes");
 
@@ -45,7 +50,7 @@ public class TestWorker : BackgroundService
         };
         var scriptResource = await resourceManager.DeployResourceAsync<IScriptResourceGrain>("script_01",
             ResourceConfigurationStore.FromDictionary(dictionary));
-        await scriptResource.ExecuteAsync();
+        await scriptResource.ExecuteAsync();*/
 
         /*var weatherConfiguration = new ResourceConfiguration
         {
