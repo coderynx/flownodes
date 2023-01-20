@@ -16,13 +16,18 @@ public class TestWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var resourceManager = _environmentService.GetResourceManagerGrain();
-        var configuration = new ResourceConfigurationStore
+        var tenantManager = _environmentService.GetTenantManagerGrain();
+        var tenant = await tenantManager.CreateTenantAsync("default", new Dictionary<string, string?>());
+        var resourceManager = await tenant.GetResourceManager();
+        
+        /*var configuration = new ResourceConfigurationStore
         {
             BehaviourId = "minecraft_lever"
         };
-        var resource = await resourceManager.DeployResourceAsync<IDeviceGrain>("lever", configuration);
-        /*var alertManager = _environmentService.GetAlertManagerGrain();
+        var resource = await resourceManager.DeployResourceAsync<IDeviceGrain>("lever", configuration);*/
+
+
+        var alertManager = _environmentService.GetAlertManagerGrain();
         await alertManager.SetupAsync("telegram");
         // await alertManager.FireInfoAsync("resource_manager", "Started Flownodes");
 
@@ -32,7 +37,7 @@ public class TestWorker : BackgroundService
         };
         var resourceConfiguration = ResourceConfigurationStore.FromDictionary(dictionary);
         resourceConfiguration.BehaviourId = "hue_light";
-        await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light_1", resourceConfiguration);
+        var hueLight = await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light_1", resourceConfiguration);
 
         const string code = """
             (async function () {
@@ -50,7 +55,7 @@ public class TestWorker : BackgroundService
         };
         var scriptResource = await resourceManager.DeployResourceAsync<IScriptResourceGrain>("script_01",
             ResourceConfigurationStore.FromDictionary(dictionary));
-        await scriptResource.ExecuteAsync();*/
+        await scriptResource.ExecuteAsync();
 
         /*var weatherConfiguration = new ResourceConfiguration
         {

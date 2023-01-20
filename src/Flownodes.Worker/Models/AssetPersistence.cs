@@ -12,6 +12,6 @@ public class AssetPersistence
 [GenerateSerializer]
 public class AssetState
 {
-    [Id(0)] public DateTime? UpdatedAt { get; set; } = null;
+    [Id(0)] public DateTime? UpdatedAt { get; set; }
     [Id(1)] public JObject Data { get; set; } = JObject.FromObject(new { });
 }

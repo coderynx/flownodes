@@ -1,0 +1,20 @@
+name: flownodes
+services:
+  - name: redis
+    image: redis
+    bindings:
+      - port: 6379
+        connectionString: "${host}:${port}"
+
+  - name: redis-cli
+    image: redis
+    args: "redis-cli -h redis MONITOR"
+
+  - name: worker
+    project: src/Flownodes.Worker/Flownodes.Worker.csproj
+    env:
+      - DOTNET_ENVIRONMENT=Staging
+      - ORLEANS_CLUSTER_ID=dev
+      - ORLEANS_SERVICE_ID=flownodes
+      - RESOURCE_MANAGER_NAME=resource_manager
+      - ALERT_MANAGER_NAME=alert_manager

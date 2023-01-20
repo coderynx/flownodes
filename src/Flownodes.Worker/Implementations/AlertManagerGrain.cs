@@ -24,6 +24,8 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
     private readonly IPersistentState<AlertManagerPersistence> _persistence;
     private readonly IServiceProvider _serviceProvider;
 
+    private string Id => this.GetPrimaryKeyString();
+
     public AlertManagerGrain(ILogger<AlertManagerGrain> logger,
         [PersistentState("alerterStore", "flownodes")]
         IPersistentState<AlertManagerPersistence> persistence,
@@ -78,18 +80,18 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
         _persistence.State.Registrations.Clear();
         await _persistence.WriteStateAsync();
 
-        _logger.LogInformation("Cleared stored alerts");
+        _logger.LogInformation("Cleared stored alerts of tenant {TenantId}", Id);
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Alert manager activated");
+        _logger.LogInformation("Alert manager of tenant {TenantId} activated", Id);
         return base.OnActivateAsync(cancellationToken);
     }
 
     public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Alert manager deactivated");
+        _logger.LogInformation("Alert manager of tenant {TenantId} deactivated", Id);
         return base.OnDeactivateAsync(reason, cancellationToken);
     }
 
@@ -123,8 +125,7 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
         _persistence.State.Registrations.Add(alert);
         await _persistence.WriteStateAsync();
 
-        _logger.LogInformation("Dispatched alert {AlertId} of resource {TargeResourceId} to all drivers", alert.Id,
-            targetResourceId);
+        _logger.LogInformation("Dispatched alert {AlertId} to all drivers", alert.Id);
 
         return alert;
     }

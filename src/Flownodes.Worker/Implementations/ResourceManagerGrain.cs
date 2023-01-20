@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Flownodes.Shared.Attributes;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
@@ -14,6 +15,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     private readonly ILogger<ResourceManagerGrain> _logger;
     private readonly IPersistentState<ResourceManagerPersistence> _persistence;
 
+    private string Id => this.GetPrimaryKeyString();
+
     public ResourceManagerGrain(ILogger<ResourceManagerGrain> logger,
         [PersistentState("resourceManagerState", "flownodes")]
         IPersistentState<ResourceManagerPersistence> persistence, IGrainFactory grainFactory)
@@ -26,6 +29,13 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async ValueTask<ResourceSummary?> GetResourceSummary(string id)
     {
+        id.ThrowIfNull().IfWhiteSpace();
+
+        if (!id.Contains('/'))
+        {
+            id = $"{Id}/{id}";
+        }
+        
         var registration = _persistence.State.Registrations.SingleOrDefault(x => x.ResourceId.Equals(id));
         if (registration is null) return default;
 
@@ -38,6 +48,13 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async ValueTask<IResourceGrain?> GetResourceAsync(string id)
     {
+        id.ThrowIfNull().IfWhiteSpace();
+
+        if (!id.Contains('/'))
+        {
+            id = $"{Id}/{id}";
+        }
+        
         var registration = _persistence.State.Registrations.SingleOrDefault(x => x.ResourceId.Equals(id));
         if (registration is null) return default;
 
@@ -48,17 +65,19 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return grain;
     }
 
-    public async ValueTask<IEnumerable<ResourceSummary?>> GetAllResourceSummaries()
+    public async ValueTask<ReadOnlyCollection<ResourceSummary>> GetAllResourceSummaries()
     {
-        var summaries = new List<ResourceSummary?>();
-        foreach (var grain in _persistence.State.Registrations.Select(registration =>
-                     _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>()))
+        var summaries = new List<ResourceSummary>();
+
+        var grains = _persistence.State.Registrations
+            .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>());
+        foreach (var grain in grains)
         {
             var summary = await grain.GetSummary();
             summaries.Add(summary);
         }
 
-        return summaries;
+        return summaries.AsReadOnly();
     }
 
     public async ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string id)
@@ -66,6 +85,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         id.ThrowIfNull().IfWhiteSpace();
 
+        if (!id.Contains('/'))
+        {
+            id = $"{Id}/{id}";
+        }
+        
         if (!_persistence.State.Registrations.Any(x => x.ResourceId.Equals(id)))
         {
             _logger.LogError("Could not find a resource with ID {Id}", id);
@@ -80,13 +104,43 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return grain;
     }
 
+    public async ValueTask<IResourceGrain?> GetGenericResourceAsync(string id)
+    {
+        id.ThrowIfNull().IfWhiteSpace();
+
+        if (!id.Contains('/'))
+        {
+            id = $"{Id}/{id}";
+        }
+
+        var registration = _persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id));
+        
+        if (registration is null)
+        {
+            _logger.LogError("Could not find a resource with ID {Id}", id);
+            return default;
+        }
+
+        var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
+
+        var frn = await grain.GetFrn();
+
+        _logger.LogDebug("Retrieved resource with FRN {Frn}", frn);
+        return grain;
+    }
+    
     public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string id,
         ResourceConfigurationStore configurationStore) where TResourceGrain : IResourceGrain
     {
         id.ThrowIfNull().IfWhiteSpace();
         configurationStore.ThrowIfNull();
 
-        if (_persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id)) is not null)
+        if (!id.Contains('/'))
+        {
+            id = $"{Id}/{id}";
+        }
+        
+        if (_persistence.State.Registrations.Any(x => x.ResourceId.Equals(id)))
             throw new InvalidOperationException($"Resource with ID {id} already exists");
 
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
@@ -112,16 +166,21 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         id.ThrowIfNull().IfWhiteSpace();
 
-        var toRemove = _persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id));
-        if (toRemove is null)
+        if (!id.Contains('/'))
+        {
+            id = $"{Id}/{id}";
+        }
+        
+        var registration = _persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id));
+        if (registration is null)
             throw new InvalidOperationException($"Resource with ID {id} does not exist");
 
-        var grain = _grainFactory.GetGrain(toRemove.GrainId).AsReference<IResourceGrain>();
+        var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
         await grain.SelfRemoveAsync();
 
         var frn = await grain.GetFrn();
 
-        _persistence.State.Registrations.Remove(toRemove);
+        _persistence.State.Registrations.Remove(registration);
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Removed resource with FRN {Frn}", frn);

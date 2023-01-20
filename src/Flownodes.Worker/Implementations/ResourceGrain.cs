@@ -32,10 +32,10 @@ public abstract class ResourceGrain : Grain
     protected string Id => this.GetPrimaryKeyString();
     protected string? BehaviourId => ConfigurationStore.BehaviourId;
     protected string Frn => $"{EnvironmentService.BaseFrn}:{Kind}:{Id}";
-    protected DateTime CreatedAt => Persistence.State.CreatedAt;
+    protected DateTime CreatedAt => Persistence.State.Metadata.CreatedAt;
     protected IResourceManagerGrain ResourceManagerGrain => EnvironmentService.GetResourceManagerGrain();
 
-    protected Dictionary<string, string?> Metadata
+    protected ResourceMetadataStore Metadata
     {
         get => Persistence.State.Metadata;
         private set => Persistence.State.Metadata = value;
@@ -85,7 +85,7 @@ public abstract class ResourceGrain : Grain
         return ValueTask.FromResult(Frn);
     }
 
-    public virtual ValueTask<Dictionary<string, string?>> GetMetadata()
+    public ValueTask<ResourceMetadataStore> GetMetadata()
     {
         return ValueTask.FromResult(Persistence.State.Metadata);
     }
@@ -99,14 +99,20 @@ public abstract class ResourceGrain : Grain
     {
         var actualConfiguration = new ResourceConfiguration
         {
+            BehaviourId = ConfigurationStore.BehaviourId,
             Properties = ConfigurationStore.Properties
+        };
+        var actualMetadata = new ResourceMetadata
+        {
+            CreatedAt = Metadata.CreatedAt,
+            Properties = Metadata.Properties
         };
         var actualState = new ResourceState
         {
             Properties = StateStore.Properties
         };
 
-        return new ResourceContext(actualConfiguration, Metadata, actualState);
+        return new ResourceContext(actualConfiguration, actualMetadata, actualState);
     }
 
     public virtual async Task UpdateConfigurationAsync(ResourceConfigurationStore configurationStore)
@@ -143,7 +149,7 @@ public abstract class ResourceGrain : Grain
     {
         metadata.ThrowIfNull();
 
-        Metadata.MergeInPlace(metadata);
+        Metadata.Properties.MergeInPlace(metadata);
         await Persistence.WriteStateAsync();
 
         Logger.LogInformation("Updated metadata for resource with FRN {Frn}", Frn);
@@ -161,7 +167,7 @@ public abstract class ResourceGrain : Grain
 
     public virtual async Task ClearMetadataAsync()
     {
-        Metadata = new Dictionary<string, string?>();
+        Metadata = new ResourceMetadataStore();
         await Persistence.WriteStateAsync();
 
         Logger.LogInformation("Cleared metadata for resource with FRN {Frn}", Frn);

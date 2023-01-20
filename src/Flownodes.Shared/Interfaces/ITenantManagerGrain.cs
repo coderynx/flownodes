@@ -4,6 +4,6 @@ public interface ITenantManagerGrain : IGrainWithStringKey
 {
     ValueTask<ITenantGrain?> GetTenantAsync(string id);
     Task GetTenantsAsync();
-    Task CreateTenantAsync(string id, Dictionary<string, string?>? metadata = null);
+    ValueTask<ITenantGrain?> CreateTenantAsync(string id, Dictionary<string, string?>? metadata = null);
     Task RemoveTenantAsync(string id);
 }

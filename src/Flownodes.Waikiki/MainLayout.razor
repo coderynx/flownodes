@@ -1,4 +1,6 @@
-﻿@inherits LayoutComponentBase
+﻿@using Flownodes.Waikiki.Services
+@inherits LayoutComponentBase
+@inject IContextService ContextService
 
 <MudThemeProvider IsDarkMode="true"/>
 <MudDialogProvider/>
@@ -14,8 +16,10 @@
         </MudDrawerHeader>
         <NavMenu/>
     </MudDrawer>
-    <MudMainContent Class="px-6 py-6">
-        @Body
+    <MudMainContent>
+        <MudContainer Class="py-8 px-8" MaxWidth="MaxWidth.False">
+            @Body
+        </MudContainer>
     </MudMainContent>
 </MudLayout>
 
@@ -25,6 +29,11 @@
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ContextService.SetTenantAsync("default");
     }
 
 }

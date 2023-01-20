@@ -38,14 +38,17 @@ public class TenantManagerGrain : ITenantManagerGrain
         _logger.LogDebug("Retrieved all tenants");
     }
 
-    public async Task CreateTenantAsync(string id, Dictionary<string, string?>? metadata = null)
+    public async ValueTask<ITenantGrain?> CreateTenantAsync(string id, Dictionary<string, string?>? metadata = null)
     {
         id.ThrowIfNull().IfWhiteSpace();
 
         _registrations.State.Add(id);
         await _registrations.WriteStateAsync();
+
+        var grain = _grainFactory.GetGrain<ITenantGrain>(id);
         
         _logger.LogInformation("Created tenant with ID {Id}", id);
+        return grain;
     }
 
     public async Task RemoveTenantAsync(string id)

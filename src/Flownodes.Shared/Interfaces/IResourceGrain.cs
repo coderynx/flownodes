@@ -10,8 +10,7 @@ public interface IResourceGrain : IGrainWithStringKey
     /// <summary>
     ///     Gets the resource summary.
     /// </summary>
-    /// <returns>
-    ///     <The resource summary./ returns>
+    /// <returns>The resource summary. </returns>
     public ValueTask<ResourceSummary?> GetSummary();
 
     /// <summary>
@@ -37,7 +36,7 @@ public interface IResourceGrain : IGrainWithStringKey
     /// </summary>
     /// <param name="metadata">The new metadata to merge.</param>
     /// <returns></returns>
-    Task UpdateMetadataAsync(Dictionary<string, string> metadata);
+    Task UpdateMetadataAsync(Dictionary<string, string?> metadata);
 
     /// <summary>
     ///     Configures the resource.
@@ -49,7 +48,7 @@ public interface IResourceGrain : IGrainWithStringKey
     ///     Gets the stored resource metadata.
     /// </summary>
     /// <returns>The stored metadata.</returns>
-    ValueTask<Dictionary<string, string>> GetMetadata();
+    ValueTask<ResourceMetadataStore> GetMetadata();
 
     /// <summary>
     ///     Clears the resource metadata.

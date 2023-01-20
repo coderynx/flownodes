@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Flownodes.Shared.Models;
 
 namespace Flownodes.Shared.Interfaces;
@@ -6,7 +7,7 @@ public interface IResourceManagerGrain : IGrainWithStringKey
 {
     ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string id) where TResourceGrain : IResourceGrain;
     ValueTask<IResourceGrain?> GetResourceAsync(string id);
-    ValueTask<IEnumerable<ResourceSummary?>> GetAllResourceSummaries();
+    ValueTask<ReadOnlyCollection<ResourceSummary>> GetAllResourceSummaries();
 
     ValueTask<TResource> DeployResourceAsync<TResource>(string id, ResourceConfigurationStore configurationStore)
         where TResource : IResourceGrain;
@@ -14,4 +15,5 @@ public interface IResourceManagerGrain : IGrainWithStringKey
     Task RemoveResourceAsync(string id);
     Task RemoveAllResourcesAsync();
     ValueTask<ResourceSummary?> GetResourceSummary(string id);
+    ValueTask<IResourceGrain?> GetGenericResourceAsync(string id);
 }

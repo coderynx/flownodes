@@ -1,0 +1,195 @@
+@using Flownodes.Shared.Models
+@using Flownodes.Waikiki.Services
+@using Microsoft.AspNetCore.Components.Forms
+@using Flownodes.Shared.Interfaces
+@inject IContextService ContextService
+
+@if (ResourceId is not null)
+{
+    <div class="d-flex mb-2">
+        <MudIcon Icon="@Icons.Material.Outlined.DeviceUnknown" Size="Size.Large" Class="mr-2"></MudIcon>
+        <MudText Typo="Typo.h5" GutterBottom="true">@ResourceId</MudText>
+    </div>
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+
+        <MudTabPanel Text="Summary">
+            <div class="d-flex gap-4">
+
+                <MudCard>
+                    <MudCardContent>
+                        <MudSimpleTable Elevation="0">
+                            <tbody>
+                            <tr>
+                                <td>
+                                    <MudText Typo="Typo.body2">Behaviour ID</MudText>
+                                </td>
+                                <td>
+                                    <MudText Typo="Typo.body2">
+                                        <b>@Configuration.BehaviourId</b>
+                                    </MudText>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <MudText Typo="Typo.body2">Creation date</MudText>
+                                </td>
+                                <td>
+                                    <MudText Typo="Typo.body2">
+                                        <b>@Metadata.CreatedAt</b>
+                                    </MudText>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <MudText Typo="Typo.body2">Last state update date</MudText>
+                                </td>
+                                <td>
+                                    <MudText Typo="Typo.body2">
+                                        <b>@State.LastUpdate</b>
+                                    </MudText>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudCardContent>
+                </MudCard>
+
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <div class="d-flex align-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Outlined.Description"/>
+                                <MudText Typo="Typo.h6">Metadata</MudText>
+                            </div>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudSimpleTable Elevation="0">
+                            <tbody>
+                            <MudVirtualize Items="@State.Properties">
+                                <tr>
+                                    <td>
+                                        <MudText Typo="Typo.body2">@context.Key</MudText>
+                                    </td>
+                                    <td>
+                                        <MudText Typo="Typo.body2">
+                                            <b>@context.Value</b>
+                                        </MudText>
+                                    </td>
+                                </tr>
+                            </MudVirtualize>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudCardContent>
+                </MudCard>
+
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <div class="d-flex align-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Outlined.Build"/>
+                                <MudText Typo="Typo.h6">Configuration</MudText>
+                            </div>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudSimpleTable Elevation="0">
+                            <tbody>
+                            <MudVirtualize Items="@Configuration.Properties">
+                                <tr>
+                                    <td>
+                                        <MudText Typo="Typo.body2">@context.Key</MudText>
+                                    </td>
+                                    <td>
+                                        <MudText Typo="Typo.body2">
+                                            <b>@context.Value</b>
+                                        </MudText>
+                                    </td>
+                                </tr>
+                            </MudVirtualize>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudCardContent>
+                </MudCard>
+
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <div class="d-flex align-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Outlined.Dataset"/>
+                                <MudText Typo="Typo.h6">State</MudText>
+                            </div>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudSimpleTable Elevation="0">
+                            <tbody>
+                            <MudVirtualize Items="@State.Properties">
+                                <tr>
+                                    <td>
+                                        <MudText Typo="Typo.body2">@context.Key</MudText>
+                                    </td>
+                                    <td>
+                                        <MudText Typo="Typo.body2">
+                                            <b>@context.Value</b>
+                                        </MudText>
+                                    </td>
+                                </tr>
+                            </MudVirtualize>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudCardContent>
+                </MudCard>
+
+            </div>
+        </MudTabPanel>
+        <MudTabPanel Text="Configuration">
+            <MudText>Content Two</MudText>
+        </MudTabPanel>
+        <MudTabPanel Text="State">
+            <MudText>Content Three</MudText>
+        </MudTabPanel>
+        <MudTabPanel Text="Advanced">
+        </MudTabPanel>
+    </MudTabs>
+}
+else
+{
+    <MudText Typo="Typo.h6">Select a resource from the tree view</MudText>
+}
+
+@code {
+
+    [Parameter]
+    public string? ResourceId { get; set; }
+
+    public ResourceConfigurationStore Configuration { get; set; } = new();
+    public ResourceMetadataStore Metadata { get; set; } = new();
+    public ResourceStateStore State { get; set; } = new();
+    public IResourceGrain? ResourceGrain { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ResourceId is null) return;
+
+        ResourceGrain = await ContextService.ResourceManager.GetGenericResourceAsync(ResourceId);
+        if (ResourceGrain is null) return;
+
+        Configuration = await ResourceGrain.GetConfiguration();
+        Metadata = await ResourceGrain.GetMetadata();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ResourceId is null) return;
+
+        ResourceGrain = await ContextService.ResourceManager.GetGenericResourceAsync(ResourceId);
+        if (ResourceGrain is null) return;
+
+        Configuration = await ResourceGrain.GetConfiguration();
+        Metadata = await ResourceGrain.GetMetadata();
+        State = await ResourceGrain.GetState();
+    }
+
+}

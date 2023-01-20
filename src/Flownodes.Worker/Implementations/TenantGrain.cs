@@ -20,6 +20,7 @@ public class TenantGrain : Grain, ITenantGrain
     private readonly IGrainFactory _grainFactory;
     private string Id => this.GetPrimaryKeyString();
     private IResourceManagerGrain ResourceManagerGrain => _grainFactory.GetGrain<IResourceManagerGrain>(Id);
+    private IAlertManagerGrain AlertManagerGrain => _grainFactory.GetGrain<IAlertManagerGrain>(Id);
 
     public async Task UpdateConfigurationAsync(TenantConfiguration configuration)
     {
@@ -38,5 +39,10 @@ public class TenantGrain : Grain, ITenantGrain
     public ValueTask<IResourceManagerGrain> GetResourceManager()
     {
         return ValueTask.FromResult(ResourceManagerGrain);
+    }
+
+    public ValueTask<IAlertManagerGrain> GetAlertManager()
+    {
+        return ValueTask.FromResult(AlertManagerGrain);
     }
 }

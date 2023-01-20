@@ -1,4 +1,4 @@
 namespace Flownodes.Sdk.Resourcing;
 
-public record ResourceContext(ResourceConfiguration Configuration, Dictionary<string, string?> Metadata,
+public record ResourceContext(ResourceConfiguration Configuration, ResourceMetadata Metadata,
     ResourceState State);

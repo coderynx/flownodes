@@ -8,4 +8,5 @@ public interface ITenantGrain : IGrainWithStringKey
     ValueTask<TenantConfiguration> GetConfiguration();
 
     ValueTask<IResourceManagerGrain> GetResourceManager();
+    ValueTask<IAlertManagerGrain> GetAlertManager();
 }
