@@ -63,7 +63,7 @@ public class ResourceGrainTests
         await grain.UpdateMetadataAsync(metadata);
 
         var newMetadata = await grain.GetMetadata();
-        newMetadata.Should().BeEquivalentTo(metadata);
+        newMetadata.Properties.Should().BeEquivalentTo(metadata);
     }
 
     [Fact]

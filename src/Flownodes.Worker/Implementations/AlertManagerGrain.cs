@@ -27,7 +27,7 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
     private string Id => this.GetPrimaryKeyString();
 
     public AlertManagerGrain(ILogger<AlertManagerGrain> logger,
-        [PersistentState("alerterStore", "flownodes")]
+        [PersistentState("alertManagerStore", "flownodes")]
         IPersistentState<AlertManagerPersistence> persistence,
         IServiceProvider serviceProvider, IMapper mapper)
     {
