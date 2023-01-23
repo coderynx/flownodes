@@ -1,0 +1,54 @@
+@using Flownodes.Shared.Interfaces
+@using Flownodes.Shared.Models
+@using Newtonsoft.Json
+
+<EditForm Model="@_json" OnValidSubmit="OnSubmit">
+    <StandaloneCodeEditor OnDidInit="OnDidInitAsync" Id="state-editor" @ref="_codeEditor" ConstructionOptions="EditorConstructionOptions" CssClass="code-editor"/>
+    <MudStack>
+        <MudText>Last Update: @State.LastUpdate</MudText>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto mt-6">Update</MudButton>
+    </MudStack>
+</EditForm>
+
+@code {
+
+    [Parameter]
+    public ResourceStateStore State { get; set; } = new();
+
+    [Parameter]
+    public IResourceGrain? ResourceGrain { get; set; }
+
+    private StandaloneCodeEditor _codeEditor;
+
+    private string _json;
+
+    protected override void OnInitialized()
+    {
+        _json = JsonConvert.SerializeObject(State.Properties);
+    }
+
+    private async Task OnDidInitAsync()
+    {
+        await _codeEditor.SetValue(_json);
+        await _codeEditor.Trigger("anyString", "editor.action.formatDocument");
+    }
+    
+    private async Task OnSubmit()
+    {
+        _json = await _codeEditor.GetValue();
+        State.Properties = JsonConvert.DeserializeObject<Dictionary<string, object?>>(_json) ?? State.Properties;
+        await ResourceGrain.UpdateStateAsync(State.Properties);
+    }
+    
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Theme = "vs-dark",
+            AutomaticLayout = true,
+            Language = "json",
+            FormatOnPaste = true
+        };
+    }
+
+}

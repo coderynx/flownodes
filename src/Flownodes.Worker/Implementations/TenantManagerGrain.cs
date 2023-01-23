@@ -6,6 +6,11 @@ namespace Flownodes.Worker.Implementations;
 
 public class TenantManagerGrain : ITenantManagerGrain
 {
+    private readonly IGrainFactory _grainFactory;
+
+    private readonly ILogger<TenantManagerGrain> _logger;
+    private readonly IPersistentState<HashSet<string>> _registrations;
+
     public TenantManagerGrain(ILogger<TenantManagerGrain> logger,
         [PersistentState("tenantRegistrations", "flownodes")]
         IPersistentState<HashSet<string>> registrations, IGrainFactory grainFactory)
@@ -15,16 +20,12 @@ public class TenantManagerGrain : ITenantManagerGrain
         _grainFactory = grainFactory;
     }
 
-    private readonly ILogger<TenantManagerGrain> _logger;
-    private readonly IPersistentState<HashSet<string>> _registrations;
-    private readonly IGrainFactory _grainFactory;
-
     public ValueTask<ITenantGrain?> GetTenantAsync(string id)
     {
         if (_registrations.State.Contains(id))
         {
             var grain = _grainFactory.GetGrain<ITenantGrain>(id);
-            
+
             _logger.LogDebug("Retrieved tenant with ID {Id}", id);
             return ValueTask.FromResult(grain);
         }
@@ -46,7 +47,7 @@ public class TenantManagerGrain : ITenantManagerGrain
         await _registrations.WriteStateAsync();
 
         var grain = _grainFactory.GetGrain<ITenantGrain>(id);
-        
+
         _logger.LogInformation("Created tenant with ID {Id}", id);
         return grain;
     }
@@ -56,7 +57,7 @@ public class TenantManagerGrain : ITenantManagerGrain
         id.ThrowIfNull().IfEmpty();
 
         // TODO: Perform tenant removal.
-        
+
         _logger.LogInformation("Removed tenant with ID {Id}", id);
     }
 }

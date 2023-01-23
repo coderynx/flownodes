@@ -1,7 +1,6 @@
-@using Flownodes.Shared.Models
 @using Flownodes.Waikiki.Services
-@using Microsoft.AspNetCore.Components.Forms
 @using Flownodes.Shared.Interfaces
+@using Flownodes.Shared.Models
 @inject IContextService ContextService
 
 @if (ResourceId is not null)
@@ -67,7 +66,7 @@
                     <MudCardContent>
                         <MudSimpleTable Elevation="0">
                             <tbody>
-                            <MudVirtualize Items="@State.Properties">
+                            <MudVirtualize Items="@Metadata.Properties">
                                 <tr>
                                     <td>
                                         <MudText Typo="Typo.body2">@context.Key</MudText>
@@ -148,7 +147,7 @@
             <MudText>Content Two</MudText>
         </MudTabPanel>
         <MudTabPanel Text="State">
-            <MudText>Content Three</MudText>
+            <ResourceState State="State" ResourceGrain="ResourceGrain"></ResourceState>
         </MudTabPanel>
         <MudTabPanel Text="Advanced">
         </MudTabPanel>

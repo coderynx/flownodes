@@ -45,6 +45,12 @@ public interface IResourceGrain : IGrainWithStringKey
     Task UpdateConfigurationAsync(ResourceConfigurationStore configurationStore);
 
     /// <summary>
+    ///     Updates the state of the resource by storing the new state and applying it.
+    /// </summary>
+    /// <param name="newState">The new state of the resource to store.</param>
+    Task UpdateStateAsync(Dictionary<string, object?> newState);
+
+    /// <summary>
     ///     Gets the stored resource metadata.
     /// </summary>
     /// <returns>The stored metadata.</returns>

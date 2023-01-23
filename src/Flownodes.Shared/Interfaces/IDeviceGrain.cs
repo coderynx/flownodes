@@ -5,9 +5,4 @@ namespace Flownodes.Shared.Interfaces;
 /// </summary>
 public interface IDeviceGrain : IResourceGrain
 {
-    /// <summary>
-    ///     Updates the state of the device by storing the new state and applying it.
-    /// </summary>
-    /// <param name="newState">The new state of the device to store.</param>
-    Task UpdateStateAsync(Dictionary<string, object?> newState);
 }

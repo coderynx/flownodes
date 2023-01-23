@@ -36,7 +36,8 @@ public class ResourceManagerTests
         var manager = ProvideResourceManager();
 
         // Act & Assert.
-        await manager.DeployResourceAsync<IDummyResourceGrain>(_fixture.Create<string>(), new ResourceConfigurationStore());
+        await manager.DeployResourceAsync<IDummyResourceGrain>(_fixture.Create<string>(),
+            new ResourceConfigurationStore());
     }
 
     [Fact]
@@ -87,7 +88,8 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>(_fixture.Create<string>(), new ResourceConfigurationStore());
+        await manager.DeployResourceAsync<IDummyResourceGrain>(_fixture.Create<string>(),
+            new ResourceConfigurationStore());
 
         // Act.
         var grain = await manager.GetResourceAsync<IDummyResourceGrain>(_fixture.Create<string>());

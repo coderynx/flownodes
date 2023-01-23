@@ -6,6 +6,11 @@ namespace Flownodes.Worker.Implementations;
 
 public class TenantGrain : Grain, ITenantGrain
 {
+    private readonly IPersistentState<TenantConfiguration> _configuration;
+    private readonly IGrainFactory _grainFactory;
+
+    private readonly ILogger<TenantGrain> _logger;
+
     public TenantGrain(ILogger<TenantGrain> logger,
         [PersistentState("tenantConfiguration", "flownodes")]
         IPersistentState<TenantConfiguration> configuration, IGrainFactory grainFactory)
@@ -15,9 +20,6 @@ public class TenantGrain : Grain, ITenantGrain
         _grainFactory = grainFactory;
     }
 
-    private readonly ILogger<TenantGrain> _logger;
-    private readonly IPersistentState<TenantConfiguration> _configuration;
-    private readonly IGrainFactory _grainFactory;
     private string Id => this.GetPrimaryKeyString();
     private IResourceManagerGrain ResourceManagerGrain => _grainFactory.GetGrain<IResourceManagerGrain>(Id);
     private IAlertManagerGrain AlertManagerGrain => _grainFactory.GetGrain<IAlertManagerGrain>(Id);
@@ -26,7 +28,7 @@ public class TenantGrain : Grain, ITenantGrain
     {
         _configuration.State = configuration;
         await _configuration.WriteStateAsync();
-        
+
         _logger.LogInformation("Updated configuration for tenant {TenantId}", Id);
     }
 

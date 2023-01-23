@@ -140,9 +140,25 @@ public abstract class ResourceGrain : Grain
         Logger.LogInformation("Configured resource with FRN {Frn}", Frn);
     }
 
+    protected virtual Task OnStateChangedAsync(Dictionary<string, object?> newState)
+    {
+        return Task.CompletedTask;
+    }
+
     protected virtual Task OnBehaviourUpdateAsync()
     {
         return Task.CompletedTask;
+    }
+
+    public async Task UpdateStateAsync(Dictionary<string, object?> newState)
+    {
+        StateStore.Properties.MergeInPlace(newState);
+        StateStore.LastUpdate = DateTime.Now;
+        await Persistence.WriteStateAsync();
+
+        await OnStateChangedAsync(newState);
+
+        Logger.LogInformation("Updated state for resource {ResourceId}", Id);
     }
 
     public virtual async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)

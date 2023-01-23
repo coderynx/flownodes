@@ -5,9 +5,9 @@ namespace Flownodes.Shared.Models;
 [GenerateSerializer]
 public class ResourceStateStore
 {
-    [Id(1)]private Dictionary<string, object?> _properties = new();
-    [Id(0)] public DateTime? LastUpdate { get; private set; }
-    
+    [Id(1)] private Dictionary<string, object?> _properties = new();
+    [Id(0)] public DateTime? LastUpdate { get; set; } = DateTime.Now;
+
     public Dictionary<string, object?> Properties
     {
         get => _properties;

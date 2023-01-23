@@ -24,8 +24,6 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
     private readonly IPersistentState<AlertManagerPersistence> _persistence;
     private readonly IServiceProvider _serviceProvider;
 
-    private string Id => this.GetPrimaryKeyString();
-
     public AlertManagerGrain(ILogger<AlertManagerGrain> logger,
         [PersistentState("alertManagerStore", "flownodes")]
         IPersistentState<AlertManagerPersistence> persistence,
@@ -36,6 +34,8 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
         _serviceProvider = serviceProvider;
         _mapper = mapper;
     }
+
+    private string Id => this.GetPrimaryKeyString();
 
     public async Task SetupAsync(params string[] alertDriverIds)
     {

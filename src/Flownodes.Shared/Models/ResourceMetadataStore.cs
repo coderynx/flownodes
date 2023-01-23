@@ -6,9 +6,9 @@ namespace Flownodes.Shared.Models;
 public class ResourceMetadataStore
 {
     [Id(0)] public Dictionary<string, string?> Properties { get; set; } = new();
-    
+
     [Id(1)] public DateTime CreatedAt { get; set; } = DateTime.Now;
-    
+
     public string? this[string key]
     {
         get => Properties[key];

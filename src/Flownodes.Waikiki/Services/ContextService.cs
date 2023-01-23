@@ -5,19 +5,20 @@ namespace Flownodes.Waikiki.Services;
 
 public class ContextService : IContextService
 {
+    private readonly ILogger<ContextService> _logger;
+
+    private readonly ITenantManagerGrain _tenantManagerGrain;
+
     public ContextService(IGrainFactory grainFactory, ILogger<ContextService> logger)
     {
         _logger = logger;
         _tenantManagerGrain = grainFactory.GetGrain<ITenantManagerGrain>("tenant_manager");
     }
-    
+
     public ITenantGrain? TenantGrain { get; private set; }
     public IResourceManagerGrain? ResourceManager { get; private set; }
     public IAlertManagerGrain? AlertManager { get; private set; }
     public IList<ResourceSummary>? ResourceSummaries { get; private set; }
-    
-    private readonly ITenantManagerGrain _tenantManagerGrain;
-    private readonly ILogger<ContextService> _logger;
 
     public async Task SetTenantAsync(string tenantName)
     {
@@ -27,8 +28,8 @@ public class ContextService : IContextService
         ResourceManager = await TenantGrain.GetResourceManager();
         AlertManager = await TenantGrain.GetAlertManager();
 
-        await UpdateResourceSummaries();  
-        
+        await UpdateResourceSummaries();
+
         _logger.LogInformation("Switched tenant to: {TenantName}", tenantName);
     }
 

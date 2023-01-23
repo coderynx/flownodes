@@ -15,8 +15,6 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     private readonly ILogger<ResourceManagerGrain> _logger;
     private readonly IPersistentState<ResourceManagerPersistence> _persistence;
 
-    private string Id => this.GetPrimaryKeyString();
-
     public ResourceManagerGrain(ILogger<ResourceManagerGrain> logger,
         [PersistentState("resourceManagerState", "flownodes")]
         IPersistentState<ResourceManagerPersistence> persistence, IGrainFactory grainFactory)
@@ -27,15 +25,14 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _grainFactory.GetGrain<IAlertManagerGrain>("alerter");
     }
 
+    private string Id => this.GetPrimaryKeyString();
+
     public async ValueTask<ResourceSummary?> GetResourceSummary(string id)
     {
         id.ThrowIfNull().IfWhiteSpace();
 
-        if (!id.Contains('/'))
-        {
-            id = $"{Id}/{id}";
-        }
-        
+        if (!id.Contains('/')) id = $"{Id}/{id}";
+
         var registration = _persistence.State.Registrations.SingleOrDefault(x => x.ResourceId.Equals(id));
         if (registration is null) return default;
 
@@ -50,11 +47,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         id.ThrowIfNull().IfWhiteSpace();
 
-        if (!id.Contains('/'))
-        {
-            id = $"{Id}/{id}";
-        }
-        
+        if (!id.Contains('/')) id = $"{Id}/{id}";
+
         var registration = _persistence.State.Registrations.SingleOrDefault(x => x.ResourceId.Equals(id));
         if (registration is null) return default;
 
@@ -85,11 +79,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         id.ThrowIfNull().IfWhiteSpace();
 
-        if (!id.Contains('/'))
-        {
-            id = $"{Id}/{id}";
-        }
-        
+        if (!id.Contains('/')) id = $"{Id}/{id}";
+
         if (!_persistence.State.Registrations.Any(x => x.ResourceId.Equals(id)))
         {
             _logger.LogError("Could not find a resource with ID {Id}", id);
@@ -108,13 +99,10 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         id.ThrowIfNull().IfWhiteSpace();
 
-        if (!id.Contains('/'))
-        {
-            id = $"{Id}/{id}";
-        }
+        if (!id.Contains('/')) id = $"{Id}/{id}";
 
         var registration = _persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id));
-        
+
         if (registration is null)
         {
             _logger.LogError("Could not find a resource with ID {Id}", id);
@@ -128,18 +116,15 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _logger.LogDebug("Retrieved resource with FRN {Frn}", frn);
         return grain;
     }
-    
+
     public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string id,
         ResourceConfigurationStore configurationStore) where TResourceGrain : IResourceGrain
     {
         id.ThrowIfNull().IfWhiteSpace();
         configurationStore.ThrowIfNull();
 
-        if (!id.Contains('/'))
-        {
-            id = $"{Id}/{id}";
-        }
-        
+        if (!id.Contains('/')) id = $"{Id}/{id}";
+
         if (_persistence.State.Registrations.Any(x => x.ResourceId.Equals(id)))
             throw new InvalidOperationException($"Resource with ID {id} already exists");
 
@@ -166,11 +151,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         id.ThrowIfNull().IfWhiteSpace();
 
-        if (!id.Contains('/'))
-        {
-            id = $"{Id}/{id}";
-        }
-        
+        if (!id.Contains('/')) id = $"{Id}/{id}";
+
         var registration = _persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id));
         if (registration is null)
             throw new InvalidOperationException($"Resource with ID {id} does not exist");

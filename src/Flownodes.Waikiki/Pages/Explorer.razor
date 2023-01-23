@@ -1,11 +1,11 @@
 ﻿@page "/explorer"
-@using Flownodes.Shared.Models
 @using Flownodes.Waikiki.Services
+@using Flownodes.Shared.Models
 @inject IContextService ContextService;
 
 <PageTitle>Flownodes Web - Explorer</PageTitle>
-<div class="d-flex gap-4">
-    <MudTreeView Hover="true" @bind-SelectedValue="_currentSummary" >
+<MudStack Row="true" AlignItems="AlignItems.Stretch" Justify="Justify.Center" Spacing="8">
+    <MudTreeView Hover="true" @bind-SelectedValue="_currentSummary">
         <MudVirtualize T="ResourceSummary" Items="@ContextService.ResourceSummaries">
             <MudTreeViewItem Value="@context" Icon="@Icons.Material.Outlined.DeviceUnknown" Text="@context.Id"/>
         </MudVirtualize>
@@ -13,7 +13,7 @@
     <div class="flex-grow-1">
         <Resource ResourceId="@_currentSummary?.Id"/>
     </div>
-</div>
+</MudStack>
 
 @code {
     private ResourceSummary? _currentSummary;
@@ -22,4 +22,5 @@
     {
         _currentSummary = ContextService.ResourceSummaries.First();
     }
+
 }
