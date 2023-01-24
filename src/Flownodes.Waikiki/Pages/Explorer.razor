@@ -4,24 +4,80 @@
 @inject IContextService ContextService;
 
 <PageTitle>Flownodes Web - Explorer</PageTitle>
-<div class="d-flex flex-grow-1 gap-4 align-stretch">
-    <MudTreeView Hover="true" @bind-SelectedValue="_currentSummary">
-        <MudVirtualize T="ResourceSummary" Items="@ContextService.ResourceSummaries">
-            <MudTreeViewItem Value="@context" Icon="@Icons.Material.Outlined.DeviceUnknown" Text="@context.Id"/>
-        </MudVirtualize>
-    </MudTreeView>
-    <MudDivider Vertical="true" FlexItem="true" />
+<div class="d-flex align-stretch flex-grow-1 gap-4">
+    <div>
+        <MudTreeView Items="_items" Hover="true" @bind-ActivatedValue="ActivatedItem">
+            <ItemTemplate>
+                <MudTreeViewItem Value="@context" LoadingIconColor="Color.Info" Icon="@context.Icon" Text="@context.Id" EndTextTypo="@Typo.caption" CanExpand="@context.CanExpand" Items="@context.Items"/>
+            </ItemTemplate>
+        </MudTreeView>
+    </div>
+    <MudDivider Vertical="true" FlexItem="true"/>
     <div class="flex-grow-1">
-        <Resource ResourceId="@_currentSummary?.Id"/>
+        @if (ActivatedItem.Kind == ItemKind.Resource)
+        {
+            <Resource ResourceId="@ActivatedItem.Id"/>
+        }
     </div>
 </div>
 
 @code {
+
     private ResourceSummary? _currentSummary;
+    private readonly HashSet<TreeViewItem> _items = new();
+    private TreeViewItem ActivatedItem { get; set; } = new();
+
+    private enum ItemKind
+    {
+        Service,
+        Cluster,
+        Tenant,
+        Resource
+    }
+
+    private class TreeViewItem
+    {
+        public ItemKind Kind { get; set; }
+        public string Icon { get; set; }
+        public string Id { get; set; }
+        public bool CanExpand { get; set; }
+        public HashSet<TreeViewItem> Items { get; set; } = new();
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        _currentSummary = ContextService.ResourceSummaries.First();
+        var clusterInfo = await ContextService.ClusterGrain.GetClusterInformation();
+
+        var serviceItem = new TreeViewItem
+        {
+            Kind = ItemKind.Service,
+            Icon = Icons.Material.Outlined.MiscellaneousServices,
+            Id = clusterInfo.ServiceId,
+            CanExpand = true
+        };
+
+        var clusterItem = new TreeViewItem
+        {
+            Kind = ItemKind.Cluster,
+            Icon = Icons.Material.Outlined.DeviceHub,
+            Id = clusterInfo.ClusterId,
+            CanExpand = true
+        };
+        serviceItem.Items.Add(clusterItem);
+
+        foreach (var resourceSummary in ContextService.ResourceSummaries)
+        {
+            var resourceItem = new TreeViewItem
+            {
+                Kind = ItemKind.Resource,
+                Icon = Icons.Material.Outlined.DevicesOther,
+                Id = resourceSummary.Id,
+                CanExpand = false
+            };
+            clusterItem.Items.Add(resourceItem);
+        }
+
+        _items.Add(serviceItem);
     }
 
 }

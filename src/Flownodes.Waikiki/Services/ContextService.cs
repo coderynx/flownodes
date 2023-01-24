@@ -13,9 +13,11 @@ public class ContextService : IContextService
     {
         _logger = logger;
         _tenantManagerGrain = grainFactory.GetGrain<ITenantManagerGrain>("tenant_manager");
+        ClusterGrain = grainFactory.GetGrain<IClusterGrain>(0);
     }
-
+    
     public ITenantGrain? TenantGrain { get; private set; }
+    public IClusterGrain? ClusterGrain { get; }
     public IResourceManagerGrain? ResourceManager { get; private set; }
     public IAlertManagerGrain? AlertManager { get; private set; }
     public IList<ResourceSummary>? ResourceSummaries { get; private set; }

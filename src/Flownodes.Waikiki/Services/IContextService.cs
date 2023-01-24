@@ -6,6 +6,7 @@ namespace Flownodes.Waikiki.Services;
 public interface IContextService
 {
     ITenantGrain? TenantGrain { get; }
+    IClusterGrain? ClusterGrain { get; }
     IResourceManagerGrain? ResourceManager { get; }
     IAlertManagerGrain? AlertManager { get; }
     IList<ResourceSummary>? ResourceSummaries { get; }

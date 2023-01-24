@@ -15,7 +15,7 @@ services:
     env:
       - DOTNET_ENVIRONMENT=Staging
       - ORLEANS_CLUSTER_ID=dev
-      - ORLEANS_SERVICE_ID=flownodes
+      - ORLEANS_SERVICE_ID=flownodes-dev
       - RESOURCE_MANAGER_NAME=resource_manager
       - ALERT_MANAGER_NAME=alert_manager
 
@@ -23,7 +23,7 @@ services:
     project: src/Flownodes.ApiGateway/Flownodes.ApiGateway.csproj
     env:
       - ORLEANS_CLUSTER_ID=dev
-      - ORLEANS_SERVICE_ID=flownodes
+      - ORLEANS_SERVICE_ID=flownodes-dev
       - RESOURCE_MANAGER_NAME=resource_manager
       - ALERT_MANAGER_NAME=alert_manager
     bindings:
