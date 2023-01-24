@@ -4,16 +4,17 @@
 @inject IContextService ContextService;
 
 <PageTitle>Flownodes Web - Explorer</PageTitle>
-<MudStack Row="true" AlignItems="AlignItems.Stretch" Justify="Justify.Center" Spacing="8">
+<div class="d-flex flex-grow-1 gap-4 align-stretch">
     <MudTreeView Hover="true" @bind-SelectedValue="_currentSummary">
         <MudVirtualize T="ResourceSummary" Items="@ContextService.ResourceSummaries">
             <MudTreeViewItem Value="@context" Icon="@Icons.Material.Outlined.DeviceUnknown" Text="@context.Id"/>
         </MudVirtualize>
     </MudTreeView>
+    <MudDivider Vertical="true" FlexItem="true" />
     <div class="flex-grow-1">
         <Resource ResourceId="@_currentSummary?.Id"/>
     </div>
-</MudStack>
+</div>
 
 @code {
     private ResourceSummary? _currentSummary;

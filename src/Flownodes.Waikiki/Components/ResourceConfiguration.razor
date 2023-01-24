@@ -3,9 +3,9 @@
 @using Newtonsoft.Json
 
 <EditForm Model="@_json" OnValidSubmit="OnSubmit">
+    <MudTextField @bind-Value="Configuration.BehaviourId" Label="Behavior ID" For="@(() => Configuration.BehaviourId)" Class="mb-6"/>
     <StandaloneCodeEditor OnDidInit="OnDidInitAsync" Id="state-editor" @ref="_codeEditor" ConstructionOptions="EditorConstructionOptions" CssClass="code-editor"/>
     <MudStack>
-        <MudText>Last Update: @State.LastUpdate</MudText>
         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto mt-6">Update</MudButton>
     </MudStack>
 </EditForm>
@@ -13,7 +13,7 @@
 @code {
 
     [Parameter]
-    public ResourceStateStore State { get; set; } = new();
+    public ResourceConfigurationStore Configuration { get; set; } = new();
 
     [Parameter]
     public IResourceGrain? ResourceGrain { get; set; }
@@ -24,7 +24,7 @@
 
     protected override void OnInitialized()
     {
-        _json = JsonConvert.SerializeObject(State.Properties);
+        _json = JsonConvert.SerializeObject(Configuration.Properties);
     }
 
     private async Task OnDidInitAsync()
@@ -36,8 +36,8 @@
     private async Task OnSubmit()
     {
         _json = await _codeEditor.GetValue();
-        State.Properties = JsonConvert.DeserializeObject<Dictionary<string, object?>>(_json) ?? State.Properties;
-        await ResourceGrain.UpdateStateAsync(State.Properties);
+        Configuration.Properties = JsonConvert.DeserializeObject<Dictionary<string, object?>>(_json) ?? Configuration.Properties;
+        await ResourceGrain.UpdateConfigurationAsync(Configuration);
     }
 
     private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)

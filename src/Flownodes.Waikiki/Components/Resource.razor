@@ -16,6 +16,14 @@
             <div class="d-flex gap-4">
 
                 <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <div class="d-flex align-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Outlined.Info"/>
+                                <MudText Typo="Typo.h6">Information</MudText>
+                            </div>
+                        </CardHeaderContent>
+                    </MudCardHeader>
                     <MudCardContent>
                         <MudSimpleTable Elevation="0">
                             <tbody>
@@ -144,7 +152,10 @@
             </div>
         </MudTabPanel>
         <MudTabPanel Text="Configuration">
-            <MudText>Content Two</MudText>
+            <ResourceConfiguration Configuration="Configuration" ResourceGrain="ResourceGrain"/>
+        </MudTabPanel>
+        <MudTabPanel Text="Metadata">
+            <ResourceMetadata Metadata="Metadata" ResourceGrain="ResourceGrain"/>
         </MudTabPanel>
         <MudTabPanel Text="State">
             <ResourceState State="State" ResourceGrain="ResourceGrain"></ResourceState>

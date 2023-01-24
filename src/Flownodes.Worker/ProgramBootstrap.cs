@@ -92,6 +92,9 @@ public static partial class Program
             options.ServiceId = serviceId;
         });
 
+
+        builder.UseDashboard();
+        
         // Initialize node with localhost clustering and in-memory persistence.
         if (context.HostingEnvironment.IsDevelopment())
         {
