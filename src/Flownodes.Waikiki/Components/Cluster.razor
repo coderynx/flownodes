@@ -1,0 +1,18 @@
+@using Flownodes.Waikiki.Services
+@using Flownodes.Shared.Interfaces
+
+<div class="d-flex mb-2">
+    <MudIcon Icon="@Icons.Material.Outlined.DeviceHub" Size="Size.Large" Class="mr-2"></MudIcon>
+    <MudText Typo="Typo.h5" GutterBottom="true">@ClusterInformation.ClusterId</MudText>
+    <MudButton Variant="Variant.Outlined" Color="Color.Success" Class="ml-auto" StartIcon="@Icons.Material.Outlined.Add" Size="Size.Small">Add resource</MudButton>
+</div>
+
+<MudText Typo="Typo.body1">Number of nodes: @ClusterInformation.NumberOfNodes</MudText>
+<MudText Typo="Typo.body1">Orleans version: @ClusterInformation.Version</MudText>
+
+@code {
+
+    [Parameter]
+    public ClusterInformation ClusterInformation { get; set; }
+
+}

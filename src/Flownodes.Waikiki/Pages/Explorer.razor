@@ -1,6 +1,7 @@
 ﻿@page "/explorer"
 @using Flownodes.Waikiki.Services
 @using Flownodes.Shared.Models
+@using Flownodes.Shared.Interfaces
 @inject IContextService ContextService;
 
 <PageTitle>Flownodes Web - Explorer</PageTitle>
@@ -14,9 +15,14 @@
     </div>
     <MudDivider Vertical="true" FlexItem="true"/>
     <div class="flex-grow-1">
-        @if (ActivatedItem.Kind == ItemKind.Resource)
+        @switch (ActivatedItem.Kind)
         {
-            <Resource ResourceId="@ActivatedItem.Id"/>
+            case ItemKind.Resource:
+                <Resource ResourceId="@ActivatedItem.Id"/>
+                break;
+            case ItemKind.Cluster:
+                <Cluster ClusterInformation="@_clusterInformation"/>
+                break;
         }
     </div>
 </div>
@@ -24,6 +30,7 @@
 @code {
 
     private ResourceSummary? _currentSummary;
+    private ClusterInformation _clusterInformation;
     private readonly HashSet<TreeViewItem> _items = new();
     private TreeViewItem ActivatedItem { get; set; } = new();
 
@@ -46,13 +53,13 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var clusterInfo = await ContextService.ClusterGrain.GetClusterInformation();
+        _clusterInformation = await ContextService.ClusterGrain.GetClusterInformation();
 
         var serviceItem = new TreeViewItem
         {
             Kind = ItemKind.Service,
             Icon = Icons.Material.Outlined.MiscellaneousServices,
-            Id = clusterInfo.ServiceId,
+            Id = _clusterInformation.ServiceId,
             CanExpand = true
         };
 
@@ -60,7 +67,7 @@
         {
             Kind = ItemKind.Cluster,
             Icon = Icons.Material.Outlined.DeviceHub,
-            Id = clusterInfo.ClusterId,
+            Id = _clusterInformation.ClusterId,
             CanExpand = true
         };
         serviceItem.Items.Add(clusterItem);

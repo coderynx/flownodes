@@ -6,7 +6,6 @@ namespace Flownodes.Waikiki.Services;
 public class ContextService : IContextService
 {
     private readonly ILogger<ContextService> _logger;
-
     private readonly ITenantManagerGrain _tenantManagerGrain;
 
     public ContextService(IGrainFactory grainFactory, ILogger<ContextService> logger)

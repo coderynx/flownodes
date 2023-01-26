@@ -12,6 +12,7 @@ public interface IEnvironmentService
     ITenantManagerGrain GetTenantManagerGrain();
     IResourceManagerGrain GetResourceManagerGrain();
     IAlertManagerGrain GetAlertManagerGrain();
+    IClusterGrain GetClusterGrain();
 }
 
 public record EnvironmentOptions
@@ -52,5 +53,10 @@ public class EnvironmentService : IEnvironmentService
     public IAlertManagerGrain GetAlertManagerGrain()
     {
         return _grainFactory.GetGrain<IAlertManagerGrain>(_environmentOptions.AlertManagerName);
+    }
+
+    public IClusterGrain GetClusterGrain()
+    {
+        return _grainFactory.GetGrain<IClusterGrain>(0);
     }
 }

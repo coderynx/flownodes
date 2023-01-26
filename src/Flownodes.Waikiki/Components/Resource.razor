@@ -2,6 +2,7 @@
 @using Flownodes.Shared.Interfaces
 @using Flownodes.Shared.Models
 @inject IContextService ContextService
+@inject IDialogService DialogService
 
 @if (ResourceId is not null)
 {
@@ -156,9 +157,10 @@
             <ResourceMetadata Metadata="Metadata" ResourceGrain="ResourceGrain"/>
         </MudTabPanel>
         <MudTabPanel Text="State">
-            <ResourceState State="State" ResourceGrain="ResourceGrain"></ResourceState>
+            <ResourceState State="State" ResourceGrain="ResourceGrain"/>
         </MudTabPanel>
         <MudTabPanel Text="Advanced">
+            <MudButton Variant="Variant.Filled" Color="Color.Error" @onclick="DeleteResource">Delete resource</MudButton>
         </MudTabPanel>
     </MudTabs>
 }
@@ -198,6 +200,21 @@ else
         Configuration = await ResourceGrain.GetConfiguration();
         Metadata = await ResourceGrain.GetMetadata();
         State = await ResourceGrain.GetState();
+    }
+
+    private void DeleteResource()
+    {
+        var parameters = new DialogParameters
+        {
+            { "ContentText", $"Do you really want to delete the resource {ResourceId}? This process cannot be undone." },
+            { "ButtonText", "Delete" },
+            { "Color", Color.Error },
+            { "ResourceId", ResourceId }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        DialogService.Show<DeleteResourceDialog>("Delete", parameters, options);
     }
 
 }

@@ -20,6 +20,9 @@ public class TestWorker : BackgroundService
         var tenant = await tenantManager.CreateTenantAsync("default", new Dictionary<string, string?>());
         var resourceManager = await tenant.GetResourceManager();
 
+        var clusterGrain = _environmentService.GetClusterGrain();
+        await clusterGrain.GetClusterInformation();
+        
         /*var configuration = new ResourceConfigurationStore
         {
             BehaviourId = "minecraft_lever"
