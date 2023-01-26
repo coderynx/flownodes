@@ -12,6 +12,7 @@ using MapsterMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NSubstitute;
+using Orleans.Configuration;
 using Orleans.Hosting;
 using Orleans.TestingHost;
 using Xunit;
