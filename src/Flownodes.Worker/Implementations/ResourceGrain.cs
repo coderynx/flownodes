@@ -59,18 +59,19 @@ public abstract class ResourceGrain : Grain
 
     public ValueTask<ResourceSummary> GetSummary()
     {
+        Logger.LogDebug("Retrieved resource summary of resource {ResourceId}", Id);
         return ValueTask.FromResult(new ResourceSummary(Id, CreatedAt, Configuration, Metadata, State));
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
-        Logger.LogInformation("Activated grain {Frn}", Frn);
+        Logger.LogInformation("Activated resource grain {ResourceId}", Id);
         return base.OnActivateAsync(cancellationToken);
     }
 
     public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
     {
-        Logger.LogInformation("Deactivated grain {Frn} for reason {Reason}", Frn, reason.Description);
+        Logger.LogInformation("Deactivated resource grain {ResourceId} for reason {Reason}", Id, reason.Description);
         return base.OnDeactivateAsync(reason, cancellationToken);
     }
 
@@ -139,16 +140,11 @@ public abstract class ResourceGrain : Grain
 
             var context = GetResourceContext();
             await Behaviour.OnSetupAsync(context);
-
+            
             await OnBehaviourUpdateAsync();
-
-            Logger.LogInformation("Configured behaviour {BehaviourId} for resource {ResourceId}",
-                configurationStore.BehaviourId, Id);
         }
 
-        await ConfigurationStore.WriteStateAsync();
-
-        Logger.LogInformation("Configured resource with FRN {Frn}", Frn);
+        await StoreConfigurationAsync();
     }
 
     protected virtual Task OnStateChangedAsync(Dictionary<string, object?> newState)
@@ -165,19 +161,15 @@ public abstract class ResourceGrain : Grain
     {
         State.Properties.MergeInPlace(newState);
         State.LastUpdate = DateTime.Now;
-
-        await StateStore.WriteStateAsync();
+        
         await OnStateChangedAsync(newState);
-
-        Logger.LogInformation("Updated state for resource {ResourceId}", Id);
+        await StoreStateAsync();
     }
 
     public virtual async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
     {
         Metadata.Properties.MergeInPlace(metadata);
-        await MetadataStore.WriteStateAsync();
-
-        Logger.LogInformation("Updated metadata of resource {ResourceId}", Id);
+        await StoreMetadataAsync();
     }
 
     public virtual async Task ClearConfigurationAsync()
@@ -198,6 +190,24 @@ public abstract class ResourceGrain : Grain
         Logger.LogInformation("Cleared state of resource {ResourceId}", Id);
     }
 
+    private async Task StoreConfigurationAsync()
+    {
+        await ConfigurationStore.WriteStateAsync();
+        Logger.LogInformation("Updated configuration of resource {ResourceId}", Id);
+    }
+
+    private async Task StoreMetadataAsync()
+    {
+        await MetadataStore.WriteStateAsync();
+        Logger.LogInformation("Updated metadata of resource {ResourceId}", Id);
+    }
+
+    private async Task StoreStateAsync()
+    {
+        await StateStore.WriteStateAsync();
+        Logger.LogInformation("Updated state of resource {ResourceId}", Id);
+    }
+    
     public virtual async Task SelfRemoveAsync()
     {
         await ConfigurationStore.ClearStateAsync();
