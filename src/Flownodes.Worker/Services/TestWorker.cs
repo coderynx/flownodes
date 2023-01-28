@@ -22,7 +22,7 @@ public class TestWorker : BackgroundService
 
         var clusterGrain = _environmentService.GetClusterGrain();
         await clusterGrain.GetClusterInformation();
-        
+
         /*var configuration = new ResourceConfigurationStore
         {
             BehaviourId = "minecraft_lever"

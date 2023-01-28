@@ -2,7 +2,6 @@ using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
 using Flownodes.Worker.Extensions;
-using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Orleans.Concurrency;
 using Orleans.Runtime;
@@ -14,48 +13,53 @@ namespace Flownodes.Worker.Implementations;
 public abstract class ResourceGrain : Grain
 {
     private readonly IBehaviourProvider _behaviourProvider;
+    private readonly IPersistentState<ResourceConfigurationStore> ConfigurationStore;
     protected readonly IEnvironmentService EnvironmentService;
     protected readonly ILogger<ResourceGrain> Logger;
-    protected readonly IPersistentState<ResourcePersistence> Persistence;
+    private readonly IPersistentState<ResourceMetadataStore> MetadataStore;
+    private readonly IPersistentState<ResourceStateStore> StateStore;
     protected IBehaviour? Behaviour;
 
-    protected ResourceGrain(ILogger<ResourceGrain> logger, IPersistentState<ResourcePersistence> persistence,
-        IEnvironmentService environmentService, IBehaviourProvider behaviourProvider)
+    protected ResourceGrain(ILogger<ResourceGrain> logger, IEnvironmentService environmentService,
+        IBehaviourProvider behaviourProvider, IPersistentState<ResourceConfigurationStore> configurationStore,
+        IPersistentState<ResourceMetadataStore> metadataStore, IPersistentState<ResourceStateStore> stateStore)
     {
         Logger = logger;
-        Persistence = persistence;
         EnvironmentService = environmentService;
         _behaviourProvider = behaviourProvider;
+        ConfigurationStore = configurationStore;
+        MetadataStore = metadataStore;
+        StateStore = stateStore;
     }
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
     protected string Id => this.GetPrimaryKeyString();
-    protected string? BehaviourId => ConfigurationStore.BehaviourId;
+    protected string? BehaviourId => Configuration.BehaviourId;
     protected string Frn => $"{EnvironmentService.BaseFrn}:{Kind}:{Id}";
-    protected DateTime CreatedAt => Persistence.State.Metadata.CreatedAt;
+    protected DateTime CreatedAt => Metadata.CreatedAt;
     protected IResourceManagerGrain ResourceManagerGrain => EnvironmentService.GetResourceManagerGrain();
 
     protected ResourceMetadataStore Metadata
     {
-        get => Persistence.State.Metadata;
-        private set => Persistence.State.Metadata = value;
+        get => MetadataStore.State;
+        private set => MetadataStore.State = value;
     }
 
-    protected ResourceConfigurationStore ConfigurationStore
+    protected ResourceConfigurationStore Configuration
     {
-        get => Persistence.State.ConfigurationStore;
-        private set => Persistence.State.ConfigurationStore = value;
+        get => ConfigurationStore.State;
+        private set => ConfigurationStore.State = value;
     }
 
-    protected ResourceStateStore StateStore
+    protected ResourceStateStore State
     {
-        get => Persistence.State.StateStore;
-        private set => Persistence.State.StateStore = value;
+        get => StateStore.State;
+        private set => StateStore.State = value;
     }
 
     public ValueTask<ResourceSummary> GetSummary()
     {
-        return ValueTask.FromResult(new ResourceSummary(Id, CreatedAt, ConfigurationStore, Metadata, StateStore));
+        return ValueTask.FromResult(new ResourceSummary(Id, CreatedAt, Configuration, Metadata, State));
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
@@ -87,20 +91,28 @@ public abstract class ResourceGrain : Grain
 
     public ValueTask<ResourceMetadataStore> GetMetadata()
     {
-        return ValueTask.FromResult(Persistence.State.Metadata);
+        Logger.LogInformation("Retrieved metadata of resource {ResourceId}", Id);
+        return ValueTask.FromResult(Metadata);
     }
 
     public ValueTask<ResourceConfigurationStore> GetConfiguration()
     {
-        return ValueTask.FromResult(ConfigurationStore);
+        Logger.LogInformation("Retrieved configuration of resource {ResourceId}", Id);
+        return ValueTask.FromResult(Configuration);
+    }
+
+    public virtual ValueTask<ResourceStateStore> GetState()
+    {
+        Logger.LogDebug("Retrieved state of resource {ResourceId}", Id);
+        return ValueTask.FromResult(State);
     }
 
     protected ResourceContext GetResourceContext()
     {
         var actualConfiguration = new ResourceConfiguration
         {
-            BehaviourId = ConfigurationStore.BehaviourId,
-            Properties = ConfigurationStore.Properties
+            BehaviourId = Configuration.BehaviourId,
+            Properties = Configuration.Properties
         };
         var actualMetadata = new ResourceMetadata
         {
@@ -109,7 +121,7 @@ public abstract class ResourceGrain : Grain
         };
         var actualState = new ResourceState
         {
-            Properties = StateStore.Properties
+            Properties = State.Properties
         };
 
         return new ResourceContext(actualConfiguration, actualMetadata, actualState);
@@ -118,8 +130,7 @@ public abstract class ResourceGrain : Grain
     public virtual async Task UpdateConfigurationAsync(ResourceConfigurationStore configurationStore)
     {
         configurationStore.ThrowIfNull();
-
-        ConfigurationStore = configurationStore;
+        Configuration = configurationStore;
 
         if (BehaviourId is not null)
         {
@@ -135,7 +146,7 @@ public abstract class ResourceGrain : Grain
                 configurationStore.BehaviourId, Id);
         }
 
-        await Persistence.WriteStateAsync();
+        await ConfigurationStore.WriteStateAsync();
 
         Logger.LogInformation("Configured resource with FRN {Frn}", Frn);
     }
@@ -152,10 +163,10 @@ public abstract class ResourceGrain : Grain
 
     public async Task UpdateStateAsync(Dictionary<string, object?> newState)
     {
-        StateStore.Properties.MergeInPlace(newState);
-        StateStore.LastUpdate = DateTime.Now;
-        await Persistence.WriteStateAsync();
+        State.Properties.MergeInPlace(newState);
+        State.LastUpdate = DateTime.Now;
 
+        await StateStore.WriteStateAsync();
         await OnStateChangedAsync(newState);
 
         Logger.LogInformation("Updated state for resource {ResourceId}", Id);
@@ -163,48 +174,36 @@ public abstract class ResourceGrain : Grain
 
     public virtual async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
     {
-        metadata.ThrowIfNull();
-
         Metadata.Properties.MergeInPlace(metadata);
-        await Persistence.WriteStateAsync();
+        await MetadataStore.WriteStateAsync();
 
-        Logger.LogInformation("Updated metadata for resource with FRN {Frn}", Frn);
+        Logger.LogInformation("Updated metadata of resource {ResourceId}", Id);
     }
 
     public virtual async Task ClearConfigurationAsync()
     {
-        ConfigurationStore = new ResourceConfigurationStore();
-        await Persistence.WriteStateAsync();
-
-        Behaviour = null;
-
-        Logger.LogInformation("Cleared configuration for grain with FRN {Frn}", Frn);
+        await ConfigurationStore.ClearStateAsync();
+        Logger.LogInformation("Cleared configuration of resource {ResourceId}", Id);
     }
 
     public virtual async Task ClearMetadataAsync()
     {
-        Metadata = new ResourceMetadataStore();
-        await Persistence.WriteStateAsync();
-
-        Logger.LogInformation("Cleared metadata for resource with FRN {Frn}", Frn);
-    }
-
-    public virtual ValueTask<ResourceStateStore> GetState()
-    {
-        return ValueTask.FromResult(StateStore);
+        await MetadataStore.ClearStateAsync();
+        Logger.LogInformation("Cleared metadata of resource {ResourceId}", Id);
     }
 
     public virtual async Task ClearStateAsync()
     {
-        StateStore = new ResourceStateStore();
-        await Persistence.WriteStateAsync();
-
-        Logger.LogInformation("Cleared state for resource with FRN {Frn}", Frn);
+        await StateStore.ClearStateAsync();
+        Logger.LogInformation("Cleared state of resource {ResourceId}", Id);
     }
 
     public virtual async Task SelfRemoveAsync()
     {
-        await Persistence.ClearStateAsync();
-        Logger.LogInformation("Removed grain with FRN {Frn}", Frn);
+        await ConfigurationStore.ClearStateAsync();
+        await MetadataStore.ClearStateAsync();
+        await StateStore.ClearStateAsync();
+
+        Logger.LogInformation("Cleared persistence of resource {ResourceId}", Id);
     }
 }

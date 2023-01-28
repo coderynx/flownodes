@@ -27,5 +27,4 @@ public class ClusterGrainTests
         var clusterInformation = await clusterGrain.GetClusterInformation();
         clusterInformation.Should().NotBeNull();
     }
-
 }

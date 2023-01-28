@@ -7,13 +7,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BlazorMonaco" Version="3.0.0" />
-        <PackageReference Include="MudBlazor" Version="6.1.7" />
-        <PackageReference Include="Orleans.Clustering.Redis" Version="7.0.0" />
+        <PackageReference Include="BlazorMonaco" Version="3.0.0"/>
+        <PackageReference Include="MudBlazor" Version="6.1.7"/>
+        <PackageReference Include="Orleans.Clustering.Redis" Version="7.0.0"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Flownodes.Shared\Flownodes.Shared.csproj" />
+        <ProjectReference Include="..\Flownodes.Shared\Flownodes.Shared.csproj"/>
     </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared.Interfaces;
-using Flownodes.Worker.Models;
+using Flownodes.Shared.Models;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
@@ -8,11 +8,15 @@ namespace Flownodes.Worker.Implementations;
 
 public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
-    public DeviceGrain(IBehaviourProvider behaviourProvider,
-        [PersistentState("devicePersistence", "flownodes")]
-        IPersistentState<ResourcePersistence> persistence,
-        ILogger<DeviceGrain> logger, IEnvironmentService environmentService) : base(logger, persistence,
-        environmentService, behaviourProvider)
+    public DeviceGrain(IBehaviourProvider behaviourProvider, ILogger<DeviceGrain> logger,
+        IEnvironmentService environmentService,
+        [PersistentState("deviceConfigurationStore", "flownodes")]
+        IPersistentState<ResourceConfigurationStore> configurationStore,
+        [PersistentState("deviceMetadataStore", "flownodes")]
+        IPersistentState<ResourceMetadataStore> metadataStore,
+        [PersistentState("deviceStateStore", "flownodes")]
+        IPersistentState<ResourceStateStore> stateStore) :
+        base(logger, environmentService, behaviourProvider, configurationStore, metadataStore, stateStore)
     {
     }
 
@@ -24,10 +28,9 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         await Behaviour?.OnUpdateAsync(context)!;
 
         // TODO: Evaluate if always writing causes performance issues.
-        Persistence.State.StateStore.Properties = context.State.Properties;
-        await Persistence.WriteStateAsync();
+        await UpdateStateAsync(context.State.Properties);
 
-        Logger.LogDebug("Updated state for device {Id}: {State}", Id, StateStore.Properties);
+        Logger.LogDebug("Updated state for device {Id}: {State}", Id, State.Properties);
     }
 
     protected override Task OnBehaviourUpdateAsync()

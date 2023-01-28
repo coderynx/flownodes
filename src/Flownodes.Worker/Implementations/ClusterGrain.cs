@@ -12,7 +12,8 @@ public class ClusterGrain : Grain, IClusterGrain
     private readonly ILogger<ClusterGrain> _logger;
     private readonly IClusterManifestProvider _manifest;
 
-    public ClusterGrain(IEnvironmentService environmentService, ILogger<ClusterGrain> logger, IClusterManifestProvider manifest)
+    public ClusterGrain(IEnvironmentService environmentService, ILogger<ClusterGrain> logger,
+        IClusterManifestProvider manifest)
     {
         _environmentService = environmentService;
         _logger = logger;
@@ -23,6 +24,7 @@ public class ClusterGrain : Grain, IClusterGrain
     {
         _logger.LogDebug("Requested cluster information");
         return ValueTask.FromResult(
-            new ClusterInformation(_environmentService.ClusterId, _environmentService.ServiceId, _manifest.Current.Silos.Count, _manifest.Current.Version.ToString()));
+            new ClusterInformation(_environmentService.ClusterId, _environmentService.ServiceId,
+                _manifest.Current.Silos.Count, _manifest.Current.Version.ToString()));
     }
 }

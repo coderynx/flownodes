@@ -48,7 +48,7 @@
         public string Icon { get; set; }
         public string Id { get; set; }
         public bool CanExpand { get; set; }
-        public HashSet<TreeViewItem> Items { get; set; } = new();
+        public HashSet<TreeViewItem> Items { get; } = new();
     }
 
     protected override async Task OnInitializedAsync()

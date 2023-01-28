@@ -14,7 +14,7 @@ public class ContextService : IContextService
         _tenantManagerGrain = grainFactory.GetGrain<ITenantManagerGrain>("tenant_manager");
         ClusterGrain = grainFactory.GetGrain<IClusterGrain>(0);
     }
-    
+
     public ITenantGrain? TenantGrain { get; private set; }
     public IClusterGrain? ClusterGrain { get; }
     public IResourceManagerGrain? ResourceManager { get; private set; }

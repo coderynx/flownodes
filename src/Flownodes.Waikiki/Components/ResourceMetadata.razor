@@ -1,7 +1,6 @@
-@using Flownodes.Shared.Interfaces
 @using Flownodes.Shared.Models
 @using Newtonsoft.Json
-
+@using Flownodes.Shared.Interfaces
 <EditForm Model="@_json" OnValidSubmit="OnSubmit">
     <StandaloneCodeEditor OnDidInit="OnDidInitAsync" Id="state-editor" @ref="_codeEditor" ConstructionOptions="EditorConstructionOptions" CssClass="code-editor"/>
     <MudStack>

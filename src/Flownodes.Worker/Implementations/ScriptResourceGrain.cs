@@ -1,5 +1,5 @@
 using Flownodes.Shared.Interfaces;
-using Flownodes.Worker.Models;
+using Flownodes.Shared.Models;
 using Flownodes.Worker.Services;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.V8;
@@ -12,12 +12,15 @@ public class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
     private readonly ILoggerFactory _loggerFactory;
     private readonly V8ScriptEngine _scriptEngine = new(V8ScriptEngineFlags.EnableTaskPromiseConversion);
 
-    public ScriptResourceGrain(ILogger<ScriptResourceGrain> logger,
-        [PersistentState("scriptStore", "flownodes")]
-        IPersistentState<ResourcePersistence> persistence,
-        IEnvironmentService environmentService, IBehaviourProvider behaviourProvider, ILoggerFactory loggerFactory) :
-        base(logger, persistence,
-            environmentService, behaviourProvider)
+    public ScriptResourceGrain(ILogger<ScriptResourceGrain> logger, IEnvironmentService environmentService,
+        IBehaviourProvider behaviourProvider, ILoggerFactory loggerFactory,
+        [PersistentState("scriptResourceConfigurationStore", "flownodes")]
+        IPersistentState<ResourceConfigurationStore> configurationStore,
+        [PersistentState("scriptResourceMetadataStore", "flownodes")]
+        IPersistentState<ResourceMetadataStore> metadataStore,
+        [PersistentState("scriptResourceStateStore", "flownodes")]
+        IPersistentState<ResourceStateStore> stateStore) :
+        base(logger, environmentService, behaviourProvider, configurationStore, metadataStore, stateStore)
     {
         _loggerFactory = loggerFactory;
     }
@@ -25,7 +28,7 @@ public class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
     public Task ExecuteAsync(Dictionary<string, object?>? parameters = null)
     {
         var context = GetScriptContext();
-        var code = ConfigurationStore["code"] as string;
+        var code = Configuration["code"] as string;
 
         _scriptEngine.AddHostObject("host", new HostFunctions());
         _scriptEngine.AddHostObject("context", context);
