@@ -2,6 +2,7 @@
 @using Flownodes.Waikiki.Services
 @using Flownodes.Shared.Models
 @using Flownodes.Shared.Interfaces
+@using Resource = Flownodes.Shared.Models.Resource
 @inject IContextService ContextService;
 
 <PageTitle>Flownodes Web - Explorer</PageTitle>
@@ -29,7 +30,7 @@
 
 @code {
 
-    private ResourceSummary? _currentSummary;
+    private Resource? _currentSummary;
     private ClusterInformation _clusterInformation;
     private readonly HashSet<TreeViewItem> _items = new();
     private TreeViewItem ActivatedItem { get; set; } = new();

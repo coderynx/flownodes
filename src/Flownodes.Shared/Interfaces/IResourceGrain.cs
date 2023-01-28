@@ -8,10 +8,10 @@ namespace Flownodes.Shared.Interfaces;
 public interface IResourceGrain : IGrainWithStringKey
 {
     /// <summary>
-    ///     Gets the resource summary.
+    ///     Gets the resource POCO.
     /// </summary>
-    /// <returns>The resource summary. </returns>
-    public ValueTask<ResourceSummary?> GetSummary();
+    /// <returns>The resource POCO. </returns>
+    public ValueTask<Resource?> GetPoco();
 
     /// <summary>
     ///     Get the resource kind.
@@ -34,9 +34,9 @@ public interface IResourceGrain : IGrainWithStringKey
     /// <summary>
     ///     Updates the resource metadata.
     /// </summary>
-    /// <param name="metadata">The new metadata to merge.</param>
+    /// <param name="properties">The new metadata to merge.</param>
     /// <returns></returns>
-    Task UpdateMetadataAsync(Dictionary<string, string?> metadata);
+    Task UpdateMetadataAsync(Dictionary<string, string?> properties);
 
     /// <summary>
     ///     Configures the resource.
@@ -47,8 +47,8 @@ public interface IResourceGrain : IGrainWithStringKey
     /// <summary>
     ///     Updates the state of the resource by storing the new state and applying it.
     /// </summary>
-    /// <param name="newState">The new state of the resource to store.</param>
-    Task UpdateStateAsync(Dictionary<string, object?> newState);
+    /// <param name="properties">The new state of the resource to store.</param>
+    Task UpdateStateAsync(Dictionary<string, object?> properties);
 
     /// <summary>
     ///     Gets the stored resource metadata.

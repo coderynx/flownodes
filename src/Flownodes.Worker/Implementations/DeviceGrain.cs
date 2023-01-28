@@ -38,7 +38,7 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         var overridden = Behaviour.GetType().GetMethod("OnUpdateAsync")?.DeclaringType == Behaviour.GetType();
         if (overridden)
             RegisterTimer(ExecuteTimerBehaviourAsync, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
-
+        
         return base.OnBehaviourUpdateAsync();
     }
 

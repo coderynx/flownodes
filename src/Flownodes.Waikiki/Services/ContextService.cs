@@ -19,7 +19,7 @@ public class ContextService : IContextService
     public IClusterGrain? ClusterGrain { get; }
     public IResourceManagerGrain? ResourceManager { get; private set; }
     public IAlertManagerGrain? AlertManager { get; private set; }
-    public IList<ResourceSummary>? ResourceSummaries { get; private set; }
+    public IList<Resource>? ResourceSummaries { get; private set; }
 
     public async Task SetTenantAsync(string tenantName)
     {

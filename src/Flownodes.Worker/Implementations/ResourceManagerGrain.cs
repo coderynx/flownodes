@@ -27,7 +27,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     private string Id => this.GetPrimaryKeyString();
 
-    public async ValueTask<ResourceSummary?> GetResourceSummary(string id)
+    public async ValueTask<Resource?> GetResourceSummary(string id)
     {
         id.ThrowIfNull().IfWhiteSpace();
 
@@ -37,7 +37,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (registration is null) return default;
 
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
-        var summary = await grain.GetSummary();
+        var summary = await grain.GetPoco();
 
         _logger.LogDebug("Retrieved resource summary with FRN {Id}", id);
         return summary;
@@ -59,15 +59,15 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return grain;
     }
 
-    public async ValueTask<ReadOnlyCollection<ResourceSummary>> GetAllResourceSummaries()
+    public async ValueTask<ReadOnlyCollection<Resource>> GetAllResourceSummaries()
     {
-        var summaries = new List<ResourceSummary>();
+        var summaries = new List<Resource>();
 
         var grains = _persistence.State.Registrations
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>());
         foreach (var grain in grains)
         {
-            var summary = await grain.GetSummary();
+            var summary = await grain.GetPoco();
             summaries.Add(summary);
         }
 

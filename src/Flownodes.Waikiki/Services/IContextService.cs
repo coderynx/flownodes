@@ -9,7 +9,7 @@ public interface IContextService
     IClusterGrain? ClusterGrain { get; }
     IResourceManagerGrain? ResourceManager { get; }
     IAlertManagerGrain? AlertManager { get; }
-    IList<ResourceSummary>? ResourceSummaries { get; }
+    IList<Resource>? ResourceSummaries { get; }
     Task SetTenantAsync(string tenantName);
     Task UpdateResourceSummaries();
 }
