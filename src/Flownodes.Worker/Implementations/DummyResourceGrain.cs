@@ -10,11 +10,11 @@ public sealed class DummyResourceGrain : ResourceGrain, IDummyResourceGrain
 {
     public DummyResourceGrain(ILogger<DummyResourceGrain> logger, IEnvironmentService environmentService,
         IBehaviourProvider behaviourProvider,
-        [PersistentState("dummyResourceConfigurationStore", "flownodes")]
+        [PersistentState("dummyResourceConfigurationStore")]
         IPersistentState<ResourceConfigurationStore> configurationStore,
-        [PersistentState("dummyResourceMetadataStore", "flownodes")]
+        [PersistentState("dummyResourceMetadataStore")]
         IPersistentState<ResourceMetadataStore> metadataStore,
-        [PersistentState("dummyResourceStateStore", "flownodes")]
+        [PersistentState("dummyResourceStateStore")]
         IPersistentState<ResourceStateStore> stateStore) :
         base(logger, environmentService, behaviourProvider, configurationStore, metadataStore, stateStore)
     {

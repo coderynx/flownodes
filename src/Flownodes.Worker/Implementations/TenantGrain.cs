@@ -12,7 +12,7 @@ public class TenantGrain : Grain, ITenantGrain
     private readonly ILogger<TenantGrain> _logger;
 
     public TenantGrain(ILogger<TenantGrain> logger,
-        [PersistentState("tenantConfiguration", "flownodes")]
+        [PersistentState("tenantConfiguration")]
         IPersistentState<TenantConfiguration> configuration, IGrainFactory grainFactory)
     {
         _logger = logger;

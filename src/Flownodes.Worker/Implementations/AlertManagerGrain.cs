@@ -25,8 +25,7 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
     private readonly IServiceProvider _serviceProvider;
 
     public AlertManagerGrain(ILogger<AlertManagerGrain> logger,
-        [PersistentState("alertManagerStore", "flownodes")]
-        IPersistentState<AlertManagerPersistence> persistence,
+        [PersistentState("alertManagerStore")] IPersistentState<AlertManagerPersistence> persistence,
         IServiceProvider serviceProvider, IMapper mapper)
     {
         _logger = logger;

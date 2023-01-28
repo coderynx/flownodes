@@ -16,7 +16,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     private readonly IPersistentState<ResourceManagerPersistence> _persistence;
 
     public ResourceManagerGrain(ILogger<ResourceManagerGrain> logger,
-        [PersistentState("resourceManagerState", "flownodes")]
+        [PersistentState("resourceManagerState")]
         IPersistentState<ResourceManagerPersistence> persistence, IGrainFactory grainFactory)
     {
         _logger = logger;

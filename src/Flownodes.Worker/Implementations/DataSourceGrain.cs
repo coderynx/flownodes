@@ -10,11 +10,11 @@ public sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
     public DataSourceGrain(ILogger<DataSourceGrain> logger, IEnvironmentService environmentService,
         IBehaviourProvider behaviourProvider,
-        [PersistentState("dataSourceConfigurationStore", "flownodes")]
+        [PersistentState("dataSourceConfigurationStore")]
         IPersistentState<ResourceConfigurationStore> configurationStore,
-        [PersistentState("dataSourceMetadataStore", "flownodes")]
+        [PersistentState("dataSourceMetadataStore")]
         IPersistentState<ResourceMetadataStore> metadataStore,
-        [PersistentState("dataSourceStateStore", "flownodes")]
+        [PersistentState("dataSourceStateStore")]
         IPersistentState<ResourceStateStore> stateStore)
         : base(logger, environmentService, behaviourProvider, configurationStore, metadataStore, stateStore)
     {

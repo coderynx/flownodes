@@ -7,18 +7,18 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-public class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
+public sealed class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
 {
     private readonly ILoggerFactory _loggerFactory;
     private readonly V8ScriptEngine _scriptEngine = new(V8ScriptEngineFlags.EnableTaskPromiseConversion);
 
     public ScriptResourceGrain(ILogger<ScriptResourceGrain> logger, IEnvironmentService environmentService,
         IBehaviourProvider behaviourProvider, ILoggerFactory loggerFactory,
-        [PersistentState("scriptResourceConfigurationStore", "flownodes")]
+        [PersistentState("scriptResourceConfigurationStore")]
         IPersistentState<ResourceConfigurationStore> configurationStore,
-        [PersistentState("scriptResourceMetadataStore", "flownodes")]
+        [PersistentState("scriptResourceMetadataStore")]
         IPersistentState<ResourceMetadataStore> metadataStore,
-        [PersistentState("scriptResourceStateStore", "flownodes")]
+        [PersistentState("scriptResourceStateStore")]
         IPersistentState<ResourceStateStore> stateStore) :
         base(logger, environmentService, behaviourProvider, configurationStore, metadataStore, stateStore)
     {

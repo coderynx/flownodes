@@ -61,7 +61,7 @@ public static partial class Program
                 options.ConnectionString = _redisConnectionString;
                 options.Database = 0;
             })
-            .AddRedisGrainStorage("flownodes", options =>
+            .AddRedisGrainStorageAsDefault(options =>
             {
                 options.ConnectionString = _redisConnectionString;
                 options.DatabaseNumber = 1;
@@ -99,7 +99,6 @@ public static partial class Program
         if (context.HostingEnvironment.IsDevelopment())
         {
             builder
-                .AddMemoryGrainStorage("flownodes")
                 .AddMemoryGrainStorageAsDefault()
                 .UseLocalhostClustering();
             return;

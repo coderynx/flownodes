@@ -93,12 +93,7 @@ public class ClusterFixture : IAsyncLifetime
                 {
                     options.ConnectionString = TestGlobals.RedisConnectionString;
                     options.Database = 1;
-                })
-                .AddRedisGrainStorage("flownodes", optionsBuilder => optionsBuilder.Configure(options =>
-                {
-                    options.ConnectionString = TestGlobals.RedisConnectionString;
-                    options.DatabaseNumber = 0;
-                })).AddRedisGrainStorageAsDefault(optionsBuilder => optionsBuilder.Configure(options =>
+                }).AddRedisGrainStorageAsDefault(optionsBuilder => optionsBuilder.Configure(options =>
                 {
                     options.ConnectionString = TestGlobals.RedisConnectionString;
                     options.DatabaseNumber = 0;

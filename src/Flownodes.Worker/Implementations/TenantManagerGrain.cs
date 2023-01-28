@@ -12,7 +12,7 @@ public class TenantManagerGrain : ITenantManagerGrain
     private readonly IPersistentState<HashSet<string>> _registrations;
 
     public TenantManagerGrain(ILogger<TenantManagerGrain> logger,
-        [PersistentState("tenantRegistrations", "flownodes")]
+        [PersistentState("tenantRegistrations")]
         IPersistentState<HashSet<string>> registrations, IGrainFactory grainFactory)
     {
         _logger = logger;

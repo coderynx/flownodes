@@ -10,12 +10,11 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
     public DeviceGrain(IBehaviourProvider behaviourProvider, ILogger<DeviceGrain> logger,
         IEnvironmentService environmentService,
-        [PersistentState("deviceConfigurationStore", "flownodes")]
+        [PersistentState("deviceConfigurationStore")]
         IPersistentState<ResourceConfigurationStore> configurationStore,
-        [PersistentState("deviceMetadataStore", "flownodes")]
+        [PersistentState("deviceMetadataStore")]
         IPersistentState<ResourceMetadataStore> metadataStore,
-        [PersistentState("deviceStateStore", "flownodes")]
-        IPersistentState<ResourceStateStore> stateStore) :
+        [PersistentState("deviceStateStore")] IPersistentState<ResourceStateStore> stateStore) :
         base(logger, environmentService, behaviourProvider, configurationStore, metadataStore, stateStore)
     {
     }

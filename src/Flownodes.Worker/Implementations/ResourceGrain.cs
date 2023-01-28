@@ -140,7 +140,7 @@ public abstract class ResourceGrain : Grain
 
             var context = GetResourceContext();
             await Behaviour.OnSetupAsync(context);
-            
+
             await OnBehaviourUpdateAsync();
         }
 
@@ -161,7 +161,7 @@ public abstract class ResourceGrain : Grain
     {
         State.Properties.MergeInPlace(newState);
         State.LastUpdate = DateTime.Now;
-        
+
         await OnStateChangedAsync(newState);
         await StoreStateAsync();
     }
@@ -207,7 +207,7 @@ public abstract class ResourceGrain : Grain
         await StateStore.WriteStateAsync();
         Logger.LogInformation("Updated state of resource {ResourceId}", Id);
     }
-    
+
     public virtual async Task SelfRemoveAsync()
     {
         await ConfigurationStore.ClearStateAsync();
