@@ -12,7 +12,7 @@ public sealed class ResourceContext
     public DateTime CreatedAt { get; set; }
     public string? BehaviorId { get; init; }
     public Dictionary<string, object?> Configuration { get; set; }
-    public Dictionary<string, string> Metadata { get; set; }
+    public Dictionary<string, string?> Metadata { get; set; }
     public Dictionary<string, object?> State { get; set; }
     public DateTime? LastStateUpdate { get; init; }
 }

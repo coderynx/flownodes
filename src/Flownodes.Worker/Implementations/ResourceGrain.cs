@@ -35,7 +35,6 @@ public abstract class ResourceGrain : Grain
     protected string Kind => this.GetGrainId().Type.ToString()!;
     protected string Id => this.GetPrimaryKeyString();
     protected string? BehaviourId => Configuration.BehaviourId;
-    protected string Frn => $"{EnvironmentService.BaseFrn}:{Kind}:{Id}";
     protected DateTime CreatedAt => Metadata.CreatedAt;
     protected IResourceManagerGrain ResourceManagerGrain => EnvironmentService.GetResourceManagerGrain();
 
@@ -83,11 +82,6 @@ public abstract class ResourceGrain : Grain
     public ValueTask<string> GetId()
     {
         return ValueTask.FromResult(Id);
-    }
-
-    public ValueTask<string> GetFrn()
-    {
-        return ValueTask.FromResult(Frn);
     }
 
     public ValueTask<ResourceMetadataStore> GetMetadata()

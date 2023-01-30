@@ -27,16 +27,17 @@ public class TenantManagerGrain : ITenantManagerGrain
             var grain = _grainFactory.GetGrain<ITenantGrain>(id);
 
             _logger.LogDebug("Retrieved tenant with ID {Id}", id);
-            return ValueTask.FromResult(grain);
+            return ValueTask.FromResult<ITenantGrain?>(grain);
         }
 
         _logger.LogError("Could not retrieve tenant with ID {Id}", id);
         return ValueTask.FromResult<ITenantGrain?>(null);
     }
 
-    public async Task GetTenantsAsync()
+    public Task GetTenantsAsync()
     {
         _logger.LogDebug("Retrieved all tenants");
+        return Task.CompletedTask;
     }
 
     public async ValueTask<ITenantGrain?> CreateTenantAsync(string id, Dictionary<string, string?>? metadata = null)
@@ -52,12 +53,13 @@ public class TenantManagerGrain : ITenantManagerGrain
         return grain;
     }
 
-    public async Task RemoveTenantAsync(string id)
+    public Task RemoveTenantAsync(string id)
     {
         id.ThrowIfNull().IfEmpty();
 
         // TODO: Perform tenant removal.
 
         _logger.LogInformation("Removed tenant with ID {Id}", id);
+        return Task.CompletedTask;
     }
 }

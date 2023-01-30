@@ -26,12 +26,6 @@ public interface IResourceGrain : IGrainWithStringKey
     public ValueTask<string> GetId();
 
     /// <summary>
-    ///     Gets the resource FRN,
-    /// </summary>
-    /// <returns>The resource FRN.</returns>
-    ValueTask<string> GetFrn();
-
-    /// <summary>
     ///     Updates the resource metadata.
     /// </summary>
     /// <param name="properties">The new metadata to merge.</param>

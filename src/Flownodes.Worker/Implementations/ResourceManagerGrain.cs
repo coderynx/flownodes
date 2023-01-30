@@ -54,9 +54,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (registration is null) return default;
 
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
-        var frn = await grain.GetFrn();
 
-        _logger.LogDebug("Retrieved resource with FRN {Frn}", frn);
+        _logger.LogDebug("Retrieved resource {ResourceId}", id);
         return grain;
     }
 
@@ -69,6 +68,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         foreach (var grain in grains)
         {
             var summary = await grain.GetPoco();
+            if (summary is null) continue;
             summaries.Add(summary);
         }
 
@@ -89,9 +89,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
 
-        var frn = await grain.GetFrn();
-
-        _logger.LogDebug("Retrieved resource with FRN {Frn}", frn);
+        _logger.LogDebug("Retrieved resource {ResourceId}", id);
         return grain;
     }
 
@@ -110,9 +108,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
 
-        var frn = await grain.GetFrn();
-
-        _logger.LogDebug("Retrieved resource with FRN {Frn}", frn);
+        _logger.LogDebug("Retrieved resource {ResourceId}", id);
         return grain;
     }
 
@@ -137,12 +133,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
                 .IfFalse();
 
         await grain.UpdateConfigurationAsync(configurationStore);
-        var frn = await grain.GetFrn();
 
-        _persistence.State.AddRegistration(id, grain.GetGrainId(), kind, frn);
+        _persistence.State.AddRegistration(id, grain.GetGrainId(), kind);
         await _persistence.WriteStateAsync();
 
-        _logger.LogInformation("Deployed resource with FRN {Frn}", frn);
+        _logger.LogInformation("Deployed resource {ResourceId}", id);
         return grain;
     }
 
@@ -158,12 +153,10 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
         await grain.SelfRemoveAsync();
 
-        var frn = await grain.GetFrn();
-
         _persistence.State.Registrations.Remove(registration);
         await _persistence.WriteStateAsync();
 
-        _logger.LogInformation("Removed resource with FRN {Frn}", frn);
+        _logger.LogInformation("Removed resource {ResourceId}", id);
     }
 
     public async Task RemoveAllResourcesAsync()

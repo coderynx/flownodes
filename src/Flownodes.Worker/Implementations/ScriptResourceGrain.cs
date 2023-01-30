@@ -37,7 +37,7 @@ public sealed class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
         _scriptEngine.AddHostType(typeof(IDeviceGrain));
         _scriptEngine.Execute(code);
 
-        Logger.LogInformation("Executed script with {Frn}", Frn);
+        Logger.LogInformation("Executed script {ResourceId}", Id);
         return Task.CompletedTask;
     }
 
