@@ -13,12 +13,12 @@ namespace Flownodes.Worker.Implementations;
 public abstract class ResourceGrain : Grain
 {
     private readonly IBehaviourProvider _behaviourProvider;
-    protected readonly IEnvironmentService EnvironmentService;
-    protected readonly ILogger<ResourceGrain> Logger;
-    protected IBehaviour? Behaviour;
     private readonly IPersistentState<ResourceConfigurationStore> _configurationStore;
     private readonly IPersistentState<ResourceMetadataStore> _metadataStore;
     private readonly IPersistentState<ResourceStateStore> _stateStore;
+    protected readonly IEnvironmentService EnvironmentService;
+    protected readonly ILogger<ResourceGrain> Logger;
+    protected IBehaviour? Behaviour;
 
     protected ResourceGrain(ILogger<ResourceGrain> logger, IEnvironmentService environmentService,
         IBehaviourProvider behaviourProvider, IPersistentState<ResourceConfigurationStore> configurationStore,
@@ -110,8 +110,19 @@ public abstract class ResourceGrain : Grain
 
     protected ResourceContext GetResourceContext()
     {
-        return new ResourceContext(Configuration.BehaviourId, Configuration.Properties, Metadata.Properties,
-            State.Properties, State.LastUpdate);
+        return new ResourceContext
+        {
+            ServiceId = EnvironmentService.ServiceId,
+            ClusterId = EnvironmentService.ClusterId,
+            TenantId = "", // TODO: Add tenant id.
+            ResourceId = Id,
+            CreatedAt = Metadata.CreatedAt,
+            BehaviorId = Configuration.BehaviourId,
+            Configuration = Configuration.Properties,
+            Metadata = Metadata.Properties,
+            State = State.Properties,
+            LastStateUpdate = State.LastUpdate
+        };
     }
 
     public virtual async Task UpdateConfigurationAsync(ResourceConfigurationStore configurationStore)

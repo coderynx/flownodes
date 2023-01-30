@@ -6,6 +6,7 @@ using Flownodes.Shared.Models;
 using Flownodes.Tests.Configuration;
 using Flownodes.Worker.Interfaces;
 using FluentAssertions;
+using Orleans;
 using Orleans.TestingHost;
 using Xunit;
 
@@ -38,6 +39,23 @@ public class ResourceManagerTests
         // Act & Assert.
         await manager.DeployResourceAsync<IDummyResourceGrain>(_fixture.Create<string>(),
             new ResourceConfigurationStore());
+    }
+
+    [Fact]
+    public async Task DeployResource_ShouldDeployResourceWithValidId()
+    {
+        // Arrange.
+        var manager = ProvideResourceManager();
+        var resourceName = _fixture.Create<string>();
+
+        // Act.
+        var grain = await manager.DeployResourceAsync<IDummyResourceGrain>(resourceName,
+            new ResourceConfigurationStore());
+
+        var id = new ResourceId(await grain.GetId());
+        id.TenantId.Should().Be(manager.GetPrimaryKeyString());
+        id.ClusterId.Should().NotBeNull();
+        id.ResourceName.Should().Be(resourceName);
     }
 
     [Fact]

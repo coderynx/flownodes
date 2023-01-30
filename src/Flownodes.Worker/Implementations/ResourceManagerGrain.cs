@@ -3,6 +3,7 @@ using Flownodes.Shared.Attributes;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
 using Flownodes.Worker.Models;
+using Flownodes.Worker.Services;
 using Orleans.Runtime;
 using Throw;
 
@@ -10,18 +11,20 @@ namespace Flownodes.Worker.Implementations;
 
 public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 {
+    private readonly IEnvironmentService _environmentService;
     private readonly IGrainFactory _grainFactory;
-
     private readonly ILogger<ResourceManagerGrain> _logger;
     private readonly IPersistentState<ResourceManagerPersistence> _persistence;
 
     public ResourceManagerGrain(ILogger<ResourceManagerGrain> logger,
         [PersistentState("resourceManagerState")]
-        IPersistentState<ResourceManagerPersistence> persistence, IGrainFactory grainFactory)
+        IPersistentState<ResourceManagerPersistence> persistence, IGrainFactory grainFactory,
+        IEnvironmentService environmentService)
     {
         _logger = logger;
         _persistence = persistence;
         _grainFactory = grainFactory;
+        _environmentService = environmentService;
         _grainFactory.GetGrain<IAlertManagerGrain>("alerter");
     }
 
@@ -30,8 +33,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async ValueTask<Resource?> GetResourceSummary(string id)
     {
         id.ThrowIfNull().IfWhiteSpace();
-
-        if (!id.Contains('/')) id = $"{Id}/{id}";
+        if (!id.Contains('/')) id = GetFullId(id);
 
         var registration = _persistence.State.Registrations.SingleOrDefault(x => x.ResourceId.Equals(id));
         if (registration is null) return default;
@@ -46,8 +48,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async ValueTask<IResourceGrain?> GetResourceAsync(string id)
     {
         id.ThrowIfNull().IfWhiteSpace();
-
-        if (!id.Contains('/')) id = $"{Id}/{id}";
+        if (!id.Contains('/')) id = GetFullId(id);
 
         var registration = _persistence.State.Registrations.SingleOrDefault(x => x.ResourceId.Equals(id));
         if (registration is null) return default;
@@ -78,8 +79,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         where TResourceGrain : IResourceGrain
     {
         id.ThrowIfNull().IfWhiteSpace();
-
-        if (!id.Contains('/')) id = $"{Id}/{id}";
+        if (!id.Contains('/')) id = GetFullId(id);
 
         if (!_persistence.State.Registrations.Any(x => x.ResourceId.Equals(id)))
         {
@@ -98,8 +98,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async ValueTask<IResourceGrain?> GetGenericResourceAsync(string id)
     {
         id.ThrowIfNull().IfWhiteSpace();
-
-        if (!id.Contains('/')) id = $"{Id}/{id}";
+        if (!id.Contains('/')) id = GetFullId(id);
 
         var registration = _persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id));
 
@@ -123,7 +122,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         id.ThrowIfNull().IfWhiteSpace();
         configurationStore.ThrowIfNull();
 
-        if (!id.Contains('/')) id = $"{Id}/{id}";
+        if (!id.Contains('/')) id = GetFullId(id);
 
         if (_persistence.State.Registrations.Any(x => x.ResourceId.Equals(id)))
             throw new InvalidOperationException($"Resource with ID {id} already exists");
@@ -150,8 +149,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async Task RemoveResourceAsync(string id)
     {
         id.ThrowIfNull().IfWhiteSpace();
-
-        if (!id.Contains('/')) id = $"{Id}/{id}";
+        if (!id.Contains('/')) id = GetFullId(id);
 
         var registration = _persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id));
         if (registration is null)
@@ -179,6 +177,12 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Removed all resources");
+    }
+
+    private string GetFullId(string resourceName)
+    {
+        var fullId = new ResourceId(Id, _environmentService.ClusterId, resourceName);
+        return fullId.ToString();
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
