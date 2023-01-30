@@ -110,22 +110,8 @@ public abstract class ResourceGrain : Grain
 
     protected ResourceContext GetResourceContext()
     {
-        var actualConfiguration = new ResourceConfiguration
-        {
-            BehaviourId = Configuration.BehaviourId,
-            Properties = Configuration.Properties
-        };
-        var actualMetadata = new ResourceMetadata
-        {
-            CreatedAt = Metadata.CreatedAt,
-            Properties = Metadata.Properties
-        };
-        var actualState = new ResourceState
-        {
-            Properties = State.Properties
-        };
-
-        return new ResourceContext(actualConfiguration, actualMetadata, actualState);
+        return new ResourceContext(Configuration.BehaviourId, Configuration.Properties, Metadata.Properties,
+            State.Properties, State.LastUpdate);
     }
 
     public virtual async Task UpdateConfigurationAsync(ResourceConfigurationStore configurationStore)

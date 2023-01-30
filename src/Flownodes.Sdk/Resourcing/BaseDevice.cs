@@ -13,19 +13,19 @@ public abstract class BaseDevice : IBehaviour
 
     public virtual Task OnSetupAsync(ResourceContext context)
     {
-        Logger.LogInformation("Initialized behaviour {BehaviourId}", context.Configuration?.BehaviourId);
+        Logger.LogInformation("Initialized behaviour {BehaviourId}", context.BehaviorId);
         return Task.CompletedTask;
     }
 
     public virtual Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context)
     {
-        Logger.LogInformation("Updated state with {BehaviourId}", context.Configuration?.BehaviourId);
+        Logger.LogInformation("Updated state with {BehaviourId}", context.BehaviorId);
         return Task.CompletedTask;
     }
 
     public virtual Task OnUpdateAsync(ResourceContext context)
     {
-        Logger.LogInformation("Updating state from device with {BehaviourId}", context.Configuration?.BehaviourId);
+        Logger.LogInformation("Updating state from device with {BehaviourId}", context.BehaviorId);
         return default;
     }
 }

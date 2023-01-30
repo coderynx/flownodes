@@ -27,7 +27,7 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         await Behaviour?.OnUpdateAsync(context)!;
 
         // TODO: Evaluate if always writing causes performance issues.
-        await UpdateStateAsync(context.State.Properties);
+        await UpdateStateAsync(context.State);
 
         Logger.LogDebug("Updated state for device {Id}: {State}", Id, State.Properties);
     }
