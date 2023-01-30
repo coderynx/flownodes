@@ -1,9 +1,12 @@
 using Flownodes.Shared.Models;
-using Flownodes.Worker.Interfaces;
+using Flownodes.Tests.Interfaces;
+using Flownodes.Worker.Implementations;
 using Flownodes.Worker.Services;
+using Microsoft.Extensions.Logging;
+using Orleans;
 using Orleans.Runtime;
 
-namespace Flownodes.Worker.Implementations;
+namespace Flownodes.Tests.Grains;
 
 [GrainType("dummy_resource")]
 public sealed class DummyResourceGrain : ResourceGrain, IDummyResourceGrain

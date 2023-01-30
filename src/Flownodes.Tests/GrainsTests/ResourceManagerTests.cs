@@ -4,7 +4,7 @@ using AutoFixture;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
 using Flownodes.Tests.Configuration;
-using Flownodes.Worker.Interfaces;
+using Flownodes.Tests.Interfaces;
 using FluentAssertions;
 using Orleans;
 using Orleans.TestingHost;
