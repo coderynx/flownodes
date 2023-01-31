@@ -6,22 +6,22 @@ namespace Flownodes.Worker.Services;
 public class TestWorker : BackgroundService
 {
     private readonly IEnvironmentService _environmentService;
+    private readonly IGrainFactory _grainFactory;
     private readonly ILogger<TestWorker> _logger;
 
-    public TestWorker(ILogger<TestWorker> logger, IEnvironmentService environmentService)
+    public TestWorker(ILogger<TestWorker> logger, IEnvironmentService environmentService, IGrainFactory grainFactory)
     {
         _logger = logger;
         _environmentService = environmentService;
+        _grainFactory = grainFactory;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var tenantManager = _environmentService.GetTenantManagerGrain();
-        var tenant = await tenantManager.CreateTenantAsync("default", new Dictionary<string, string?>());
-        var resourceManager = await tenant.GetResourceManager();
+        var tenant = await tenantManager.CreateTenantAsync("default");
 
-        var clusterGrain = _environmentService.GetClusterGrain();
-        await clusterGrain.GetClusterInformation();
+        var resourceManager = await tenant.GetResourceManager();
 
         var dictionary = new Dictionary<string, object?>
         {
@@ -30,10 +30,40 @@ public class TestWorker : BackgroundService
         var resourceConfiguration = ResourceConfigurationStore.FromDictionary(dictionary);
         resourceConfiguration.BehaviourId = "hue_light";
         await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light_1", resourceConfiguration);
-        var hueLight = await resourceManager.GetResourceAsync<IDeviceGrain>("hue_light_1");
-        var generic = await resourceManager.GetGenericResourceAsync("hue_light_1");
 
-        const string code = """
+        const string workflowJson = """
+{
+  "WorkflowName": "test_workflow",
+  "Rules": [
+ {
+   "RuleName": "updateDeviceState",
+   "SuccessEvent": "10",
+   "ErrorMessage": "One or more adjust rules failed.",
+   "ErrorType": "Error",
+   "RuleExpressionType": "LambdaExpression",
+   "Expression": "true",
+   "Actions": {
+      "OnSuccess": {
+         "Name": "UpdateDeviceState",  
+         "Context": {  
+            "deviceId" : "hue_light_1",
+            "deviceState": {
+              "power": true
+            }
+         }
+      }
+   }
+ }
+  ]
+}
+""";
+
+        var workflowManager = await tenant.GetWorkflowManager();
+        var workflow = await workflowManager.CreateWorkflowAsync("test_workflow", workflowJson);
+
+        await workflow.ExecuteAsync();
+
+        /*const string code = """
             (async function () {
                     var newState = host.newObj(deviceState);
                     newState.Add('power', false);
@@ -49,6 +79,6 @@ public class TestWorker : BackgroundService
         };
         var scriptResource = await resourceManager.DeployResourceAsync<IScriptResourceGrain>("script_01",
             ResourceConfigurationStore.FromDictionary(dictionary));
-        await scriptResource.ExecuteAsync();
+        await scriptResource.ExecuteAsync();*/
     }
 }

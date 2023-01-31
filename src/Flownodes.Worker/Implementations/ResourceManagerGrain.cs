@@ -45,20 +45,6 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return summary;
     }
 
-    public async ValueTask<IResourceGrain?> GetResourceAsync(string id)
-    {
-        id.ThrowIfNull().IfWhiteSpace();
-        if (!id.Contains('/')) id = GetFullId(id);
-
-        var registration = _persistence.State.Registrations.SingleOrDefault(x => x.ResourceId.Equals(id));
-        if (registration is null) return default;
-
-        var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
-
-        _logger.LogDebug("Retrieved resource {ResourceId}", id);
-        return grain;
-    }
-
     public async ValueTask<ReadOnlyCollection<Resource>> GetAllResourceSummaries()
     {
         var summaries = new List<Resource>();

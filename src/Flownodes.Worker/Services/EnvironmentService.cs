@@ -6,7 +6,6 @@ namespace Flownodes.Worker.Services;
 
 public interface IEnvironmentService
 {
-    string BaseFrn { get; }
     string ServiceId { get; }
     string ClusterId { get; }
     ITenantManagerGrain GetTenantManagerGrain();
@@ -17,6 +16,7 @@ public interface IEnvironmentService
 
 public record EnvironmentOptions
 {
+    public string DefaultTenantName { get; set; } = "default";
     public string ResourceManagerName { get; set; } = "resource_manager";
     public string AlertManagerName { get; set; } = "alert_manager";
     public string TenantManagerName { get; set; } = "tenant_manager";
@@ -43,12 +43,11 @@ public class EnvironmentService : IEnvironmentService
 
     public IResourceManagerGrain GetResourceManagerGrain()
     {
-        return _grainFactory.GetGrain<IResourceManagerGrain>(_environmentOptions.ResourceManagerName);
+        return _grainFactory.GetGrain<IResourceManagerGrain>(_environmentOptions.DefaultTenantName);
     }
 
     public string ServiceId => _clusterOptions.ServiceId;
     public string ClusterId => _clusterOptions.ClusterId;
-    public string BaseFrn => $"frn:{ServiceId}:{ClusterId}";
 
     public IAlertManagerGrain GetAlertManagerGrain()
     {

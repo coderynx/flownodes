@@ -3,20 +3,14 @@ using Autofac.Extensions.DependencyInjection;
 using Flownodes.Sdk.Alerting;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
+using Flownodes.Worker.Models;
 using MapsterMapper;
 using Orleans.Runtime;
 using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
-[GenerateSerializer]
-public sealed record AlertManagerPersistence
-{
-    [Id(0)] public List<Alert> Registrations { get; set; } = new();
-    [Id(1)] public List<string> DriversNames { get; set; } = new();
-}
-
-public class AlertManagerGrain : Grain, IAlertManagerGrain
+public sealed class AlertManagerGrain : Grain, IAlertManagerGrain
 {
     private readonly List<IAlerterDriver> _drivers = new();
     private readonly ILogger<AlertManagerGrain> _logger;
@@ -90,7 +84,8 @@ public class AlertManagerGrain : Grain, IAlertManagerGrain
 
     public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Alert manager of tenant {TenantId} deactivated", Id);
+        _logger.LogInformation("Alert manager of tenant {TenantId} deactivated for reason {Reason}", Id,
+            reason.Description);
         return base.OnDeactivateAsync(reason, cancellationToken);
     }
 

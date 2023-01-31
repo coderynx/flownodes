@@ -3,11 +3,22 @@ using Orleans.Runtime;
 namespace Flownodes.Worker.Models;
 
 [GenerateSerializer]
-public record ResourceRegistration([property: Id(0)] string ResourceId, [property: Id(1)] GrainId GrainId,
-    [property: Id(2)] string Kind);
+public sealed class ResourceRegistration
+{
+    public ResourceRegistration(string ResourceId, GrainId GrainId, string Kind)
+    {
+        this.ResourceId = ResourceId;
+        this.GrainId = GrainId;
+        this.Kind = Kind;
+    }
+
+    [Id(0)] public string ResourceId { get; init; }
+    [Id(1)] public GrainId GrainId { get; init; }
+    [Id(2)] public string Kind { get; init; }
+}
 
 [GenerateSerializer]
-public class ResourceManagerPersistence
+public sealed class ResourceManagerPersistence
 {
     [Id(0)] public List<ResourceRegistration> Registrations { get; set; } = new();
 

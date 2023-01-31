@@ -3,6 +3,20 @@ using Flownodes.Shared.Models;
 namespace Flownodes.Shared.Interfaces;
 
 [GenerateSerializer]
-public sealed record Alert([property: Id(0)] Guid Id, [property: Id(1)] string TargetResourceId,
-    [property: Id(2)] AlertSeverity Severity, [property: Id(3)] DateTime CreatedAt,
-    [property: Id(4)] string Description);
+public sealed class Alert
+{
+    public Alert(Guid Id, string TargetResourceId, AlertSeverity Severity, DateTime CreatedAt, string Description)
+    {
+        this.Id = Id;
+        this.TargetResourceId = TargetResourceId;
+        this.Severity = Severity;
+        this.CreatedAt = CreatedAt;
+        this.Description = Description;
+    }
+
+    [Id(0)] public Guid Id { get; init; }
+    [Id(1)] public string TargetResourceId { get; init; }
+    [Id(2)] public AlertSeverity Severity { get; init; }
+    [Id(3)] public DateTime CreatedAt { get; init; }
+    [Id(4)] public string Description { get; init; }
+}

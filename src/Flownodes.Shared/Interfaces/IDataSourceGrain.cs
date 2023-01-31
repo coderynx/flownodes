@@ -4,7 +4,7 @@ using System.Text.Json.Nodes;
 namespace Flownodes.Shared.Interfaces;
 
 [GenerateSerializer]
-public record DataSourceResult
+public sealed record DataSourceResult
 {
     public DataSourceResult(object inputObj)
     {
