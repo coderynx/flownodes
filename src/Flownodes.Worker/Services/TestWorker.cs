@@ -37,10 +37,6 @@ public class TestWorker : BackgroundService
   "Rules": [
  {
    "RuleName": "updateDeviceState",
-   "SuccessEvent": "10",
-   "ErrorMessage": "One or more adjust rules failed.",
-   "ErrorType": "Error",
-   "RuleExpressionType": "LambdaExpression",
    "Expression": "true",
    "Actions": {
       "OnSuccess": {

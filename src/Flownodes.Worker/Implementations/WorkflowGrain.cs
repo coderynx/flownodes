@@ -36,6 +36,7 @@ internal class WorkflowGrain : Grain, IWorkflowGrain
         {
             CustomActions = new Dictionary<string, Func<ActionBase>>
             {
+                { "GetDeviceState", () => new GetDeviceStateAction(resourceManager) },
                 { "UpdateDeviceState", () => new UpdateDeviceStateAction(resourceManager) }
             }
         };

@@ -34,10 +34,14 @@ public class TenantManagerGrain : ITenantManagerGrain
         return ValueTask.FromResult<ITenantGrain?>(null);
     }
 
-    public Task GetTenantsAsync()
+    public async ValueTask<IList<ITenantGrain>> GetTenantsAsync()
     {
+        var tenants = _registrations.State
+            .Select(registration => _grainFactory.GetGrain<ITenantGrain>(registration))
+            .ToList();
+
         _logger.LogDebug("Retrieved all tenants");
-        return Task.CompletedTask;
+        return tenants;
     }
 
     public async ValueTask<ITenantGrain?> CreateTenantAsync(string id, Dictionary<string, string?>? metadata = null)

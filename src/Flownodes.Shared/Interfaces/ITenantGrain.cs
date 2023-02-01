@@ -10,4 +10,5 @@ public interface ITenantGrain : IGrainWithStringKey
     ValueTask<IResourceManagerGrain> GetResourceManager();
     ValueTask<IAlertManagerGrain> GetAlertManager();
     ValueTask<IWorkflowManagerGrain> GetWorkflowManager();
+    Task ClearConfigurationAsync();
 }
