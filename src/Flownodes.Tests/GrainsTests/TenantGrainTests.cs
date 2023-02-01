@@ -25,7 +25,7 @@ public class TenantGrainTests
     {
         return _fixture.Create<TenantConfiguration>();
     }
-    
+
     [Fact]
     public async Task UpdateConfiguration_ShouldUpdateConfiguration()
     {

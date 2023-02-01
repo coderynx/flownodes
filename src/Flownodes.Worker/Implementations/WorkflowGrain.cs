@@ -32,6 +32,7 @@ internal class WorkflowGrain : Grain, IWorkflowGrain
         var tenantId = Id.Split('/')[0];
         var resourceManager = grainFactory.GetGrain<IResourceManagerGrain>(tenantId);
 
+        // TODO: Move the settings.
         var reSettings = new ReSettings
         {
             CustomActions = new Dictionary<string, Func<ActionBase>>
@@ -48,6 +49,8 @@ internal class WorkflowGrain : Grain, IWorkflowGrain
 
     public async Task ConfigureAsync(string workflowJson)
     {
+        workflowJson.ThrowIfNull().IfEmpty().IfWhiteSpace();
+
         _configurationStore.State.WorkflowJson = workflowJson;
 
         await _configurationStore.WriteStateAsync();

@@ -35,7 +35,7 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
 
     public ValueTask<IWorkflowGrain?> GetWorkflowAsync(string name)
     {
-        name.ThrowIfNull().IfWhiteSpace();
+        name.ThrowIfNull().IfWhiteSpace().IfEmpty();
 
         var id = GetFullId(name);
 
@@ -51,9 +51,19 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
         return ValueTask.FromResult<IWorkflowGrain?>(grain);
     }
 
+    public async ValueTask<IList<IWorkflowGrain>> GetWorkflowsAsync()
+    {
+        var workflows = _store.State.WorkflowRegistrations
+            .Select(registration => _grainFactory.GetGrain<IWorkflowGrain>(registration))
+            .ToList();
+
+        _logger.LogDebug("Retrieved all workflows of tenant {WorkflowManagerId}", Id);
+        return workflows;
+    }
+
     public async ValueTask<IWorkflowGrain> CreateWorkflowAsync(string name, string workflowJson)
     {
-        name.ThrowIfNull().IfWhiteSpace();
+        name.ThrowIfNull().IfWhiteSpace().IfEmpty();
         workflowJson.ThrowIfNull();
 
         var id = GetFullId(name);
@@ -71,7 +81,7 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
 
     public async Task RemoveWorkflowAsync(string name)
     {
-        name.ThrowIfNull().IfWhiteSpace();
+        name.ThrowIfNull().IfWhiteSpace().IfEmpty();
 
         var id = GetFullId(name);
 

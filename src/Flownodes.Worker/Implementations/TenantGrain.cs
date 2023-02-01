@@ -38,7 +38,7 @@ public class TenantGrain : Grain, ITenantGrain
         await _configuration.ClearStateAsync();
         _logger.LogInformation("Cleared configuration og tenant {TenantId}", Id);
     }
-    
+
     public ValueTask<TenantConfiguration> GetConfiguration()
     {
         _logger.LogDebug("Retrieved configuration for tenant {TenantId}", Id);
