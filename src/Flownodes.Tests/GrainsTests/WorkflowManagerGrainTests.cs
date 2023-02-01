@@ -72,7 +72,7 @@ public class WorkflowManagerGrainTests
         var workflowManager = _cluster.GrainFactory.GetGrain<IWorkflowManagerGrain>(_fixture.Create<string>());
 
         var workflowName = _fixture.Create<string>();
-        var workflow = await workflowManager.CreateWorkflowAsync(workflowName, string.Empty);
+        var workflow = await workflowManager.CreateWorkflowAsync(workflowName, _fixture.Create<string>());
 
         // Act.
         await workflowManager.RemoveWorkflowAsync(workflowName);

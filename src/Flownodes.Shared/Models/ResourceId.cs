@@ -1,3 +1,5 @@
+using Throw;
+
 namespace Flownodes.Shared.Models;
 
 public class ResourceId
@@ -11,6 +13,10 @@ public class ResourceId
 
     public ResourceId(string tenantId, string clusterId, string resourceName)
     {
+        tenantId.ThrowIfNull().IfWhiteSpace().IfEmpty();
+        clusterId.ThrowIfNull().IfWhiteSpace().IfEmpty();
+        clusterId.ThrowIfNull().IfWhiteSpace().IfEmpty();
+
         _id = $"{tenantId}/{clusterId}/{resourceName}";
     }
 
