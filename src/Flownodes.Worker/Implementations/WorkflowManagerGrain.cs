@@ -33,21 +33,22 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
 
     private string Id => this.GetPrimaryKeyString();
 
-    public ValueTask<IWorkflowGrain?> GetWorkflowAsync(string name)
+    public ValueTask<IWorkflowGrain?> GetWorkflowAsync(string nameOrId)
     {
-        name.ThrowIfNull().IfWhiteSpace().IfEmpty();
+        nameOrId.ThrowIfNull().IfWhiteSpace().IfEmpty();
+        
+        if(!nameOrId.Contains('/'))
+            nameOrId = GetFullId(nameOrId);
 
-        var id = GetFullId(name);
-
-        if (!_store.State.WorkflowRegistrations.Contains(id))
+        if (!_store.State.WorkflowRegistrations.Contains(nameOrId))
         {
-            _logger.LogError("The workflow {WorkflowId} does not exists", id);
+            _logger.LogError("The workflow {WorkflowId} does not exists", nameOrId);
             return ValueTask.FromResult<IWorkflowGrain?>(null);
         }
 
-        var grain = _grainFactory.GetGrain<IWorkflowGrain>(id);
+        var grain = _grainFactory.GetGrain<IWorkflowGrain>(nameOrId);
 
-        _logger.LogDebug("Retrieved workflow {WorkflowId}", name);
+        _logger.LogDebug("Retrieved workflow {WorkflowId}", nameOrId);
         return ValueTask.FromResult<IWorkflowGrain?>(grain);
     }
 
@@ -61,48 +62,49 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
         return workflows;
     }
 
-    public async ValueTask<IWorkflowGrain> CreateWorkflowAsync(string name, string workflowJson)
+    public async ValueTask<IWorkflowGrain> CreateWorkflowAsync(string nameOrId, string workflowJson)
     {
-        name.ThrowIfNull().IfWhiteSpace().IfEmpty();
+        nameOrId.ThrowIfNull().IfWhiteSpace().IfEmpty();
         workflowJson.ThrowIfNull();
 
-        var id = GetFullId(name);
+        nameOrId = GetFullId(nameOrId);
 
-        var grain = _grainFactory.GetGrain<IWorkflowGrain>(id);
+        var grain = _grainFactory.GetGrain<IWorkflowGrain>(nameOrId);
         await grain.ConfigureAsync(workflowJson);
 
-        _store.State.WorkflowRegistrations.Add(id);
+        _store.State.WorkflowRegistrations.Add(nameOrId);
         await _store.WriteStateAsync();
 
-        _logger.LogInformation("Created workflow {WorkflowId}", id);
+        _logger.LogInformation("Created workflow {WorkflowId}", nameOrId);
 
         return grain;
     }
 
-    public async Task RemoveWorkflowAsync(string name)
+    public async Task RemoveWorkflowAsync(string nameOrId)
     {
-        name.ThrowIfNull().IfWhiteSpace().IfEmpty();
+        nameOrId.ThrowIfNull().IfWhiteSpace().IfEmpty();
 
-        var id = GetFullId(name);
+        if(!nameOrId.Contains('/'))
+            nameOrId = GetFullId(nameOrId);
 
-        if (!_store.State.WorkflowRegistrations.Contains(id))
+        if (!_store.State.WorkflowRegistrations.Contains(nameOrId))
         {
-            _logger.LogError("The workflow {WorkflowId} does not exists", id);
+            _logger.LogError("The workflow {WorkflowId} does not exists", nameOrId);
             return;
         }
 
-        var grain = _grainFactory.GetGrain<IWorkflowGrain>(id);
+        var grain = _grainFactory.GetGrain<IWorkflowGrain>(nameOrId);
         await grain.ClearConfigurationAsync();
 
-        _store.State.WorkflowRegistrations.Remove(id);
+        _store.State.WorkflowRegistrations.Remove(nameOrId);
         await _store.WriteStateAsync();
 
-        _logger.LogInformation("Removed workflow {WorkflowId}", id);
+        _logger.LogInformation("Removed workflow {WorkflowId}", nameOrId);
     }
 
-    private string GetFullId(string resourceName)
+    private string GetFullId(string name)
     {
-        var fullId = new ResourceId(Id, _environmentService.ClusterId, resourceName);
+        var fullId = new ObjectId(Id, _environmentService.ClusterId, name);
         return fullId.ToString();
     }
 

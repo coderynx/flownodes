@@ -49,13 +49,13 @@ public class ResourceManagerTests
         var resourceName = _fixture.Create<string>();
 
         // Act.
-        var grain = await manager.DeployResourceAsync<IDummyResourceGrain>(resourceName,
+        var id = await manager.DeployResourceAsync<IDummyResourceGrain>(resourceName,
             new ResourceConfigurationStore());
 
-        var id = new ResourceId(await grain.GetId());
-        id.TenantId.Should().Be(manager.GetPrimaryKeyString());
-        id.ClusterId.Should().NotBeNull();
-        id.ResourceName.Should().Be(resourceName);
+        var resourceId = new ObjectId(id);
+        resourceId.TenantName.Should().Be(manager.GetPrimaryKeyString());
+        resourceId.ClusterName.Should().NotBeNull();
+        resourceId.ObjectName.Should().Be(resourceName);
     }
 
     [Fact]

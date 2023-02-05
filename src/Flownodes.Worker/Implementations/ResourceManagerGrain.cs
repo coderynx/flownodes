@@ -98,18 +98,18 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return grain;
     }
 
-    public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string id,
+    public async ValueTask<string> DeployResourceAsync<TResourceGrain>(string name,
         ResourceConfigurationStore configurationStore) where TResourceGrain : IResourceGrain
     {
-        id.ThrowIfNull().IfWhiteSpace();
+        name.ThrowIfNull().IfWhiteSpace();
         configurationStore.ThrowIfNull();
 
-        if (!id.Contains('/')) id = GetFullId(id);
+        if (!name.Contains('/')) name = GetFullId(name);
 
-        if (_persistence.State.Registrations.Any(x => x.ResourceId.Equals(id)))
-            throw new InvalidOperationException($"Resource with ID {id} already exists");
+        if (_persistence.State.Registrations.Any(x => x.ResourceId.Equals(name)))
+            throw new InvalidOperationException($"Resource with ID {name} already exists");
 
-        var grain = _grainFactory.GetGrain<TResourceGrain>(id);
+        var grain = _grainFactory.GetGrain<TResourceGrain>(name);
         var kind = await grain.GetKind();
 
         // TODO: Verify if singleton is needed.
@@ -120,11 +120,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         await grain.UpdateConfigurationAsync(configurationStore);
 
-        _persistence.State.AddRegistration(id, grain.GetGrainId(), kind);
+        _persistence.State.AddRegistration(name, grain.GetGrainId(), kind);
         await _persistence.WriteStateAsync();
 
-        _logger.LogInformation("Deployed resource {ResourceId}", id);
-        return grain;
+        _logger.LogInformation("Deployed resource {ResourceId}", name);
+        return name;
     }
 
     public async Task RemoveResourceAsync(string id)
@@ -160,7 +160,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     private string GetFullId(string resourceName)
     {
-        var fullId = new ResourceId(Id, _environmentService.ClusterId, resourceName);
+        var fullId = new ObjectId(Id, _environmentService.ClusterId, resourceName);
         return fullId.ToString();
     }
 

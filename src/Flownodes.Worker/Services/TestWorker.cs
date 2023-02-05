@@ -44,7 +44,7 @@ public class TestWorker : BackgroundService
          "Context": {  
             "deviceId" : "hue_light_1",
             "deviceState": {
-              "power": true
+              "power": false
             }
          }
       }

@@ -8,7 +8,7 @@ public interface IResourceManagerGrain : IGrainWithStringKey
     ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string id) where TResourceGrain : IResourceGrain;
     ValueTask<ReadOnlyCollection<Resource>> GetAllResourceSummaries();
 
-    ValueTask<TResource> DeployResourceAsync<TResource>(string id, ResourceConfigurationStore configurationStore)
+    ValueTask<string> DeployResourceAsync<TResource>(string name, ResourceConfigurationStore configurationStore)
         where TResource : IResourceGrain;
 
     Task RemoveResourceAsync(string id);
