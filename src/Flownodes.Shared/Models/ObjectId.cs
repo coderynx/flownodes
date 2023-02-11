@@ -1,14 +1,12 @@
-using Throw;
-
 namespace Flownodes.Shared.Models;
 
 public class ObjectId
 {
     public ObjectId(string tenantId, string clusterId, string resourceName)
     {
-        tenantId.ThrowIfNull().IfWhiteSpace().IfEmpty();
-        clusterId.ThrowIfNull().IfWhiteSpace().IfEmpty();
-        clusterId.ThrowIfNull().IfWhiteSpace().IfEmpty();
+        ArgumentException.ThrowIfNullOrEmpty(tenantId);
+        ArgumentException.ThrowIfNullOrEmpty(clusterId);
+        ArgumentException.ThrowIfNullOrEmpty(resourceName);
 
         TenantName = tenantId;
         ClusterName = clusterId;

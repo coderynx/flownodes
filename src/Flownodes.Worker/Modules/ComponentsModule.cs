@@ -3,7 +3,6 @@ using System.Text.RegularExpressions;
 using Autofac;
 using Flownodes.Sdk.Alerting;
 using Flownodes.Sdk.Resourcing;
-using Throw;
 using Module = Autofac.Module;
 
 namespace Flownodes.Worker.Modules;
@@ -13,14 +12,14 @@ public class ComponentsModule : Module
     private static string GetBehaviourName(MemberInfo type)
     {
         var attribute = type.GetCustomAttribute(typeof(BehaviourIdAttribute)) as BehaviourIdAttribute;
-        attribute.ThrowIfNull();
+        ArgumentNullException.ThrowIfNull(attribute);
         return attribute.Id;
     }
 
     private static string GetAlerterDriverName(MemberInfo type)
     {
         var attribute = type.GetCustomAttribute(typeof(AlerterDriverIdAttribute)) as AlerterDriverIdAttribute;
-        attribute.ThrowIfNull();
+        ArgumentNullException.ThrowIfNull(attribute);
         return attribute.Id;
     }
 

@@ -5,7 +5,6 @@ using Flownodes.Shared.Models;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
-using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
@@ -32,7 +31,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async ValueTask<Resource?> GetResourceSummary(string id)
     {
-        id.ThrowIfNull().IfWhiteSpace();
+        ArgumentException.ThrowIfNullOrEmpty(id);
         if (!id.Contains('/')) id = GetFullId(id);
 
         var registration = _persistence.State.Registrations.SingleOrDefault(x => x.ResourceId.Equals(id));
@@ -64,7 +63,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string id)
         where TResourceGrain : IResourceGrain
     {
-        id.ThrowIfNull().IfWhiteSpace();
+        ArgumentException.ThrowIfNullOrEmpty(id);
         if (!id.Contains('/')) id = GetFullId(id);
 
         if (!_persistence.State.Registrations.Any(x => x.ResourceId.Equals(id)))
@@ -81,7 +80,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async ValueTask<IResourceGrain?> GetGenericResourceAsync(string id)
     {
-        id.ThrowIfNull().IfWhiteSpace();
+        ArgumentException.ThrowIfNullOrEmpty(id);
         if (!id.Contains('/')) id = GetFullId(id);
 
         var registration = _persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id));
@@ -101,8 +100,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async ValueTask<string> DeployResourceAsync<TResourceGrain>(string name,
         ResourceConfigurationStore configurationStore) where TResourceGrain : IResourceGrain
     {
-        name.ThrowIfNull().IfWhiteSpace();
-        configurationStore.ThrowIfNull();
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentNullException.ThrowIfNull(configurationStore);
 
         if (!name.Contains('/')) name = GetFullId(name);
 
@@ -113,10 +112,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var kind = await grain.GetKind();
 
         // TODO: Verify if singleton is needed.
-        if (Attribute.IsDefined(typeof(TResourceGrain), typeof(SingletonResourceAttribute)))
-            _persistence.State.IsKindRegistered(kind)
-                .Throw($"Singleton resource of Kind {kind} already exists")
-                .IfFalse();
+        if (Attribute.IsDefined(typeof(TResourceGrain), typeof(SingletonResourceAttribute))
+            && _persistence.State.IsKindRegistered(kind))
+        {
+            throw new Exception("Singleton resource of Kind {kind} already exists");
+        }
 
         await grain.UpdateConfigurationAsync(configurationStore);
 
@@ -129,7 +129,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async Task RemoveResourceAsync(string id)
     {
-        id.ThrowIfNull().IfWhiteSpace();
+        ArgumentException.ThrowIfNullOrEmpty(id);
         if (!id.Contains('/')) id = GetFullId(id);
 
         var registration = _persistence.State.Registrations.FirstOrDefault(x => x.ResourceId.Equals(id));

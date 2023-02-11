@@ -88,24 +88,24 @@ public class AlerterGrainTests
     }
 
     [Fact]
-    public async Task ShouldThrowOnProduceAlert_WhenFrnIsWhitespace()
+    public async Task ShouldThrowOnProduceAlert_WhenFrnIsEmpty()
     {
         // Arrange.
         var grain = await ProvideAlerterAsync();
 
         // Act & Assert.
-        var act = async () => { await grain.FireInfoAsync(" ", "Test"); };
+        var act = async () => { await grain.FireInfoAsync(string.Empty, "Test"); };
         await act.Should().ThrowAsync<ArgumentException>();
     }
 
     [Fact]
-    public async Task ShouldThrowOnProduceAlert_WhenMessageIsWhitespace()
+    public async Task ShouldThrowOnProduceAlert_WhenMessageIsEmpty()
     {
         // Arrange.
         var grain = await ProvideAlerterAsync();
 
         // Act & Assert.
-        var act = async () => { await grain.FireInfoAsync(_fixture.Create<string>(), " "); };
+        var act = async () => { await grain.FireInfoAsync(_fixture.Create<string>(), string.Empty); };
         await act.Should().ThrowAsync<ArgumentException>();
     }
 

@@ -3,7 +3,6 @@ using System.Text.Json.Nodes;
 using Flownodes.Sdk.Resourcing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Throw;
 
 namespace Flownodes.Components.PhilipsHue.Behaviours;
 
@@ -49,7 +48,7 @@ public class HueLight : BaseDevice
     public override async Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context)
     {
         var lightId = context.Configuration["lightId"]?.ToString();
-        lightId.ThrowIfNull();
+        ArgumentException.ThrowIfNullOrEmpty(lightId);
 
         if (newState.TryGetValue("power", out var value))
         {

@@ -5,7 +5,6 @@ using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Services;
 using Orleans.Concurrency;
 using Orleans.Runtime;
-using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
@@ -127,13 +126,13 @@ public abstract class ResourceGrain : Grain
 
     public virtual async Task UpdateConfigurationAsync(ResourceConfigurationStore configurationStore)
     {
-        configurationStore.ThrowIfNull();
+        ArgumentNullException.ThrowIfNull(configurationStore);
         Configuration = configurationStore;
 
         if (BehaviourId is not null)
         {
             Behaviour = _behaviourProvider.GetBehaviour(BehaviourId);
-            Behaviour.ThrowIfNull();
+            ArgumentNullException.ThrowIfNull(Behaviour);
 
             var context = GetResourceContext();
             await Behaviour.OnSetupAsync(context);

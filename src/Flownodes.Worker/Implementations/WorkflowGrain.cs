@@ -5,7 +5,6 @@ using Orleans.Runtime;
 using RulesEngine.Actions;
 using RulesEngine.Interfaces;
 using RulesEngine.Models;
-using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
@@ -49,7 +48,7 @@ internal class WorkflowGrain : Grain, IWorkflowGrain
 
     public async Task ConfigureAsync(string workflowJson)
     {
-        workflowJson.ThrowIfNull().IfEmpty().IfWhiteSpace();
+        ArgumentException.ThrowIfNullOrEmpty(workflowJson);
 
         _configurationStore.State.WorkflowJson = workflowJson;
 
@@ -65,7 +64,7 @@ internal class WorkflowGrain : Grain, IWorkflowGrain
 
     public async Task ExecuteAsync(IDictionary<string, object?>? parameters = null)
     {
-        _configurationStore.State.WorkflowJson.ThrowIfNull().IfWhiteSpace();
+        ArgumentException.ThrowIfNullOrEmpty(_configurationStore.State.WorkflowJson);
         var workflow = JsonConvert.DeserializeObject<Workflow>(_configurationStore.State.WorkflowJson);
 
         if (!_rulesEngine.ContainsWorkflow(workflow?.WorkflowName))

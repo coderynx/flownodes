@@ -1,6 +1,5 @@
 using Flownodes.Shared.Interfaces;
 using Orleans.Runtime;
-using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
@@ -46,7 +45,7 @@ public class TenantManagerGrain : ITenantManagerGrain
 
     public async ValueTask<ITenantGrain?> CreateTenantAsync(string id, Dictionary<string, string?>? metadata = null)
     {
-        id.ThrowIfNull().IfWhiteSpace();
+        ArgumentException.ThrowIfNullOrEmpty(id);
 
         _registrations.State.Add(id);
         await _registrations.WriteStateAsync();
@@ -59,7 +58,7 @@ public class TenantManagerGrain : ITenantManagerGrain
 
     public Task RemoveTenantAsync(string id)
     {
-        id.ThrowIfNull().IfEmpty();
+        ArgumentException.ThrowIfNullOrEmpty(id);
 
         // TODO: Perform tenant removal.
 

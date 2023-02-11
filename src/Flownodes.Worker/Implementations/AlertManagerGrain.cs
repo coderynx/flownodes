@@ -6,7 +6,6 @@ using Flownodes.Shared.Models;
 using Flownodes.Worker.Models;
 using MapsterMapper;
 using Orleans.Runtime;
-using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
@@ -106,8 +105,8 @@ public sealed class AlertManagerGrain : Grain, IAlertManagerGrain
     private async ValueTask<Alert> FireAlertAsync(string targetResourceId, AlertSeverity severity,
         string description)
     {
-        targetResourceId.ThrowIfNull().IfWhiteSpace();
-        description.ThrowIfNull().IfWhiteSpace();
+        ArgumentException.ThrowIfNullOrEmpty(targetResourceId);
+        ArgumentException.ThrowIfNullOrEmpty(description);
 
         LoadDrivers();
 

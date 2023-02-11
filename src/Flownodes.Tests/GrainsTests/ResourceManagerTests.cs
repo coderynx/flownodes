@@ -67,7 +67,7 @@ public class ResourceManagerTests
         // Act & Assert.
         var act = async () =>
         {
-            await manager.DeployResourceAsync<IDummyResourceGrain>(" ", new ResourceConfigurationStore());
+            await manager.DeployResourceAsync<IDummyResourceGrain>(string.Empty, new ResourceConfigurationStore());
         };
         await act.Should().ThrowAsync<ArgumentException>();
     }

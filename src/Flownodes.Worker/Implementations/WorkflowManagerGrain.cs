@@ -2,7 +2,6 @@ using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
-using Throw;
 
 namespace Flownodes.Worker.Implementations;
 
@@ -35,7 +34,7 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
 
     public ValueTask<IWorkflowGrain?> GetWorkflowAsync(string nameOrId)
     {
-        nameOrId.ThrowIfNull().IfWhiteSpace().IfEmpty();
+        ArgumentException.ThrowIfNullOrEmpty(nameOrId);
         
         if(!nameOrId.Contains('/'))
             nameOrId = GetFullId(nameOrId);
@@ -64,8 +63,8 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
 
     public async ValueTask<IWorkflowGrain> CreateWorkflowAsync(string nameOrId, string workflowJson)
     {
-        nameOrId.ThrowIfNull().IfWhiteSpace().IfEmpty();
-        workflowJson.ThrowIfNull();
+        ArgumentException.ThrowIfNullOrEmpty(nameOrId);
+        ArgumentException.ThrowIfNullOrEmpty(workflowJson);
 
         nameOrId = GetFullId(nameOrId);
 
@@ -82,7 +81,7 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
 
     public async Task RemoveWorkflowAsync(string nameOrId)
     {
-        nameOrId.ThrowIfNull().IfWhiteSpace().IfEmpty();
+        ArgumentException.ThrowIfNullOrEmpty(nameOrId);
 
         if(!nameOrId.Contains('/'))
             nameOrId = GetFullId(nameOrId);
