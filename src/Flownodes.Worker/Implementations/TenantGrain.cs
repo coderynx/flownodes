@@ -1,62 +1,42 @@
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
 using Orleans.Runtime;
+using OrleansCodeGen.Orleans;
 
 namespace Flownodes.Worker.Implementations;
 
 public class TenantGrain : Grain, ITenantGrain
 {
-    private readonly IPersistentState<TenantConfiguration> _configuration;
-    private readonly IGrainFactory _grainFactory;
-
+    private readonly IPersistentState<Dictionary<string, string?>> _metadata;
     private readonly ILogger<TenantGrain> _logger;
 
     public TenantGrain(ILogger<TenantGrain> logger,
-        [PersistentState("tenantConfiguration")]
-        IPersistentState<TenantConfiguration> configuration, IGrainFactory grainFactory)
+        [PersistentState("tenantMetadata")]
+        IPersistentState<Dictionary<string, string?>> metadata)
     {
         _logger = logger;
-        _configuration = configuration;
-        _grainFactory = grainFactory;
+        _metadata = metadata;
     }
 
-    private string Id => this.GetPrimaryKeyString();
-    private IResourceManagerGrain ResourceManagerGrain => _grainFactory.GetGrain<IResourceManagerGrain>(Id);
-    private IAlertManagerGrain AlertManagerGrain => _grainFactory.GetGrain<IAlertManagerGrain>(Id);
-    private IWorkflowManagerGrain WorkflowManagerGrain => _grainFactory.GetGrain<IWorkflowManagerGrain>(Id);
+    private string Name => this.GetPrimaryKeyString();
 
-    public async Task UpdateConfigurationAsync(TenantConfiguration configuration)
+    public async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
     {
-        _configuration.State = configuration;
-        await _configuration.WriteStateAsync();
+        _metadata.State = metadata;
+        await _metadata.WriteStateAsync();
 
-        _logger.LogInformation("Updated configuration for tenant {TenantId}", Id);
+        _logger.LogInformation("Updated metadata for tenant {TenantName}", Name);
     }
 
-    public async Task ClearConfigurationAsync()
+    public async Task ClearMetadataAsync()
     {
-        await _configuration.ClearStateAsync();
-        _logger.LogInformation("Cleared configuration og tenant {TenantId}", Id);
+        await _metadata.ClearStateAsync();
+        _logger.LogInformation("Cleared metadata og tenant {TenantName}", Name);
     }
 
-    public ValueTask<TenantConfiguration> GetConfiguration()
+    public ValueTask<Dictionary<string, string?>> GetMetadata()
     {
-        _logger.LogDebug("Retrieved configuration for tenant {TenantId}", Id);
-        return ValueTask.FromResult(_configuration.State);
-    }
-
-    public ValueTask<IResourceManagerGrain> GetResourceManager()
-    {
-        return ValueTask.FromResult(ResourceManagerGrain);
-    }
-
-    public ValueTask<IAlertManagerGrain> GetAlertManager()
-    {
-        return ValueTask.FromResult(AlertManagerGrain);
-    }
-
-    public ValueTask<IWorkflowManagerGrain> GetWorkflowManager()
-    {
-        return ValueTask.FromResult(WorkflowManagerGrain);
+        _logger.LogDebug("Retrieved configuration for tenant {TenantName}", Name);
+        return ValueTask.FromResult(_metadata.State);
     }
 }

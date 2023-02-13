@@ -96,7 +96,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return grain;
     }
 
-    public async ValueTask<string> DeployResourceAsync<TResourceGrain>(string tenantName, string resourceName,
+    public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string tenantName, string resourceName,
         ResourceConfigurationStore configurationStore) where TResourceGrain : IResourceGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
@@ -124,7 +124,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Deployed resource {ResourceName} in tenant {TenantName}", resourceName, tenantName);
-        return id;
+        return grain;
     }
 
     public async Task RemoveResourceAsync(string tenantName, string resourceName)

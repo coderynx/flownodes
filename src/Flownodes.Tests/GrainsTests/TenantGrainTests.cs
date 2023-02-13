@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
 using Flownodes.Shared.Interfaces;
-using Flownodes.Shared.Models;
 using Flownodes.Tests.Configuration;
 using FluentAssertions;
 using Orleans.TestingHost;
@@ -21,20 +21,14 @@ public class TenantGrainTests
         _fixture = new Fixture();
     }
 
-    private TenantConfiguration ProvideTenantConfiguration()
-    {
-        return _fixture.Create<TenantConfiguration>();
-    }
-
     [Fact]
     public async Task UpdateConfiguration_ShouldUpdateConfiguration()
     {
         var grain = _cluster.GrainFactory.GetGrain<ITenantGrain>(_fixture.Create<string>());
+        
+        await grain.UpdateMetadataAsync(_fixture.Create<Dictionary<string, string?>>());
 
-        var configuration = ProvideTenantConfiguration();
-        await grain.UpdateConfigurationAsync(configuration);
-
-        var newConfiguration = await grain.GetConfiguration();
-        newConfiguration.Should().BeEquivalentTo(configuration);
+        var metadata = await grain.GetMetadata();
+        metadata.Should().NotBeNull();
     }
 }

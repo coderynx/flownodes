@@ -6,7 +6,6 @@ namespace Flownodes.Worker.Implementations;
 public class TenantManagerGrain : ITenantManagerGrain
 {
     private readonly IGrainFactory _grainFactory;
-
     private readonly ILogger<TenantManagerGrain> _logger;
     private readonly IPersistentState<HashSet<string>> _registrations;
 
@@ -19,17 +18,17 @@ public class TenantManagerGrain : ITenantManagerGrain
         _grainFactory = grainFactory;
     }
 
-    public ValueTask<ITenantGrain?> GetTenantAsync(string id)
+    public ValueTask<ITenantGrain?> GetTenantAsync(string name)
     {
-        if (_registrations.State.Contains(id))
+        if (_registrations.State.Contains(name))
         {
-            var grain = _grainFactory.GetGrain<ITenantGrain>(id);
+            var grain = _grainFactory.GetGrain<ITenantGrain>(name);
 
-            _logger.LogDebug("Retrieved tenant with ID {Id}", id);
+            _logger.LogDebug("Retrieved tenant with ID {Id}", name);
             return ValueTask.FromResult<ITenantGrain?>(grain);
         }
 
-        _logger.LogError("Could not retrieve tenant with ID {Id}", id);
+        _logger.LogError("Could not retrieve tenant with ID {Id}", name);
         return ValueTask.FromResult<ITenantGrain?>(null);
     }
 
@@ -43,26 +42,32 @@ public class TenantManagerGrain : ITenantManagerGrain
         return tenants;
     }
 
-    public async ValueTask<ITenantGrain?> CreateTenantAsync(string id, Dictionary<string, string?>? metadata = null)
+    public async ValueTask<ITenantGrain?> CreateTenantAsync(string name, Dictionary<string, string?>? metadata = null)
     {
-        ArgumentException.ThrowIfNullOrEmpty(id);
+        ArgumentException.ThrowIfNullOrEmpty(name);
 
-        _registrations.State.Add(id);
+        _registrations.State.Add(name);
         await _registrations.WriteStateAsync();
 
-        var grain = _grainFactory.GetGrain<ITenantGrain>(id);
+        var grain = _grainFactory.GetGrain<ITenantGrain>(name);
 
-        _logger.LogInformation("Created tenant with ID {Id}", id);
+        _logger.LogInformation("Created tenant with ID {Id}", name);
         return grain;
     }
 
-    public Task RemoveTenantAsync(string id)
+    public async ValueTask<bool> IsTenantRegistered(string tenantName)
     {
-        ArgumentException.ThrowIfNullOrEmpty(id);
+        ArgumentException.ThrowIfNullOrEmpty(tenantName);
+        return _registrations.State.Contains(tenantName);
+    }
+
+    public Task RemoveTenantAsync(string name)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
 
         // TODO: Perform tenant removal.
 
-        _logger.LogInformation("Removed tenant with ID {Id}", id);
+        _logger.LogInformation("Removed tenant with ID {Id}", name);
         return Task.CompletedTask;
     }
 }
