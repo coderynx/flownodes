@@ -15,9 +15,10 @@ public class GetDeviceStateAction : ActionBase
 
     public override async ValueTask<object> Run(ActionContext context, RuleParameter[] ruleParameters)
     {
-        var deviceId = context.GetContext<string>("deviceId");
+        var tenantName = context.GetContext<string>("tenantName");
+        var deviceName = context.GetContext<string>("deviceName");
 
-        var grain = await _resourceManager.GetResourceAsync<IDeviceGrain>(deviceId);
+        var grain = await _resourceManager.GetResourceAsync<IDeviceGrain>(tenantName, deviceName);
         return await grain.GetState();
     }
 }

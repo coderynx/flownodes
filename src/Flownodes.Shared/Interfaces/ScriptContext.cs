@@ -13,9 +13,9 @@ public class ScriptContext
         ResourceManager = resourceManager;
     }
 
-    public async Task<IDeviceGrain?> GetDevice(string id)
+    public async Task<IDeviceGrain?> GetDevice(string tenantName, string resourceName)
     {
-        return await ResourceManager.GetResourceAsync<IDeviceGrain>(id);
+        return await ResourceManager.GetResourceAsync<IDeviceGrain>(tenantName, resourceName);
     }
 
     public void LogInformation(string text)

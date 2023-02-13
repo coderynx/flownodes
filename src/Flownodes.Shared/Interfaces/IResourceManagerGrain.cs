@@ -5,14 +5,14 @@ namespace Flownodes.Shared.Interfaces;
 
 public interface IResourceManagerGrain : IGrainWithStringKey
 {
-    ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string id) where TResourceGrain : IResourceGrain;
-    ValueTask<ReadOnlyCollection<Resource>> GetAllResourceSummaries();
+    ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string tenantName, string resourceName) where TResourceGrain : IResourceGrain;
+    ValueTask<ReadOnlyCollection<Resource>> GetAllResourceSummaries(string tenantName);
 
-    ValueTask<string> DeployResourceAsync<TResource>(string name, ResourceConfigurationStore configurationStore)
+    ValueTask<string> DeployResourceAsync<TResource>(string tenantName, string resourceName, ResourceConfigurationStore configurationStore)
         where TResource : IResourceGrain;
 
-    Task RemoveResourceAsync(string id);
-    Task RemoveAllResourcesAsync();
-    ValueTask<Resource?> GetResourceSummary(string id);
-    ValueTask<IResourceGrain?> GetGenericResourceAsync(string id);
+    Task RemoveResourceAsync(string tenantName, string resourceName);
+    Task RemoveAllResourcesAsync(string tenantName);
+    ValueTask<Resource?> GetResourceSummary(string tenantName, string resourceName);
+    ValueTask<IResourceGrain?> GetGenericResourceAsync(string tenantName, string resourceName);
 }

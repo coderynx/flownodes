@@ -18,7 +18,7 @@
         @switch (ActivatedItem.Kind)
         {
             case ItemKind.Resource:
-                <Resource ResourceId="@ActivatedItem.Id"/>
+                <Resource ResourceName="@ActivatedItem.Id"/>
                 break;
             case ItemKind.Cluster:
                 <Cluster ClusterInformation="@_clusterInformation"/>

@@ -5,6 +5,7 @@ namespace Flownodes.Waikiki.Services;
 
 public interface IContextService
 {
+    string TenantName { get; }
     ITenantGrain? TenantGrain { get; }
     IClusterGrain? ClusterGrain { get; }
     IResourceManagerGrain? ResourceManager { get; }

@@ -4,11 +4,11 @@
 @inject IContextService ContextService
 @inject IDialogService DialogService
 
-@if (ResourceId is not null)
+@if (ResourceName is not null)
 {
     <div class="d-flex mb-2">
         <MudIcon Icon="@Icons.Material.Outlined.DeviceUnknown" Size="Size.Large" Class="mr-2"></MudIcon>
-        <MudText Typo="Typo.h5" GutterBottom="true">@ResourceId</MudText>
+        <MudText Typo="Typo.h5" GutterBottom="true">@ResourceName</MudText>
     </div>
 
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
@@ -172,7 +172,7 @@ else
 @code {
 
     [Parameter]
-    public string? ResourceId { get; set; }
+    public string? ResourceName { get; set; }
 
     public ResourceConfigurationStore Configuration { get; set; } = new();
     public ResourceMetadataStore Metadata { get; set; } = new();
@@ -181,9 +181,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        if (ResourceId is null) return;
+        if (ResourceName is null) return;
 
-        ResourceGrain = await ContextService.ResourceManager.GetGenericResourceAsync(ResourceId);
+        ResourceGrain = await ContextService.ResourceManager.GetGenericResourceAsync(ContextService.TenantName, ResourceName);
         if (ResourceGrain is null) return;
 
         Configuration = await ResourceGrain.GetConfiguration();
@@ -192,9 +192,9 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        if (ResourceId is null) return;
+        if (ResourceName is null) return;
 
-        ResourceGrain = await ContextService.ResourceManager.GetGenericResourceAsync(ResourceId);
+        ResourceGrain = await ContextService.ResourceManager.GetGenericResourceAsync(ContextService.TenantName, ResourceName);
         if (ResourceGrain is null) return;
 
         Configuration = await ResourceGrain.GetConfiguration();
@@ -206,10 +206,10 @@ else
     {
         var parameters = new DialogParameters
         {
-            { "ContentText", $"Do you really want to delete the resource {ResourceId}? This process cannot be undone." },
+            { "ContentText", $"Do you really want to delete the resource {ResourceName}? This process cannot be undone." },
             { "ButtonText", "Delete" },
             { "Color", Color.Error },
-            { "ResourceId", ResourceId }
+            { "ResourceId", ResourceName }
         };
 
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };

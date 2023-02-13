@@ -12,22 +12,24 @@ public class ContextService : IContextService
     {
         _logger = logger;
         _tenantManagerGrain = grainFactory.GetGrain<ITenantManagerGrain>("tenant_manager");
+        ResourceManager = grainFactory.GetGrain<IResourceManagerGrain>("resource_manager");
+        
         ClusterGrain = grainFactory.GetGrain<IClusterGrain>(0);
     }
 
+    public string TenantName { get; private set; }
     public ITenantGrain? TenantGrain { get; private set; }
     public IClusterGrain? ClusterGrain { get; }
-    public IResourceManagerGrain? ResourceManager { get; private set; }
+    public IResourceManagerGrain? ResourceManager { get; }
     public IAlertManagerGrain? AlertManager { get; private set; }
     public IList<Resource>? ResourceSummaries { get; private set; }
 
     public async Task SetTenantAsync(string tenantName)
     {
+        TenantName = tenantName;
+        
         TenantGrain = await _tenantManagerGrain.GetTenantAsync(tenantName);
         if (TenantGrain is null) throw new Exception($"Tenant {tenantName} not found");
-
-        ResourceManager = await TenantGrain.GetResourceManager();
-        AlertManager = await TenantGrain.GetAlertManager();
 
         await UpdateResourceSummaries();
 
@@ -36,6 +38,6 @@ public class ContextService : IContextService
 
     public async Task UpdateResourceSummaries()
     {
-        ResourceSummaries = await ResourceManager.GetAllResourceSummaries();
+        ResourceSummaries = await ResourceManager.GetAllResourceSummaries(TenantName);
     }
 }

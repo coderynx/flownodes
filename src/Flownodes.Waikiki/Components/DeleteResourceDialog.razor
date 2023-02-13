@@ -26,11 +26,11 @@
     public Color Color { get; set; }
 
     [Parameter]
-    public string ResourceId { get; set; }
+    public string ResourceName { get; set; }
 
     void Submit()
     {
-        ContextService.ResourceManager.RemoveResourceAsync(ResourceId);
+        ContextService.ResourceManager.RemoveResourceAsync(ContextService.TenantName, ResourceName);
         MudDialog.Close(DialogResult.Ok(true));
         ContextService.UpdateResourceSummaries();
         StateHasChanged();
