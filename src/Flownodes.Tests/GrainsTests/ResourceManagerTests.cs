@@ -50,11 +50,12 @@ public class ResourceManagerTests
         var manager = ProvideResourceManager();
 
         // Act.
-        var id = await manager.DeployResourceAsync<IDummyResourceGrain>(
+        var resource = await manager.DeployResourceAsync<IDummyResourceGrain>(
             "tenant",
             "resource",
             new ResourceConfigurationStore());
 
+        var id = await resource.GetId();
         id.Should().Be("tenant/resource");
     }
 
