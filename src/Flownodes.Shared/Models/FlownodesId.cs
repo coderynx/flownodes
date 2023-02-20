@@ -17,7 +17,7 @@ public class FlownodesId
         TenantName = tokens[0];
         ObjectName = tokens[1];
     }
-    
+
     public string TenantName { get; }
     public string ObjectName { get; }
 

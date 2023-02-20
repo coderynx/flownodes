@@ -35,8 +35,8 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
     public ValueTask<IWorkflowGrain?> GetWorkflowAsync(string nameOrId)
     {
         ArgumentException.ThrowIfNullOrEmpty(nameOrId);
-        
-        if(!nameOrId.Contains('/'))
+
+        if (!nameOrId.Contains('/'))
             nameOrId = GetFullId(nameOrId);
 
         if (!_store.State.WorkflowRegistrations.Contains(nameOrId))
@@ -83,7 +83,7 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(nameOrId);
 
-        if(!nameOrId.Contains('/'))
+        if (!nameOrId.Contains('/'))
             nameOrId = GetFullId(nameOrId);
 
         if (!_store.State.WorkflowRegistrations.Contains(nameOrId))

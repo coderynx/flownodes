@@ -13,7 +13,7 @@ public class ContextService : IContextService
         _logger = logger;
         _tenantManagerGrain = grainFactory.GetGrain<ITenantManagerGrain>("tenant_manager");
         ResourceManager = grainFactory.GetGrain<IResourceManagerGrain>("resource_manager");
-        
+
         ClusterGrain = grainFactory.GetGrain<IClusterGrain>(0);
     }
 
@@ -27,7 +27,7 @@ public class ContextService : IContextService
     public async Task SetTenantAsync(string tenantName)
     {
         TenantName = tenantName;
-        
+
         TenantGrain = await _tenantManagerGrain.GetTenantAsync(tenantName);
         if (TenantGrain is null) throw new Exception($"Tenant {tenantName} not found");
 

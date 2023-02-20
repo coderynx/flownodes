@@ -25,7 +25,7 @@ public class TenantGrainTests
     public async Task UpdateConfiguration_ShouldUpdateConfiguration()
     {
         var grain = _cluster.GrainFactory.GetGrain<ITenantGrain>(_fixture.Create<string>());
-        
+
         await grain.UpdateMetadataAsync(_fixture.Create<Dictionary<string, string?>>());
 
         var metadata = await grain.GetMetadata();

@@ -3,7 +3,6 @@ using Flownodes.ApiGateway.Services;
 using Flownodes.Shared.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Orleans.Configuration;
-using OrleansCodeGen.Orleans.Runtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,7 +53,8 @@ app.MapGet("/api/cluster", async ([FromServices] IClusterClient clusterClient) =
     return await grain.GetClusterInformation();
 });
 
-app.MapGet("/api/tenant/{tenantName}/resource/{resourceName}", async ([FromServices] IEnvironmentService environmentService,
+app.MapGet("/api/tenant/{tenantName}/resource/{resourceName}", async (
+    [FromServices] IEnvironmentService environmentService,
     string tenantName, string resourceName) =>
 {
     var manager = environmentService.GetResourceManagerGrain();

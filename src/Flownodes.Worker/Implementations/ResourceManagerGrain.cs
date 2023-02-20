@@ -10,6 +10,7 @@ namespace Flownodes.Worker.Implementations;
 public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 {
     private readonly IGrainFactory _grainFactory;
+    private readonly ITenantManagerGrain _tenantManager;
     private readonly ILogger<ResourceManagerGrain> _logger;
     private readonly IPersistentState<ResourceManagerPersistence> _persistence;
 
@@ -20,7 +21,13 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _logger = logger;
         _persistence = persistence;
         _grainFactory = grainFactory;
-        _grainFactory.GetGrain<IAlertManagerGrain>("alerter");
+        
+        _tenantManager = _grainFactory.GetGrain<ITenantManagerGrain>("tenant_manager");
+    }
+
+    private async ValueTask<bool> IsTenantRegistered(string tenantName)
+    {
+        return await _tenantManager.IsTenantRegistered(tenantName);
     }
 
     public async ValueTask<Resource?> GetResourceSummary(string tenantName, string resourceName)
@@ -35,7 +42,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
         var summary = await grain.GetPoco();
 
-        _logger.LogDebug("Retrieved resource summary of resource {ResourceName} of tenant {TenantName}", resourceName, tenantName);
+        _logger.LogDebug("Retrieved resource summary of resource {ResourceName} of tenant {TenantName}", resourceName,
+            tenantName);
         return summary;
     }
 
@@ -46,7 +54,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var grains = _persistence.State.Registrations
             .Where(x => x.TenantName.Equals(tenantName))
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>());
-        
+
         foreach (var grain in grains)
         {
             var summary = await grain.GetPoco();
@@ -66,7 +74,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (!_persistence.State.Registrations
                 .Any(x => x.TenantName.Equals(tenantName) && x.ResourceName.Equals(resourceName)))
         {
-            _logger.LogError("Could not find a resource {ResourceName} of tenant {TenantName}", resourceName, tenantName);
+            _logger.LogError("Could not find a resource {ResourceName} of tenant {TenantName}", resourceName,
+                tenantName);
             return default;
         }
 
@@ -97,11 +106,12 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     }
 
     public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string tenantName, string resourceName,
-        ResourceConfigurationStore configurationStore) where TResourceGrain : IResourceGrain
+        string behaviorId, Dictionary<string, object?>? configuration = null,
+        Dictionary<string, string?>? metadata = null) where TResourceGrain : IResourceGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
-        ArgumentNullException.ThrowIfNull(configurationStore);
+        ArgumentException.ThrowIfNullOrEmpty(behaviorId);
 
         if (_persistence.State.Registrations
             .Any(x => x.TenantName.Equals(tenantName) && x.ResourceName.Equals(resourceName)))
@@ -114,11 +124,16 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         // TODO: Verify if singleton is needed.
         if (Attribute.IsDefined(typeof(TResourceGrain), typeof(SingletonResourceAttribute))
             && _persistence.State.IsKindRegistered(kind))
-        {
             throw new Exception($"Singleton resource of Kind {kind} already exists");
-        }
 
+        var configurationStore = new ResourceConfigurationStore
+        {
+            Properties = configuration ?? new Dictionary<string, object?>(),
+            BehaviourId = behaviorId
+        };
         await grain.UpdateConfigurationAsync(configurationStore);
+
+        if (metadata is not null) await grain.UpdateMetadataAsync(metadata);
 
         _persistence.State.AddRegistration(tenantName, resourceName, grain.GetGrainId(), kind);
         await _persistence.WriteStateAsync();
