@@ -28,8 +28,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
 
-        var registration = _persistence.State.Registrations
-            .SingleOrDefault(x => x.TenantName.Equals(tenantName) && x.ResourceName.Equals(resourceName));
+        var registration = _persistence.State.GetRegistration(tenantName, resourceName);
         if (registration is null) return default;
 
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
@@ -44,8 +43,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         var summaries = new List<Resource>();
 
-        var grains = _persistence.State.Registrations
-            .Where(x => x.TenantName.Equals(tenantName))
+        var grains = _persistence.State
+            .GetRegistrationsOfTenant(tenantName)
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>());
 
         foreach (var grain in grains)
@@ -82,8 +81,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
 
-        var registration = _persistence.State.Registrations
-            .FirstOrDefault(x => x.TenantName.Equals(tenantName) && x.ResourceName.Equals(resourceName));
+        var registration = _persistence.State.GetRegistration(tenantName, resourceName);
 
         if (registration is null)
         {
