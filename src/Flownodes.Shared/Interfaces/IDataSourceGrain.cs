@@ -6,7 +6,7 @@ namespace Flownodes.Shared.Interfaces;
 [GenerateSerializer]
 public sealed record DataSourceResult
 {
-    public DataSourceResult(object inputObj)
+    public DataSourceResult(object? inputObj)
     {
         JsonString = JsonSerializer.Serialize(inputObj);
     }
