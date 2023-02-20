@@ -25,10 +25,10 @@ public class TenantGrain : Grain, ITenantGrain
         _logger.LogInformation("Updated metadata of tenant {TenantName}", Name);
     }
 
-    public async ValueTask<Dictionary<string, string?>> GetMetadataAsync()
+    public ValueTask<Dictionary<string, string?>> GetMetadataAsync()
     {
         _logger.LogDebug("Retrieving metadata of tenant {TenantName}", Name);
-        return _metadata.State;
+        return ValueTask.FromResult(_metadata.State);
     }
 
     public async Task ClearMetadataAsync()

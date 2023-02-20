@@ -51,14 +51,14 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
         return ValueTask.FromResult<IWorkflowGrain?>(grain);
     }
 
-    public async ValueTask<IList<IWorkflowGrain>> GetWorkflowsAsync()
+    public ValueTask<IList<IWorkflowGrain>> GetWorkflowsAsync()
     {
         var workflows = _store.State.WorkflowRegistrations
             .Select(registration => _grainFactory.GetGrain<IWorkflowGrain>(registration))
             .ToList();
 
         _logger.LogDebug("Retrieved all workflows of tenant {WorkflowManagerId}", Id);
-        return workflows;
+        return ValueTask.FromResult<IList<IWorkflowGrain>>(workflows);
     }
 
     public async ValueTask<IWorkflowGrain> CreateWorkflowAsync(string nameOrId, string workflowJson)

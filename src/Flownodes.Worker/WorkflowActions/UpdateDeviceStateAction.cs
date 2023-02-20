@@ -1,3 +1,4 @@
+using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
 using RulesEngine.Actions;
 using RulesEngine.Models;
@@ -20,6 +21,7 @@ public class UpdateDeviceStateAction : ActionBase
         var state = context.GetContext<Dictionary<string, object?>>("deviceState");
 
         var grain = await _resourceManager.GetResourceAsync<IDeviceGrain>(tenantName, deviceName);
+        if (grain is null) throw new ResourceNotFoundException(tenantName, deviceName);
         await grain.UpdateStateAsync(state);
         return ValueTask.CompletedTask;
     }

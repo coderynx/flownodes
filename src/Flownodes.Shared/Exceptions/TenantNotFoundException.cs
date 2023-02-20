@@ -4,6 +4,5 @@ public class TenantNotFoundException : Exception
 {
     public TenantNotFoundException(string tenantName) : base($"Tenant {tenantName} not found")
     {
-        
     }
 }

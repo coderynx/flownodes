@@ -24,6 +24,8 @@ public sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 
     public async ValueTask<DataSourceResult> GetData(string actionId, Dictionary<string, object?>? parameters = null)
     {
+        if (Behaviour is null) throw new NullReferenceException("Behaviour should not be null");
+
         var data = await Behaviour.GetDataAsync(actionId, parameters);
         return new DataSourceResult(data);
     }

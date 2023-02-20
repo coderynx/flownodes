@@ -33,14 +33,14 @@ public class TenantManagerGrain : ITenantManagerGrain
         return default;
     }
 
-    public async ValueTask<IList<ITenantGrain>> GetTenantsAsync()
+    public ValueTask<IList<ITenantGrain>> GetTenantsAsync()
     {
         var tenants = _registrations.State
             .Select(registration => _grainFactory.GetGrain<ITenantGrain>(registration))
             .ToList();
 
         _logger.LogDebug("Retrieved all tenants");
-        return tenants;
+        return ValueTask.FromResult<IList<ITenantGrain>>(tenants);
     }
 
     public async ValueTask<ITenantGrain> CreateTenantAsync(string name, Dictionary<string, string?>? metadata = null)
@@ -49,7 +49,7 @@ public class TenantManagerGrain : ITenantManagerGrain
 
         if (await IsTenantRegistered(name))
             throw new TenantAlreadyRegisteredException(name);
-        
+
         _registrations.State.Add(name);
         await _registrations.WriteStateAsync();
 

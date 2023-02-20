@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using Flownodes.Shared.Attributes;
 using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
@@ -57,7 +56,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return summaries.AsReadOnly();
     }
 
-    public async ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string tenantName, string resourceName)
+    public ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string tenantName, string resourceName)
         where TResourceGrain : IResourceGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
@@ -73,16 +72,15 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var grain = _grainFactory.GetGrain<TResourceGrain>($"{tenantName}/{resourceName}");
 
         _logger.LogDebug("Retrieved resource {ResourceName} of tenant {TenantName}", resourceName, tenantName);
-        return grain;
+        return ValueTask.FromResult<TResourceGrain?>(grain);
     }
 
-    public async ValueTask<IResourceGrain?> GetGenericResourceAsync(string tenantName, string resourceName)
+    public ValueTask<IResourceGrain?> GetGenericResourceAsync(string tenantName, string resourceName)
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
 
         var registration = _persistence.State.GetRegistration(tenantName, resourceName);
-
         if (registration is null)
         {
             _logger.LogError("Could not find resource {ResourceName} of tenant {TenantName}", resourceName, tenantName);
@@ -92,7 +90,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
 
         _logger.LogDebug("Retrieved resource {ResourceName} of tenant {TenantName}", resourceName, tenantName);
-        return grain;
+        return ValueTask.FromResult<IResourceGrain?>(grain);
     }
 
     public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string tenantName, string resourceName,
@@ -109,11 +107,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var id = $"{tenantName}/{resourceName}";
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
         var kind = await grain.GetKind();
-        
+
         // TODO: Further investigation for singleton resource is needed.
         if (_persistence.State.IsSingletonResourceRegistered<TResourceGrain>(kind))
             throw new SingletonResourceAlreadyRegistered(tenantName, resourceName);
-        
+
         await grain.UpdateConfigurationAsync(configuration, behaviorId);
 
         if (metadata is not null) await grain.UpdateMetadataAsync(metadata);

@@ -11,7 +11,7 @@ namespace Flownodes.Worker.Implementations;
 [GenerateSerializer]
 internal class WorkflowConfiguration
 {
-    [Id(0)] public string WorkflowJson { get; set; }
+    [Id(0)] public string? WorkflowJson { get; set; }
 }
 
 internal class WorkflowGrain : Grain, IWorkflowGrain

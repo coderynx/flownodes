@@ -22,6 +22,8 @@ public static partial class Program
     private static void ConfigureAppConfiguration(IConfigurationBuilder builder)
     {
         var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        if (appPath is null) throw new NullReferenceException("Application path should not be null");
+
         builder.SetBasePath(appPath)
             .AddJsonFile("configuration.json", true);
     }

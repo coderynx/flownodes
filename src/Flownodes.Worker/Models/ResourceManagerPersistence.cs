@@ -43,7 +43,7 @@ public sealed class ResourceManagerPersistence
             .Where(x => x.TenantName.Equals(tenantName))
             .ToList();
     }
-    
+
     public bool IsSingletonResourceRegistered<TResourceGrain>(string kind) where TResourceGrain : IResourceGrain
     {
         return Attribute.IsDefined(typeof(TResourceGrain), typeof(SingletonResourceAttribute))
@@ -53,9 +53,9 @@ public sealed class ResourceManagerPersistence
     public bool IsResourceRegistered(string tenantName, string resourceName)
     {
         return Registrations
-            .Any(x => x.TenantName.Equals(tenantName) &&x.ResourceName.Equals(resourceName));
+            .Any(x => x.TenantName.Equals(tenantName) && x.ResourceName.Equals(resourceName));
     }
-    
+
     public bool IsKindRegistered(string kind)
     {
         return Registrations.Any(x => x.Kind.Equals(kind));

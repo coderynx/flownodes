@@ -44,7 +44,6 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     protected override async Task OnStateChangedAsync(Dictionary<string, object?> newState)
     {
         await Behaviour?.OnStateChangeAsync(newState, GetResourceContext())!;
-
         Logger.LogInformation("Applied new state for device {DeviceId}", Id);
     }
 
