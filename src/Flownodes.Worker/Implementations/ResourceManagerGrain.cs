@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Flownodes.Shared.Attributes;
+using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
 using Flownodes.Worker.Models;
@@ -10,7 +11,6 @@ namespace Flownodes.Worker.Implementations;
 public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 {
     private readonly IGrainFactory _grainFactory;
-    private readonly ITenantManagerGrain _tenantManager;
     private readonly ILogger<ResourceManagerGrain> _logger;
     private readonly IPersistentState<ResourceManagerPersistence> _persistence;
 
@@ -21,13 +21,6 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _logger = logger;
         _persistence = persistence;
         _grainFactory = grainFactory;
-        
-        _tenantManager = _grainFactory.GetGrain<ITenantManagerGrain>("tenant_manager");
-    }
-
-    private async ValueTask<bool> IsTenantRegistered(string tenantName)
-    {
-        return await _tenantManager.IsTenantRegistered(tenantName);
     }
 
     public async ValueTask<Resource?> GetResourceSummary(string tenantName, string resourceName)
@@ -71,8 +64,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
 
-        if (!_persistence.State.Registrations
-                .Any(x => x.TenantName.Equals(tenantName) && x.ResourceName.Equals(resourceName)))
+        if (!_persistence.State.IsResourceRegistered(tenantName, resourceName))
         {
             _logger.LogError("Could not find a resource {ResourceName} of tenant {TenantName}", resourceName,
                 tenantName);
@@ -113,25 +105,18 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
         ArgumentException.ThrowIfNullOrEmpty(behaviorId);
 
-        if (_persistence.State.Registrations
-            .Any(x => x.TenantName.Equals(tenantName) && x.ResourceName.Equals(resourceName)))
-            throw new InvalidOperationException($"Resource with ID {resourceName} already exists");
+        if (_persistence.State.IsResourceRegistered(tenantName, resourceName))
+            throw new ResourceAlreadyRegisteredException(tenantName, resourceName);
 
         var id = $"{tenantName}/{resourceName}";
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
         var kind = await grain.GetKind();
-
-        // TODO: Verify if singleton is needed.
-        if (Attribute.IsDefined(typeof(TResourceGrain), typeof(SingletonResourceAttribute))
-            && _persistence.State.IsKindRegistered(kind))
-            throw new Exception($"Singleton resource of Kind {kind} already exists");
-
-        var configurationStore = new ResourceConfigurationStore
-        {
-            Properties = configuration ?? new Dictionary<string, object?>(),
-            BehaviourId = behaviorId
-        };
-        await grain.UpdateConfigurationAsync(configurationStore);
+        
+        // TODO: Further investigation for singleton resource is needed.
+        if (_persistence.State.IsSingletonResourceRegistered<TResourceGrain>(kind))
+            throw new SingletonResourceAlreadyRegistered(tenantName, resourceName);
+        
+        await grain.UpdateConfigurationAsync(configuration, behaviorId);
 
         if (metadata is not null) await grain.UpdateMetadataAsync(metadata);
 
@@ -147,11 +132,9 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
 
-        var registration = _persistence.State.Registrations
-            .FirstOrDefault(x => x.TenantName.Equals(tenantName) && x.ResourceName.Equals(resourceName));
-
+        var registration = _persistence.State.GetRegistration(tenantName, resourceName);
         if (registration is null)
-            throw new InvalidOperationException($"Resource {resourceName} of tenant {tenantName} does not exist");
+            throw new ResourceNotFoundException(tenantName, resourceName);
 
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
         await grain.SelfRemoveAsync();
@@ -164,8 +147,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async Task RemoveAllResourcesAsync(string tenantName)
     {
-        var grains = _persistence.State.Registrations
-            .Where(x => x.TenantName.Equals(tenantName))
+        var grains = _persistence.State
+            .GetRegistrationsOfTenant(tenantName)
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>());
 
         foreach (var grain in grains) await grain.SelfRemoveAsync();

@@ -1,3 +1,5 @@
+using Flownodes.Shared.Attributes;
+using Flownodes.Shared.Interfaces;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Models;
@@ -29,6 +31,31 @@ public sealed class ResourceManagerPersistence
         Registrations.Add(new ResourceRegistration(tenantId, resourceId, grainId, kind));
     }
 
+    public ResourceRegistration? GetRegistration(string tenantName, string resourceName)
+    {
+        return Registrations
+            .FirstOrDefault(x => x.TenantName.Equals(tenantName) && x.ResourceName.Equals(resourceName));
+    }
+
+    public IEnumerable<ResourceRegistration> GetRegistrationsOfTenant(string tenantName)
+    {
+        return Registrations
+            .Where(x => x.TenantName.Equals(tenantName))
+            .ToList();
+    }
+    
+    public bool IsSingletonResourceRegistered<TResourceGrain>(string kind) where TResourceGrain : IResourceGrain
+    {
+        return Attribute.IsDefined(typeof(TResourceGrain), typeof(SingletonResourceAttribute))
+               && IsKindRegistered(kind);
+    }
+
+    public bool IsResourceRegistered(string tenantName, string resourceName)
+    {
+        return Registrations
+            .Any(x => x.TenantName.Equals(tenantName) &&x.ResourceName.Equals(resourceName));
+    }
+    
     public bool IsKindRegistered(string kind)
     {
         return Registrations.Any(x => x.Kind.Equals(kind));

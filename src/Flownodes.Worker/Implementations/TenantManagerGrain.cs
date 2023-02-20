@@ -1,3 +1,4 @@
+using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
 using Orleans.Runtime;
 
@@ -18,18 +19,18 @@ public class TenantManagerGrain : ITenantManagerGrain
         _grainFactory = grainFactory;
     }
 
-    public ValueTask<ITenantGrain?> GetTenantAsync(string name)
+    public async ValueTask<ITenantGrain?> GetTenantAsync(string name)
     {
-        if (_registrations.State.Contains(name))
+        if (await IsTenantRegistered(name))
         {
             var grain = _grainFactory.GetGrain<ITenantGrain>(name);
 
             _logger.LogDebug("Retrieved tenant with ID {Id}", name);
-            return ValueTask.FromResult<ITenantGrain?>(grain);
+            return grain;
         }
 
         _logger.LogError("Could not retrieve tenant with ID {Id}", name);
-        return ValueTask.FromResult<ITenantGrain?>(null);
+        return default;
     }
 
     public async ValueTask<IList<ITenantGrain>> GetTenantsAsync()
@@ -42,10 +43,13 @@ public class TenantManagerGrain : ITenantManagerGrain
         return tenants;
     }
 
-    public async ValueTask<ITenantGrain?> CreateTenantAsync(string name, Dictionary<string, string?>? metadata = null)
+    public async ValueTask<ITenantGrain> CreateTenantAsync(string name, Dictionary<string, string?>? metadata = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 
+        if (await IsTenantRegistered(name))
+            throw new TenantAlreadyRegisteredException(name);
+        
         _registrations.State.Add(name);
         await _registrations.WriteStateAsync();
 
@@ -55,10 +59,10 @@ public class TenantManagerGrain : ITenantManagerGrain
         return grain;
     }
 
-    public async ValueTask<bool> IsTenantRegistered(string tenantName)
+    public ValueTask<bool> IsTenantRegistered(string tenantName)
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
-        return _registrations.State.Contains(tenantName);
+        return ValueTask.FromResult(_registrations.State.Contains(tenantName));
     }
 
     public Task RemoveTenantAsync(string name)

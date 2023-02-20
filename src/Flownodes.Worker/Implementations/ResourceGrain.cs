@@ -124,6 +124,13 @@ public abstract class ResourceGrain : Grain
         await StoreConfigurationAsync();
     }
 
+    public async Task UpdateConfigurationAsync(Dictionary<string, object?>? properties, string behaviorId)
+    {
+        Configuration.Properties = properties ?? new Dictionary<string, object?>();
+        Configuration.BehaviourId = behaviorId;
+        await StoreConfigurationAsync();
+    }
+    
     public virtual async Task UpdateConfigurationAsync(ResourceConfigurationStore configurationStore)
     {
         ArgumentNullException.ThrowIfNull(configurationStore);
