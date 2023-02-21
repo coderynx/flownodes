@@ -1,7 +1,5 @@
 using Carter;
-using Flownodes.ApiGateway;
 using Flownodes.ApiGateway.Mediator.Requests;
-using Flownodes.ApiGateway.Services;
 using Orleans.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,12 +27,6 @@ builder.Services.AddOrleansClient(clientBuilder =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAuthorization();
-builder.Services.Configure<EnvironmentOptions>(options =>
-{
-    options.AlertManagerName = Environment.GetEnvironmentVariable("ALERT_MANAGER_NAME") ?? "alert_manager";
-    options.ResourceManagerName = Environment.GetEnvironmentVariable("RESOURCE_MANAGER_NAME") ?? "resource_manager";
-});
-builder.Services.AddSingleton<IEnvironmentService, EnvironmentService>();
 builder.Services.AddMediatR(config => { config.RegisterServicesFromAssembly(typeof(GetTenantRequest).Assembly); });
 builder.Services.AddCarter();
 

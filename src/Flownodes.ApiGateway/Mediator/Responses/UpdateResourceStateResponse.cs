@@ -17,5 +17,5 @@ public record UpdateResourceStateResponse : Response
 
     public string TenantName { get; }
     public string ResourceName { get; }
-    public IDictionary<string, object?> State { get; }
+    public IDictionary<string, object?>? State { get; }
 }
