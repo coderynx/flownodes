@@ -3,4 +3,5 @@ using MediatR;
 
 namespace Flownodes.ApiGateway.Mediator.Requests;
 
-public sealed record CreateTenantRequest(string TenantName, IDictionary<string, string?>? Metadata = null) : IRequest<CreateTenantResponse>;
+public sealed record CreateTenantRequest
+    (string TenantName, IDictionary<string, string?>? Metadata = null) : IRequest<CreateTenantResponse>;

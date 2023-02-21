@@ -7,13 +7,13 @@ namespace Flownodes.ApiGateway.Mediator.Handlers;
 
 public class GetClusterInfoHandler : IRequestHandler<GetClusterInfoRequest, GetClusterInfoResponse>
 {
+    private readonly IClusterGrain _cluster;
+
     public GetClusterInfoHandler(IGrainFactory grainFactory)
     {
         _cluster = grainFactory.GetGrain<IClusterGrain>(0);
     }
 
-    private readonly IClusterGrain _cluster;
-    
     public async Task<GetClusterInfoResponse> Handle(GetClusterInfoRequest request, CancellationToken cancellationToken)
     {
         try

@@ -5,7 +5,7 @@ namespace Flownodes.Shared.Models;
 [GenerateSerializer]
 public class ResourceConfigurationStore
 {
-    [Id(0)] public Dictionary<string, object?> Properties { get; set; } = new ();
+    [Id(0)] public Dictionary<string, object?> Properties { get; set; } = new();
     [Id(1)] public string? BehaviourId { get; set; }
 
     public object? this[string key]

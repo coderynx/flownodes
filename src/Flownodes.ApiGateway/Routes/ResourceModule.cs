@@ -1,7 +1,6 @@
 using Carter;
 using Flownodes.ApiGateway.Extensions;
 using Flownodes.ApiGateway.Mediator.Requests;
-using Flownodes.ApiGateway.Mediator.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +8,6 @@ namespace Flownodes.ApiGateway.Routes;
 
 public class ResourceModule : ICarterModule
 {
-
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapGet("api/tenants/{tenantName}/resources/{resourceName}",
@@ -34,7 +32,8 @@ public class ResourceModule : ICarterModule
             .WithDisplayName("Get resources");
 
         app.MapPut("api/tenants/{tenantName}/resources/{resourceName}",
-                async ([FromServices] IMediator mediator, string tenantName, string resourceName, IDictionary<string, object?> state) =>
+                async ([FromServices] IMediator mediator, string tenantName, string resourceName,
+                    IDictionary<string, object?> state) =>
                 {
                     var request = new UpdateResourceStateRequest(tenantName, resourceName, state);
                     var response = await mediator.Send(request);

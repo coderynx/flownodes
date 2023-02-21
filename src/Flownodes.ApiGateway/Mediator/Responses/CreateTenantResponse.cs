@@ -12,7 +12,7 @@ public sealed record CreateTenantResponse : Response
     {
         TenantName = tenantName;
     }
-    
+
     public string TenantName { get; }
     public IDictionary<string, string?>? Metadata { get; }
 }

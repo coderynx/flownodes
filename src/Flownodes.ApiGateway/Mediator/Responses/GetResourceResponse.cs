@@ -1,16 +1,15 @@
-using Swashbuckle.AspNetCore.SwaggerGen;
-
 namespace Flownodes.ApiGateway.Mediator.Responses;
 
 public sealed record GetResourceResponse : Response
 {
-    public GetResourceResponse(string tenantName, string resourceName,
+    public GetResourceResponse(string tenantName, string resourceName, string? behaviorId = null,
         IDictionary<string, string?>? metadata = null,
         IDictionary<string, object?>? configuration = null,
-        IDictionary<string, object?> state = null)
+        IDictionary<string, object?>? state = null)
     {
         TenantName = tenantName;
         ResourceName = resourceName;
+        BehaviorId = behaviorId;
         Metadata = metadata;
         Configuration = configuration;
         State = state;
@@ -24,6 +23,7 @@ public sealed record GetResourceResponse : Response
 
     public string TenantName { get; }
     public string ResourceName { get; }
+    public string? BehaviorId { get; }
     public IDictionary<string, string?>? Metadata { get; }
     public IDictionary<string, object?>? Configuration { get; }
     public IDictionary<string, object?>? State { get; }

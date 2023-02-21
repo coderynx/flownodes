@@ -8,13 +8,13 @@ namespace Flownodes.ApiGateway.Mediator.Handlers;
 
 public class CreateTenantHandler : IRequestHandler<CreateTenantRequest, CreateTenantResponse>
 {
+    private readonly ITenantManagerGrain _tenantManager;
+
     public CreateTenantHandler(IGrainFactory grainFactory)
     {
         _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>("tenant_manager");
     }
 
-    private readonly ITenantManagerGrain _tenantManager;
-    
     public async Task<CreateTenantResponse> Handle(CreateTenantRequest request, CancellationToken cancellationToken)
     {
         try

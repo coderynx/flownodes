@@ -8,12 +8,12 @@ public sealed record GetTenantResponse : Response
         Metadata = metadata;
         Resources = resources;
     }
-    
+
     public GetTenantResponse(string tenantName, string message) : base(message)
     {
         TenantName = tenantName;
     }
-    
+
     public string TenantName { get; }
     public IDictionary<string, string?>? Metadata { get; }
     public IList<string>? Resources { get; }
