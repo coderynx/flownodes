@@ -1,4 +1,5 @@
 using Carter;
+using Flownodes.ApiGateway.Extensions;
 using Flownodes.ApiGateway.Mediator.Requests;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -9,22 +10,20 @@ public class TenantModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/tenants/{tenantName}", async ([FromServices] IMediator mediator, string tenantName) =>
+        app.MapGet("api/tenants/{tenantName}", async ([FromServices] IMediator mediator, string tenantName) =>
             {
                 var request = new GetTenantRequest(tenantName);
                 var response = await mediator.Send(request);
-                
-                return response.IsSuccess is false ? Results.NotFound(response) : Results.Ok(response);
+                return response.GetResult();
             })
             .WithName("CreateTenant")
             .WithDisplayName("Create tenant");
 
-        app.MapPost("/tenants", async ([FromServices] IMediator mediator, [FromBody] CreateTenantRequest request) =>
-        {
-            var response = await mediator.Send(request);
-            
-            return response.IsSuccess is false ? Results.BadRequest(response) : Results.Ok(response);
-        })
+        app.MapPost("api/tenants", async ([FromServices] IMediator mediator, [FromBody] CreateTenantRequest request) =>
+            {
+                var response = await mediator.Send(request);
+                return response.GetResult();
+            })
             .WithName("GetTenant")
             .WithDisplayName("Get tenant");
     }

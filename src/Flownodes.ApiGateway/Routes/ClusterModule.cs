@@ -1,4 +1,5 @@
 using Carter;
+using Flownodes.ApiGateway.Extensions;
 using Flownodes.ApiGateway.Mediator.Requests;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -9,11 +10,10 @@ public class ClusterModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/cluster", async ([FromServices] IMediator mediator) =>
+        app.MapGet("api/cluster", async ([FromServices] IMediator mediator) =>
             {
                 var response = await mediator.Send(new GetClusterInfoRequest());
-
-                return response.IsSuccess is false ? Results.BadRequest(response) : Results.Ok(response);
+                return response.GetResult();
             })
             .WithName("GetClusterInfo")
             .WithDisplayName("Get cluster information");
