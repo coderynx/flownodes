@@ -43,7 +43,7 @@ public class TenantManagerGrain : ITenantManagerGrain
         return ValueTask.FromResult<IList<ITenantGrain>>(tenants);
     }
 
-    public async ValueTask<ITenantGrain> CreateTenantAsync(string name, Dictionary<string, string?>? metadata = null)
+    public async ValueTask<ITenantGrain> CreateTenantAsync(string name, IDictionary<string, string?>? metadata = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 

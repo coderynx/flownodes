@@ -66,6 +66,12 @@ public interface IResourceGrain : IGrainWithStringKey
     ValueTask<ResourceMetadataStore> GetMetadata();
 
     /// <summary>
+    /// Retrieves the stored resource metadata properties.
+    /// </summary>
+    /// <returns>The metadata properties of the resource.</returns>
+    ValueTask<Dictionary<string, string?>> GetMetadataProperties();
+
+    /// <summary>
     ///     Clears the resource metadata.
     /// </summary>
     /// <returns></returns>
@@ -78,6 +84,12 @@ public interface IResourceGrain : IGrainWithStringKey
     ValueTask<ResourceConfigurationStore> GetConfiguration();
 
     /// <summary>
+    /// Retrieves the stored configuration properties of the resource.
+    /// </summary>
+    /// <returns>The configuration properties of the resource</returns>
+    ValueTask<Dictionary<string, object?>> GetConfigurationProperties();
+
+    /// <summary>
     ///     Clears the resource configuration.
     /// </summary>
     Task ClearConfigurationAsync();
@@ -85,8 +97,14 @@ public interface IResourceGrain : IGrainWithStringKey
     /// <summary>
     ///     Gets the stored state of the resource.
     /// </summary>
-    /// <returns>Thea stored state of the resource.</returns>
+    /// <returns>The stored state of the resource.</returns>
     ValueTask<ResourceStateStore> GetState();
+
+    /// <summary>
+    /// Gets the stored state properties of the resource.
+    /// </summary>
+    /// <returns>The stored state of the resource.</returns>
+    ValueTask<Dictionary<string, object?>> GetStateProperties();
 
     /// <summary>
     ///     Clears the state from the resource store.

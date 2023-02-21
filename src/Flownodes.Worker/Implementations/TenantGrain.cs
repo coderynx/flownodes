@@ -25,12 +25,6 @@ public class TenantGrain : Grain, ITenantGrain
         _logger.LogInformation("Updated metadata of tenant {TenantName}", Name);
     }
 
-    public ValueTask<Dictionary<string, string?>> GetMetadataAsync()
-    {
-        _logger.LogDebug("Retrieving metadata of tenant {TenantName}", Name);
-        return ValueTask.FromResult(_metadata.State);
-    }
-
     public async Task ClearMetadataAsync()
     {
         await _metadata.ClearStateAsync();
@@ -39,7 +33,7 @@ public class TenantGrain : Grain, ITenantGrain
 
     public ValueTask<Dictionary<string, string?>> GetMetadata()
     {
-        _logger.LogDebug("Retrieved configuration of tenant {TenantName}", Name);
+        _logger.LogDebug("Retrieved metadata of tenant {TenantName}", Name);
         return ValueTask.FromResult(_metadata.State);
     }
 }

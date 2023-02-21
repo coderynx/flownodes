@@ -1,7 +1,7 @@
+using Carter;
 using Flownodes.ApiGateway;
+using Flownodes.ApiGateway.Mediator.Requests;
 using Flownodes.ApiGateway.Services;
-using Flownodes.Shared.Interfaces;
-using Microsoft.AspNetCore.Mvc;
 using Orleans.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +35,8 @@ builder.Services.Configure<EnvironmentOptions>(options =>
     options.ResourceManagerName = Environment.GetEnvironmentVariable("RESOURCE_MANAGER_NAME") ?? "resource_manager";
 });
 builder.Services.AddSingleton<IEnvironmentService, EnvironmentService>();
+builder.Services.AddMediatR(config => { config.RegisterServicesFromAssembly(typeof(GetTenantRequest).Assembly); });
+builder.Services.AddCarter();
 
 var app = builder.Build();
 
@@ -47,25 +49,5 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 
-app.MapGet("/api/cluster", async ([FromServices] IClusterClient clusterClient) =>
-{
-    var grain = clusterClient.GetGrain<IClusterGrain>(0);
-    return await grain.GetClusterInformation();
-});
-
-app.MapGet("/api/tenant/{tenantName}/resource/{resourceName}", async (
-    [FromServices] IEnvironmentService environmentService,
-    string tenantName, string resourceName) =>
-{
-    var manager = environmentService.GetResourceManagerGrain();
-    return await manager.GetResourceSummary(tenantName, resourceName);
-});
-
-app.MapGet("/api/tenant/{tenantName}/resources", async ([FromServices] IGrainFactory grainFactory, string tenantName) =>
-{
-    var resourceManager = grainFactory.GetGrain<IResourceManagerGrain>("resource_manager");
-    var summaries = await resourceManager.GetAllResourceSummaries(tenantName);
-    return summaries;
-});
-
+app.MapCarter();
 app.Run();

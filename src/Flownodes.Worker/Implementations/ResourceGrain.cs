@@ -1,3 +1,4 @@
+using System.Numerics;
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
@@ -89,16 +90,34 @@ public abstract class ResourceGrain : Grain
         return ValueTask.FromResult(Metadata);
     }
 
+    public ValueTask<Dictionary<string, string?>> GetMetadataProperties()
+    {
+        Logger.LogInformation("Retrieved metadata properties of resource {ResourceId}", Id);
+        return ValueTask.FromResult(Metadata.Properties);
+    }
+    
     public ValueTask<ResourceConfigurationStore> GetConfiguration()
     {
         Logger.LogInformation("Retrieved configuration of resource {ResourceId}", Id);
         return ValueTask.FromResult(Configuration);
     }
 
-    public virtual ValueTask<ResourceStateStore> GetState()
+    public ValueTask<Dictionary<string, object?>> GetConfigurationProperties()
+    {
+        Logger.LogInformation("Retrieved configuration properties of resource {ResourceId}", Id);
+        return ValueTask.FromResult(Configuration.Properties);
+    }
+    
+    public ValueTask<ResourceStateStore> GetState()
     {
         Logger.LogDebug("Retrieved state of resource {ResourceId}", Id);
         return ValueTask.FromResult(State);
+    }
+
+    public ValueTask<Dictionary<string, object?>> GetStateProperties()
+    {
+        Logger.LogDebug("Retrieved state properties of resource {ResourceId}", Id);
+        return ValueTask.FromResult(State.Properties);
     }
 
     protected ResourceContext GetResourceContext()
