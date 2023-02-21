@@ -13,8 +13,8 @@ public class GetResourcesHandler : IRequestHandler<GetResourcesRequest, GetResou
 
     public GetResourcesHandler(IGrainFactory grainFactory)
     {
-        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>("tenant_manager");
-        _resourceManager = grainFactory.GetGrain<IResourceManagerGrain>("resource_manager");
+        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(Globals.TenantManagerName);
+        _resourceManager = grainFactory.GetGrain<IResourceManagerGrain>(Globals.ResourceManagerName);
     }
 
     public async Task<GetResourcesResponse> Handle(GetResourcesRequest request, CancellationToken cancellationToken)

@@ -12,7 +12,7 @@ public class CreateTenantHandler : IRequestHandler<CreateTenantRequest, CreateTe
 
     public CreateTenantHandler(IGrainFactory grainFactory)
     {
-        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>("tenant_manager");
+        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(Globals.TenantManagerName);
     }
 
     public async Task<CreateTenantResponse> Handle(CreateTenantRequest request, CancellationToken cancellationToken)

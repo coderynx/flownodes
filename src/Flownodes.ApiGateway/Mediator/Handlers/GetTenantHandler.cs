@@ -13,8 +13,8 @@ public class GetTenantHandler : IRequestHandler<GetTenantRequest, GetTenantRespo
 
     public GetTenantHandler(IGrainFactory clusterClient)
     {
-        _tenantManager = clusterClient.GetGrain<ITenantManagerGrain>("tenant_manager");
-        _resourceManager = clusterClient.GetGrain<IResourceManagerGrain>("resource_manager");
+        _tenantManager = clusterClient.GetGrain<ITenantManagerGrain>(Globals.TenantManagerName);
+        _resourceManager = clusterClient.GetGrain<IResourceManagerGrain>(Globals.ResourceManagerName);
     }
 
 
