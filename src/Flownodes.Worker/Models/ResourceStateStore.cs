@@ -1,9 +1,9 @@
 using System.Text.Json.Serialization;
 
-namespace Flownodes.Shared.Models;
+namespace Flownodes.Worker.Models;
 
 [GenerateSerializer]
-public class ResourceStateStore
+internal sealed class ResourceStateStore
 {
     [Id(1)] private Dictionary<string, object?> _properties = new();
     [Id(0)] public DateTime? LastUpdate { get; set; } = DateTime.Now;

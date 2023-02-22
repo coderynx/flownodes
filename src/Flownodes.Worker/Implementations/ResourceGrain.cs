@@ -2,6 +2,7 @@ using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
 using Flownodes.Worker.Extensions;
+using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Orleans.Concurrency;
 using Orleans.Runtime;
@@ -9,7 +10,7 @@ using Orleans.Runtime;
 namespace Flownodes.Worker.Implementations;
 
 [Reentrant]
-public abstract class ResourceGrain : Grain
+internal abstract class ResourceGrain : Grain
 {
     private readonly IPersistentState<ResourceConfigurationStore> _configurationStore;
     private readonly IPersistentState<ResourceMetadataStore> _metadataStore;
@@ -58,7 +59,11 @@ public abstract class ResourceGrain : Grain
     public ValueTask<Resource> GetPoco()
     {
         Logger.LogDebug("Retrieved POCO of resource {ResourceId}", Id);
-        return ValueTask.FromResult(new Resource(Id, CreatedAt, Configuration, Metadata, State));
+        return ValueTask.FromResult(new Resource(Id, CreatedAt, Configuration.Properties,
+            Configuration.BehaviourId,
+            Metadata.Properties,
+            State.Properties,
+            State.LastUpdate));
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
@@ -83,46 +88,22 @@ public abstract class ResourceGrain : Grain
         return ValueTask.FromResult(Id);
     }
 
-    public ValueTask<ResourceMetadataStore> GetMetadata()
+    public ValueTask<(Dictionary<string, string?> Proprties, DateTime CreatedAt)> GetMetadata()
     {
         Logger.LogInformation("Retrieved metadata of resource {ResourceId}", Id);
-        return ValueTask.FromResult(Metadata);
+        return ValueTask.FromResult((Metadata.Properties, Metadata.CreatedAt));
     }
 
-    public ValueTask<Dictionary<string, string?>> GetMetadataProperties()
-    {
-        Logger.LogInformation("Retrieved metadata properties of resource {ResourceId}", Id);
-        return ValueTask.FromResult(Metadata.Properties);
-    }
-
-    public ValueTask<ResourceConfigurationStore> GetConfiguration()
+    public ValueTask<(Dictionary<string, object?> Properties, string? BehaviorId)> GetConfiguration()
     {
         Logger.LogInformation("Retrieved configuration of resource {ResourceId}", Id);
-        return ValueTask.FromResult(Configuration);
+        return ValueTask.FromResult((Configuration.Properties, Configuration.BehaviourId));
     }
 
-    public ValueTask<Dictionary<string, object?>> GetConfigurationProperties()
+    public ValueTask<(Dictionary<string, object?> Properties, DateTime? LastUpdate)> GetState()
     {
-        Logger.LogInformation("Retrieved configuration properties of resource {ResourceId}", Id);
-        return ValueTask.FromResult(Configuration.Properties);
-    }
-
-    public ValueTask<string?> GetBehaviorId()
-    {
-        Logger.LogInformation("Retrieved behavior ID of resource {@ResourceId}", Id);
-        return ValueTask.FromResult(BehaviourId);
-    }
-
-    public ValueTask<ResourceStateStore> GetState()
-    {
-        Logger.LogDebug("Retrieved state of resource {ResourceId}", Id);
-        return ValueTask.FromResult(State);
-    }
-
-    public ValueTask<Dictionary<string, object?>> GetStateProperties()
-    {
-        Logger.LogDebug("Retrieved state properties of resource {ResourceId}", Id);
-        return ValueTask.FromResult(State.Properties);
+        Logger.LogDebug("Retrieved state of resource {@ResourceId}", Id);
+        return ValueTask.FromResult((State.Properties, State.LastUpdate));
     }
 
     protected ResourceContext GetResourceContext()
@@ -152,13 +133,6 @@ public abstract class ResourceGrain : Grain
     {
         Configuration.Properties = properties ?? new Dictionary<string, object?>();
         Configuration.BehaviourId = behaviorId;
-        await StoreConfigurationAsync();
-    }
-
-    public virtual async Task UpdateConfigurationAsync(ResourceConfigurationStore configurationStore)
-    {
-        ArgumentNullException.ThrowIfNull(configurationStore);
-        Configuration = configurationStore;
 
         if (BehaviourId is not null)
         {

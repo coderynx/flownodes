@@ -1,9 +1,9 @@
 using Newtonsoft.Json;
 
-namespace Flownodes.Shared.Models;
+namespace Flownodes.Worker.Models;
 
 [GenerateSerializer]
-public class ResourceMetadataStore
+internal sealed class ResourceMetadataStore
 {
     [Id(0)] public Dictionary<string, string?> Properties { get; set; } = new();
 

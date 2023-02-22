@@ -1,9 +1,9 @@
 using System.Text.Json.Serialization;
 
-namespace Flownodes.Shared.Models;
+namespace Flownodes.Worker.Models;
 
 [GenerateSerializer]
-public class ResourceConfigurationStore
+internal sealed class ResourceConfigurationStore
 {
     [Id(0)] public Dictionary<string, object?> Properties { get; set; } = new();
     [Id(1)] public string? BehaviourId { get; set; }

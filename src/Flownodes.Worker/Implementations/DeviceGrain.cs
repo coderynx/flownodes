@@ -1,12 +1,12 @@
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared.Interfaces;
-using Flownodes.Shared.Models;
+using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
+internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
     public DeviceGrain(IPluginProvider pluginProvider, ILogger<DeviceGrain> logger,
         IEnvironmentService environmentService,
@@ -34,7 +34,11 @@ public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     protected override Task OnBehaviourUpdateAsync()
     {
         // Check if method is overriden
-        var isOverridden = Behaviour?.GetType().GetMethod("OnUpdateAsync")?.DeclaringType == Behaviour?.GetType();
+        var isOverridden = Behaviour?
+            .GetType()
+            .GetMethod("OnUpdateAsync")?.DeclaringType == Behaviour?
+            .GetType();
+
         if (isOverridden)
             RegisterTimer(ExecuteTimerBehaviourAsync, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
 

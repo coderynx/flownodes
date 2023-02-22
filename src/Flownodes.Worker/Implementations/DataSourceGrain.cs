@@ -1,12 +1,12 @@
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared.Interfaces;
-using Flownodes.Shared.Models;
+using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-public sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
+internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
     public DataSourceGrain(ILogger<DataSourceGrain> logger, IEnvironmentService environmentService,
         IPluginProvider pluginProvider,

@@ -15,8 +15,9 @@ public class TelegramAlerterDriver : IAlerterDriver
 
     public TelegramAlerterDriver(IConfiguration configuration, ILogger<TelegramAlerterDriver> logger)
     {
-        _bot = new TelegramBotClient(configuration["TelegramAlerter:Token"]);
-        _chatId = configuration["TelegramAlerter:ChatId"];
+        var token = configuration["Telegram:Token"] ?? throw new NullReferenceException("Token cannot be null");
+        _chatId = configuration["Telegram:ChatId"] ?? throw new Exception("Chat is cannot be null");
+        _bot = new TelegramBotClient(token);
         _logger = logger;
     }
 

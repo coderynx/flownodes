@@ -27,10 +27,11 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
         if (resource is null)
             return new GetResourceResponse(request.TenantName, request.ResourceName, "Resource not found");
 
-        return new GetResourceResponse(request.TenantName, request.ResourceName,
-            await resource.GetBehaviorId(),
-            await resource.GetMetadataProperties(),
-            await resource.GetConfigurationProperties(),
-            await resource.GetStateProperties());
+        var configuration = await resource.GetConfiguration();
+        var metadata = await resource.GetMetadata();
+        var state = await resource.GetState();
+
+        return new GetResourceResponse(request.TenantName, request.ResourceName, metadata.CreatedAt,
+            configuration.BehaviorId, metadata.Proprties, configuration.Properties, state.Properties, state.LastUpdate);
     }
 }

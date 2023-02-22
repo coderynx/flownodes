@@ -38,6 +38,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="Flownodes.Cluster.Node.Tests"/>
+        <InternalsVisibleTo Include="Flownodes.Tests"/>
     </ItemGroup>
+
 </Project>

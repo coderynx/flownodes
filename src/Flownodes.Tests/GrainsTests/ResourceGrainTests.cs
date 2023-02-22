@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
-using Flownodes.Shared.Models;
 using Flownodes.Tests.Configuration;
 using Flownodes.Tests.Interfaces;
 using FluentAssertions;
@@ -23,23 +22,16 @@ public class ResourceGrainTests
         _fixture = new Fixture();
     }
 
-    private ResourceConfigurationStore ProvideResourceConfiguration()
-    {
-        var configuration = _fixture.Create<ResourceConfigurationStore>();
-        configuration.BehaviourId = "TestDeviceBehavior";
-        return configuration;
-    }
-
     [Fact]
     public async Task ShouldUpdateConfigurationAsync()
     {
         var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(_fixture.Create<string>());
 
-        var configuration = ProvideResourceConfiguration();
+        var configuration = _fixture.Create<Dictionary<string, object?>>();
         await grain.UpdateConfigurationAsync(configuration);
 
         var newConfiguration = await grain.GetConfiguration();
-        newConfiguration.Should().BeEquivalentTo(configuration);
+        newConfiguration.Properties.Should().BeEquivalentTo(configuration);
     }
 
     [Fact]
@@ -47,10 +39,10 @@ public class ResourceGrainTests
     {
         var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(_fixture.Create<string>());
 
-        var configuration = _fixture.Create<ResourceConfigurationStore>();
-        configuration.BehaviourId = "InvalidBehaviour";
+        var configuration = _fixture.Create<Dictionary<string, object?>>();
+        var behaviorId = _fixture.Create<string>();
 
-        var act = async () => { await grain.UpdateConfigurationAsync(configuration); };
+        var act = async () => { await grain.UpdateConfigurationAsync(configuration, behaviorId); };
         await act.Should().ThrowAsync<ArgumentNullException>();
     }
 
@@ -63,7 +55,7 @@ public class ResourceGrainTests
         await grain.UpdateMetadataAsync(metadata);
 
         var newMetadata = await grain.GetMetadata();
-        newMetadata.Properties.Should().BeEquivalentTo(metadata);
+        newMetadata.Proprties.Should().BeEquivalentTo(metadata);
     }
 
     [Fact]

@@ -35,8 +35,8 @@ public interface IResourceGrain : IGrainWithStringKey
     /// <summary>
     ///     Configures the resource.
     /// </summary>
-    /// <param name="configurationStore">The resource configuration to store.</param>
-    Task UpdateConfigurationAsync(ResourceConfigurationStore configurationStore);
+    /// <param name="configuration">The resource configuration to store.</param>
+    Task UpdateConfigurationAsync(Dictionary<string, object?> configuration);
 
     /// <summary>
     ///     Updates the resource current configuration.
@@ -45,13 +45,6 @@ public interface IResourceGrain : IGrainWithStringKey
     /// <param name="behaviorId">The behavior id to set.</param>
     /// <returns></returns>
     Task UpdateConfigurationAsync(Dictionary<string, object?>? properties, string behaviorId);
-
-    /// <summary>
-    ///     Updates the resource current configuration.
-    /// </summary>
-    /// <param name="properties">The properties to set to the resource.</param>
-    /// <returns></returns>
-    Task UpdateConfigurationAsync(Dictionary<string, object?> properties);
 
     /// <summary>
     ///     Updates the state of the resource by storing the new state and applying it.
@@ -63,13 +56,7 @@ public interface IResourceGrain : IGrainWithStringKey
     ///     Gets the stored resource metadata.
     /// </summary>
     /// <returns>The stored metadata.</returns>
-    ValueTask<ResourceMetadataStore> GetMetadata();
-
-    /// <summary>
-    ///     Retrieves the stored resource metadata properties.
-    /// </summary>
-    /// <returns>The metadata properties of the resource.</returns>
-    ValueTask<Dictionary<string, string?>> GetMetadataProperties();
+    ValueTask<(Dictionary<string, string?> Proprties, DateTime CreatedAt)> GetMetadata();
 
     /// <summary>
     ///     Clears the resource metadata.
@@ -81,13 +68,7 @@ public interface IResourceGrain : IGrainWithStringKey
     ///     Gets the stored configuration of the resource.
     /// </summary>
     /// <returns>The current resource configuration.</returns>
-    ValueTask<ResourceConfigurationStore> GetConfiguration();
-
-    /// <summary>
-    ///     Retrieves the stored configuration properties of the resource.
-    /// </summary>
-    /// <returns>The configuration properties of the resource</returns>
-    ValueTask<Dictionary<string, object?>> GetConfigurationProperties();
+    ValueTask<(Dictionary<string, object?> Properties, string? BehaviorId)> GetConfiguration();
 
     /// <summary>
     ///     Clears the resource configuration.
@@ -95,22 +76,10 @@ public interface IResourceGrain : IGrainWithStringKey
     Task ClearConfigurationAsync();
 
     /// <summary>
-    ///     Retrieves the resource behavior ID.
-    /// </summary>
-    /// <returns>The resource behavior ID.</returns>
-    ValueTask<string?> GetBehaviorId();
-
-    /// <summary>
     ///     Gets the stored state of the resource.
     /// </summary>
     /// <returns>The stored state of the resource.</returns>
-    ValueTask<ResourceStateStore> GetState();
-
-    /// <summary>
-    ///     Gets the stored state properties of the resource.
-    /// </summary>
-    /// <returns>The stored state of the resource.</returns>
-    ValueTask<Dictionary<string, object?>> GetStateProperties();
+    ValueTask<(Dictionary<string, object?> Properties, DateTime? LastUpdate)> GetState();
 
     /// <summary>
     ///     Clears the state from the resource store.

@@ -1,5 +1,5 @@
 using Flownodes.Shared.Interfaces;
-using Flownodes.Shared.Models;
+using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.V8;
@@ -7,7 +7,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-public sealed class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
+internal sealed class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
 {
     private readonly ILoggerFactory _loggerFactory;
     private readonly V8ScriptEngine _scriptEngine = new(V8ScriptEngineFlags.EnableTaskPromiseConversion);
