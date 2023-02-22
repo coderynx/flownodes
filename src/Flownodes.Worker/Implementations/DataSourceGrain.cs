@@ -9,14 +9,14 @@ namespace Flownodes.Worker.Implementations;
 public sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
     public DataSourceGrain(ILogger<DataSourceGrain> logger, IEnvironmentService environmentService,
-        IBehaviourProvider behaviourProvider,
+        IPluginProvider pluginProvider,
         [PersistentState("dataSourceConfigurationStore")]
         IPersistentState<ResourceConfigurationStore> configurationStore,
         [PersistentState("dataSourceMetadataStore")]
         IPersistentState<ResourceMetadataStore> metadataStore,
         [PersistentState("dataSourceStateStore")]
         IPersistentState<ResourceStateStore> stateStore)
-        : base(logger, environmentService, behaviourProvider, configurationStore, metadataStore, stateStore)
+        : base(logger, environmentService, pluginProvider, configurationStore, metadataStore, stateStore)
     {
     }
 

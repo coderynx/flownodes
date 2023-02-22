@@ -1,125 +1,120 @@
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using Flownodes.Sdk.Alerting;
+using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
-using Flownodes.Shared.Models;
-using Flownodes.Worker.Models;
-using MapsterMapper;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-public sealed class AlertManagerGrain : Grain, IAlertManagerGrain
-{
-    private readonly List<IAlerterDriver> _drivers = new();
-    private readonly ILogger<AlertManagerGrain> _logger;
-    private readonly IMapper _mapper;
-    private readonly IPersistentState<AlertManagerPersistence> _persistence;
-    private readonly IServiceProvider _serviceProvider;
+[GenerateSerializer]
+internal sealed record AlertRegistration([property: Id(0)] string TenantName, [property: Id(1)] string AlertName);
 
-    public AlertManagerGrain(ILogger<AlertManagerGrain> logger,
-        [PersistentState("alertManagerStore")] IPersistentState<AlertManagerPersistence> persistence,
-        IServiceProvider serviceProvider, IMapper mapper)
+internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
+{
+    private readonly IPersistentState<HashSet<AlertRegistration>> _alertRegistrations;
+    private readonly IGrainFactory _grainFactory;
+    private readonly ILogger<AlertManagerGrain> _logger;
+
+    public AlertManagerGrain(ILogger<AlertManagerGrain> logger, IGrainFactory grainFactory,
+        [PersistentState("alertRegistrations")]
+        IPersistentState<HashSet<AlertRegistration>> alertRegistrations)
     {
         _logger = logger;
-        _persistence = persistence;
-        _serviceProvider = serviceProvider;
-        _mapper = mapper;
+        _grainFactory = grainFactory;
+        _alertRegistrations = alertRegistrations;
     }
 
-    private string Id => this.GetPrimaryKeyString();
-
-    public async Task SetupAsync(params string[] alertDriverIds)
+    public async ValueTask<IAlertGrain> CreateAlertAsync(string tenantName, string targetObjectName,
+        AlertSeverity severity, string description, ISet<string> driverIds)
     {
-        if (alertDriverIds.Length > 0)
-        {
-            foreach (var alertDriverId in alertDriverIds)
-            {
-                var alertDriver = _serviceProvider.GetAutofacRoot().ResolveKeyed<IAlerterDriver>(alertDriverId);
-                _drivers.Add(alertDriver);
-                _persistence.State.DriversNames.Add(alertDriverId);
-                _logger.LogInformation("Loaded alerter driver {AlerterDriverId}", alertDriverId);
-            }
-
-            await _persistence.WriteStateAsync();
-        }
-
-        _logger.LogInformation("Alerter configured");
+        var alertName = Guid.NewGuid().ToString();
+        return await CreateAlertAsync(tenantName, alertName, targetObjectName, severity, description, driverIds);
     }
 
-    public async ValueTask<Alert> FireInfoAsync(string targetResourceId, string description)
+    public async ValueTask<IAlertGrain> CreateAlertAsync(string tenantName, string alertName, string targetObjectName,
+        AlertSeverity severity,
+        string description, ISet<string> driverIds)
     {
-        return await FireAlertAsync(targetResourceId, AlertSeverity.Informational, description);
+        if (_alertRegistrations.State.Any(x => x.TenantName.Equals(tenantName) && x.AlertName.Equals(alertName)))
+            throw new AlertAlreadyRegisteredException(tenantName, alertName);
+
+        var id = $"{tenantName}/{alertName}";
+        var grain = _grainFactory.GetGrain<IAlertGrain>(id);
+        await grain.InitializeAsync(targetObjectName, DateTime.Now, severity, description, driverIds);
+
+        var registration = await AddRegistrationAsync(tenantName, alertName);
+
+        _logger.LogInformation("Registered alert {@AlertRegistration}", registration);
+
+        return grain;
     }
 
-    public async ValueTask<Alert> FireWarningAsync(string targetResourceId, string description)
+    public ValueTask<IAlertGrain?> GetAlert(string tenantName, string alertName)
     {
-        return await FireAlertAsync(targetResourceId, AlertSeverity.Warning, description);
+        if (!_alertRegistrations.State.Any(x => x.TenantName.Equals(tenantName) && x.AlertName.Equals(alertName)))
+            return default;
+
+        var id = $"{tenantName}/{alertName}";
+        var grain = _grainFactory.GetGrain<IAlertGrain>(id);
+
+        _logger.LogDebug("Retrieved alert grain {@AlertGrainId}", id);
+        return ValueTask.FromResult<IAlertGrain?>(grain);
     }
 
-    public async ValueTask<Alert> FireErrorAsync(string targetResourceId, string description)
+    public ValueTask<HashSet<string>> GetAlertNames(string tenantName)
     {
-        return await FireAlertAsync(targetResourceId, AlertSeverity.Error, description);
+        ArgumentException.ThrowIfNullOrEmpty(tenantName);
+
+        var names = _alertRegistrations.State
+            .Where(x => x.TenantName.Equals(tenantName))
+            .Select(x => x.AlertName)
+            .ToHashSet();
+
+        return ValueTask.FromResult(names);
     }
 
-    public ValueTask<IEnumerable<Alert>> GetAlerts()
+    public ValueTask<HashSet<IAlertGrain>> GetAlerts(string tenantName)
     {
-        return ValueTask.FromResult<IEnumerable<Alert>>(_persistence.State.Registrations);
+        ArgumentException.ThrowIfNullOrEmpty(tenantName);
+
+        var alerts = _alertRegistrations.State
+            .Where(x => x.TenantName.Equals(tenantName))
+            .Select(x => _grainFactory.GetGrain<IAlertGrain>($"{x.TenantName}/{x.AlertName}"))
+            .ToHashSet();
+
+        return ValueTask.FromResult(alerts);
     }
 
-    public async Task ClearAlertsAsync()
+    public async Task RemoveAlertAsync(string tenantName, string alertName)
     {
-        _persistence.State.Registrations.Clear();
-        await _persistence.WriteStateAsync();
+        var registration = _alertRegistrations.State
+            .SingleOrDefault(x => x.TenantName.Equals(tenantName) && x.AlertName.Equals(alertName));
 
-        _logger.LogInformation("Cleared stored alerts of tenant {TenantId}", Id);
+        if (registration is null) throw new AlertNotFoundException(tenantName, alertName);
+
+        var grain = _grainFactory.GetGrain<IAlertGrain>(alertName);
+        await grain.ClearStateAsync();
+        _alertRegistrations.State.Remove(registration);
+
+        _logger.LogInformation("Removed alert {@AlertRegistration}", registration);
+    }
+
+    private async ValueTask<AlertRegistration> AddRegistrationAsync(string tenantName, string alertName)
+    {
+        var registration = new AlertRegistration(tenantName, alertName);
+        _alertRegistrations.State.Add(registration);
+        await _alertRegistrations.WriteStateAsync();
+        return registration;
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Alert manager of tenant {TenantId} activated", Id);
+        _logger.LogInformation("Alert manager activated");
         return base.OnActivateAsync(cancellationToken);
     }
 
     public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Alert manager of tenant {TenantId} deactivated for reason {Reason}", Id,
-            reason.Description);
+        _logger.LogInformation("Alert manager deactivated for reason {Reason}", reason.Description);
         return base.OnDeactivateAsync(reason, cancellationToken);
-    }
-
-    private void LoadDrivers()
-    {
-        if (_drivers.Count > 0) return;
-
-        // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-        foreach (var alertDriverId in _persistence.State.DriversNames)
-        {
-            var alertDriver = _serviceProvider.GetAutofacRoot().ResolveKeyed<IAlerterDriver>(alertDriverId);
-            _drivers.Add(alertDriver);
-        }
-
-        _logger.LogInformation("Drivers loaded");
-    }
-
-    private async ValueTask<Alert> FireAlertAsync(string targetResourceId, AlertSeverity severity,
-        string description)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(targetResourceId);
-        ArgumentException.ThrowIfNullOrEmpty(description);
-
-        LoadDrivers();
-
-        var alert = new Alert(Guid.NewGuid(), targetResourceId, severity, DateTime.Now, description);
-
-        var alertToFire = _mapper.Map<AlertToFire>(alert);
-        foreach (var driver in _drivers) await driver.SendAlertAsync(alertToFire);
-
-        _persistence.State.Registrations.Add(alert);
-        await _persistence.WriteStateAsync();
-
-        _logger.LogInformation("Dispatched alert {AlertId} to all drivers", alert.Id);
-
-        return alert;
     }
 }

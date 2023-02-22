@@ -1,6 +1,6 @@
 ﻿namespace Flownodes.Sdk.Alerting;
 
-public enum AlertToFireSeverity
+public enum AlertSeverity
 {
     Verbose,
     Informational,
@@ -9,11 +9,5 @@ public enum AlertToFireSeverity
     Critical
 }
 
-public record AlertToFire
-{
-    public Guid Id { get; init; }
-    public DateTime FiredAt { get; init; }
-    public AlertToFireSeverity Severity { get; init; }
-    public string TargetResourceId { get; init; }
-    public string Description { get; init; }
-}
+public record AlertToFire(string Id, DateTime FiredAt, AlertSeverity Severity, string TargetResourceId,
+    string Description);

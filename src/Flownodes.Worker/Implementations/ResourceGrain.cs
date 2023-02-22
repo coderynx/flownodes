@@ -11,21 +11,21 @@ namespace Flownodes.Worker.Implementations;
 [Reentrant]
 public abstract class ResourceGrain : Grain
 {
-    private readonly IBehaviourProvider _behaviourProvider;
     private readonly IPersistentState<ResourceConfigurationStore> _configurationStore;
     private readonly IPersistentState<ResourceMetadataStore> _metadataStore;
+    private readonly IPluginProvider _pluginProvider;
     private readonly IPersistentState<ResourceStateStore> _stateStore;
     protected readonly IEnvironmentService EnvironmentService;
     protected readonly ILogger<ResourceGrain> Logger;
     protected IBehaviour? Behaviour;
 
     protected ResourceGrain(ILogger<ResourceGrain> logger, IEnvironmentService environmentService,
-        IBehaviourProvider behaviourProvider, IPersistentState<ResourceConfigurationStore> configurationStore,
+        IPluginProvider pluginProvider, IPersistentState<ResourceConfigurationStore> configurationStore,
         IPersistentState<ResourceMetadataStore> metadataStore, IPersistentState<ResourceStateStore> stateStore)
     {
         Logger = logger;
         EnvironmentService = environmentService;
-        _behaviourProvider = behaviourProvider;
+        _pluginProvider = pluginProvider;
         _configurationStore = configurationStore;
         _metadataStore = metadataStore;
         _stateStore = stateStore;
@@ -162,7 +162,7 @@ public abstract class ResourceGrain : Grain
 
         if (BehaviourId is not null)
         {
-            Behaviour = _behaviourProvider.GetBehaviour(BehaviourId);
+            Behaviour = _pluginProvider.GetBehaviour(BehaviourId);
             ArgumentNullException.ThrowIfNull(Behaviour);
 
             var context = GetResourceContext();

@@ -13,14 +13,14 @@ public sealed class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
     private readonly V8ScriptEngine _scriptEngine = new(V8ScriptEngineFlags.EnableTaskPromiseConversion);
 
     public ScriptResourceGrain(ILogger<ScriptResourceGrain> logger, IEnvironmentService environmentService,
-        IBehaviourProvider behaviourProvider, ILoggerFactory loggerFactory,
+        IPluginProvider pluginProvider, ILoggerFactory loggerFactory,
         [PersistentState("scriptResourceConfigurationStore")]
         IPersistentState<ResourceConfigurationStore> configurationStore,
         [PersistentState("scriptResourceMetadataStore")]
         IPersistentState<ResourceMetadataStore> metadataStore,
         [PersistentState("scriptResourceStateStore")]
         IPersistentState<ResourceStateStore> stateStore) :
-        base(logger, environmentService, behaviourProvider, configurationStore, metadataStore, stateStore)
+        base(logger, environmentService, pluginProvider, configurationStore, metadataStore, stateStore)
     {
         _loggerFactory = loggerFactory;
     }

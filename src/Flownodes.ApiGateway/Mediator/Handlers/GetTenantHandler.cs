@@ -22,7 +22,7 @@ public class GetTenantHandler : IRequestHandler<GetTenantRequest, GetTenantRespo
     {
         var tenant = await _tenantManager.GetTenantAsync(request.TenantName);
         if (tenant is null) return new GetTenantResponse(request.TenantName, "Tenant not found");
-        
+
         var resources = await _resourceManager.GetAllResourceSummaries(request.TenantName);
 
         return new GetTenantResponse(request.TenantName, resources.Select(x => x.Id).ToList(),

@@ -8,14 +8,14 @@ namespace Flownodes.Worker.Implementations;
 
 public sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
-    public DeviceGrain(IBehaviourProvider behaviourProvider, ILogger<DeviceGrain> logger,
+    public DeviceGrain(IPluginProvider pluginProvider, ILogger<DeviceGrain> logger,
         IEnvironmentService environmentService,
         [PersistentState("deviceConfigurationStore")]
         IPersistentState<ResourceConfigurationStore> configurationStore,
         [PersistentState("deviceMetadataStore")]
         IPersistentState<ResourceMetadataStore> metadataStore,
         [PersistentState("deviceStateStore")] IPersistentState<ResourceStateStore> stateStore) :
-        base(logger, environmentService, behaviourProvider, configurationStore, metadataStore, stateStore)
+        base(logger, environmentService, pluginProvider, configurationStore, metadataStore, stateStore)
     {
     }
 

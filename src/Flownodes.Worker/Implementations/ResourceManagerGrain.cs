@@ -49,7 +49,6 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         foreach (var grain in grains)
         {
             var summary = await grain.GetPoco();
-            if (summary is null) continue;
             summaries.Add(summary);
         }
 

@@ -31,7 +31,7 @@ public static partial class Program
     private static void ConfigureServices(IServiceCollection services)
     {
         services.AddOptions();
-        services.AddSingleton<IBehaviourProvider, BehaviourProvider>();
+        services.AddSingleton<IPluginProvider, PluginProvider>();
 
         services.AddHttpClient();
 

@@ -1,11 +1,17 @@
+using Flownodes.Sdk.Alerting;
+
 namespace Flownodes.Shared.Interfaces;
 
 public interface IAlertManagerGrain : IGrainWithStringKey
 {
-    ValueTask<Alert> FireInfoAsync(string targetResourceId, string description);
-    ValueTask<Alert> FireWarningAsync(string targetResourceId, string description);
-    ValueTask<Alert> FireErrorAsync(string targetResourceId, string description);
-    Task SetupAsync(params string[] alertDriverIds);
-    Task ClearAlertsAsync();
-    ValueTask<IEnumerable<Alert>> GetAlerts();
+    ValueTask<IAlertGrain> CreateAlertAsync(string tenantName, string targetObjectName,
+        AlertSeverity severity, string description, ISet<string> driverIds);
+
+    ValueTask<IAlertGrain> CreateAlertAsync(string tenantName, string alertName, string targetObjectName,
+        AlertSeverity severity, string description, ISet<string> driverIds);
+
+    ValueTask<IAlertGrain?> GetAlert(string tenantName, string alertName);
+    Task RemoveAlertAsync(string tenantName, string alertName);
+    ValueTask<HashSet<string>> GetAlertNames(string tenantName);
+    ValueTask<HashSet<IAlertGrain>> GetAlerts(string tenantName);
 }
