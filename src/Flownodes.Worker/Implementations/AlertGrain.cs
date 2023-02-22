@@ -16,13 +16,12 @@ internal sealed record AlertPersistence
     [Id(2)] public AlertSeverity Severity { get; set; }
 
     [Id(3)] public string? Description { get; set; }
-    [Id(4)] public ISet<string> AlerterDrivers { get; set; } = new HashSet<string>();
+    [Id(4)] public ISet<string> DriverIds { get; set; } = new HashSet<string>();
 }
 
 internal class AlertGrain : Grain, IAlertGrain
 {
     private readonly IList<IAlerterDriver> _drivers = new List<IAlerterDriver>();
-
     private readonly ILogger<AlertGrain> _logger;
     private readonly IPersistentState<AlertPersistence> _persistence;
     private readonly IPluginProvider _pluginProvider;
@@ -40,28 +39,46 @@ internal class AlertGrain : Grain, IAlertGrain
     private string TenantName => Id.Split('/')[0];
     private string AlertName => Id.Split('/')[1];
 
+    private AlertPersistence State => _persistence.State;
+
     public async Task InitializeAsync(string targetObjectName, DateTime firedAt, AlertSeverity severity,
-        string description, ISet<string> alertDrivers)
+        string description, ISet<string> drivers)
     {
+        ArgumentException.ThrowIfNullOrEmpty(targetObjectName);
+        ArgumentException.ThrowIfNullOrEmpty(description);
+
         _persistence.State.TargetObjectName = targetObjectName;
         _persistence.State.FiredAt = firedAt;
         _persistence.State.Severity = severity;
         _persistence.State.Description = description;
-        _persistence.State.AlerterDrivers = alertDrivers;
+        _persistence.State.DriverIds = drivers;
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Initialized alert grain {@AlertId}", Id);
     }
 
-    public async Task FireAsync()
-    {
-        LoadDrivers();
 
-        if (_persistence.State.TargetObjectName is null || _persistence.State.Description is null)
+    public ValueTask<(string TargetObjectName, DateTime FiredAt, AlertSeverity Severity, string Description,
+        ISet<string> Drivers)> GetState()
+    {
+        if (State.TargetObjectName is null || State.Description is null)
             throw new InvalidAlertException(TenantName, AlertName);
 
-        await SendToDriversAsync(_persistence.State.TargetObjectName, _persistence.State.FiredAt,
-            _persistence.State.Severity, _persistence.State.Description);
+        var state = (State.TargetObjectName, State.FiredAt, State.Severity, State.Description, State.DriverIds);
+
+        _logger.LogDebug("Retrieved state of alert {@AlertId}", Id);
+        return ValueTask.FromResult(state);
+    }
+
+    public async Task FireAsync()
+    {
+        if (_drivers.Count is 0)
+            LoadDrivers();
+
+        if (State.TargetObjectName is null || State.Description is null)
+            throw new InvalidAlertException(TenantName, AlertName);
+
+        await SendToDriversAsync(State.TargetObjectName, State.FiredAt, State.Severity, State.Description);
     }
 
     public async Task ClearStateAsync()
@@ -72,7 +89,7 @@ internal class AlertGrain : Grain, IAlertGrain
 
     private void LoadDrivers()
     {
-        foreach (var alertDriverId in _persistence.State.AlerterDrivers)
+        foreach (var alertDriverId in _persistence.State.DriverIds)
         {
             var alertDriver = _pluginProvider.GetAlerterDriver(alertDriverId);
             if (alertDriver is null)
