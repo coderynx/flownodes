@@ -15,6 +15,7 @@ using NSubstitute;
 using Orleans.Hosting;
 using Orleans.TestingHost;
 using Xunit;
+using ContainerBuilder = Autofac.ContainerBuilder;
 
 namespace Flownodes.Tests.Configuration;
 
