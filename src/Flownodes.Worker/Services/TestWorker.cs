@@ -18,17 +18,12 @@ public class TestWorker : BackgroundService
         var resourceManager = _grainFactory.GetGrain<IResourceManagerGrain>("resource_manager");
         var alertManager = _grainFactory.GetGrain<IAlertManagerGrain>("alert_manager");
 
-        var alert = await alertManager.CreateAlertAsync("default", "cluster", AlertSeverity.Informational, "Flownodes atrted"
-        , new HashSet<string> { "telegram" } );
-        await alert.FireAsync();
-        
         await tenantManager.CreateTenantAsync("default");
 
-        var configuration = new Dictionary<string, object?>
-        {
-            { "lightId", 1 }
-        };
+        var configuration = new Dictionary<string, object?> { { "lightId", 1 } };
 
-        await resourceManager.DeployResourceAsync<IDeviceGrain>("default", "hue_light_1", "hue_light", configuration);
+        var hueLight =
+            await resourceManager.DeployResourceAsync<IDeviceGrain>("default", "hue_light_1", "hue_light",
+                configuration);
     }
 }

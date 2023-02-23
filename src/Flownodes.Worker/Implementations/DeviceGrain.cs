@@ -27,6 +27,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 
         await Behaviour?.OnUpdateAsync(context)!;
         State.Properties = context.State; // TODO: Evaluate if there's a better way.
+        await StoreStateAsync();
 
         Logger.LogDebug("Updated state for device {Id}: {State}", Id, State.Properties);
     }

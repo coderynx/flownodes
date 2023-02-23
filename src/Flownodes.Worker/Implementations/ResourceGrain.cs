@@ -191,19 +191,19 @@ internal abstract class ResourceGrain : Grain
         Logger.LogInformation("Cleared state of resource {ResourceId}", Id);
     }
 
-    private async Task StoreConfigurationAsync()
+    protected async Task StoreConfigurationAsync()
     {
         await _configurationStore.WriteStateAsync();
         Logger.LogInformation("Updated configuration of resource {ResourceId}", Id);
     }
 
-    private async Task StoreMetadataAsync()
+    protected async Task StoreMetadataAsync()
     {
         await _metadataStore.WriteStateAsync();
         Logger.LogInformation("Updated metadata of resource {ResourceId}", Id);
     }
 
-    private async Task StoreStateAsync()
+    protected async Task StoreStateAsync()
     {
         await _stateStore.WriteStateAsync();
         Logger.LogInformation("Updated state of resource {ResourceId}", Id);
