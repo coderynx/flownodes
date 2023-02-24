@@ -1,4 +1,3 @@
-using Flownodes.Sdk.Alerting;
 using Flownodes.Shared.Interfaces;
 
 namespace Flownodes.Worker.Services;

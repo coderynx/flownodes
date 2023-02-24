@@ -13,6 +13,7 @@ internal abstract class ResourceGrain : Grain
 {
     private readonly IPersistentState<ResourceConfigurationStore> _configurationStore;
     private readonly IPersistentState<ResourceMetadataStore> _metadataStore;
+
     private readonly IPluginProvider _pluginProvider;
     private readonly IPersistentState<ResourceStateStore> _stateStore;
     protected readonly IEnvironmentService EnvironmentService;
@@ -33,36 +34,20 @@ internal abstract class ResourceGrain : Grain
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
     protected string Id => this.GetPrimaryKeyString();
+    protected string TenantName => Id.Split('/')[0];
+    protected string ResourceName => Id.Split('/')[1];
     protected string? BehaviourId => Configuration.BehaviourId;
     protected DateTime CreatedAt => Metadata.CreatedAt;
     protected IResourceManagerGrain ResourceManagerGrain => EnvironmentService.GetResourceManagerGrain();
-
-    protected ResourceMetadataStore Metadata
-    {
-        get => _metadataStore.State;
-        private set => _metadataStore.State = value;
-    }
-
-    protected ResourceConfigurationStore Configuration
-    {
-        get => _configurationStore.State;
-        private set => _configurationStore.State = value;
-    }
-
-    protected ResourceStateStore State
-    {
-        get => _stateStore.State;
-        private set => _stateStore.State = value;
-    }
+    protected ResourceMetadataStore Metadata => _metadataStore.State;
+    protected ResourceConfigurationStore Configuration => _configurationStore.State;
+    protected ResourceStateStore State => _stateStore.State;
 
     public ValueTask<Resource> GetPoco()
     {
         Logger.LogDebug("Retrieved POCO of resource {ResourceId}", Id);
-        return ValueTask.FromResult(new Resource(Id, CreatedAt, Configuration.Properties,
-            Configuration.BehaviourId,
-            Metadata.Properties,
-            State.Properties,
-            State.LastUpdate));
+        return ValueTask.FromResult(new Resource(Id, TenantName, ResourceName, Kind, BehaviourId, CreatedAt,
+            Configuration.Properties, Metadata.Properties, State.Properties, State.LastUpdate));
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
@@ -202,6 +187,7 @@ internal abstract class ResourceGrain : Grain
 
     protected async Task StoreStateAsync()
     {
+        // TODO: Decide when to store the resource state.
         await _stateStore.WriteStateAsync();
         Logger.LogInformation("Updated state of resource {ResourceId}", Id);
     }

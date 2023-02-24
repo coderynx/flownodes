@@ -16,7 +16,7 @@ internal sealed class ResourceMetadataStore
             Properties.Clear();
             return;
         }
-        
+
         Properties.MergeInPlace(properties);
     }
 }

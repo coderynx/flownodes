@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
 using Flownodes.Shared.Interfaces;
@@ -97,6 +98,23 @@ public class ResourceManagerTests
 
         // Assert.
         grain.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task SearchResourcesByTags_ShouldReturnResources()
+    {
+        // Arrange.
+        var manager = ProvideResourceManager();
+        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource_1", "TestDeviceBehavior");
+        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource_2", "TestDeviceBehavior");
+
+        // Act.
+        var result =
+            await manager.SearchResourcesByTags("tenant",
+                new HashSet<string> { "TesTDeviceBehavior", "dummy_resource" });
+
+        // Assert.
+        result.Should().HaveCount(2);
     }
 
     [Fact]

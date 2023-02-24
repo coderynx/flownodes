@@ -11,7 +11,22 @@ namespace Flownodes.ApiGateway.Routes;
 internal record DictionaryStringObject
 {
     [JsonConverter(typeof(DictionaryStringObjectJsonConverter))]
-    public Dictionary<string, object?> Properties { get; set; } = new();
+    public Dictionary<string, object?> Properties { get; } = new();
+}
+
+internal class TagsQuery
+{
+    public string[] Values { get; private init; } = Array.Empty<string>();
+
+    public static bool TryParse(string? value, out TagsQuery result)
+    {
+        result = new TagsQuery
+        {
+            Values = value?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>()
+        };
+
+        return true;
+    }
 }
 
 public class ResourceModule : ICarterModule
@@ -50,5 +65,16 @@ public class ResourceModule : ICarterModule
                 })
             .WithName("UpdateResourceState")
             .WithDisplayName("Update resource state");
+
+        app.MapGet("api/tenants/{tenantName}/resources/search/{tags}",
+                async ([FromServices] IMediator mediator, string tenantName, TagsQuery tags) =>
+                {
+                    var request = new SearchResourcesByTagsRequest(tenantName, tags.Values.ToHashSet());
+                    var response = await mediator.Send(request);
+
+                    return response.GetResult();
+                })
+            .WithName("SearchResourcesByTags")
+            .WithDisplayName("Search resources by tags");
     }
 }

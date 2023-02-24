@@ -92,6 +92,26 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return ValueTask.FromResult<IResourceGrain?>(grain);
     }
 
+    public ValueTask<IReadOnlyList<IResourceGrain>> SearchResourcesByTags(string tenantName, HashSet<string> tags)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(tenantName);
+
+        if (tags.Count is 0)
+            throw new ArgumentException("The tags set cannot be null");
+
+        var registrations = _persistence.State.Registrations
+            .Where(x => x.TenantName.Equals(tenantName))
+            .Where(x => x.Tags.Any(y => tags.Any(x => x.Equals(y))))
+            .ToList();
+
+        var resources = registrations
+            .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>())
+            .ToList();
+
+        _logger.LogDebug("Searched for resources of tenants {@TenantName} with tags {@Tags}", tenantName, tags);
+        return ValueTask.FromResult<IReadOnlyList<IResourceGrain>>(resources);
+    }
+
     public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string tenantName, string resourceName,
         string behaviorId, Dictionary<string, object?>? configuration = null,
         Dictionary<string, string?>? metadata = null) where TResourceGrain : IResourceGrain
@@ -115,7 +135,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         if (metadata is not null) await grain.UpdateMetadataAsync(metadata);
 
-        _persistence.State.AddRegistration(tenantName, resourceName, grain.GetGrainId(), kind);
+        var tags = new HashSet<string> { resourceName, behaviorId, kind };
+        _persistence.State.AddRegistration(tenantName, resourceName, grain.GetGrainId(), kind, tags);
         await _persistence.WriteStateAsync();
 
         _logger.LogInformation("Deployed resource {ResourceName} in tenant {TenantName}", resourceName, tenantName);

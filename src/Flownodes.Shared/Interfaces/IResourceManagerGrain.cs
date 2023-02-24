@@ -20,4 +20,5 @@ public interface IResourceManagerGrain : IGrainWithStringKey
     Task RemoveAllResourcesAsync(string tenantName);
     ValueTask<Resource?> GetResourceSummary(string tenantName, string resourceName);
     ValueTask<IResourceGrain?> GetGenericResourceAsync(string tenantName, string resourceName);
+    ValueTask<IReadOnlyList<IResourceGrain>> SearchResourcesByTags(string tenantName, HashSet<string> tags);
 }

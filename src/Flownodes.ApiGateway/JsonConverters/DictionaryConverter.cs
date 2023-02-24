@@ -15,29 +15,19 @@ public class DictionaryStringObjectJsonConverter : JsonConverter<Dictionary<stri
         ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
-        {
             throw new JsonException($"JsonTokenType was of type {reader.TokenType}, only objects are supported");
-        }
 
         var dictionary = new Dictionary<string, object?>();
         while (reader.Read())
         {
-            if (reader.TokenType == JsonTokenType.EndObject)
-            {
-                return dictionary;
-            }
+            if (reader.TokenType == JsonTokenType.EndObject) return dictionary;
 
             if (reader.TokenType != JsonTokenType.PropertyName)
-            {
                 throw new JsonException("JsonTokenType was not PropertyName");
-            }
 
             var propertyName = reader.GetString();
 
-            if (string.IsNullOrWhiteSpace(propertyName))
-            {
-                throw new JsonException("Failed to get property name");
-            }
+            if (string.IsNullOrWhiteSpace(propertyName)) throw new JsonException("Failed to get property name");
 
             reader.Read();
 
@@ -57,10 +47,7 @@ public class DictionaryStringObjectJsonConverter : JsonConverter<Dictionary<stri
         switch (reader.TokenType)
         {
             case JsonTokenType.String:
-                if (reader.TryGetDateTime(out var date))
-                {
-                    return date;
-                }
+                if (reader.TryGetDateTime(out var date)) return date;
 
                 return reader.GetString();
             case JsonTokenType.False:
@@ -76,9 +63,7 @@ public class DictionaryStringObjectJsonConverter : JsonConverter<Dictionary<stri
             case JsonTokenType.StartArray:
                 var list = new List<object?>();
                 while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
-                {
                     list.Add(ExtractValue(ref reader, options));
-                }
 
                 return list;
             case JsonTokenType.None:
