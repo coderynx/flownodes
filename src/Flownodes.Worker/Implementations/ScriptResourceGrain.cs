@@ -28,7 +28,7 @@ internal sealed class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
     public Task ExecuteAsync(Dictionary<string, object?>? parameters = null)
     {
         var context = GetScriptContext();
-        var code = Configuration["code"] as string;
+        var code = Configuration.Properties["code"] as string;
 
         _scriptEngine.AddHostObject("host", new HostFunctions());
         _scriptEngine.AddHostObject("context", context);

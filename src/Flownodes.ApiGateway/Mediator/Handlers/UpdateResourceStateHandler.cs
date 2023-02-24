@@ -28,15 +28,9 @@ public class UpdateResourceStateHandler : IRequestHandler<UpdateResourceStateReq
         if (resource is null)
             return new UpdateResourceStateResponse(request.TenantName, request.ResourceName, "Resource not found");
 
-        try
-        {
-            await resource.UpdateStateAsync((Dictionary<string, object?>)request.State);
+      
+            await resource.UpdateStateAsync(request.State);
             return new UpdateResourceStateResponse(request.TenantName, request.ResourceName, request.State);
-        }
-        catch
-        {
-            return new UpdateResourceStateResponse(request.TenantName, request.ResourceName,
-                "Could not update resource state");
-        }
+
     }
 }

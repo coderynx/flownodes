@@ -79,7 +79,7 @@ public interface IResourceGrain : IGrainWithStringKey
     ///     Gets the stored state of the resource.
     /// </summary>
     /// <returns>The stored state of the resource.</returns>
-    ValueTask<(Dictionary<string, object?> Properties, DateTime? LastUpdate)> GetState();
+    ValueTask<(Dictionary<string, object?> Properties, DateTime LastUpdate)> GetState();
 
     /// <summary>
     ///     Clears the state from the resource store.

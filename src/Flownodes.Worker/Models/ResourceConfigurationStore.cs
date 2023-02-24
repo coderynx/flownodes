@@ -1,50 +1,21 @@
-using System.Text.Json.Serialization;
+using Flownodes.Worker.Extensions;
 
 namespace Flownodes.Worker.Models;
 
 [GenerateSerializer]
 internal sealed class ResourceConfigurationStore
 {
-    [Id(0)] public Dictionary<string, object?> Properties { get; set; } = new();
+    [Id(0)] public Dictionary<string, object?> Properties { get; } = new();
     [Id(1)] public string? BehaviourId { get; set; }
 
-    public object? this[string key]
+    public void UpdateProperties(Dictionary<string, object?>? properties)
     {
-        get => Properties[key];
-        set => Properties[key] = value;
-    }
-
-    [JsonIgnore] public int Count => Properties.Count;
-
-    [JsonIgnore] public IEnumerable<string> Keys => Properties.Keys;
-
-    [JsonIgnore] public IEnumerable<object?> Values => Properties.Values;
-
-    public static ResourceConfigurationStore FromDictionary(Dictionary<string, object?> dictionary)
-    {
-        return new ResourceConfigurationStore
+        if (properties is null)
         {
-            Properties = dictionary
-        };
-    }
-
-    public void Add(string key, object? value)
-    {
-        Properties.Add(key, value);
-    }
-
-    public bool ContainsKey(string key)
-    {
-        return Properties.ContainsKey(key);
-    }
-
-    public bool Remove(string key)
-    {
-        return Properties.Remove(key);
-    }
-
-    public bool TryGetValue(string key, out object? value)
-    {
-        return Properties.TryGetValue(key, out value);
+            Properties.Clear();
+            return;
+        }
+        
+        Properties.MergeInPlace(properties);
     }
 }

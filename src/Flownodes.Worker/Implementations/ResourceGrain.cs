@@ -1,7 +1,6 @@
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
-using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Orleans.Concurrency;
@@ -100,7 +99,7 @@ internal abstract class ResourceGrain : Grain
         return ValueTask.FromResult((Configuration.Properties, Configuration.BehaviourId));
     }
 
-    public ValueTask<(Dictionary<string, object?> Properties, DateTime? LastUpdate)> GetState()
+    public ValueTask<(Dictionary<string, object?> Properties, DateTime LastUpdate)> GetState()
     {
         Logger.LogDebug("Retrieved state of resource {@ResourceId}", Id);
         return ValueTask.FromResult((State.Properties, State.LastUpdate));
@@ -125,13 +124,13 @@ internal abstract class ResourceGrain : Grain
 
     public async Task UpdateConfigurationAsync(Dictionary<string, object?>? configuration)
     {
-        Configuration.Properties = configuration ?? new Dictionary<string, object?>();
+        Configuration.UpdateProperties(configuration);
         await StoreConfigurationAsync();
     }
 
     public async Task UpdateConfigurationAsync(Dictionary<string, object?>? properties, string behaviorId)
     {
-        Configuration.Properties = properties ?? new Dictionary<string, object?>();
+        Configuration.UpdateProperties(properties);
         Configuration.BehaviourId = behaviorId;
 
         if (BehaviourId is not null)
@@ -158,18 +157,16 @@ internal abstract class ResourceGrain : Grain
         return Task.CompletedTask;
     }
 
-    public async Task UpdateStateAsync(Dictionary<string, object?> newState)
+    public async Task UpdateStateAsync(Dictionary<string, object?> state)
     {
-        State.Properties.MergeInPlace(newState);
-        State.LastUpdate = DateTime.Now;
-
-        await OnStateChangedAsync(newState);
-        await StoreStateAsync();
+        State.UpdateState(state);
+        // await StoreStateAsync();
+        await OnStateChangedAsync(state);
     }
 
     public virtual async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
     {
-        Metadata.Properties.MergeInPlace(metadata);
+        Metadata.UpdateProperties(metadata);
         await StoreMetadataAsync();
     }
 

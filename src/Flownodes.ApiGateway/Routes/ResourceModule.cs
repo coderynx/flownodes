@@ -1,10 +1,18 @@
+using System.Text.Json.Serialization;
 using Carter;
 using Flownodes.ApiGateway.Extensions;
+using Flownodes.ApiGateway.JsonConverters;
 using Flownodes.ApiGateway.Mediator.Requests;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Flownodes.ApiGateway.Routes;
+
+internal record DictionaryStringObject
+{
+    [JsonConverter(typeof(DictionaryStringObjectJsonConverter))]
+    public Dictionary<string, object?> Properties { get; set; } = new();
+}
 
 public class ResourceModule : ICarterModule
 {
@@ -31,11 +39,11 @@ public class ResourceModule : ICarterModule
             .WithName("GetResources")
             .WithDisplayName("Get resources");
 
-        app.MapPut("api/tenants/{tenantName}/resources/{resourceName}",
+        app.MapPut("api/tenants/{tenantName}/resources/{resourceName}/state",
                 async ([FromServices] IMediator mediator, string tenantName, string resourceName,
-                    IDictionary<string, object?> state) =>
+                    DictionaryStringObject state) =>
                 {
-                    var request = new UpdateResourceStateRequest(tenantName, resourceName, state);
+                    var request = new UpdateResourceStateRequest(tenantName, resourceName, state.Properties);
                     var response = await mediator.Send(request);
 
                     return response.GetResult();
