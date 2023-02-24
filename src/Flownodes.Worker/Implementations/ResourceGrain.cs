@@ -1,3 +1,4 @@
+using System.Linq.Dynamic.Core;
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
@@ -92,19 +93,9 @@ internal abstract class ResourceGrain : Grain
 
     protected ResourceContext GetResourceContext()
     {
-        return new ResourceContext
-        {
-            ServiceId = EnvironmentService.ServiceId,
-            ClusterId = EnvironmentService.ClusterId,
-            TenantId = "", // TODO: Add tenant id.
-            ResourceId = Id,
-            CreatedAt = Metadata.CreatedAt,
-            BehaviorId = Configuration.BehaviourId,
-            Configuration = Configuration.Properties,
-            Metadata = Metadata.Properties,
-            State = State.Properties,
-            LastStateUpdate = State.LastUpdate
-        };
+        return new ResourceContext(EnvironmentService.ServiceId, EnvironmentService.ClusterId, TenantName, ResourceName,
+            Metadata.CreatedAt, Configuration.BehaviourId, Configuration.Properties, Metadata.Properties,
+            State.Properties);
     }
 
     public async Task UpdateConfigurationAsync(Dictionary<string, object?>? configuration)

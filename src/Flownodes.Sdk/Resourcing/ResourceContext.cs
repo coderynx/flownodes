@@ -5,10 +5,25 @@ namespace Flownodes.Sdk.Resourcing;
 /// </summary>
 public sealed class ResourceContext
 {
+    public ResourceContext(string serviceId, string clusterId, string tenantName, string resourceName, DateTime createdAt,
+        string? behaviorId, Dictionary<string, object?> configuration, Dictionary<string, string?> metadata,
+        Dictionary<string, object?> state)
+    {
+        ServiceId = serviceId;
+        ClusterId = clusterId;
+        TenantName = tenantName;
+        ResourceName = resourceName;
+        CreatedAt = createdAt;
+        BehaviorId = behaviorId;
+        Configuration = configuration;
+        Metadata = metadata;
+        State = state;
+    }
+    
     public string ServiceId { get; init; }
     public string ClusterId { get; init; }
-    public string TenantId { get; init; }
-    public string ResourceId { get; set; }
+    public string TenantName { get; init; }
+    public string ResourceName { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? BehaviorId { get; init; }
     public Dictionary<string, object?> Configuration { get; set; }

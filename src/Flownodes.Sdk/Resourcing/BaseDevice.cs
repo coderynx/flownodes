@@ -26,6 +26,6 @@ public abstract class BaseDevice : IBehaviour
     public virtual Task OnUpdateAsync(ResourceContext context)
     {
         Logger.LogInformation("Updating state from device with {BehaviourId}", context.BehaviorId);
-        return default;
+        return Task.CompletedTask;
     }
 }
