@@ -12,7 +12,8 @@ public class DiscordWebhookAlerterDriver : IAlerterDriver
     public DiscordWebhookAlerterDriver(IConfiguration configuration)
     {
         _httpClient = new HttpClient();
-        _url = configuration["DiscordAlerterDriver:Url"];
+        _url = configuration["DiscordAlerterDriver:Url"] ??
+               throw new InvalidOperationException("Discord URL not configured");
     }
 
     public Task SendAlertAsync(AlertToFire alert)

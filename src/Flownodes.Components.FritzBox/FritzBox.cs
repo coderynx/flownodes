@@ -13,13 +13,13 @@ namespace Flownodes.Components.FritzBox;
 [BehaviourDescription("FritzBox behaviour for Flownodes.")]
 public class FritzBox : BaseDevice
 {
-    private readonly string _address;
+    private readonly string? _address;
     private readonly HttpClient _httpClient;
 
     private readonly ILogger<FritzBox> _logger;
     private readonly string _password;
     private readonly string _username;
-    private string _sid;
+    private string? _sid;
 
     public FritzBox(ILogger<FritzBox> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration) :
         base(logger)
@@ -27,9 +27,12 @@ public class FritzBox : BaseDevice
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
 
-        _address = configuration["FritzBox:Address"];
-        _username = configuration["FritzBox:Username"];
-        _password = configuration["FritzBox:Password"];
+        _address = configuration["FritzBox:Address"]
+                   ?? throw new InvalidOperationException("FritzBox address not configured");
+        _username = configuration["FritzBox:Username"]
+                    ?? throw new InvalidOperationException("FritzBox username not configured");
+        _password = configuration["FritzBox:Password"]
+                    ?? throw new InvalidOperationException("FritzBox password not configured");
 
         var url = $"{_address}/";
         _httpClient.BaseAddress = new Uri(url);
@@ -52,12 +55,12 @@ public class FritzBox : BaseDevice
             await response.Content.ReadAsStringAsync();
             var json = await response.Content.ReadFromJsonAsync<JsonNode>();
 
-            var internetLed = json["data"]["internet"]["led"].GetValue<string>();
+            var internetLed = json?["data"]?["internet"]?["led"]?.GetValue<string>();
             if (internetLed == "globe_online") context.State["internet_status"] = true;
         }
     }
 
-    public override async Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context)
+    public override Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context)
     {
         throw new NotImplementedException();
     }
@@ -76,10 +79,10 @@ public class FritzBox : BaseDevice
 
     private static string GetResponse(string challenge, string password)
     {
-        return challenge + "-" + GetMD5Hash(challenge + "-" + password);
+        return challenge + "-" + GetMd5Hash(challenge + "-" + password);
     }
 
-    private static string GetMD5Hash(string input)
+    private static string GetMd5Hash(string input)
     {
         var data = MD5.HashData(Encoding.Unicode.GetBytes(input));
         var sb = new StringBuilder();
@@ -91,7 +94,8 @@ public class FritzBox : BaseDevice
     private static string GetValue(XContainer doc, string name)
     {
         var info = doc.FirstNode as XElement;
-        return info.Element(name).Value;
+        return info?.Element(name)?.Value ??
+               throw new InvalidOperationException("Could not parse FritzBox information");
     }
 
     private async Task<bool> IsLoggedIn()

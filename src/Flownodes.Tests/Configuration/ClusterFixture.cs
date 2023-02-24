@@ -26,13 +26,13 @@ internal static class TestGlobals
 
 public class ClusterFixture : IAsyncLifetime
 {
-    private readonly RedisTestcontainer _redisContainer = new TestcontainersBuilder<RedisTestcontainer>()
+    private readonly RedisTestcontainer _redisContainer = new ContainerBuilder<RedisTestcontainer>()
         .WithImage("redis:latest")
         .WithDatabase(new RedisTestcontainerConfiguration())
         .WithCleanUp(true)
         .Build();
 
-    public TestCluster Cluster { get; set; }
+    public TestCluster? Cluster { get; set; }
 
     public async Task InitializeAsync()
     {
@@ -49,7 +49,7 @@ public class ClusterFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        await Cluster.KillSiloAsync(Cluster.Primary);
+        await Cluster!.KillSiloAsync(Cluster.Primary);
         await _redisContainer.StopAsync();
     }
 

@@ -22,6 +22,8 @@ public class OpenWeatherMapSource : BaseDataSource
     public override async ValueTask<object?> GetDataAsync(string actionId,
         Dictionary<string, object?>? parameters = null)
     {
+        if (parameters is null) return default;
+
         switch (actionId)
         {
             case "get_current_by_city":
