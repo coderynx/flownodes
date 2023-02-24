@@ -1,10 +1,6 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
-using Flownodes.Ctl.ApiSchemas;
-using Flownodes.Ctl.Commands;
+﻿using Flownodes.Ctl.ApiSchemas;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
-using Spectre.Console;
 
 var builder = ConsoleApp.CreateBuilder(args);
 
@@ -18,6 +14,6 @@ builder.ConfigureServices(service =>
 });
 
 var app = builder.Build();
-app.AddSubCommands<ResourceCommands>();
+app.AddAllCommandType();
 
 await app.RunAsync();

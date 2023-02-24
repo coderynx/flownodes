@@ -1,5 +1,7 @@
+
 name: flownodes
 services:
+
   - name: redis
     image: redis
     bindings:
@@ -10,22 +12,32 @@ services:
     image: redis
     args: "redis-cli -h redis MONITOR"
 
-  - name: worker
+  - name: worker-1
     project: src/Flownodes.Worker/Flownodes.Worker.csproj
+    bindings:
+      - port: 5000
+        protocol: http
     env:
       - DOTNET_ENVIRONMENT=Staging
       - ORLEANS_CLUSTER_ID=dev
-      - ORLEANS_SERVICE_ID=flownodes-dev
-      - RESOURCE_MANAGER_NAME=resource_manager
-      - ALERT_MANAGER_NAME=alert_manager
+      - ORLEANS_SERVICE_ID=flownodes
+
+  - name: worker-2
+    project: src/Flownodes.Worker/Flownodes.Worker.csproj
+    bindings:
+      - port: 5001
+        protocol: http
+    env:
+      - DOTNET_ENVIRONMENT=Staging
+      - ORLEANS_CLUSTER_ID=dev
+      - ORLEANS_SERVICE_ID=flownodes
 
   - name: api
     project: src/Flownodes.ApiGateway/Flownodes.ApiGateway.csproj
     env:
+      - DOTNET_ENVIRONMENT=Staging
       - ORLEANS_CLUSTER_ID=dev
-      - ORLEANS_SERVICE_ID=flownodes-dev
-      - RESOURCE_MANAGER_NAME=resource_manager
-      - ALERT_MANAGER_NAME=alert_manager
+      - ORLEANS_SERVICE_ID=flownodes
     bindings:
       - port: 5000
         protocol: http

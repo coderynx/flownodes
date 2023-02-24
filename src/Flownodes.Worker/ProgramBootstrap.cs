@@ -95,7 +95,7 @@ public static partial class Program
         });
 
 
-        builder.UseDashboard();
+        //builder.UseDashboard(_ => { });
 
         // Initialize node with localhost clustering and in-memory persistence.
         if (context.HostingEnvironment.IsDevelopment())
