@@ -3,7 +3,7 @@ namespace Flownodes.ApiGateway.Mediator.Responses;
 public sealed record GetResourceResponse : Response
 {
     public GetResourceResponse(string fullId, string tenantName, string resourceName,
-        string kind,
+        string resourceKind,
         DateTime createdAt,
         string? behaviorId = null,
         IDictionary<string, string?>? metadata = null,
@@ -14,7 +14,7 @@ public sealed record GetResourceResponse : Response
         TenantName = tenantName;
         ResourceName = resourceName;
         FullId = fullId;
-        Kind = kind;
+        ResourceKind = resourceKind;
         CreatedAt = createdAt;
         BehaviorId = behaviorId;
         Metadata = metadata;
@@ -23,7 +23,8 @@ public sealed record GetResourceResponse : Response
         LastStateUpdate = lastStateUpdate;
     }
 
-    public GetResourceResponse(string tenantName, string resourceName, string message) : base(message)
+    public GetResourceResponse(string tenantName, string resourceName, string message, ResponseKind responseKind) : base(
+        message, responseKind)
     {
         TenantName = tenantName;
         ResourceName = resourceName;
@@ -32,7 +33,7 @@ public sealed record GetResourceResponse : Response
     public string TenantName { get; }
     public string ResourceName { get; }
     public string? FullId { get; }
-    public string? Kind { get; }
+    public string? ResourceKind { get; }
     public string? BehaviorId { get; }
     public IDictionary<string, string?>? Metadata { get; }
     public DateTime CreatedAt { get; }

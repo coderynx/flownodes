@@ -21,9 +21,18 @@ public class GetResourcesHandler : IRequestHandler<GetResourcesRequest, GetResou
     public async Task<GetResourcesResponse> Handle(GetResourcesRequest request, CancellationToken cancellationToken)
     {
         var tenant = await _tenantManager.GetTenantAsync(request.TenantName);
-        if (tenant is null) return new GetResourcesResponse(request.TenantName, "Tenant not found");
+        if (tenant is null)
+            return new GetResourcesResponse(request.TenantName, "Tenant not found", ResponseKind.NotFound);
 
-        var resources = await _resourceManager.GetAllResourceSummaries(request.TenantName);
-        return new GetResourcesResponse(request.TenantName, resources.Select(x => x.Id).ToList());
+        try
+        {
+            var resources = await _resourceManager.GetAllResourceSummaries(request.TenantName);
+            return new GetResourcesResponse(request.TenantName, resources.Select(x => x.Id).ToList());
+        }
+        catch
+        {
+            return new GetResourcesResponse(request.TenantName, "Could not retrieve resources",
+                ResponseKind.InternalError);
+        }
     }
 }

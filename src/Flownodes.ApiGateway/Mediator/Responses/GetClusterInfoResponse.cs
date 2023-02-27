@@ -9,7 +9,7 @@ public sealed record GetClusterInfoResponse : Response
         NumberOfNodes = numberOfNodes;
     }
 
-    public GetClusterInfoResponse(string message) : base(message)
+    public GetClusterInfoResponse(string message, ResponseKind responseKind) : base(message, responseKind)
     {
     }
 

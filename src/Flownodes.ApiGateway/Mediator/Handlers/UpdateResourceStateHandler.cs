@@ -23,11 +23,13 @@ public class UpdateResourceStateHandler : IRequestHandler<UpdateResourceStateReq
     {
         var tenant = await _tenantManager.GetTenantAsync(request.TenantName);
         if (tenant is null)
-            return new UpdateResourceStateResponse(request.TenantName, request.ResourceName, "Tenant not found");
+            return new UpdateResourceStateResponse(request.TenantName, request.ResourceName, "Tenant not found",
+                ResponseKind.NotFound);
 
         var resource = await _resourceManager.GetGenericResourceAsync(request.TenantName, request.ResourceName);
         if (resource is null)
-            return new UpdateResourceStateResponse(request.TenantName, request.ResourceName, "Resource not found");
+            return new UpdateResourceStateResponse(request.TenantName, request.ResourceName, "Resource not found",
+                ResponseKind.NotFound);
 
         try
         {
@@ -36,7 +38,8 @@ public class UpdateResourceStateHandler : IRequestHandler<UpdateResourceStateReq
         }
         catch
         {
-            return new UpdateResourceStateResponse(request.TenantName, request.ResourceName, "Failed to update resource state");
+            return new UpdateResourceStateResponse(request.TenantName, request.ResourceName,
+                "Failed to update resource state", ResponseKind.InternalError);
         }
     }
 }

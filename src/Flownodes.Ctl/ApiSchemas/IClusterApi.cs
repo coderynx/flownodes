@@ -7,5 +7,4 @@ public interface IClusterApi
 {
     [Get("/api/cluster")]
     Task<ApiResponse<JsonNode>> GetInfoAsync();
-    
 }

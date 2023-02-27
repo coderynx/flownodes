@@ -22,19 +22,28 @@ public class SearchResourcesByTagsHandler : IRequestHandler<SearchResourcesByTag
         CancellationToken cancellationToken)
     {
         if (!await _tenantManager.IsTenantRegistered(request.TenantName))
-            return new SearchResourceByTagsResponse(request.TenantName, request.Tags, "Tenant not found");
+            return new SearchResourceByTagsResponse(request.TenantName, request.Tags, "Tenant not found",
+                ResponseKind.NotFound);
 
-        var resources = await _resourceManager.SearchResourcesByTags(request.TenantName, request.Tags);
-
-        var searchResults = new HashSet<ResourceSearchResult>();
-        foreach (var resource in resources)
+        try
         {
-            var poco = await resource.GetPoco();
-            var result =
-                new ResourceSearchResult(poco.Id, poco.TenantName, poco.ResourceName, poco.Kind, poco.BehaviorId);
-            searchResults.Add(result);
-        }
+            var resources = await _resourceManager.SearchResourcesByTags(request.TenantName, request.Tags);
 
-        return new SearchResourceByTagsResponse(request.TenantName, request.Tags, searchResults);
+            var searchResults = new HashSet<ResourceSearchResult>();
+            foreach (var resource in resources)
+            {
+                var poco = await resource.GetPoco();
+                var result = new ResourceSearchResult(poco.Id, poco.TenantName, poco.ResourceName, poco.Kind,
+                    poco.BehaviorId);
+                searchResults.Add(result);
+            }
+
+            return new SearchResourceByTagsResponse(request.TenantName, request.Tags, searchResults);
+        }
+        catch
+        {
+            return new SearchResourceByTagsResponse(request.TenantName, request.Tags,
+                "Could not execute query on cluster", ResponseKind.InternalError);
+        }
     }
 }

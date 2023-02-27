@@ -23,7 +23,8 @@ public class GetClusterInfoHandler : IRequestHandler<GetClusterInfoRequest, GetC
         }
         catch
         {
-            return new GetClusterInfoResponse("There was an internal error while retrieving cluster information");
+            return new GetClusterInfoResponse("There was an internal error while retrieving cluster information",
+                ResponseKind.InternalError);
         }
     }
 }

@@ -21,20 +21,31 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
     public async Task<GetResourceResponse> Handle(GetResourceRequest request, CancellationToken cancellationToken)
     {
         if (!await _tenantManager.IsTenantRegistered(request.TenantName))
-            return new GetResourceResponse(request.TenantName, request.ResourceName, "Tenant not found");
+            return new GetResourceResponse(request.TenantName, request.ResourceName, "Tenant not found",
+                ResponseKind.NotFound);
 
         var resource = await _resourceManager.GetGenericResourceAsync(request.TenantName, request.ResourceName);
 
         if (resource is null)
-            return new GetResourceResponse(request.TenantName, request.ResourceName, "Resource not found");
+            return new GetResourceResponse(request.TenantName, request.ResourceName, "Resource not found",
+                ResponseKind.NotFound);
 
-        var kind = await resource.GetKind();
-        var fullId = await resource.GetId();
-        var configuration = await resource.GetConfiguration();
-        var metadata = await resource.GetMetadata();
-        var state = await resource.GetState();
+        try
+        {
+            var kind = await resource.GetKind();
+            var fullId = await resource.GetId();
+            var configuration = await resource.GetConfiguration();
+            var metadata = await resource.GetMetadata();
+            var state = await resource.GetState();
 
-        return new GetResourceResponse(fullId, request.TenantName, request.ResourceName, kind, metadata.CreatedAt,
-            configuration.BehaviorId, metadata.Proprties, configuration.Properties, state.Properties, state.LastUpdate);
+            return new GetResourceResponse(fullId, request.TenantName, request.ResourceName, kind, metadata.CreatedAt,
+                configuration.BehaviorId, metadata.Proprties, configuration.Properties, state.Properties,
+                state.LastUpdate);
+        }
+        catch
+        {
+            return new GetResourceResponse(request.TenantName, request.ResourceName, "Could not retrieve resource data",
+                ResponseKind.InternalError);
+        }
     }
 }

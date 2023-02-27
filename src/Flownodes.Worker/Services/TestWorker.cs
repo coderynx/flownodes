@@ -18,7 +18,7 @@ public class TestWorker : BackgroundService
         var alertManager = _grainFactory.GetGrain<IAlertManagerGrain>("alert_manager");
 
         if (await tenantManager.IsTenantRegistered("default")) return;
-        
+
         await tenantManager.CreateTenantAsync("default");
 
         var configuration = new Dictionary<string, object?> { { "lightId", 1 } };

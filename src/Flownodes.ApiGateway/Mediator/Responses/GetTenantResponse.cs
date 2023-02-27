@@ -9,7 +9,7 @@ public sealed record GetTenantResponse : Response
         Resources = resources;
     }
 
-    public GetTenantResponse(string tenantName, string message) : base(message)
+    public GetTenantResponse(string tenantName, string message, ResponseKind responseKind) : base(message, responseKind)
     {
         TenantName = tenantName;
     }

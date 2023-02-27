@@ -25,7 +25,7 @@ public class CreateTenantHandler : IRequestHandler<CreateTenantRequest, CreateTe
         }
         catch (TenantAlreadyRegisteredException exception)
         {
-            return new CreateTenantResponse(exception.TenantName, exception.Message);
+            return new CreateTenantResponse(exception.TenantName, exception.Message, ResponseKind.InternalError);
         }
     }
 }

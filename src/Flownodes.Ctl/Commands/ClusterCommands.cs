@@ -7,17 +7,17 @@ namespace Flownodes.Ctl.Commands;
 [Command("cluster")]
 public class ClusterCommands : ConsoleAppBase
 {
+    private readonly IClusterApi _clusterApi;
+
     public ClusterCommands(IClusterApi clusterApi)
     {
         _clusterApi = clusterApi;
     }
 
-    private readonly IClusterApi _clusterApi;
-
     [Command("get")]
     public async Task GetClusterInfoAsync()
     {
-        AnsiConsole.MarkupLine($"[bold green]Getting cluster info...[/] \n");
+        AnsiConsole.MarkupLine("[bold green]Getting cluster info...[/] \n");
         var response = await _clusterApi.GetInfoAsync();
         if (response.IsSuccessStatusCode)
         {
@@ -25,7 +25,7 @@ public class ClusterCommands : ConsoleAppBase
             AnsiConsole.WriteLine(text);
             return;
         }
-        
+
         AnsiConsole.WriteLine("[bold red]There was an error during the communication with the server[/]");
     }
 }

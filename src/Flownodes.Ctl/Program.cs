@@ -8,7 +8,7 @@ builder.ConfigureServices(service =>
 {
     service.AddRefitClient<IClusterApi>()
         .ConfigureHttpClient(c => c.BaseAddress = new Uri("http://localhost:5000"));
-    
+
     service.AddRefitClient<IResourceApi>()
         .ConfigureHttpClient(c => c.BaseAddress = new Uri("http://localhost:5000"));
 });

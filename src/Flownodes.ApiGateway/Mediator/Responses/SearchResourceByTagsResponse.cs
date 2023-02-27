@@ -12,7 +12,8 @@ public sealed record SearchResourceByTagsResponse : Response
         Tags = tags;
     }
 
-    public SearchResourceByTagsResponse(string tenantName, HashSet<string> tags, string message) : base(message)
+    public SearchResourceByTagsResponse(string tenantName, HashSet<string> tags, string message, ResponseKind responseKind) :
+        base(message, responseKind)
     {
         TenantName = tenantName;
         Tags = tags;

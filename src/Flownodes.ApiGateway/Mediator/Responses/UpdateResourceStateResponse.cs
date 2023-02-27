@@ -9,7 +9,8 @@ public record UpdateResourceStateResponse : Response
         State = state;
     }
 
-    public UpdateResourceStateResponse(string tenantName, string resourceName, string message) : base(message)
+    public UpdateResourceStateResponse(string tenantName, string resourceName, string message, ResponseKind responseKind) :
+        base(message, responseKind)
     {
         TenantName = tenantName;
         ResourceName = resourceName;
