@@ -1,5 +1,6 @@
 using Flownodes.ApiGateway.Mediator.Requests;
 using Flownodes.ApiGateway.Mediator.Responses;
+using Flownodes.Shared;
 using Flownodes.Shared.Interfaces;
 using MediatR;
 

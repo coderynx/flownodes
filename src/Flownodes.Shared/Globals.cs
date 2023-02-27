@@ -1,4 +1,4 @@
-namespace Flownodes.ApiGateway;
+namespace Flownodes.Shared;
 
 public static class Globals
 {

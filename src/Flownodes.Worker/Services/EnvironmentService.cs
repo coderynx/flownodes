@@ -1,3 +1,4 @@
+using Flownodes.Shared;
 using Flownodes.Shared.Interfaces;
 using Microsoft.Extensions.Options;
 using Orleans.Configuration;
@@ -14,36 +15,25 @@ public interface IEnvironmentService
     IClusterGrain GetClusterGrain();
 }
 
-public record EnvironmentOptions
-{
-    public string DefaultTenantName { get; set; } = "default";
-    public string ResourceManagerName { get; set; } = "resource_manager";
-    public string AlertManagerName { get; set; } = "alert_manager";
-    public string TenantManagerName { get; set; } = "tenant_manager";
-}
-
 public class EnvironmentService : IEnvironmentService
 {
     private readonly ClusterOptions _clusterOptions;
-    private readonly EnvironmentOptions _environmentOptions;
     private readonly IGrainFactory _grainFactory;
 
-    public EnvironmentService(IOptions<EnvironmentOptions> configuration, IGrainFactory grainFactory,
-        IOptions<ClusterOptions> clusterOptions)
+    public EnvironmentService(IGrainFactory grainFactory, IOptions<ClusterOptions> clusterOptions)
     {
-        _environmentOptions = configuration.Value;
         _grainFactory = grainFactory;
         _clusterOptions = clusterOptions.Value;
     }
 
     public ITenantManagerGrain GetTenantManagerGrain()
     {
-        return _grainFactory.GetGrain<ITenantManagerGrain>(_environmentOptions.TenantManagerName);
+        return _grainFactory.GetGrain<ITenantManagerGrain>(Globals.TenantManagerName);
     }
 
     public IResourceManagerGrain GetResourceManagerGrain()
     {
-        return _grainFactory.GetGrain<IResourceManagerGrain>(_environmentOptions.DefaultTenantName);
+        return _grainFactory.GetGrain<IResourceManagerGrain>(Globals.ResourceManagerName);
     }
 
     public string ServiceId => _clusterOptions.ServiceId;
@@ -51,7 +41,7 @@ public class EnvironmentService : IEnvironmentService
 
     public IAlertManagerGrain GetAlertManagerGrain()
     {
-        return _grainFactory.GetGrain<IAlertManagerGrain>(_environmentOptions.AlertManagerName);
+        return _grainFactory.GetGrain<IAlertManagerGrain>(Globals.AlertManagerName);
     }
 
     public IClusterGrain GetClusterGrain()

@@ -35,18 +35,6 @@ public static partial class Program
 
         services.AddHttpClient();
 
-        // Setting up environment.
-        var alertManagerName = Environment.GetEnvironmentVariable("ALERT_MANAGER_NAME") ?? "alert_manager";
-        var resourceManagerName = Environment.GetEnvironmentVariable("RESOURCE_MANAGER_NAME") ?? "resource_manager";
-        var tenantManagerName = Environment.GetEnvironmentVariable("TENANT_MANAGER_NAME") ?? "tenant_manager";
-
-        services.Configure<EnvironmentOptions>(options =>
-        {
-            options.AlertManagerName = alertManagerName;
-            options.ResourceManagerName = resourceManagerName;
-            options.TenantManagerName = tenantManagerName;
-        });
-
         var config = new TypeAdapterConfig();
         services.AddSingleton(config);
         services.AddScoped<IMapper, ServiceMapper>();

@@ -4,15 +4,19 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Orleans.Sdk" Version="7.1.0" />
+        <ProjectReference Include="..\Flownodes.Sdk\Flownodes.Sdk.csproj">
+            <Private>false</Private>
+            <ExcludeAssets>runtime</ExcludeAssets>
+        </ProjectReference>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Flownodes.Sdk\Flownodes.Sdk.csproj" />
+        <PackageReference Include="RabbitMQ.Client" Version="6.4.0"/>
     </ItemGroup>
 
 </Project>
