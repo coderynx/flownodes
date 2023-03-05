@@ -21,6 +21,8 @@ public class TenantManagerGrain : ITenantManagerGrain
 
     public async ValueTask<ITenantGrain?> GetTenantAsync(string name)
     {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        
         if (await IsTenantRegistered(name))
         {
             var grain = _grainFactory.GetGrain<ITenantGrain>(name);
@@ -62,6 +64,7 @@ public class TenantManagerGrain : ITenantManagerGrain
     public ValueTask<bool> IsTenantRegistered(string tenantName)
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
+        
         return ValueTask.FromResult(_registrations.State.Contains(tenantName));
     }
 
