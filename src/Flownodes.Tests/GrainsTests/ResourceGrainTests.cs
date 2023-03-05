@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
+using Flownodes.Shared.Exceptions;
 using Flownodes.Tests.Configuration;
 using Flownodes.Tests.Interfaces;
 using FluentAssertions;
@@ -22,7 +25,7 @@ public class ResourceGrainTests
     }
 
     [Fact]
-    public async Task ShouldUpdateConfigurationAsync()
+    public async Task UpdateConfiguration_ShouldUpdateConfigurationAsync()
     {
         var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(_fixture.Create<string>());
 
@@ -34,7 +37,22 @@ public class ResourceGrainTests
     }
 
     [Fact]
-    public async Task ShouldUpdateMetadata()
+    public async Task UpdateConfiguration_ShouldThrowWhenBehaviourIsNotRegistered()
+    {
+        var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(_fixture.Create<string>());
+
+        var configuration = _fixture.Create<Dictionary<string, object?>>();
+        configuration.Add("behaviourId", "unknown");
+
+        var act = async () =>
+        {
+            await grain.UpdateConfigurationAsync(configuration);
+        };
+        await act.Should().ThrowAsync<Exception>();
+    }
+
+    [Fact]
+    public async Task UpdateMetadata_ShouldUpdateMetadata()
     {
         var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(_fixture.Create<string>());
 
@@ -46,7 +64,7 @@ public class ResourceGrainTests
     }
 
     [Fact]
-    public async Task ShouldGetState()
+    public async Task GetState_ShouldGetState()
     {
         var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(_fixture.Create<string>());
 
