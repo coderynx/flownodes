@@ -20,11 +20,8 @@ public class TestWorker : BackgroundService
         if (await tenantManager.IsTenantRegistered("default")) return;
 
         await tenantManager.CreateTenantAsync("default");
+        var configuration = new Dictionary<string, object?> { { "lightId", 1 }, { "behaviourId", "hue_light" } };
 
-        var configuration = new Dictionary<string, object?> { { "lightId", 1 } };
-
-        var hueLight =
-            await resourceManager.DeployResourceAsync<IDeviceGrain>("default", "hue_light_1", "hue_light",
-                configuration);
+        var hueLight = await resourceManager.DeployResourceAsync<IDeviceGrain>("default", "hue_light_1", configuration);
     }
 }

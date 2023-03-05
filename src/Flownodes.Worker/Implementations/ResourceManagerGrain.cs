@@ -101,7 +101,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         var registrations = _persistence.State.Registrations
             .Where(x => x.TenantName.Equals(tenantName))
-            .Where(x => x.Tags.Any(y => tags.Any(x => x.Equals(y))))
+            .Where(x => x.Tags.Any(y => tags.Any(s => s.Equals(y))))
             .ToList();
 
         var resources = registrations
@@ -113,12 +113,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     }
 
     public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string tenantName, string resourceName,
-        string behaviorId, Dictionary<string, object?>? configuration = null,
-        Dictionary<string, string?>? metadata = null) where TResourceGrain : IResourceGrain
+        Dictionary<string, object?>? configuration = null, Dictionary<string, string?>? metadata = null)
+        where TResourceGrain : IResourceGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
-        ArgumentException.ThrowIfNullOrEmpty(behaviorId);
 
         if (_persistence.State.IsResourceRegistered(tenantName, resourceName))
             throw new ResourceAlreadyRegisteredException(tenantName, resourceName);
@@ -131,11 +130,14 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (_persistence.State.IsSingletonResourceRegistered<TResourceGrain>(kind))
             throw new SingletonResourceAlreadyRegistered(tenantName, resourceName);
 
-        await grain.UpdateConfigurationAsync(configuration, behaviorId);
+        configuration ??= new Dictionary<string, object?>();
+        await grain.UpdateConfigurationAsync(configuration);
 
         if (metadata is not null) await grain.UpdateMetadataAsync(metadata);
 
-        var tags = new HashSet<string> { resourceName, behaviorId, kind };
+        var tags = new HashSet<string> { resourceName, kind };
+        if (configuration.GetValueOrDefault("behaviourId") is string behaviourId) tags.Add(behaviourId);
+
         _persistence.State.AddRegistration(tenantName, resourceName, grain.GetGrainId(), kind, tags);
         await _persistence.WriteStateAsync();
 

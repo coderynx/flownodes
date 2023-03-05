@@ -23,8 +23,9 @@ public sealed record GetResourceResponse : Response
         LastStateUpdate = lastStateUpdate;
     }
 
-    public GetResourceResponse(string tenantName, string resourceName, string message, ResponseKind responseKind) : base(
-        message, responseKind)
+    public GetResourceResponse(string tenantName, string resourceName, string message, ResponseKind responseKind) :
+        base(
+            message, responseKind)
     {
         TenantName = tenantName;
         ResourceName = resourceName;

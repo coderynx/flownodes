@@ -26,7 +26,6 @@ public abstract record Response
 
     public bool IsSuccess { get; }
     public string? Message { get; }
-    
-    [JsonIgnore]
-    public ResponseKind ResponseKind { get; }
+
+    [JsonIgnore] public ResponseKind ResponseKind { get; }
 }

@@ -6,7 +6,6 @@ namespace Flownodes.Worker.Models;
 internal sealed class ResourceConfigurationStore
 {
     [Id(0)] public Dictionary<string, object?> Properties { get; } = new();
-    [Id(1)] public string? BehaviourId { get; set; }
 
     public void UpdateProperties(Dictionary<string, object?>? properties)
     {

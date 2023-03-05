@@ -8,7 +8,8 @@ public sealed record CreateTenantResponse : Response
         Metadata = metadata;
     }
 
-    public CreateTenantResponse(string tenantName, string message, ResponseKind responseKind) : base(message, responseKind)
+    public CreateTenantResponse(string tenantName, string message, ResponseKind responseKind) : base(message,
+        responseKind)
     {
         TenantName = tenantName;
     }

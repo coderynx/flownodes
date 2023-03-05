@@ -39,8 +39,10 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
             .GetMethod("OnUpdateAsync")?.DeclaringType == Behaviour?
             .GetType();
 
-        if (isOverridden)
-            RegisterTimer(ExecuteTimerBehaviourAsync, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+        var timeSpan = Configuration.Properties.GetValueOrDefault("updateStateTimeSpan") as int?;
+        if (isOverridden && timeSpan is not null)
+            RegisterTimer(ExecuteTimerBehaviourAsync, null, TimeSpan.FromSeconds(timeSpan.Value),
+                TimeSpan.FromSeconds(timeSpan.Value));
 
         return base.OnBehaviourUpdateAsync();
     }

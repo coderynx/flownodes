@@ -39,14 +39,6 @@ public interface IResourceGrain : IGrainWithStringKey
     Task UpdateConfigurationAsync(Dictionary<string, object?> configuration);
 
     /// <summary>
-    ///     Updates the resource current configuration.
-    /// </summary>
-    /// <param name="properties">The properties to set.</param>
-    /// <param name="behaviorId">The behavior id to set.</param>
-    /// <returns></returns>
-    Task UpdateConfigurationAsync(Dictionary<string, object?>? properties, string behaviorId);
-
-    /// <summary>
     ///     Updates the state of the resource by storing the new state and applying it.
     /// </summary>
     /// <param name="properties">The new state of the resource to store.</param>

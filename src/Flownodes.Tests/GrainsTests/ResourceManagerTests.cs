@@ -38,8 +38,7 @@ public class ResourceManagerTests
         // Act & Assert.
         await manager.DeployResourceAsync<IDummyResourceGrain>(
             _fixture.Create<string>(),
-            _fixture.Create<string>(),
-            "TestDeviceBehavior");
+            _fixture.Create<string>());
     }
 
     [Fact]
@@ -51,8 +50,7 @@ public class ResourceManagerTests
         // Act.
         var resource = await manager.DeployResourceAsync<IDummyResourceGrain>(
             "tenant",
-            "resource",
-            "TestDeviceBehavior");
+            "resource");
 
         var id = await resource.GetId();
         id.Should().Be("tenant/resource");
@@ -65,15 +63,12 @@ public class ResourceManagerTests
         var manager = ProvideResourceManager();
 
         // Act & Assert.
-        var act = async () =>
-        {
-            await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", string.Empty, "TestDeviceBehavior");
-        };
+        var act = async () => { await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", string.Empty); };
         await act.Should().ThrowAsync<ArgumentException>();
     }
 
     [Fact]
-    public async Task DeployResource_ShouldThrowWhenConfigurationIsNull()
+    public async Task DeployResource_ShouldNotThrowWhenConfigurationIsNull()
     {
         // Arrange.
         var manager = ProvideResourceManager();
@@ -81,7 +76,8 @@ public class ResourceManagerTests
         // Act & Assert.
         var act = async () =>
         {
-            await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource", "TestDeviceBehavior");
+            await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource",
+                new Dictionary<string, object?>());
         };
         await act.Should().NotThrowAsync();
     }
@@ -91,7 +87,7 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource", "TestDeviceBehavior");
+        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource");
 
         // Act.
         var grain = await manager.GetResourceAsync<IDummyResourceGrain>("tenant", "resource");
@@ -105,13 +101,13 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource_1", "TestDeviceBehavior");
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource_2", "TestDeviceBehavior");
+        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource_1");
+        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource_2");
 
         // Act.
         var result =
             await manager.SearchResourcesByTags("tenant",
-                new HashSet<string> { "TesTDeviceBehavior", "dummy_resource" });
+                new HashSet<string> { "TestDeviceBehavior", "dummy_resource" });
 
         // Assert.
         result.Should().HaveCount(2);
@@ -122,7 +118,7 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource", "TestDeviceBehavior");
+        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource");
 
         // Act.
         var grain = await manager.GetResourceAsync<IDummyResourceGrain>("tenant", "resource1");
@@ -136,7 +132,7 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource", "TestDeviceBehavior");
+        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource");
 
         // Act.
         await manager.RemoveResourceAsync("tenant", "resource");
@@ -150,8 +146,8 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource1", "TestDeviceBehavior");
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource2", "TestDeviceBehavior");
+        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource1");
+        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource2");
 
         // Act.
         await manager.RemoveAllResourcesAsync("tenant");

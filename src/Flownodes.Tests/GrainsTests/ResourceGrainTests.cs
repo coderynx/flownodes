@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
@@ -32,18 +31,6 @@ public class ResourceGrainTests
 
         var newConfiguration = await grain.GetConfiguration();
         newConfiguration.Properties.Should().BeEquivalentTo(configuration);
-    }
-
-    [Fact]
-    public async Task ShouldNotUpdateConfiguration_WhenBehaviourIsInvalid()
-    {
-        var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(_fixture.Create<string>());
-
-        var configuration = _fixture.Create<Dictionary<string, object?>>();
-        var behaviorId = _fixture.Create<string>();
-
-        var act = async () => { await grain.UpdateConfigurationAsync(configuration, behaviorId); };
-        await act.Should().ThrowAsync<ArgumentNullException>();
     }
 
     [Fact]

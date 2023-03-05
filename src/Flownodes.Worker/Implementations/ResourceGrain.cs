@@ -13,7 +13,6 @@ internal abstract class ResourceGrain : Grain
 {
     private readonly IPersistentState<ResourceConfigurationStore> _configurationStore;
     private readonly IPersistentState<ResourceMetadataStore> _metadataStore;
-
     private readonly IPluginProvider _pluginProvider;
     private readonly IPersistentState<ResourceStateStore> _stateStore;
     protected readonly IEnvironmentService EnvironmentService;
@@ -36,7 +35,13 @@ internal abstract class ResourceGrain : Grain
     protected string Id => this.GetPrimaryKeyString();
     protected string TenantName => Id.Split('/')[0];
     protected string ResourceName => Id.Split('/')[1];
-    protected string? BehaviourId => Configuration.BehaviourId;
+
+    protected string? BehaviourId
+    {
+        get => Configuration.Properties.GetValueOrDefault("behaviourId") as string;
+        set => Configuration.Properties["behaviourId"] = value;
+    }
+
     protected DateTime CreatedAt => Metadata.CreatedAt;
     protected IResourceManagerGrain ResourceManagerGrain => EnvironmentService.GetResourceManagerGrain();
     protected ResourceMetadataStore Metadata => _metadataStore.State;
@@ -81,7 +86,7 @@ internal abstract class ResourceGrain : Grain
     public ValueTask<(Dictionary<string, object?> Properties, string? BehaviorId)> GetConfiguration()
     {
         Logger.LogInformation("Retrieved configuration of resource {ResourceId}", Id);
-        return ValueTask.FromResult((Configuration.Properties, Configuration.BehaviourId));
+        return ValueTask.FromResult((Configuration.Properties, BehaviourId));
     }
 
     public ValueTask<(Dictionary<string, object?> Properties, DateTime LastUpdate)> GetState()
@@ -93,24 +98,19 @@ internal abstract class ResourceGrain : Grain
     protected ResourceContext GetResourceContext()
     {
         return new ResourceContext(EnvironmentService.ServiceId, EnvironmentService.ClusterId, TenantName, ResourceName,
-            Metadata.CreatedAt, Configuration.BehaviourId, Configuration.Properties, Metadata.Properties,
+            Metadata.CreatedAt, BehaviourId, Configuration.Properties, Metadata.Properties,
             State.Properties);
     }
 
-    public async Task UpdateConfigurationAsync(Dictionary<string, object?>? configuration)
-    {
-        Configuration.UpdateProperties(configuration);
-        await StoreConfigurationAsync();
-    }
-
-    public async Task UpdateConfigurationAsync(Dictionary<string, object?>? properties, string behaviorId)
+    public async Task UpdateConfigurationAsync(Dictionary<string, object?>? properties)
     {
         Configuration.UpdateProperties(properties);
-        Configuration.BehaviourId = behaviorId;
 
         if (BehaviourId is not null)
         {
             Behaviour = _pluginProvider.GetBehaviour(BehaviourId);
+
+            // TODO: Add custom exception.
             ArgumentNullException.ThrowIfNull(Behaviour);
 
             var context = GetResourceContext();

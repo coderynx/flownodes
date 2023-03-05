@@ -11,7 +11,6 @@ public interface IResourceManagerGrain : IGrainWithStringKey
     ValueTask<ReadOnlyCollection<Resource>> GetAllResourceSummaries(string tenantName);
 
     ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string tenantName, string resourceName,
-        string behaviorId,
         Dictionary<string, object?>? configuration = null,
         Dictionary<string, string?>? metadata = null)
         where TResourceGrain : IResourceGrain;
