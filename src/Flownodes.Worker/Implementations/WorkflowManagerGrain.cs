@@ -1,6 +1,5 @@
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
-using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
@@ -13,7 +12,6 @@ internal class WorkflowManagerStore
 
 internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
 {
-    private readonly IEnvironmentService _environmentService;
     private readonly IGrainFactory _grainFactory;
 
     private readonly ILogger<WorkflowManagerGrain> _logger;
@@ -21,12 +19,11 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
 
     public WorkflowManagerGrain(ILogger<WorkflowManagerGrain> logger,
         [PersistentState("workflowManagerStore")]
-        IPersistentState<WorkflowManagerStore> store, IEnvironmentService environmentService,
+        IPersistentState<WorkflowManagerStore> store,
         IGrainFactory grainFactory)
     {
         _logger = logger;
         _store = store;
-        _environmentService = environmentService;
         _grainFactory = grainFactory;
     }
 

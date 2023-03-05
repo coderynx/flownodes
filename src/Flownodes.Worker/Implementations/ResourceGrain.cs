@@ -1,4 +1,5 @@
 using Flownodes.Sdk.Resourcing;
+using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
 using Flownodes.Worker.Models;
@@ -110,8 +111,8 @@ internal abstract class ResourceGrain : Grain
         {
             Behaviour = _pluginProvider.GetBehaviour(BehaviourId);
 
-            // TODO: Add custom exception.
-            ArgumentNullException.ThrowIfNull(Behaviour);
+            if (Behaviour is null)
+                throw new BehaviourNotRegisteredException(BehaviourId);
 
             var context = GetResourceContext();
             await Behaviour.OnSetupAsync(context);
