@@ -13,7 +13,7 @@ public abstract class BaseDataSource : IBehaviour
 
     public virtual Task OnSetupAsync(ResourceContext context)
     {
-        Logger.LogInformation("Initialized base data source {BehaviourId}", context.BehaviorId);
+        Logger.LogInformation("Initialized base data source {BehaviourId}", context.BehaviourId);
         return Task.CompletedTask;
     }
 

@@ -84,10 +84,10 @@ internal abstract class ResourceGrain : Grain
         return ValueTask.FromResult((Metadata.Properties, Metadata.CreatedAt));
     }
 
-    public ValueTask<(Dictionary<string, object?> Properties, string? BehaviorId)> GetConfiguration()
+    public ValueTask<Dictionary<string, object?>> GetConfiguration()
     {
         Logger.LogInformation("Retrieved configuration of resource {ResourceId}", Id);
-        return ValueTask.FromResult((Configuration.Properties, BehaviourId));
+        return ValueTask.FromResult(Configuration.Properties);
     }
 
     public ValueTask<(Dictionary<string, object?> Properties, DateTime LastUpdate)> GetState()
@@ -106,21 +106,24 @@ internal abstract class ResourceGrain : Grain
     public async Task UpdateConfigurationAsync(Dictionary<string, object?>? properties)
     {
         Configuration.UpdateProperties(properties);
-
-        if (BehaviourId is not null)
-        {
-            Behaviour = _pluginProvider.GetBehaviour(BehaviourId);
-
-            if (Behaviour is null)
-                throw new BehaviourNotRegisteredException(BehaviourId);
-
-            var context = GetResourceContext();
-            await Behaviour.OnSetupAsync(context);
-
-            await OnBehaviourUpdateAsync();
-        }
-
+        
+        await GetRequiredBehaviour();
+        
         await StoreConfigurationAsync();
+    }
+
+    private async Task GetRequiredBehaviour()
+    {
+        if (BehaviourId is null) return;
+
+        Behaviour = _pluginProvider.GetBehaviour(BehaviourId);
+
+        if (Behaviour is null) throw new BehaviourNotRegisteredException(BehaviourId);
+
+        var context = GetResourceContext();
+        await Behaviour.OnSetupAsync(context);
+
+        await OnBehaviourUpdateAsync();
     }
 
     protected virtual Task OnStateChangedAsync(Dictionary<string, object?> newState)

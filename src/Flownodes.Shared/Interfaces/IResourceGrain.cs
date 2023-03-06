@@ -60,7 +60,7 @@ public interface IResourceGrain : IGrainWithStringKey
     ///     Gets the stored configuration of the resource.
     /// </summary>
     /// <returns>The current resource configuration.</returns>
-    ValueTask<(Dictionary<string, object?> Properties, string? BehaviorId)> GetConfiguration();
+    ValueTask<Dictionary<string, object?>> GetConfiguration();
 
     /// <summary>
     ///     Clears the resource configuration.

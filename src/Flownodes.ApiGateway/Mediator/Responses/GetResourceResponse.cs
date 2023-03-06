@@ -5,7 +5,6 @@ public sealed record GetResourceResponse : Response
     public GetResourceResponse(string fullId, string tenantName, string resourceName,
         string resourceKind,
         DateTime createdAt,
-        string? behaviorId = null,
         IDictionary<string, string?>? metadata = null,
         IDictionary<string, object?>? configuration = null,
         IDictionary<string, object?>? state = null,
@@ -16,7 +15,6 @@ public sealed record GetResourceResponse : Response
         FullId = fullId;
         ResourceKind = resourceKind;
         CreatedAt = createdAt;
-        BehaviorId = behaviorId;
         Metadata = metadata;
         Configuration = configuration;
         State = state;
@@ -35,7 +33,6 @@ public sealed record GetResourceResponse : Response
     public string ResourceName { get; }
     public string? FullId { get; }
     public string? ResourceKind { get; }
-    public string? BehaviorId { get; }
     public IDictionary<string, string?>? Metadata { get; }
     public DateTime CreatedAt { get; }
     public IDictionary<string, object?>? Configuration { get; }

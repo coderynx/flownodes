@@ -39,8 +39,7 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
             var state = await resource.GetState();
 
             return new GetResourceResponse(fullId, request.TenantName, request.ResourceName, kind, metadata.CreatedAt,
-                configuration.BehaviorId, metadata.Proprties, configuration.Properties, state.Properties,
-                state.LastUpdate);
+                metadata.Proprties, configuration, state.Properties, state.LastUpdate);
         }
         catch
         {

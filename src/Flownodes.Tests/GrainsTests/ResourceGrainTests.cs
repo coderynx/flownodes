@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AutoFixture;
-using Flownodes.Shared.Exceptions;
 using Flownodes.Tests.Configuration;
 using Flownodes.Tests.Interfaces;
 using FluentAssertions;
@@ -33,7 +31,7 @@ public class ResourceGrainTests
         await grain.UpdateConfigurationAsync(configuration);
 
         var newConfiguration = await grain.GetConfiguration();
-        newConfiguration.Properties.Should().BeEquivalentTo(configuration);
+        newConfiguration.Should().BeEquivalentTo(configuration);
     }
 
     [Fact]
