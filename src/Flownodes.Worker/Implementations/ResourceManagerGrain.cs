@@ -41,7 +41,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async ValueTask<ReadOnlyCollection<Resource>> GetAllResourceSummaries(string tenantName)
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
-        
+
         var summaries = new List<Resource>();
 
         var grains = _persistence.State
@@ -168,7 +168,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     public async Task RemoveAllResourcesAsync(string tenantName)
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
-        
+
         var grains = _persistence.State
             .GetRegistrationsOfTenant(tenantName)
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>());

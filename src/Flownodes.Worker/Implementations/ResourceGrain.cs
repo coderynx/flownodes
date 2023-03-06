@@ -106,9 +106,9 @@ internal abstract class ResourceGrain : Grain
     public async Task UpdateConfigurationAsync(Dictionary<string, object?>? properties)
     {
         Configuration.UpdateProperties(properties);
-        
+
         await GetRequiredBehaviour();
-        
+
         await StoreConfigurationAsync();
     }
 

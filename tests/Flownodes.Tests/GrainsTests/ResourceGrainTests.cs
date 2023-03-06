@@ -42,10 +42,7 @@ public class ResourceGrainTests
         var configuration = _fixture.Create<Dictionary<string, object?>>();
         configuration.Add("behaviourId", "unknown");
 
-        var act = async () =>
-        {
-            await grain.UpdateConfigurationAsync(configuration);
-        };
+        var act = async () => { await grain.UpdateConfigurationAsync(configuration); };
         await act.Should().ThrowAsync<Exception>();
     }
 

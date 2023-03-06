@@ -29,7 +29,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Flownodes.Worker\Flownodes.Worker.csproj"/>
+        <ProjectReference Include="..\..\src\Flownodes.Worker\Flownodes.Worker.csproj"/>
     </ItemGroup>
 
 </Project>

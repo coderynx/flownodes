@@ -15,7 +15,8 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
     private readonly ILogger<AlertManagerGrain> _logger;
 
     public AlertManagerGrain(ILogger<AlertManagerGrain> logger, IGrainFactory grainFactory,
-        [PersistentState("alertRegistrations")] IPersistentState<HashSet<AlertRegistration>> alertRegistrations)
+        [PersistentState("alertRegistrations")]
+        IPersistentState<HashSet<AlertRegistration>> alertRegistrations)
     {
         _logger = logger;
         _grainFactory = grainFactory;
@@ -27,7 +28,7 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(targetObjectName);
-        
+
         var alertName = Guid.NewGuid().ToString();
         return await CreateAlertAsync(tenantName, alertName, targetObjectName, severity, description, driverIds);
     }
@@ -39,7 +40,7 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(alertName);
         ArgumentException.ThrowIfNullOrEmpty(targetObjectName);
-        
+
         if (_alertRegistrations.State.Any(x => x.TenantName.Equals(tenantName) && x.AlertName.Equals(alertName)))
             throw new AlertAlreadyRegisteredException(tenantName, alertName);
 
@@ -58,7 +59,7 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(alertName);
-        
+
         if (!_alertRegistrations.State.Any(x => x.TenantName.Equals(tenantName) && x.AlertName.Equals(alertName)))
             return default;
 
@@ -114,7 +115,7 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(alertName);
-        
+
         var registration = new AlertRegistration(tenantName, alertName);
         _alertRegistrations.State.Add(registration);
         await _alertRegistrations.WriteStateAsync();
