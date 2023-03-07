@@ -6,34 +6,40 @@ namespace Flownodes.Worker.Implementations;
 public class TenantGrain : Grain, ITenantGrain
 {
     private readonly ILogger<TenantGrain> _logger;
-    private readonly IPersistentState<Dictionary<string, string?>> _metadata;
+    private readonly IPersistentState<Dictionary<string, string?>> _metadataStore;
+
+    private Dictionary<string, string?> Metadata
+    {
+        get => _metadataStore.State;
+        set => _metadataStore.State = value;
+    }
 
     public TenantGrain(ILogger<TenantGrain> logger,
-        [PersistentState("tenantMetadata")] IPersistentState<Dictionary<string, string?>> metadata)
+        [PersistentState("tenantMetadata")] IPersistentState<Dictionary<string, string?>> metadataStore)
     {
         _logger = logger;
-        _metadata = metadata;
+        _metadataStore = metadataStore;
     }
 
     private string Name => this.GetPrimaryKeyString();
 
     public async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
     {
-        _metadata.State = metadata;
-        await _metadata.WriteStateAsync();
+        Metadata = metadata;
+        await _metadataStore.WriteStateAsync();
 
         _logger.LogInformation("Updated metadata of tenant {TenantName}", Name);
     }
 
     public async Task ClearMetadataAsync()
     {
-        await _metadata.ClearStateAsync();
+        await _metadataStore.ClearStateAsync();
         _logger.LogInformation("Cleared metadata of tenant {TenantName}", Name);
     }
 
     public ValueTask<Dictionary<string, string?>> GetMetadata()
     {
         _logger.LogDebug("Retrieved metadata of tenant {TenantName}", Name);
-        return ValueTask.FromResult(_metadata.State);
+        return ValueTask.FromResult(Metadata);
     }
 }

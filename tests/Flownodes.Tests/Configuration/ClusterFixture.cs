@@ -98,6 +98,7 @@ public class ClusterFixture : IAsyncLifetime
                 {
                     options.ConnectionString = TestGlobals.RedisConnectionString;
                     options.DatabaseNumber = 0;
+                    options.DeleteOnClear = true;
                 }));
         }
     }

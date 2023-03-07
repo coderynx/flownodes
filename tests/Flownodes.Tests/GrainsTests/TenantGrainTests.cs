@@ -17,18 +17,33 @@ public class TenantGrainTests
 
     public TenantGrainTests(ClusterFixture fixture)
     {
-        _cluster = fixture.Cluster;
+        _cluster = fixture.Cluster!;
         _fixture = new Fixture();
     }
 
     [Fact]
-    public async Task UpdateConfiguration_ShouldUpdateConfiguration()
+    public async Task UpdateConfiguration_ShouldUpdateMetadata()
     {
         var grain = _cluster.GrainFactory.GetGrain<ITenantGrain>(_fixture.Create<string>());
 
-        await grain.UpdateMetadataAsync(_fixture.Create<Dictionary<string, string?>>());
+        var metadata = _fixture.Create<Dictionary<string, string?>>();
+        await grain.UpdateMetadataAsync(metadata);
 
-        var metadata = await grain.GetMetadata();
-        metadata.Should().NotBeNull();
+        var newMetadata = await grain.GetMetadata();
+        newMetadata.Should().BeEquivalentTo(metadata);
+    }
+
+    [Fact]
+    public async Task ClearMetadata_ShouldClearMetadata()
+    {
+        var grain = _cluster.GrainFactory.GetGrain<ITenantGrain>(_fixture.Create<string>());
+
+        var metadata = _fixture.Create<Dictionary<string, string?>>();
+        await grain.UpdateMetadataAsync(metadata);
+
+        await grain.ClearMetadataAsync();
+        
+        var newMetadata = await grain.GetMetadata();
+        newMetadata.Should().BeEmpty();
     }
 }
