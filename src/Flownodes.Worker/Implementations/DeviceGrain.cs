@@ -26,25 +26,24 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         var context = GetResourceContext();
 
         await Behaviour?.OnUpdateAsync(context)!;
-        State.UpdateState(context.Configuration); // TODO: Evaluate if there's a better way.
+        State.UpdateState(context.State); // TODO: Evaluate if there's a better way.
 
-        Logger.LogDebug("Updated state for device {Id}: {State}", Id, State.Properties);
+        Logger.LogDebug("Updated state for device {@DeviceId}: {@State}", Id, State.Properties);
     }
 
     protected override Task OnBehaviourUpdateAsync()
     {
-        // Check if method is overriden
         var isOverridden = Behaviour?
             .GetType()
             .GetMethod("OnUpdateAsync")?.DeclaringType == Behaviour?
             .GetType();
 
-        var timeSpan = Configuration.Properties.GetValueOrDefault("updateStateTimeSpan") as int?;
-        if (isOverridden && timeSpan is not null)
-            RegisterTimer(ExecuteTimerBehaviourAsync, null, TimeSpan.FromSeconds(timeSpan.Value),
-                TimeSpan.FromSeconds(timeSpan.Value));
-
-        return base.OnBehaviourUpdateAsync();
+        var updateState = Configuration.Properties.GetValueOrDefault("updateStateTimeSpan") as int?;
+        if (!isOverridden || updateState is null) return Task.CompletedTask;
+        
+        var timeSpan = TimeSpan.FromSeconds(updateState.Value);
+        RegisterTimer(ExecuteTimerBehaviourAsync, null, timeSpan, timeSpan);
+        return Task.CompletedTask;
     }
 
     protected override async Task OnStateChangedAsync(Dictionary<string, object?> newState)
