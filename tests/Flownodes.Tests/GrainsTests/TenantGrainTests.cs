@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
 using Flownodes.Shared.Interfaces;
-using Flownodes.Tests.Configuration;
+using Flownodes.Tests.Fixtures;
 using FluentAssertions;
 using Orleans.TestingHost;
 using Xunit;

@@ -17,7 +17,7 @@ using Orleans.TestingHost;
 using Xunit;
 using ContainerBuilder = Autofac.ContainerBuilder;
 
-namespace Flownodes.Tests.Configuration;
+namespace Flownodes.Tests.Fixtures;
 
 internal static class TestGlobals
 {
