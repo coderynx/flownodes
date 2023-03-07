@@ -22,7 +22,7 @@ public class TenantGrainTests
     }
 
     [Fact]
-    public async Task UpdateConfiguration_ShouldUpdateMetadata()
+    public async Task UpdateMetadata_ShouldUpdateMetadata()
     {
         var grain = _cluster.GrainFactory.GetGrain<ITenantGrain>(_fixture.Create<string>());
 
@@ -44,6 +44,7 @@ public class TenantGrainTests
         await grain.ClearMetadataAsync();
         
         var newMetadata = await grain.GetMetadata();
+        newMetadata.Should().NotBeEquivalentTo(metadata);
         newMetadata.Should().BeEmpty();
     }
 }

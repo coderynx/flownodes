@@ -47,6 +47,21 @@ public class ResourceGrainTests
     }
 
     [Fact]
+    public async Task ClearConfiguration_ShouldClearConfiguration()
+    {
+        var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(_fixture.Create<string>());
+
+        var configuration = _fixture.Create<Dictionary<string, object?>>();
+        await grain.UpdateConfigurationAsync(configuration);
+
+        await grain.ClearConfigurationAsync();
+
+        var newConfiguration = await grain.GetConfiguration();
+        newConfiguration.Should().NotBeEquivalentTo(configuration);
+        newConfiguration.Should().BeEmpty();
+    }
+    
+    [Fact]
     public async Task UpdateMetadata_ShouldUpdateMetadata()
     {
         var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(_fixture.Create<string>());
@@ -58,6 +73,20 @@ public class ResourceGrainTests
         newMetadata.Proprties.Should().BeEquivalentTo(metadata);
     }
 
+    [Fact]
+    public async Task ClearMetadata_ShouldClearMetadata()
+    {
+        var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(_fixture.Create<string>());
+
+        var metadata = _fixture.Create<Dictionary<string, string?>>();
+        await grain.UpdateMetadataAsync(metadata);
+        
+        await grain.ClearMetadataAsync();
+
+        var newMetadata = await grain.GetMetadata();
+        newMetadata.Proprties.Should().BeEmpty();
+    }
+    
     [Fact]
     public async Task GetState_ShouldGetState()
     {
