@@ -8,13 +8,13 @@ namespace Flownodes.Components.PhilipsHue.Behaviours;
 
 [BehaviourId("hue_light")]
 [BehaviourDescription("Device behaviour for the Philips Hue Light")]
-public class HueLight : BaseDevice
+public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<HueLight> _logger;
 
     public HueLight(IConfiguration configuration, ILogger<HueLight> logger,
-        IHttpClientFactory httpClientFactory) : base(logger)
+        IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
@@ -26,7 +26,7 @@ public class HueLight : BaseDevice
         _httpClient.BaseAddress = new Uri(url);
     }
 
-    public override async Task OnSetupAsync(ResourceContext context)
+    public async Task OnSetupAsync(ResourceContext context)
     {
         var lightId = context.Configuration["lightId"]?.ToString();
 
@@ -42,28 +42,13 @@ public class HueLight : BaseDevice
             context.Metadata["product_name"] = json?["productname"]?.GetValue<string>();
 
             context.State["reachable"] = json?["state"]?["reachable"]?.GetValue<bool>();
+
+            _logger.LogInformation("Setup device {@DeviceId} as HueLight with ID {@HueLightId}", context.ResourceId,
+                lightId);
         }
     }
 
-    public override async Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context)
-    {
-        var lightId = context.Configuration["lightId"]?.ToString();
-        ArgumentException.ThrowIfNullOrEmpty(lightId);
-
-        if (newState.TryGetValue("power", out var value))
-        {
-            var request = $"{{\"on\": {value?.ToString()?.ToLower()}}}";
-            var response = await _httpClient.PutAsync("lights/1/state", new StringContent(request));
-            var content = await response.Content.ReadAsStringAsync();
-
-            if (response.IsSuccessStatusCode && content.Contains("success"))
-                _logger.LogInformation("Updated light power state of {LightId} to on", lightId);
-            else
-                _logger.LogError("Failed to update light power state of {LightId} to on", lightId);
-        }
-    }
-
-    public override async Task OnUpdateAsync(ResourceContext context)
+    public async Task OnPullStateAsync(ResourceContext context)
     {
         var lightId = context.Configuration["lightId"]?.ToString();
 
@@ -75,6 +60,28 @@ public class HueLight : BaseDevice
 
             context.State["power"] = json?["state"]?["on"]?.GetValue<bool>();
             context.State["reachable"] = json?["state"]?["reachable"]?.GetValue<bool>();
+
+            _logger.LogInformation("Pulled state from HueLight device {@DeviceId} with ID {@HueLightId}",
+                context.ResourceId, lightId);
+        }
+    }
+
+    public async Task OnPushStateAsync(Dictionary<string, object?> newState, ResourceContext context)
+    {
+        var lightId = context.Configuration["lightId"]?.ToString();
+        ArgumentException.ThrowIfNullOrEmpty(lightId);
+
+        if (newState.TryGetValue("power", out var value))
+        {
+            var request = $"{{\"on\": {value?.ToString()?.ToLower()}}}";
+            var response = await _httpClient.PutAsync("lights/1/state", new StringContent(request));
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode && content.Contains("success"))
+                _logger.LogInformation("Pushed power on state to HueLight device {@DeviceId} with ID {@HueLightId}",
+                    context.ResourceId, lightId);
+            else
+                _logger.LogError("Failed to update light power state of {LightId} to on", lightId);
         }
     }
 }

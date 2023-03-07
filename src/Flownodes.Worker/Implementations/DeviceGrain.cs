@@ -19,36 +19,50 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     {
     }
 
-    private new BaseDevice? Behaviour => base.Behaviour as BaseDevice;
-
     private async Task ExecuteTimerBehaviourAsync(object arg)
     {
         var context = GetResourceContext();
 
-        await Behaviour?.OnUpdateAsync(context)!;
+        if (Behaviour is null) throw new InvalidOperationException("Behaviour cannot be null");
+
+        var deviceBehaviour = (IReadableDeviceBehaviour)Behaviour;
+        await deviceBehaviour.OnPullStateAsync(context);
+
         State.UpdateState(context.State); // TODO: Evaluate if there's a better way.
 
         Logger.LogDebug("Updated state for device {@DeviceId}: {@State}", Id, State.Properties);
     }
 
-    protected override Task OnBehaviourUpdateAsync()
+    protected override Task OnBehaviourChangedAsync()
     {
-        var isOverridden = Behaviour?
-            .GetType()
-            .GetMethod("OnUpdateAsync")?.DeclaringType == Behaviour?
-            .GetType();
+        if (Behaviour is null) throw new InvalidOperationException("Behaviour cannot be null");
 
-        var updateState = Configuration.Properties.GetValueOrDefault("updateStateTimeSpan") as int?;
-        if (!isOverridden || updateState is null) return Task.CompletedTask;
-        
-        var timeSpan = TimeSpan.FromSeconds(updateState.Value);
+        var isReadable = Behaviour
+            .GetType()
+            .IsAssignableTo(typeof(IReadableDeviceBehaviour));
+
+        var isWritable = Behaviour
+            .GetType()
+            .IsAssignableTo(typeof(IWritableDeviceBehaviour));
+
+        if (!isReadable)
+            return Task.CompletedTask;
+
+        if (Configuration.Properties.GetValueOrDefault("updateStateTimeSpan") is not int updateState)
+            return Task.CompletedTask;
+
+        var timeSpan = TimeSpan.FromSeconds(updateState);
         RegisterTimer(ExecuteTimerBehaviourAsync, null, timeSpan, timeSpan);
         return Task.CompletedTask;
     }
 
-    protected override async Task OnStateChangedAsync(Dictionary<string, object?> newState)
+    protected override async Task OnUpdateStateAsync(Dictionary<string, object?> newState)
     {
-        await Behaviour?.OnStateChangeAsync(newState, GetResourceContext())!;
+        if (Behaviour is null) throw new InvalidOperationException("Behavior cannot be null");
+
+        var deviceBehaviour = (IWritableDeviceBehaviour)Behaviour;
+        await deviceBehaviour.OnPushStateAsync(newState, GetResourceContext());
+
         Logger.LogInformation("Applied new state for device {DeviceId}", Id);
     }
 

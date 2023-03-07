@@ -1,5 +1,4 @@
 using Flownodes.Shared.Interfaces;
-using OrleansCodeGen.Orleans.Runtime;
 
 namespace Flownodes.Worker.Services;
 
@@ -23,13 +22,25 @@ public class TestWorker : BackgroundService
         if (await tenantManager.IsTenantRegistered("default")) return;
 
         await tenantManager.CreateTenantAsync("default");
-        var configuration = new Dictionary<string, object?>
+        var hueLightConfiguration = new Dictionary<string, object?>
         {
             { "lightId", 1 }, { "behaviourId", "hue_light" }, { "updateStateTimeSpan", 5 }
         };
 
-        var hueLight = await resourceManager.DeployResourceAsync<IDeviceGrain>("default", "hue_light_1", configuration);
-        var state = await hueLight.GetState();
-        _logger.LogInformation("State: {@State}", state.Properties);
+        var hueLight =
+            await resourceManager.DeployResourceAsync<IDeviceGrain>("default", "hue_light", hueLightConfiguration);
+        var hueLightState = await hueLight.GetState();
+
+        _logger.LogInformation("HueLight State: {@State}", hueLightState.Properties);
+
+        var routerConfiguration = new Dictionary<string, object?>
+        {
+            { "behaviourId", "fritz_box" }, { "updateStateTimeSpan", 5 }
+        };
+        var router =
+            await resourceManager.DeployResourceAsync<IDeviceGrain>("default", "fritz_box", routerConfiguration);
+        var routerState = await router.GetState();
+
+        _logger.LogInformation("Router State: {@State}", routerState.Properties);
     }
 }

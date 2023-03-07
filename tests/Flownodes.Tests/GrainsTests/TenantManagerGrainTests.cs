@@ -16,7 +16,7 @@ public class TenantManagerGrainTests
 
     public TenantManagerGrainTests(ClusterFixture fixture)
     {
-        _cluster = fixture.Cluster;
+        _cluster = fixture.Cluster!;
         _fixture = new Fixture();
     }
 

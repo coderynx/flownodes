@@ -42,7 +42,7 @@ public class TenantGrainTests
         await grain.UpdateMetadataAsync(metadata);
 
         await grain.ClearMetadataAsync();
-        
+
         var newMetadata = await grain.GetMetadata();
         newMetadata.Should().NotBeEquivalentTo(metadata);
         newMetadata.Should().BeEmpty();

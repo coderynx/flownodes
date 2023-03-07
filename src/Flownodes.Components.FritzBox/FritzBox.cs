@@ -11,7 +11,7 @@ namespace Flownodes.Components.FritzBox;
 
 [BehaviourId("fritz_box")]
 [BehaviourDescription("FritzBox behaviour for Flownodes.")]
-public class FritzBox : BaseDevice
+public class FritzBox : IReadableDeviceBehaviour
 {
     private readonly string? _address;
     private readonly HttpClient _httpClient;
@@ -21,8 +21,7 @@ public class FritzBox : BaseDevice
     private readonly string _username;
     private string? _sid;
 
-    public FritzBox(ILogger<FritzBox> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration) :
-        base(logger)
+    public FritzBox(ILogger<FritzBox> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
@@ -38,10 +37,34 @@ public class FritzBox : BaseDevice
         _httpClient.BaseAddress = new Uri(url);
     }
 
-    public override async Task OnSetupAsync(ResourceContext context)
+    public async Task OnSetupAsync(ResourceContext context)
     {
         _sid = GetSessionId(_username, _password);
         _logger.LogInformation("Successfully logged-in FritzBox at {Address}", _address);
+
+        var json = await GetData();
+        context.State["internet_connected"] =
+            json?["data"]?["internet"]?["connections"]?[0]?["connected"]?.GetValue<bool>();
+
+        _logger.LogInformation("Setup device FritzBox {@DeviceId}", context.ResourceId);
+    }
+
+    public async Task OnPullStateAsync(ResourceContext context)
+    {
+        var json = await GetData();
+        context.State["internet_connected"] =
+            json?["data"]?["internet"]?["connections"]?[0]?["connected"]?.GetValue<bool>();
+
+        _logger.LogInformation("Pulled state from FritzBox device {@DeviceId}", context.ResourceId);
+    }
+
+    // TODO: Refactor code.
+
+    private async Task<JsonNode?> GetData()
+    {
+        if (_sid is null) throw new InvalidOperationException("SID cannot be null");
+
+        if (!await IsLoggedIn()) _sid = GetSessionId(_username, _password);
 
         var parameters = new Dictionary<string, string>
         {
@@ -50,19 +73,9 @@ public class FritzBox : BaseDevice
         var content = new FormUrlEncodedContent(parameters);
         var response = await _httpClient.PostAsync("data.lua", content);
 
-        if (response.IsSuccessStatusCode)
-        {
-            await response.Content.ReadAsStringAsync();
-            var json = await response.Content.ReadFromJsonAsync<JsonNode>();
+        if (!response.IsSuccessStatusCode) return null;
 
-            var internetLed = json?["data"]?["internet"]?["led"]?.GetValue<string>();
-            if (internetLed == "globe_online") context.State["internet_status"] = true;
-        }
-    }
-
-    public override Task OnStateChangeAsync(Dictionary<string, object?> newState, ResourceContext context)
-    {
-        throw new NotImplementedException();
+        return await response.Content.ReadFromJsonAsync<JsonNode>();
     }
 
     private string GetSessionId(string username, string password)

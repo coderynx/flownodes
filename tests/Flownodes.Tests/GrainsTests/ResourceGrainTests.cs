@@ -18,7 +18,7 @@ public class ResourceGrainTests
 
     public ResourceGrainTests(ClusterFixture fixture)
     {
-        _cluster = fixture.Cluster;
+        _cluster = fixture.Cluster!;
         _fixture = new Fixture();
     }
 
@@ -60,7 +60,7 @@ public class ResourceGrainTests
         newConfiguration.Should().NotBeEquivalentTo(configuration);
         newConfiguration.Should().BeEmpty();
     }
-    
+
     [Fact]
     public async Task UpdateMetadata_ShouldUpdateMetadata()
     {
@@ -80,13 +80,13 @@ public class ResourceGrainTests
 
         var metadata = _fixture.Create<Dictionary<string, string?>>();
         await grain.UpdateMetadataAsync(metadata);
-        
+
         await grain.ClearMetadataAsync();
 
         var newMetadata = await grain.GetMetadata();
         newMetadata.Proprties.Should().BeEmpty();
     }
-    
+
     [Fact]
     public async Task GetState_ShouldGetState()
     {

@@ -31,7 +31,7 @@ public class DictionaryStringObjectJsonConverter : JsonConverter<Dictionary<stri
 
             reader.Read();
 
-            dictionary.Add(propertyName!, ExtractValue(ref reader, options));
+            dictionary.Add(propertyName, ExtractValue(ref reader, options));
         }
 
         return dictionary;

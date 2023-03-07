@@ -11,15 +11,17 @@ public class ComponentsModule : Module
 {
     private static string GetBehaviourName(MemberInfo type)
     {
-        var attribute = type.GetCustomAttribute(typeof(BehaviourIdAttribute)) as BehaviourIdAttribute;
-        ArgumentNullException.ThrowIfNull(attribute);
+        if (type.GetCustomAttribute(typeof(BehaviourIdAttribute)) is not BehaviourIdAttribute attribute)
+            throw new InvalidOperationException("BehaviourIdAttribute not defined");
+
         return attribute.Id;
     }
 
     private static string GetAlerterDriverName(MemberInfo type)
     {
-        var attribute = type.GetCustomAttribute(typeof(AlerterDriverIdAttribute)) as AlerterDriverIdAttribute;
-        ArgumentNullException.ThrowIfNull(attribute);
+        if (type.GetCustomAttribute(typeof(AlerterDriverIdAttribute)) is not AlerterDriverIdAttribute attribute)
+            throw new InvalidOperationException("AlerterDriverId not defined");
+
         return attribute.Id;
     }
 

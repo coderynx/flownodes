@@ -9,6 +9,6 @@ public class InvalidAlertException : Exception
         AlertName = alertName;
     }
 
-    public string TenantName { get; set; }
-    public string AlertName { get; set; }
+    public string TenantName { get; }
+    public string AlertName { get; }
 }

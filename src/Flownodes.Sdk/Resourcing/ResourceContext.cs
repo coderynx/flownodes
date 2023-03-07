@@ -23,6 +23,7 @@ public sealed class ResourceContext
     public string ServiceId { get; init; }
     public string ClusterId { get; init; }
     public string TenantName { get; init; }
+    public string ResourceId => $"{TenantName}/{ResourceName}";
     public string ResourceName { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? BehaviourId { get; init; }

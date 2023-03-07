@@ -16,7 +16,7 @@ public class ClusterGrainTests
 
     public ClusterGrainTests(ClusterFixture fixture)
     {
-        _cluster = fixture.Cluster;
+        _cluster = fixture.Cluster!;
         _fixture = new Fixture();
     }
 

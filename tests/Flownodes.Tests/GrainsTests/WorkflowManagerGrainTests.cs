@@ -16,7 +16,7 @@ public class WorkflowManagerGrainTests
 
     public WorkflowManagerGrainTests(ClusterFixture fixture)
     {
-        _cluster = fixture.Cluster;
+        _cluster = fixture.Cluster!;
         _fixture = new Fixture();
     }
 

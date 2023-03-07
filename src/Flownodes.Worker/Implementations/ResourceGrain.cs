@@ -123,15 +123,15 @@ internal abstract class ResourceGrain : Grain
         var context = GetResourceContext();
         await Behaviour.OnSetupAsync(context);
 
-        await OnBehaviourUpdateAsync();
+        await OnBehaviourChangedAsync();
     }
 
-    protected virtual Task OnStateChangedAsync(Dictionary<string, object?> newState)
+    protected virtual Task OnUpdateStateAsync(Dictionary<string, object?> newState)
     {
         return Task.CompletedTask;
     }
 
-    protected virtual Task OnBehaviourUpdateAsync()
+    protected virtual Task OnBehaviourChangedAsync()
     {
         return Task.CompletedTask;
     }
@@ -140,7 +140,7 @@ internal abstract class ResourceGrain : Grain
     {
         State.UpdateState(state);
         // await StoreStateAsync();
-        await OnStateChangedAsync(state);
+        await OnUpdateStateAsync(state);
     }
 
     public virtual async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)

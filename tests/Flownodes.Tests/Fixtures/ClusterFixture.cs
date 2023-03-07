@@ -26,6 +26,7 @@ internal static class TestGlobals
 
 public class ClusterFixture : IAsyncLifetime
 {
+    // TODO: Update ContainerBuilder.
     private readonly RedisTestcontainer _redisContainer = new ContainerBuilder<RedisTestcontainer>()
         .WithImage("redis:latest")
         .WithDatabase(new RedisTestcontainerConfiguration())

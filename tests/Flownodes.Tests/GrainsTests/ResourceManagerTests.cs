@@ -19,7 +19,7 @@ public class ResourceManagerTests
 
     public ResourceManagerTests(ClusterFixture fixture)
     {
-        _cluster = fixture.Cluster;
+        _cluster = fixture.Cluster!;
         _fixture = new Fixture();
     }
 

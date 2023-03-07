@@ -8,17 +8,17 @@ public class TenantGrain : Grain, ITenantGrain
     private readonly ILogger<TenantGrain> _logger;
     private readonly IPersistentState<Dictionary<string, string?>> _metadataStore;
 
-    private Dictionary<string, string?> Metadata
-    {
-        get => _metadataStore.State;
-        set => _metadataStore.State = value;
-    }
-
     public TenantGrain(ILogger<TenantGrain> logger,
         [PersistentState("tenantMetadata")] IPersistentState<Dictionary<string, string?>> metadataStore)
     {
         _logger = logger;
         _metadataStore = metadataStore;
+    }
+
+    private Dictionary<string, string?> Metadata
+    {
+        get => _metadataStore.State;
+        set => _metadataStore.State = value;
     }
 
     private string Name => this.GetPrimaryKeyString();
