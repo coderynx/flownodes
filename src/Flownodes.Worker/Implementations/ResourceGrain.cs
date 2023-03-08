@@ -9,6 +9,9 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
+internal record PersistenceStateConfiguration
+    (string StateName, string? StorageName = null) : IPersistentStateConfiguration;
+
 [Reentrant]
 internal abstract class ResourceGrain : Grain
 {
@@ -21,15 +24,21 @@ internal abstract class ResourceGrain : Grain
     protected IBehaviour? Behaviour;
 
     protected ResourceGrain(ILogger<ResourceGrain> logger, IEnvironmentService environmentService,
-        IPluginProvider pluginProvider, IPersistentState<ResourceConfigurationStore> configurationStore,
-        IPersistentState<ResourceMetadataStore> metadataStore, IPersistentState<ResourceStateStore> stateStore)
+        IPluginProvider pluginProvider, IPersistentStateFactory persistentStateFactory, IGrainContext grainContext)
     {
         Logger = logger;
         EnvironmentService = environmentService;
         _pluginProvider = pluginProvider;
-        _configurationStore = configurationStore;
-        _metadataStore = metadataStore;
-        _stateStore = stateStore;
+
+        var configStoreConfiguration = new PersistenceStateConfiguration($"{Kind}ConfigurationStore");
+        _configurationStore =
+            persistentStateFactory.Create<ResourceConfigurationStore>(grainContext, configStoreConfiguration);
+
+        var metadataStoreConfiguration = new PersistenceStateConfiguration($"{Kind}MetadataStore");
+        _metadataStore = persistentStateFactory.Create<ResourceMetadataStore>(grainContext, metadataStoreConfiguration);
+
+        var stateStoreConfiguration = new PersistenceStateConfiguration($"{Kind}StateStore");
+        _stateStore = persistentStateFactory.Create<ResourceStateStore>(grainContext, stateStoreConfiguration);
     }
 
     protected string Kind => this.GetGrainId().Type.ToString()!;

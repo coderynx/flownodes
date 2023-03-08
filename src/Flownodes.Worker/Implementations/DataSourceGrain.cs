@@ -1,6 +1,5 @@
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared.Interfaces;
-using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
@@ -9,14 +8,8 @@ namespace Flownodes.Worker.Implementations;
 internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
     public DataSourceGrain(ILogger<DataSourceGrain> logger, IEnvironmentService environmentService,
-        IPluginProvider pluginProvider,
-        [PersistentState("dataSourceConfigurationStore")]
-        IPersistentState<ResourceConfigurationStore> configurationStore,
-        [PersistentState("dataSourceMetadataStore")]
-        IPersistentState<ResourceMetadataStore> metadataStore,
-        [PersistentState("dataSourceStateStore")]
-        IPersistentState<ResourceStateStore> stateStore)
-        : base(logger, environmentService, pluginProvider, configurationStore, metadataStore, stateStore)
+        IPluginProvider pluginProvider, IPersistentStateFactory persistentStateFactory, IGrainContext grainContext)
+        : base(logger, environmentService, pluginProvider, persistentStateFactory, grainContext)
     {
     }
 

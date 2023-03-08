@@ -1,6 +1,5 @@
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared.Interfaces;
-using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
@@ -10,13 +9,9 @@ namespace Flownodes.Worker.Implementations;
 internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
     public DeviceGrain(IPluginProvider pluginProvider, ILogger<DeviceGrain> logger,
-        IEnvironmentService environmentService,
-        [PersistentState("deviceConfigurationStore")]
-        IPersistentState<ResourceConfigurationStore> configurationStore,
-        [PersistentState("deviceMetadataStore")]
-        IPersistentState<ResourceMetadataStore> metadataStore,
-        [PersistentState("deviceStateStore")] IPersistentState<ResourceStateStore> stateStore) :
-        base(logger, environmentService, pluginProvider, configurationStore, metadataStore, stateStore)
+        IEnvironmentService environmentService, IPersistentStateFactory persistentStateFactory,
+        IGrainContext grainContext) :
+        base(logger, environmentService, pluginProvider, persistentStateFactory, grainContext)
     {
     }
 

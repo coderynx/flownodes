@@ -1,5 +1,4 @@
 using Flownodes.Shared.Interfaces;
-using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.V8;
@@ -13,14 +12,9 @@ internal sealed class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
     private readonly V8ScriptEngine _scriptEngine = new(V8ScriptEngineFlags.EnableTaskPromiseConversion);
 
     public ScriptResourceGrain(ILogger<ScriptResourceGrain> logger, IEnvironmentService environmentService,
-        IPluginProvider pluginProvider, ILoggerFactory loggerFactory,
-        [PersistentState("scriptResourceConfigurationStore")]
-        IPersistentState<ResourceConfigurationStore> configurationStore,
-        [PersistentState("scriptResourceMetadataStore")]
-        IPersistentState<ResourceMetadataStore> metadataStore,
-        [PersistentState("scriptResourceStateStore")]
-        IPersistentState<ResourceStateStore> stateStore) :
-        base(logger, environmentService, pluginProvider, configurationStore, metadataStore, stateStore)
+        IPluginProvider pluginProvider, ILoggerFactory loggerFactory, IPersistentStateFactory persistentStateFactory,
+        IGrainContext grainContext) :
+        base(logger, environmentService, pluginProvider, persistentStateFactory, grainContext)
     {
         _loggerFactory = loggerFactory;
     }

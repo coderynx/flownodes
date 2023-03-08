@@ -1,6 +1,5 @@
 using Flownodes.Tests.Interfaces;
 using Flownodes.Worker.Implementations;
-using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Microsoft.Extensions.Logging;
 using Orleans;
@@ -12,14 +11,8 @@ namespace Flownodes.Tests.Grains;
 internal sealed class DummyResourceGrain : ResourceGrain, IDummyResourceGrain
 {
     public DummyResourceGrain(ILogger<DummyResourceGrain> logger, IEnvironmentService environmentService,
-        IPluginProvider pluginProvider,
-        [PersistentState("dummyResourceConfigurationStore")]
-        IPersistentState<ResourceConfigurationStore> configurationStore,
-        [PersistentState("dummyResourceMetadataStore")]
-        IPersistentState<ResourceMetadataStore> metadataStore,
-        [PersistentState("dummyResourceStateStore")]
-        IPersistentState<ResourceStateStore> stateStore) :
-        base(logger, environmentService, pluginProvider, configurationStore, metadataStore, stateStore)
+        IPluginProvider pluginProvider, IPersistentStateFactory persistentStateFactory, IGrainContext grainContext) :
+        base(logger, environmentService, pluginProvider, persistentStateFactory, grainContext)
     {
     }
 }
