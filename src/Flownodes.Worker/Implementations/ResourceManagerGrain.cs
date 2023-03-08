@@ -127,18 +127,26 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var id = $"{tenantName}/{resourceName}";
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
         var kind = await grain.GetKind();
+        var tags = new HashSet<string> { resourceName, kind };
 
         // TODO: Further investigation for singleton resource is needed.
         if (_persistence.State.IsSingletonResourceRegistered<TResourceGrain>(kind))
             throw new SingletonResourceAlreadyRegistered(tenantName, resourceName);
 
-        configuration ??= new Dictionary<string, object?>();
-        await grain.UpdateConfigurationAsync(configuration);
+        var isConfigurable = typeof(TResourceGrain)
+            .IsAssignableTo(typeof(IConfigurableResource));
+
+        if (isConfigurable)
+        {
+            configuration ??= new Dictionary<string, object?>();
+
+            var configurableGrain = (IConfigurableResource)grain;
+            await configurableGrain.UpdateConfigurationAsync(configuration);
+
+            if (configuration.GetValueOrDefault("behaviourId") is string behaviourId) tags.Add(behaviourId);
+        }
 
         if (metadata is not null) await grain.UpdateMetadataAsync(metadata);
-
-        var tags = new HashSet<string> { resourceName, kind };
-        if (configuration.GetValueOrDefault("behaviourId") is string behaviourId) tags.Add(behaviourId);
 
         _persistence.State.AddRegistration(tenantName, resourceName, grain.GetGrainId(), kind, tags);
         await _persistence.WriteStateAsync();

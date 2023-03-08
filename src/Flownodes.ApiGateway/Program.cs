@@ -14,7 +14,7 @@ builder.Services.AddOrleansClient(clientBuilder =>
         })
         .UseRedisClustering(options =>
         {
-            options.ConnectionString = builder.Configuration.GetConnectionString("redis");
+            options.ConnectionString = builder.Configuration.GetConnectionString("redis") ?? "localhost:6379";
             options.Database = 0;
         })
         .UseConnectionRetryFilter(async (_, token) =>

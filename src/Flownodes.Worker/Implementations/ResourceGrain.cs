@@ -194,4 +194,24 @@ internal abstract class ResourceGrain : Grain
 
         Logger.LogInformation("Cleared persistence of resource {ResourceId}", Id);
     }
+
+    // TODO: Review IsConfigurable()
+    public ValueTask<bool> IsConfigurable()
+    {
+        return Kind switch
+        {
+            "device" => ValueTask.FromResult(true),
+            _ => ValueTask.FromResult(false)
+        };
+    }
+
+    // TODO: Review IsStateful()
+    public ValueTask<bool> IsStateful()
+    {
+        return Kind switch
+        {
+            "device" => ValueTask.FromResult(true),
+            _ => ValueTask.FromResult(false)
+        };
+    }
 }
