@@ -1,6 +1,6 @@
 namespace Flownodes.Shared.Models;
 
-public class FlownodesId
+public record FlownodesId
 {
     public FlownodesId(string tenantName, string resourceName)
     {
@@ -8,21 +8,36 @@ public class FlownodesId
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
 
         TenantName = tenantName;
-        ObjectName = resourceName;
+        ResourceName = resourceName;
     }
 
     public FlownodesId(string id)
     {
+        ArgumentException.ThrowIfNullOrEmpty(id);
+
         var tokens = id.Split('/');
+        if (tokens.Length != 2) throw new ArgumentException($"The provided string {nameof(id)} is invalid.");
+
         TenantName = tokens[0];
-        ObjectName = tokens[1];
+        ResourceName = tokens[1];
     }
 
+    public string Id => $"{TenantName}/{ResourceName}";
     public string TenantName { get; }
-    public string ObjectName { get; }
+    public string ResourceName { get; }
 
     public override string ToString()
     {
-        return $"{TenantName}/{ObjectName}";
+        return Id;
+    }
+
+    public static implicit operator string(FlownodesId flownodesId)
+    {
+        return flownodesId.Id;
+    }
+
+    public static implicit operator FlownodesId(string flownodesId)
+    {
+        return new FlownodesId(flownodesId);
     }
 }

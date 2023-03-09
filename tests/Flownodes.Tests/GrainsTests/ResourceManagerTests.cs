@@ -166,10 +166,10 @@ public class ResourceManagerTests
         var manager = ProvideResourceManager();
         await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource1");
         await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource2");
-        
+
         // Act.
         var summaries = await manager.GetAllResourceSummaries("tenant");
-        
+
         // Assert.
         summaries.Should().HaveCount(2);
     }

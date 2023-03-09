@@ -114,9 +114,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
 
         if (_persistence.State.IsResourceRegistered(tenantName, resourceName))
-        {
             throw new ResourceAlreadyRegisteredException(tenantName, resourceName);
-        }
 
         var id = $"{tenantName}/{resourceName}";
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
@@ -125,9 +123,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         // TODO: Further investigation for singleton resource is needed.
         if (_persistence.State.IsSingletonResourceRegistered<TResourceGrain>(kind))
-        {
             throw new SingletonResourceAlreadyRegistered(tenantName, resourceName);
-        }
 
         if (await grain.IsConfigurable())
         {
@@ -139,10 +135,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             if (configuration.GetValueOrDefault("behaviourId") is string behaviourId) tags.Add(behaviourId);
         }
 
-        if (metadata is not null)
-        {
-            await grain.UpdateMetadataAsync(metadata);
-        }
+        if (metadata is not null) await grain.UpdateMetadataAsync(metadata);
 
         _persistence.State.AddRegistration(tenantName, resourceName, grain.GetGrainId(), kind, tags);
         await _persistence.WriteStateAsync();
@@ -157,10 +150,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
 
         var registration = _persistence.State.GetRegistration(tenantName, resourceName);
-        if (registration is null)
-        {
-            throw new ResourceNotFoundException(tenantName, resourceName);
-        }
+        if (registration is null) throw new ResourceNotFoundException(tenantName, resourceName);
 
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
         await grain.SelfRemoveAsync();
@@ -179,10 +169,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             .GetRegistrationsOfTenant(tenantName)
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>());
 
-        foreach (var grain in grains)
-        {
-            await grain.SelfRemoveAsync();
-        }
+        foreach (var grain in grains) await grain.SelfRemoveAsync();
 
         _persistence.State.Registrations.Clear();
         await _persistence.WriteStateAsync();

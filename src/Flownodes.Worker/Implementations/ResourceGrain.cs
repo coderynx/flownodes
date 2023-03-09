@@ -42,9 +42,9 @@ internal abstract class ResourceGrain : Grain
     }
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
-    protected string Id => this.GetPrimaryKeyString();
-    protected string TenantName => Id.Split('/')[0];
-    protected string ResourceName => Id.Split('/')[1];
+    protected FlownodesId Id => this.GetPrimaryKeyString();
+    protected string TenantName => Id.TenantName;
+    protected string ResourceName => Id.ResourceName;
 
     protected string? BehaviourId
     {
@@ -84,7 +84,7 @@ internal abstract class ResourceGrain : Grain
 
     public ValueTask<string> GetId()
     {
-        return ValueTask.FromResult(Id);
+        return ValueTask.FromResult<string>(Id);
     }
 
     public ValueTask<(Dictionary<string, string?> Proprties, DateTime CreatedAt)> GetMetadata()
@@ -203,12 +203,12 @@ internal abstract class ResourceGrain : Grain
 
         Logger.LogInformation("Cleared persistence of resource {ResourceId}", Id);
     }
-    
+
     public ValueTask<bool> IsConfigurable()
     {
         return ValueTask.FromResult(GetType().IsAssignableTo(typeof(IConfigurableResource)));
     }
-    
+
     public ValueTask<bool> IsStateful()
     {
         return ValueTask.FromResult(GetType().IsAssignableTo(typeof(IStatefulResource)));
