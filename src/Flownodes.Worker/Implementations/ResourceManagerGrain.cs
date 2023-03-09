@@ -127,7 +127,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (_persistence.State.IsSingletonResourceRegistered<TResourceGrain>(kind))
             throw new SingletonResourceAlreadyRegistered(tenantName, resourceName);
 
-        if (await grain.IsConfigurable())
+        if (await grain.GetIsConfigurable())
         {
             configuration ??= new Dictionary<string, object?>();
 

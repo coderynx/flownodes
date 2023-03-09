@@ -15,54 +15,67 @@ internal record PersistenceStateConfiguration
 [Reentrant]
 internal abstract class ResourceGrain : Grain
 {
-    private readonly IPersistentState<ResourceConfigurationStore> _configurationStore;
+    private readonly IPersistentState<ResourceConfigurationStore>? _configurationStore;
+    private readonly IEnvironmentService _environmentService;
     private readonly IPersistentState<ResourceMetadataStore> _metadataStore;
     private readonly IPluginProvider _pluginProvider;
-    private readonly IPersistentState<ResourceStateStore> _stateStore;
-    protected readonly IEnvironmentService EnvironmentService;
+    private readonly IPersistentState<ResourceStateStore>? _stateStore;
+
     protected readonly ILogger<ResourceGrain> Logger;
+
     protected IBehaviour? Behaviour;
 
     protected ResourceGrain(ILogger<ResourceGrain> logger, IEnvironmentService environmentService,
         IPluginProvider pluginProvider, IPersistentStateFactory persistentStateFactory, IGrainContext grainContext)
     {
         Logger = logger;
-        EnvironmentService = environmentService;
+        _environmentService = environmentService;
         _pluginProvider = pluginProvider;
 
-        var configStoreConfiguration = new PersistenceStateConfiguration($"{Kind}ConfigurationStore");
-        _configurationStore =
-            persistentStateFactory.Create<ResourceConfigurationStore>(grainContext, configStoreConfiguration);
+        if (IsConfigurable)
+        {
+            var configStoreConfiguration = new PersistenceStateConfiguration($"{Kind}ConfigurationStore");
+            _configurationStore =
+                persistentStateFactory.Create<ResourceConfigurationStore>(grainContext, configStoreConfiguration);
+        }
 
         var metadataStoreConfiguration = new PersistenceStateConfiguration($"{Kind}MetadataStore");
         _metadataStore = persistentStateFactory.Create<ResourceMetadataStore>(grainContext, metadataStoreConfiguration);
 
-        var stateStoreConfiguration = new PersistenceStateConfiguration($"{Kind}StateStore");
-        _stateStore = persistentStateFactory.Create<ResourceStateStore>(grainContext, stateStoreConfiguration);
+        if (IsStateful)
+        {
+            var stateStoreConfiguration = new PersistenceStateConfiguration($"{Kind}StateStore");
+            _stateStore = persistentStateFactory.Create<ResourceStateStore>(grainContext, stateStoreConfiguration);
+        }
     }
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
     protected FlownodesId Id => this.GetPrimaryKeyString();
     protected string TenantName => Id.FirstName;
     protected string ResourceName => Id.SecondName!;
+    protected bool IsConfigurable => GetType().IsAssignableTo(typeof(IConfigurableResource));
+    protected bool IsStateful => GetType().IsAssignableTo(typeof(IStatefulResource));
 
     protected string? BehaviourId
     {
-        get => Configuration.Properties.GetValueOrDefault("behaviourId") as string;
-        set => Configuration.Properties["behaviourId"] = value;
+        get => Configuration?.Properties.GetValueOrDefault("behaviourId") as string;
+        set
+        {
+            if (Configuration != null) Configuration.Properties["behaviourId"] = value;
+        }
     }
 
     protected DateTime CreatedAt => Metadata.CreatedAt;
-    protected IResourceManagerGrain ResourceManagerGrain => EnvironmentService.GetResourceManagerGrain();
+    protected IResourceManagerGrain ResourceManagerGrain => _environmentService.GetResourceManagerGrain();
     protected ResourceMetadataStore Metadata => _metadataStore.State;
-    protected ResourceConfigurationStore Configuration => _configurationStore.State;
-    protected ResourceStateStore State => _stateStore.State;
+    protected ResourceConfigurationStore? Configuration => _configurationStore?.State;
+    protected ResourceStateStore? State => _stateStore?.State;
 
     public ValueTask<Resource> GetPoco()
     {
         Logger.LogDebug("Retrieved POCO of resource {ResourceId}", Id);
         return ValueTask.FromResult(new Resource(Id, TenantName, ResourceName, Kind, BehaviourId, CreatedAt,
-            Configuration.Properties, Metadata.Properties, State.Properties, State.LastUpdate));
+            Configuration?.Properties, Metadata.Properties, State?.Properties, State?.LastUpdate));
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
@@ -95,26 +108,31 @@ internal abstract class ResourceGrain : Grain
 
     public ValueTask<Dictionary<string, object?>> GetConfiguration()
     {
+        if (_configurationStore is null) throw new ResourceNotConfigurableException(TenantName, Kind, ResourceName);
+
         Logger.LogInformation("Retrieved configuration of resource {ResourceId}", Id);
-        return ValueTask.FromResult(Configuration.Properties);
+        return ValueTask.FromResult(Configuration!.Properties);
     }
 
     public ValueTask<(Dictionary<string, object?> Properties, DateTime LastUpdate)> GetState()
     {
+        if (!IsStateful) throw new ResourceNotStatefulException(TenantName, Kind, ResourceName);
+
         Logger.LogDebug("Retrieved state of resource {@ResourceId}", Id);
-        return ValueTask.FromResult((State.Properties, State.LastUpdate));
+        return ValueTask.FromResult((State!.Properties, State.LastUpdate));
     }
 
     protected ResourceContext GetResourceContext()
     {
-        return new ResourceContext(EnvironmentService.ServiceId, EnvironmentService.ClusterId, TenantName, ResourceName,
-            Metadata.CreatedAt, BehaviourId, Configuration.Properties, Metadata.Properties,
-            State.Properties);
+        return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, TenantName,
+            ResourceName,
+            Metadata.CreatedAt, BehaviourId, Configuration?.Properties, Metadata.Properties,
+            State?.Properties);
     }
 
     public async Task UpdateConfigurationAsync(Dictionary<string, object?>? properties)
     {
-        Configuration.UpdateProperties(properties);
+        Configuration?.UpdateProperties(properties);
 
         await GetRequiredBehaviour();
 
@@ -147,7 +165,7 @@ internal abstract class ResourceGrain : Grain
 
     public async Task UpdateStateAsync(Dictionary<string, object?> state)
     {
-        State.UpdateState(state);
+        State?.UpdateState(state);
         // await StoreStateAsync();
         await OnUpdateStateAsync(state);
     }
@@ -160,6 +178,8 @@ internal abstract class ResourceGrain : Grain
 
     public virtual async Task ClearConfigurationAsync()
     {
+        if (_configurationStore is null) throw new ResourceNotConfigurableException(TenantName, Kind, ResourceName);
+
         await _configurationStore.ClearStateAsync();
         Logger.LogInformation("Cleared configuration of resource {ResourceId}", Id);
     }
@@ -172,12 +192,16 @@ internal abstract class ResourceGrain : Grain
 
     public virtual async Task ClearStateAsync()
     {
+        if (_stateStore is null) throw new ResourceNotStatefulException(TenantName, Kind, ResourceName);
+
         await _stateStore.ClearStateAsync();
         Logger.LogInformation("Cleared state of resource {ResourceId}", Id);
     }
 
     protected async Task StoreConfigurationAsync()
     {
+        if (_configurationStore is null) throw new ResourceNotConfigurableException(TenantName, Kind, ResourceName);
+
         await _configurationStore.WriteStateAsync();
         Logger.LogInformation("Updated configuration of resource {ResourceId}", Id);
     }
@@ -190,6 +214,8 @@ internal abstract class ResourceGrain : Grain
 
     protected async Task StoreStateAsync()
     {
+        if (_stateStore is null) throw new ResourceNotStatefulException(TenantName, Kind, ResourceName);
+
         // TODO: Decide when to store the resource state.
         await _stateStore.WriteStateAsync();
         Logger.LogInformation("Updated state of resource {ResourceId}", Id);
@@ -197,20 +223,22 @@ internal abstract class ResourceGrain : Grain
 
     public virtual async Task SelfRemoveAsync()
     {
-        await _configurationStore.ClearStateAsync();
         await _metadataStore.ClearStateAsync();
-        await _stateStore.ClearStateAsync();
+
+        if (_configurationStore is not null) await _configurationStore.ClearStateAsync();
+
+        if (_stateStore is not null) await _stateStore.ClearStateAsync();
 
         Logger.LogInformation("Cleared persistence of resource {ResourceId}", Id);
     }
 
-    public ValueTask<bool> IsConfigurable()
+    public ValueTask<bool> GetIsConfigurable()
     {
-        return ValueTask.FromResult(GetType().IsAssignableTo(typeof(IConfigurableResource)));
+        return ValueTask.FromResult(IsConfigurable);
     }
 
-    public ValueTask<bool> IsStateful()
+    public ValueTask<bool> GetIsStateful()
     {
-        return ValueTask.FromResult(GetType().IsAssignableTo(typeof(IStatefulResource)));
+        return ValueTask.FromResult(IsStateful);
     }
 }

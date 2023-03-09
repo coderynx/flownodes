@@ -24,7 +24,7 @@ public sealed record DataSourceResult
     }
 }
 
-public interface IDataSourceGrain : IResourceGrain
+public interface IDataSourceGrain : IConfigurableResource
 {
     ValueTask<DataSourceResult> GetData(string actionId, Dictionary<string, object?>? parameters = null);
 }

@@ -28,7 +28,7 @@ public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
 
     public async Task OnSetupAsync(ResourceContext context)
     {
-        var lightId = context.Configuration["lightId"]?.ToString();
+        var lightId = context.Configuration!["lightId"]?.ToString();
 
         var response = await _httpClient.GetAsync($"lights/{lightId}");
 
@@ -41,7 +41,7 @@ public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
             context.Metadata["manufacturer_name"] = json?["manufacturername"]?.GetValue<string>();
             context.Metadata["product_name"] = json?["productname"]?.GetValue<string>();
 
-            context.State["reachable"] = json?["state"]?["reachable"]?.GetValue<bool>();
+            context.State!["reachable"] = json?["state"]?["reachable"]?.GetValue<bool>();
 
             _logger.LogInformation("Setup device {@DeviceId} as HueLight with ID {@HueLightId}", context.ResourceId,
                 lightId);
@@ -50,7 +50,7 @@ public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
 
     public async Task OnPullStateAsync(ResourceContext context)
     {
-        var lightId = context.Configuration["lightId"]?.ToString();
+        var lightId = context.Configuration!["lightId"]?.ToString();
 
         var response = await _httpClient.GetAsync($"lights/{lightId}");
 
@@ -58,7 +58,7 @@ public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
         {
             var json = await response.Content.ReadFromJsonAsync<JsonNode>();
 
-            context.State["power"] = json?["state"]?["on"]?.GetValue<bool>();
+            context.State!["power"] = json?["state"]?["on"]?.GetValue<bool>();
             context.State["reachable"] = json?["state"]?["reachable"]?.GetValue<bool>();
 
             _logger.LogInformation("Pulled state from HueLight device {@DeviceId} with ID {@HueLightId}",
@@ -68,7 +68,7 @@ public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
 
     public async Task OnPushStateAsync(Dictionary<string, object?> newState, ResourceContext context)
     {
-        var lightId = context.Configuration["lightId"]?.ToString();
+        var lightId = context.Configuration!["lightId"]?.ToString();
         ArgumentException.ThrowIfNullOrEmpty(lightId);
 
         if (newState.TryGetValue("power", out var value))

@@ -25,7 +25,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         var deviceBehaviour = (IReadableDeviceBehaviour)Behaviour;
         await deviceBehaviour.OnPullStateAsync(context);
 
-        State.UpdateState(context.State); // TODO: Evaluate if there's a better way.
+        State!.UpdateState(context.State!); // TODO: Evaluate if there's a better way.
 
         Logger.LogDebug("Updated state for device {@DeviceId}: {@State}", Id, State.Properties);
     }
@@ -41,7 +41,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         if (!isReadable)
             return Task.CompletedTask;
 
-        if (Configuration.Properties.GetValueOrDefault("updateStateTimeSpan") is not int updateState)
+        if (Configuration?.Properties.GetValueOrDefault("updateStateTimeSpan") is not int updateState)
             return Task.CompletedTask;
 
         var timeSpan = TimeSpan.FromSeconds(updateState);

@@ -7,8 +7,8 @@ namespace Flownodes.Shared.Interfaces;
 /// </summary>
 public interface IResourceGrain : IGrainWithStringKey
 {
-    // <summary>
-    /// Gets the resource POCO.
+    /// <summary>
+    ///     Gets the resource POCO.
     /// </summary>
     /// <returns>The resource POCO. </returns>
     public ValueTask<Resource> GetPoco();
@@ -52,11 +52,11 @@ public interface IResourceGrain : IGrainWithStringKey
     ///     Checks if the resource is configurable.
     /// </summary>
     /// <returns>True if it's configurable, otherwise false.</returns>
-    ValueTask<bool> IsConfigurable();
+    ValueTask<bool> GetIsConfigurable();
 
     /// <summary>
     ///     Checks if the resource is stateful.
     /// </summary>
     /// <returns>True if it's stateful, otherwise false.</returns>
-    ValueTask<bool> IsStateful();
+    ValueTask<bool> GetIsStateful();
 }

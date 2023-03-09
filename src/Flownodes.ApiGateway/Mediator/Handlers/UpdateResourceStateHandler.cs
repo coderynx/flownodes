@@ -9,7 +9,6 @@ namespace Flownodes.ApiGateway.Mediator.Handlers;
 public class UpdateResourceStateHandler : IRequestHandler<UpdateResourceStateRequest, UpdateResourceStateResponse>
 {
     private readonly IResourceManagerGrain _resourceManager;
-
     private readonly ITenantManagerGrain _tenantManager;
 
     public UpdateResourceStateHandler(IGrainFactory grainFactory)
@@ -32,7 +31,7 @@ public class UpdateResourceStateHandler : IRequestHandler<UpdateResourceStateReq
                 request.ResourceName, "Resource not found",
                 ResponseKind.NotFound);
 
-        if (!await grain.IsStateful())
+        if (!await grain.GetIsStateful())
             return new UpdateResourceStateResponse(request.TenantName, request.ResourceName,
                 "Cannot update state of a non stateful resource", ResponseKind.BadRequest);
 

@@ -43,7 +43,7 @@ public class FritzBox : IReadableDeviceBehaviour
         _logger.LogInformation("Successfully logged-in FritzBox at {Address}", _address);
 
         var json = await GetData();
-        context.State["internet_connected"] =
+        context.State!["internet_connected"] =
             json?["data"]?["internet"]?["connections"]?[0]?["connected"]?.GetValue<bool>();
 
         _logger.LogInformation("Setup device FritzBox {@DeviceId}", context.ResourceId);
@@ -52,7 +52,7 @@ public class FritzBox : IReadableDeviceBehaviour
     public async Task OnPullStateAsync(ResourceContext context)
     {
         var json = await GetData();
-        context.State["internet_connected"] =
+        context.State!["internet_connected"] =
             json?["data"]?["internet"]?["connections"]?[0]?["connected"]?.GetValue<bool>();
 
         _logger.LogInformation("Pulled state from FritzBox device {@DeviceId}", context.ResourceId);

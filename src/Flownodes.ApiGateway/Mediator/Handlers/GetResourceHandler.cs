@@ -38,14 +38,14 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
             var metadata = await resource.GetMetadata();
 
             Dictionary<string, object?>? configuration = null;
-            if (await resource.IsConfigurable())
+            if (await resource.GetIsConfigurable())
             {
                 var configurableResource = resource.AsReference<IConfigurableResource>();
                 configuration = await configurableResource.GetConfiguration();
             }
 
             (Dictionary<string, object?>? Properties, DateTime? LastUpdate) state = (null, null);
-            if (await resource.IsStateful())
+            if (await resource.GetIsStateful())
             {
                 var statefulResource = resource.AsReference<IStatefulResource>();
                 state = await statefulResource.GetState();
