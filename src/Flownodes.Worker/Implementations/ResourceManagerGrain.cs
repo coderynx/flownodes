@@ -42,17 +42,12 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
 
-        var summaries = new List<Resource>();
-
-        var grains = _persistence.State
+        var summaries = await _persistence.State
             .GetRegistrationsOfTenant(tenantName)
-            .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>());
-
-        foreach (var grain in grains)
-        {
-            var summary = await grain.GetPoco();
-            summaries.Add(summary);
-        }
+            .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>())
+            .ToAsyncEnumerable()
+            .SelectAwait(async grain => await grain.GetPoco())
+            .ToListAsync();
 
         return summaries.AsReadOnly();
     }
@@ -101,12 +96,9 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (tags.Count is 0)
             throw new ArgumentException("The tags set cannot be null");
 
-        var registrations = _persistence.State.Registrations
+        var resources = _persistence.State.Registrations
             .Where(x => x.TenantName.Equals(tenantName))
             .Where(x => x.Tags.Any(y => tags.Any(s => s.Equals(y))))
-            .ToList();
-
-        var resources = registrations
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>())
             .ToList();
 
@@ -122,7 +114,9 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
 
         if (_persistence.State.IsResourceRegistered(tenantName, resourceName))
+        {
             throw new ResourceAlreadyRegisteredException(tenantName, resourceName);
+        }
 
         var id = $"{tenantName}/{resourceName}";
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
@@ -131,7 +125,9 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         // TODO: Further investigation for singleton resource is needed.
         if (_persistence.State.IsSingletonResourceRegistered<TResourceGrain>(kind))
+        {
             throw new SingletonResourceAlreadyRegistered(tenantName, resourceName);
+        }
 
         if (await grain.IsConfigurable())
         {
@@ -143,7 +139,10 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             if (configuration.GetValueOrDefault("behaviourId") is string behaviourId) tags.Add(behaviourId);
         }
 
-        if (metadata is not null) await grain.UpdateMetadataAsync(metadata);
+        if (metadata is not null)
+        {
+            await grain.UpdateMetadataAsync(metadata);
+        }
 
         _persistence.State.AddRegistration(tenantName, resourceName, grain.GetGrainId(), kind, tags);
         await _persistence.WriteStateAsync();
@@ -159,7 +158,9 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         var registration = _persistence.State.GetRegistration(tenantName, resourceName);
         if (registration is null)
+        {
             throw new ResourceNotFoundException(tenantName, resourceName);
+        }
 
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
         await grain.SelfRemoveAsync();
@@ -178,7 +179,10 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             .GetRegistrationsOfTenant(tenantName)
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>());
 
-        foreach (var grain in grains) await grain.SelfRemoveAsync();
+        foreach (var grain in grains)
+        {
+            await grain.SelfRemoveAsync();
+        }
 
         _persistence.State.Registrations.Clear();
         await _persistence.WriteStateAsync();
