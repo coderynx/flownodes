@@ -1,3 +1,4 @@
+using Flownodes.Shared;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Worker.Services;
 using Microsoft.ClearScript;
@@ -6,6 +7,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
+[GrainType(ObjectNames.ScriptName)]
 internal sealed class ScriptResourceGrain : ResourceGrain, IScriptResourceGrain
 {
     private readonly ILoggerFactory _loggerFactory;

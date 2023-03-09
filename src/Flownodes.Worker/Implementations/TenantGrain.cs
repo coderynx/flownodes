@@ -1,8 +1,10 @@
+using Flownodes.Shared;
 using Flownodes.Shared.Interfaces;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
+[GrainType(ObjectNames.TenantName)]
 public class TenantGrain : Grain, ITenantGrain
 {
     private readonly ILogger<TenantGrain> _logger;

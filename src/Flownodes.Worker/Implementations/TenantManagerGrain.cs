@@ -1,9 +1,11 @@
+using Flownodes.Shared;
 using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
+[GrainType(ObjectNames.TenantManagerName)]
 public class TenantManagerGrain : ITenantManagerGrain
 {
     private readonly IGrainFactory _grainFactory;

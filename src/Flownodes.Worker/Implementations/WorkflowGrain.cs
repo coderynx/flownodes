@@ -1,3 +1,4 @@
+using Flownodes.Shared;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Worker.WorkflowActions;
 using Newtonsoft.Json;
@@ -14,6 +15,7 @@ internal class WorkflowConfiguration
     [Id(0)] public string? WorkflowJson { get; set; }
 }
 
+[GrainType(ObjectNames.WorkflowName)]
 internal class WorkflowGrain : Grain, IWorkflowGrain
 {
     private readonly IPersistentState<WorkflowConfiguration> _configurationStore;

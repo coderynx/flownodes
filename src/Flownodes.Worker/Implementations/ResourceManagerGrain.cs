@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Flownodes.Shared;
 using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
@@ -7,6 +8,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
+[GrainType(ObjectNames.ResourceManagerName)]
 public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 {
     private readonly IGrainFactory _grainFactory;

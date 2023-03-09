@@ -12,6 +12,7 @@ public enum FlownodesObject
     Device,
     DataSource,
     Asset,
+    Script,
     WorkflowManager,
     Workflow,
     Other
@@ -29,23 +30,25 @@ public record FlownodesId
         { typeof(IDeviceGrain), FlownodesObject.Device },
         { typeof(IDataSourceGrain), FlownodesObject.DataSource },
         { typeof(IAssetGrain), FlownodesObject.Asset },
+        { typeof(IScriptResourceGrain), FlownodesObject.Script },
         { typeof(IWorkflowManagerGrain), FlownodesObject.WorkflowManager },
         { typeof(IWorkflowGrain), FlownodesObject.Workflow }
     };
 
     private static readonly Dictionary<string, FlownodesObject> StringToFlownodesObject = new()
     {
-        { "tenantManager", FlownodesObject.TenantManager },
-        { "tenant", FlownodesObject.Tenant },
-        { "alertManager", FlownodesObject.AlertManager },
-        { "alert", FlownodesObject.Alert },
-        { "resourceManager", FlownodesObject.ResourceManager },
-        { "device", FlownodesObject.Device },
-        { "dataSource", FlownodesObject.DataSource },
-        { "asset", FlownodesObject.Asset },
-        { "workflowManager", FlownodesObject.WorkflowManager },
-        { "workflow", FlownodesObject.Workflow },
-        { "other", FlownodesObject.Other }
+        { ObjectNames.TenantManagerName, FlownodesObject.TenantManager },
+        { ObjectNames.TenantName, FlownodesObject.Tenant },
+        { ObjectNames.AlertManagerName, FlownodesObject.AlertManager },
+        { ObjectNames.AlertName, FlownodesObject.Alert },
+        { ObjectNames.ResourceManagerName, FlownodesObject.ResourceManager },
+        { ObjectNames.DeviceName, FlownodesObject.Device },
+        { ObjectNames.DataSourceName, FlownodesObject.DataSource },
+        { ObjectNames.AssetName, FlownodesObject.Asset },
+        { ObjectNames.ScriptName, FlownodesObject.Script },
+        { ObjectNames.WorkflowManagerName, FlownodesObject.WorkflowManager },
+        { ObjectNames.WorkflowName, FlownodesObject.Workflow },
+        { ObjectNames.OtherName, FlownodesObject.Other }
     };
 
     private static readonly Dictionary<FlownodesObject, string> FlownodesObjectToString = new()
@@ -58,6 +61,7 @@ public record FlownodesId
         { FlownodesObject.Device, "device" },
         { FlownodesObject.DataSource, "dataSource" },
         { FlownodesObject.Asset, "asset" },
+        { FlownodesObject.Script, "script" },
         { FlownodesObject.WorkflowManager, "workflowManager" },
         { FlownodesObject.Workflow, "workflow" },
         { FlownodesObject.Other, "other" }
@@ -159,9 +163,7 @@ public record FlownodesId
 
     private static FlownodesObject KindFromType(Type type)
     {
-        if (TypeToFlownodesObject.TryGetValue(type, out var result)) return result;
-
-        return FlownodesObject.Other;
+        return TypeToFlownodesObject.TryGetValue(type, out var result) ? result : FlownodesObject.Other;
     }
 
     private static FlownodesObject KindFromString(string kind)

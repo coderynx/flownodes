@@ -14,8 +14,8 @@ public class GetTenantHandler : IRequestHandler<GetTenantRequest, GetTenantRespo
 
     public GetTenantHandler(IGrainFactory clusterClient)
     {
-        _tenantManager = clusterClient.GetGrain<ITenantManagerGrain>(Globals.TenantManagerName);
-        _resourceManager = clusterClient.GetGrain<IResourceManagerGrain>(Globals.ResourceManagerName);
+        _tenantManager = clusterClient.GetGrain<ITenantManagerGrain>(ObjectNames.TenantManagerName);
+        _resourceManager = clusterClient.GetGrain<IResourceManagerGrain>(ObjectNames.ResourceManagerName);
     }
 
 

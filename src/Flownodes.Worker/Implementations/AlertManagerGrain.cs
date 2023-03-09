@@ -1,4 +1,5 @@
 using Flownodes.Sdk.Alerting;
+using Flownodes.Shared;
 using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
 using Orleans.Runtime;
@@ -8,6 +9,7 @@ namespace Flownodes.Worker.Implementations;
 [GenerateSerializer]
 internal sealed record AlertRegistration([property: Id(0)] string TenantName, [property: Id(1)] string AlertName);
 
+[GrainType(ObjectNames.AlertManagerName)]
 internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
 {
     private readonly IPersistentState<HashSet<AlertRegistration>> _alertRegistrations;
