@@ -7,7 +7,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Tests.Grains;
 
-[GrainType("dummy_resource")]
+[GrainType("other")]
 internal sealed class DummyResourceGrain : ResourceGrain, IDummyResourceGrain
 {
     public DummyResourceGrain(ILogger<DummyResourceGrain> logger, IEnvironmentService environmentService,

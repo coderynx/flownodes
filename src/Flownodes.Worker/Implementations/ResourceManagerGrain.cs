@@ -116,7 +116,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (_persistence.State.IsResourceRegistered(tenantName, resourceName))
             throw new ResourceAlreadyRegisteredException(tenantName, resourceName);
 
-        var id = $"{tenantName}/{resourceName}";
+        var id = new FlownodesId(typeof(TResourceGrain), tenantName, resourceName);
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
         var kind = await grain.GetKind();
         var tags = new HashSet<string> { resourceName, kind };

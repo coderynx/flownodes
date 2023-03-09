@@ -100,7 +100,7 @@ internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
 
     private string GetFullId(string name)
     {
-        var fullId = new FlownodesId(Id, name);
+        var fullId = new FlownodesId(FlownodesObject.Workflow, Id, name);
         return fullId.ToString();
     }
 

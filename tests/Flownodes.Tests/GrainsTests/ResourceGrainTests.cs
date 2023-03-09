@@ -25,7 +25,7 @@ public class ResourceGrainTests
 
     private FlownodesId ProvideFakeFlownodesId()
     {
-        return new FlownodesId($"{_fixture.Create<string>()}/{_fixture.Create<string>()}");
+        return new FlownodesId(FlownodesObject.Other, _fixture.Create<string>(), _fixture.Create<string>());
     }
 
     [Fact]

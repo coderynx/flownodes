@@ -43,8 +43,8 @@ internal abstract class ResourceGrain : Grain
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
     protected FlownodesId Id => this.GetPrimaryKeyString();
-    protected string TenantName => Id.TenantName;
-    protected string ResourceName => Id.ResourceName;
+    protected string TenantName => Id.FirstName;
+    protected string ResourceName => Id.SecondName!;
 
     protected string? BehaviourId
     {

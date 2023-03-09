@@ -53,7 +53,7 @@ public class ResourceManagerTests
             "resource");
 
         var id = await resource.GetId();
-        id.Should().Be("tenant/resource");
+        id.Should().Be("tenant/other:resource");
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public class ResourceManagerTests
         // Act.
         var result =
             await manager.SearchResourcesByTags("tenant",
-                new HashSet<string> { "TestDeviceBehavior", "dummy_resource" });
+                new HashSet<string> { "TestDeviceBehavior", "other" });
 
         // Assert.
         result.Should().HaveCount(2);
