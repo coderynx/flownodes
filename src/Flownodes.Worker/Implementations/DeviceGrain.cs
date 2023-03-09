@@ -37,10 +37,6 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
             .GetType()
             .IsAssignableTo(typeof(IReadableDeviceBehaviour));
 
-        var isWritable = Behaviour
-            .GetType()
-            .IsAssignableTo(typeof(IWritableDeviceBehaviour));
-
         if (!isReadable)
             return Task.CompletedTask;
 
