@@ -1,5 +1,6 @@
 using System.Reflection;
 using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using Flownodes.Worker.Modules;
 using Flownodes.Worker.Services;
 using Mapster;
@@ -14,33 +15,48 @@ public static partial class Program
 {
     private static string? _redisConnectionString;
 
-    private static void ConfigureContainer(ContainerBuilder builder)
+    private static void ConfigurePluginsContainer(this IServiceCollection services)
     {
-        builder.RegisterModule<ComponentsModule>();
-    }
+        var containerBuilder = new ContainerBuilder();
 
-    private static void ConfigureAppConfiguration(IConfigurationBuilder builder)
-    {
         var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         if (appPath is null) throw new NullReferenceException("Application path should not be null");
 
-        builder.SetBasePath(appPath)
-            .AddJsonFile("configuration.json", true);
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(appPath)
+            .AddJsonFile("pluginsConfiguration.json", true)
+            .Build();
+
+        var pluginServices = new ServiceCollection();
+        pluginServices.AddLogging(loggingBuilder =>
+        {
+            var logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(configuration)
+                .CreateLogger();
+
+            loggingBuilder.AddSerilog(logger);
+        });
+        pluginServices.AddHttpClient();
+
+        containerBuilder.Populate(pluginServices);
+        containerBuilder.RegisterModule<ComponentsModule>();
+        containerBuilder.RegisterInstance<IConfiguration>(configuration.GetSection("Plugins"));
+
+        var container = containerBuilder.Build();
+        services.AddSingleton(container);
     }
 
     private static void ConfigureServices(IServiceCollection services)
     {
         services.AddOptions();
-        services.AddSingleton<IPluginProvider, PluginProvider>();
-
-        services.AddHttpClient();
-
         var config = new TypeAdapterConfig();
         services.AddSingleton(config);
-        services.AddScoped<IMapper, ServiceMapper>();
 
+        services.AddSingleton<IPluginProvider, PluginProvider>();
+        services.AddScoped<IMapper, ServiceMapper>();
         services.AddSingleton<IEnvironmentService, EnvironmentService>();
         services.AddHostedService<TestWorker>();
+        services.ConfigurePluginsContainer();
     }
 
     private static void ConfigureProductionStorage(this ISiloBuilder builder)
@@ -81,9 +97,6 @@ public static partial class Program
             options.ClusterId = clusterId;
             options.ServiceId = serviceId;
         });
-
-
-        //builder.UseDashboard(_ => { });
 
         // Initialize node with localhost clustering and in-memory persistence.
         if (context.HostingEnvironment.IsDevelopment())

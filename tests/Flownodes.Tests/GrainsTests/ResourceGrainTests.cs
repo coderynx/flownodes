@@ -31,7 +31,7 @@ public class ResourceGrainTests
     [Fact]
     public async Task UpdateConfiguration_ShouldUpdateConfigurationAsync()
     {
-        var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(ProvideFakeFlownodesId());
+        var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
 
         var configuration = _fixture.Create<Dictionary<string, object?>>();
         await grain.UpdateConfigurationAsync(configuration);
@@ -43,7 +43,7 @@ public class ResourceGrainTests
     [Fact]
     public async Task UpdateConfiguration_ShouldThrowWhenBehaviourIsNotRegistered()
     {
-        var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(ProvideFakeFlownodesId());
+        var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
 
         var configuration = _fixture.Create<Dictionary<string, object?>>();
         configuration.Add("behaviourId", "unknown");
@@ -55,7 +55,7 @@ public class ResourceGrainTests
     [Fact]
     public async Task ClearConfiguration_ShouldClearConfiguration()
     {
-        var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(ProvideFakeFlownodesId());
+        var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
 
         var configuration = _fixture.Create<Dictionary<string, object?>>();
         await grain.UpdateConfigurationAsync(configuration);
@@ -70,7 +70,7 @@ public class ResourceGrainTests
     [Fact]
     public async Task UpdateMetadata_ShouldUpdateMetadata()
     {
-        var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(ProvideFakeFlownodesId());
+        var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
 
         var metadata = _fixture.Create<Dictionary<string, string?>>();
         await grain.UpdateMetadataAsync(metadata);
@@ -82,7 +82,7 @@ public class ResourceGrainTests
     [Fact]
     public async Task ClearMetadata_ShouldClearMetadata()
     {
-        var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(ProvideFakeFlownodesId());
+        var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
 
         var metadata = _fixture.Create<Dictionary<string, string?>>();
         await grain.UpdateMetadataAsync(metadata);
@@ -96,7 +96,7 @@ public class ResourceGrainTests
     [Fact]
     public async Task GetState_ShouldGetState()
     {
-        var grain = _cluster.GrainFactory.GetGrain<IDummyResourceGrain>(ProvideFakeFlownodesId());
+        var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
 
         var state = await grain.GetState();
         state.Should().NotBeNull();

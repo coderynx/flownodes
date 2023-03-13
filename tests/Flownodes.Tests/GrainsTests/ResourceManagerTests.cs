@@ -36,7 +36,7 @@ public class ResourceManagerTests
         var manager = ProvideResourceManager();
 
         // Act & Assert.
-        await manager.DeployResourceAsync<IDummyResourceGrain>(
+        await manager.DeployResourceAsync<ITestResourceGrain>(
             _fixture.Create<string>(),
             _fixture.Create<string>());
     }
@@ -48,7 +48,7 @@ public class ResourceManagerTests
         var manager = ProvideResourceManager();
 
         // Act.
-        var resource = await manager.DeployResourceAsync<IDummyResourceGrain>(
+        var resource = await manager.DeployResourceAsync<ITestResourceGrain>(
             "tenant",
             "resource");
 
@@ -63,7 +63,7 @@ public class ResourceManagerTests
         var manager = ProvideResourceManager();
 
         // Act & Assert.
-        var act = async () => { await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", string.Empty); };
+        var act = async () => { await manager.DeployResourceAsync<ITestResourceGrain>("tenant", string.Empty); };
         await act.Should().ThrowAsync<ArgumentException>();
     }
 
@@ -76,7 +76,7 @@ public class ResourceManagerTests
         // Act & Assert.
         var act = async () =>
         {
-            await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource",
+            await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource",
                 new Dictionary<string, object?>());
         };
         await act.Should().NotThrowAsync();
@@ -87,10 +87,10 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource");
+        await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource");
 
         // Act.
-        var grain = await manager.GetResourceAsync<IDummyResourceGrain>("tenant", "resource");
+        var grain = await manager.GetResourceAsync<ITestResourceGrain>("tenant", "resource");
 
         // Assert.
         grain.Should().NotBeNull();
@@ -101,8 +101,8 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource_1");
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource_2");
+        await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource_1");
+        await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource_2");
 
         // Act.
         var result =
@@ -118,10 +118,10 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource");
+        await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource");
 
         // Act.
-        var grain = await manager.GetResourceAsync<IDummyResourceGrain>("tenant", "resource1");
+        var grain = await manager.GetResourceAsync<ITestResourceGrain>("tenant", "resource1");
 
         // Assert.
         grain.Should().BeNull();
@@ -132,12 +132,12 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource");
+        await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource");
 
         // Act.
         await manager.RemoveResourceAsync("tenant", "resource");
 
-        var grain = await manager.GetResourceAsync<IDummyResourceGrain>("tenant", "resource");
+        var grain = await manager.GetResourceAsync<ITestResourceGrain>("tenant", "resource");
         grain.Should().BeNull();
     }
 
@@ -146,16 +146,16 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource1");
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource2");
+        await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource1");
+        await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource2");
 
         // Act.
         await manager.RemoveAllResourcesAsync("tenant");
 
         // Assert.
-        var grain1 = await manager.GetResourceAsync<IDummyResourceGrain>("tenant", "resource1");
+        var grain1 = await manager.GetResourceAsync<ITestResourceGrain>("tenant", "resource1");
         grain1.Should().BeNull();
-        var grain2 = await manager.GetResourceAsync<IDummyResourceGrain>("tenant", "resource2");
+        var grain2 = await manager.GetResourceAsync<ITestResourceGrain>("tenant", "resource2");
         grain2.Should().BeNull();
     }
 
@@ -164,8 +164,8 @@ public class ResourceManagerTests
     {
         // Arrange.
         var manager = ProvideResourceManager();
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource1");
-        await manager.DeployResourceAsync<IDummyResourceGrain>("tenant", "resource2");
+        await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource1");
+        await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource2");
 
         // Act.
         var summaries = await manager.GetAllResourceSummaries("tenant");

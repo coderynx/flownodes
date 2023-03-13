@@ -1,5 +1,4 @@
 using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using Flownodes.Sdk.Alerting;
 using Flownodes.Sdk.Resourcing;
 
@@ -7,24 +6,24 @@ namespace Flownodes.Worker.Services;
 
 public class PluginProvider : IPluginProvider
 {
-    private readonly ILifetimeScope _lifetimeScope;
+    private readonly IContainer _container;
     private readonly ILogger<PluginProvider> _logger;
 
-    public PluginProvider(IServiceProvider serviceProvider, ILogger<PluginProvider> logger)
+    public PluginProvider(ILogger<PluginProvider> logger, IContainer container)
     {
         _logger = logger;
-        _lifetimeScope = serviceProvider.GetAutofacRoot();
+        _container = container;
     }
 
     public IBehaviour? GetBehaviour(string id)
     {
         _logger.LogDebug("Retrieving behavior {@DeviceBehaviourId}", id);
-        return _lifetimeScope.ResolveOptionalKeyed<IBehaviour>(id);
+        return _container.ResolveOptionalKeyed<IBehaviour>(id);
     }
 
     public IAlerterDriver? GetAlerterDriver(string id)
     {
         _logger.LogDebug("Retrieving alerter driver {@AlerterDriverId}", id);
-        return _lifetimeScope.ResolveOptionalKeyed<IAlerterDriver>(id);
+        return _container.ResolveOptionalKeyed<IAlerterDriver>(id);
     }
 }

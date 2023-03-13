@@ -1,21 +1,16 @@
 using System.Threading.Tasks;
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
-using Flownodes.Sdk.Alerting;
-using Flownodes.Sdk.Resourcing;
+using Flownodes.Tests.Extensions;
 using Flownodes.Worker.Services;
 using Mapster;
 using MapsterMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NSubstitute;
 using Orleans.Hosting;
 using Orleans.TestingHost;
 using Xunit;
-using ContainerBuilder = Autofac.ContainerBuilder;
 
 namespace Flownodes.Tests.Fixtures;
 
@@ -42,7 +37,6 @@ public class ClusterFixture : IAsyncLifetime
 
         var builder = new TestClusterBuilder();
         builder.AddSiloBuilderConfigurator<SiloConfigurator>();
-        builder.AddSiloBuilderConfigurator<HostConfigurator>();
 
         Cluster = builder.Build();
         await Cluster.DeployAsync();
@@ -52,28 +46,6 @@ public class ClusterFixture : IAsyncLifetime
     {
         await Cluster!.KillSiloAsync(Cluster.Primary);
         await _redisContainer.StopAsync();
-    }
-
-    private class HostConfigurator : IHostConfigurator
-    {
-        public void Configure(IHostBuilder hostBuilder)
-        {
-            hostBuilder.UseServiceProviderFactory(new AutofacServiceProviderFactory())
-                .ConfigureContainer<ContainerBuilder>(ConfigureContainer);
-        }
-
-        private static void ConfigureContainer(ContainerBuilder builder)
-        {
-            var deviceBehaviorTest = Substitute.For<IBehaviour>();
-            builder.RegisterInstance(deviceBehaviorTest)
-                .As<IBehaviour>()
-                .Keyed<IBehaviour>("TestDeviceBehavior");
-
-            var alertBehaviorTest = Substitute.For<IAlerterDriver>();
-            builder.RegisterInstance(alertBehaviorTest)
-                .As<IAlerterDriver>()
-                .Keyed<IAlerterDriver>("TestAlerterDriver");
-        }
     }
 
     private class SiloConfigurator : ISiloConfigurator
@@ -88,6 +60,7 @@ public class ClusterFixture : IAsyncLifetime
                 var config = new TypeAdapterConfig();
                 services.AddSingleton(config);
                 services.AddScoped<IMapper, ServiceMapper>();
+                services.ConfigurePluginsContainer();
             });
 
             siloBuilder

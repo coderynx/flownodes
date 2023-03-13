@@ -58,7 +58,7 @@ public class TestWorker : BackgroundService
             Context.LogInformation("Hello");
             var state = new Dictionary<string, object?>
             {
-                { "power", true }
+                { "test", true }
             };
             await Context.UpdateResourceStateAsync("hue_light", state);
         }
