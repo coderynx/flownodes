@@ -2,12 +2,14 @@ using Flownodes.Sdk.Alerting;
 using Flownodes.Shared;
 using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
+using Flownodes.Shared.Models;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
 [GenerateSerializer]
-internal sealed record AlertRegistration([property: Id(0)] string TenantName, [property: Id(1)] string AlertName);
+internal sealed record AlertRegistration([property: Id(0)] string TenantName, [property: Id(1)] string AlertName,
+    [property: Id(2)] string TargetObjectName);
 
 [GrainType(FlownodesObjectNames.AlertManagerName)]
 internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
@@ -46,15 +48,29 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         if (_alertRegistrations.State.Any(x => x.TenantName.Equals(tenantName) && x.AlertName.Equals(alertName)))
             throw new AlertAlreadyRegisteredException(tenantName, alertName);
 
-        var id = $"{tenantName}/{alertName}";
+        var id = new FlownodesId(FlownodesObject.Alert, tenantName, alertName);
         var grain = _grainFactory.GetGrain<IAlertGrain>(id);
         await grain.InitializeAsync(targetObjectName, DateTime.Now, severity, description, driverIds);
 
-        var registration = await AddRegistrationAsync(tenantName, alertName);
+        var registration = await AddRegistrationAsync(tenantName, alertName, targetObjectName);
 
         _logger.LogInformation("Registered alert {@AlertRegistration}", registration);
 
         return grain;
+    }
+
+    public ValueTask<IAlertGrain?> GetAlertByTargetObjectName(string tenantName, string targetObjectName)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(tenantName);
+        ArgumentException.ThrowIfNullOrEmpty(targetObjectName);
+
+        var registration = _alertRegistrations.State
+            .FirstOrDefault(x => x.TenantName.Equals(tenantName) && x.TargetObjectName.Equals(targetObjectName));
+
+        if (registration is null) return default;
+
+        var id = new FlownodesId(FlownodesObject.Alert, registration.TenantName, registration.AlertName);
+        return ValueTask.FromResult<IAlertGrain?>(_grainFactory.GetGrain<IAlertGrain>(id));
     }
 
     public ValueTask<IAlertGrain?> GetAlert(string tenantName, string alertName)
@@ -113,12 +129,13 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         _logger.LogInformation("Removed alert {@AlertRegistration}", registration);
     }
 
-    private async ValueTask<AlertRegistration> AddRegistrationAsync(string tenantName, string alertName)
+    private async ValueTask<AlertRegistration> AddRegistrationAsync(string tenantName, string alertName,
+        string targetObjectName)
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(alertName);
 
-        var registration = new AlertRegistration(tenantName, alertName);
+        var registration = new AlertRegistration(tenantName, alertName, targetObjectName);
         _alertRegistrations.State.Add(registration);
         await _alertRegistrations.WriteStateAsync();
         return registration;

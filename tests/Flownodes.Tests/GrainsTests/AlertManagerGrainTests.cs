@@ -51,6 +51,18 @@ public class AlertManagerGrainTests
     }
 
     [Fact]
+    public async Task GetAlertByTargetObjectName_ShouldGetAlert()
+    {
+        var alertManager = ProvideAlertManagerGrain();
+
+        await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
+            AlertSeverity.Informational, "description", new HashSet<string>());
+
+        var alert = await alertManager.GetAlertByTargetObjectName("tenant", "targetObject");
+        alert.Should().NotBeNull();
+    }
+
+    [Fact]
     public async Task GetAlerts_ShouldGetAlerts()
     {
         var alertManager = ProvideAlertManagerGrain();

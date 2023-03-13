@@ -11,6 +11,8 @@ public interface IAlertGrain : IGrainWithStringKey
 
     Task ClearStateAsync();
 
+    ValueTask<string> GetName();
+
     ValueTask<(string TargetObjectName, DateTime FiredAt, AlertSeverity Severity, string Description,
         ISet<string> Drivers)> GetState();
 }

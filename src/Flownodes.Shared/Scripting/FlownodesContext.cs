@@ -58,7 +58,7 @@ public class FlownodesContext
 
     public async Task CreateAlertAsync(AlertSeverity severity, string description, ISet<string> drivers)
     {
-        var alert = await _alertManager.CreateAlertAsync(TenantName, Id, severity, description, drivers);
+        var alert = await _alertManager.CreateAlertAsync(TenantName, ResourceName, severity, description, drivers);
         await alert.FireAsync();
     }
 }

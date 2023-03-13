@@ -59,6 +59,10 @@ internal class AlertGrain : Grain, IAlertGrain
         _logger.LogInformation("Initialized alert grain {@AlertId}", Id);
     }
 
+    public ValueTask<string> GetName()
+    {
+        return ValueTask.FromResult(AlertName);
+    }
 
     public ValueTask<(string TargetObjectName, DateTime FiredAt, AlertSeverity Severity, string Description,
         ISet<string> Drivers)> GetState()

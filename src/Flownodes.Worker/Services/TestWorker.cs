@@ -48,6 +48,7 @@ public class TestWorker : BackgroundService
         using System.Collections.Generic;
         using System.Threading.Tasks;
         using Flownodes.Shared.Scripting;
+        using Flownodes.Sdk.Alerting;
 
     public class TestScript : IScript
     {
@@ -61,6 +62,8 @@ public class TestWorker : BackgroundService
                 { "test", true }
             };
             await Context.UpdateResourceStateAsync("hue_light", state);
+
+            await Context.CreateAlertAsync(AlertSeverity.Informational, "Hello", new HashSet<string>());
         }
     }
 """;

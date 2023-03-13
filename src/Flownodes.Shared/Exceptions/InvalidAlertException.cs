@@ -1,5 +1,6 @@
 namespace Flownodes.Shared.Exceptions;
 
+[GenerateSerializer]
 public class InvalidAlertException : Exception
 {
     public InvalidAlertException(string tenantName, string alertName) : base(
@@ -9,6 +10,7 @@ public class InvalidAlertException : Exception
         AlertName = alertName;
     }
 
-    public string TenantName { get; }
-    public string AlertName { get; }
+    [Id(0)] public string TenantName { get; }
+
+    [Id(1)] public string AlertName { get; }
 }

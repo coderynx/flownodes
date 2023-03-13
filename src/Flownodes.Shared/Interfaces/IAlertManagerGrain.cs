@@ -11,6 +11,7 @@ public interface IAlertManagerGrain : IGrainWithStringKey
         AlertSeverity severity, string description, ISet<string> driverIds);
 
     ValueTask<IAlertGrain?> GetAlert(string tenantName, string alertName);
+    ValueTask<IAlertGrain?> GetAlertByTargetObjectName(string tenantName, string targetObjectName);
     Task RemoveAlertAsync(string tenantName, string alertName);
     ValueTask<HashSet<string>> GetAlertNames(string tenantName);
     ValueTask<HashSet<IAlertGrain>> GetAlerts(string tenantName);
