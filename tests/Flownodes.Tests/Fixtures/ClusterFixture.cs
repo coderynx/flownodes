@@ -1,7 +1,4 @@
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Configurations;
-using DotNet.Testcontainers.Containers;
 using Flownodes.Tests.Extensions;
 using Flownodes.Worker.Services;
 using Mapster;
@@ -10,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Orleans.Hosting;
 using Orleans.TestingHost;
+using Testcontainers.Redis;
 using Xunit;
 
 namespace Flownodes.Tests.Fixtures;
@@ -22,9 +20,8 @@ internal static class TestGlobals
 public class ClusterFixture : IAsyncLifetime
 {
     // TODO: Update ContainerBuilder.
-    private readonly RedisTestcontainer _redisContainer = new ContainerBuilder<RedisTestcontainer>()
+    private readonly RedisContainer _redisContainer = new RedisBuilder()
         .WithImage("redis:latest")
-        .WithDatabase(new RedisTestcontainerConfiguration())
         .WithCleanUp(true)
         .Build();
 
@@ -33,7 +30,7 @@ public class ClusterFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _redisContainer.StartAsync();
-        TestGlobals.RedisConnectionString = _redisContainer.ConnectionString;
+        TestGlobals.RedisConnectionString = _redisContainer.GetConnectionString();
 
         var builder = new TestClusterBuilder();
         builder.AddSiloBuilderConfigurator<SiloConfigurator>();
