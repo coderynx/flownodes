@@ -15,7 +15,7 @@ internal class WorkflowConfiguration
     [Id(0)] public string? WorkflowJson { get; set; }
 }
 
-[GrainType(ObjectNames.WorkflowName)]
+[GrainType(FlownodesObjectNames.WorkflowName)]
 internal class WorkflowGrain : Grain, IWorkflowGrain
 {
     private readonly IPersistentState<WorkflowConfiguration> _configurationStore;

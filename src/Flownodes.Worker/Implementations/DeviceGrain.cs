@@ -6,7 +6,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-[GrainType(ObjectNames.DeviceName)]
+[GrainType(FlownodesObjectNames.DeviceName)]
 internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
     public DeviceGrain(IPluginProvider pluginProvider, ILogger<DeviceGrain> logger,

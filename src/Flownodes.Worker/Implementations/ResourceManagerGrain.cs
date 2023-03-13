@@ -8,7 +8,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-[GrainType(ObjectNames.ResourceManagerName)]
+[GrainType(FlownodesObjectNames.ResourceManagerName)]
 public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 {
     private readonly IGrainFactory _grainFactory;
@@ -24,7 +24,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _grainFactory = grainFactory;
     }
 
-    public async ValueTask<Resource?> GetResourceSummary(string tenantName, string resourceName)
+    public async ValueTask<ResourceSummary?> GetResourceSummary(string tenantName, string resourceName)
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
@@ -40,7 +40,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return summary;
     }
 
-    public async ValueTask<ReadOnlyCollection<Resource>> GetAllResourceSummaries(string tenantName)
+    public async ValueTask<ReadOnlyCollection<ResourceSummary>> GetAllResourceSummaries(string tenantName)
     {
         ArgumentException.ThrowIfNullOrEmpty(tenantName);
 

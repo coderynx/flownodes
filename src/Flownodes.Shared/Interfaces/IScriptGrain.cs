@@ -1,6 +1,6 @@
 namespace Flownodes.Shared.Interfaces;
 
-public interface IScriptResourceGrain : IConfigurableResource
+public interface IScriptGrain : IConfigurableResource
 {
     Task ExecuteAsync(Dictionary<string, object?>? parameters = null);
 }

@@ -1,7 +1,7 @@
 namespace Flownodes.Shared.Models;
 
 [GenerateSerializer]
-public sealed record Resource(
+public sealed record ResourceSummary(
     [property: Id(0)] string Id,
     [property: Id(1)] string TenantName,
     [property: Id(2)] string ResourceName,

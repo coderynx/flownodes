@@ -42,5 +42,35 @@ public class TestWorker : BackgroundService
         var routerState = await router.GetState();
 
         _logger.LogInformation("Router State: {@State}", routerState.Properties);
+
+        const string code = """
+        // #!/usr/local/bin/cscs
+        using System.Collections.Generic;
+        using System.Threading.Tasks;
+        using Flownodes.Shared.Scripting;
+
+    public class TestScript : IScript
+    {
+        public FlownodesContext Context { get; set; }
+
+        public async Task ExecuteAsync(Dictionary<string, object?> parameters)
+        {
+            Context.LogInformation("Hello");
+            var state = new Dictionary<string, object?>
+            {
+                { "power", true }
+            };
+            await Context.UpdateResourceStateAsync("hue_light", state);
+        }
+    }
+""";
+        var scriptConfiguration = new Dictionary<string, object?>
+        {
+            { "code", code }
+        };
+
+        var script = await resourceManager.DeployResourceAsync<IScriptGrain>("default", "script", scriptConfiguration);
+        await script.ExecuteAsync();
+        _logger.LogInformation("Executed script");
     }
 }

@@ -1,6 +1,6 @@
 namespace Flownodes.Shared;
 
-public static class ObjectNames
+public static class FlownodesObjectNames
 {
     public const string TenantManagerName = "tenant_manager";
     public const string TenantName = "tenant";

@@ -66,15 +66,16 @@ internal abstract class ResourceGrain : Grain
     }
 
     protected DateTime CreatedAt => Metadata.CreatedAt;
-    protected IResourceManagerGrain ResourceManagerGrain => _environmentService.GetResourceManagerGrain();
+    protected IResourceManagerGrain ResourceManager => _environmentService.GetResourceManagerGrain();
+    protected IAlertManagerGrain AlertManager => _environmentService.GetAlertManagerGrain();
     protected ResourceMetadataStore Metadata => _metadataStore.State;
     protected ResourceConfigurationStore? Configuration => _configurationStore?.State;
     protected ResourceStateStore? State => _stateStore?.State;
 
-    public ValueTask<Resource> GetPoco()
+    public ValueTask<ResourceSummary> GetPoco()
     {
         Logger.LogDebug("Retrieved POCO of resource {ResourceId}", Id);
-        return ValueTask.FromResult(new Resource(Id, TenantName, ResourceName, Kind, BehaviourId, CreatedAt,
+        return ValueTask.FromResult(new ResourceSummary(Id, TenantName, ResourceName, Kind, BehaviourId, CreatedAt,
             Configuration?.Properties, Metadata.Properties, State?.Properties, State?.LastUpdate));
     }
 

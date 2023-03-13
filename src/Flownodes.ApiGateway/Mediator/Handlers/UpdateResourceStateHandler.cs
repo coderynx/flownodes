@@ -13,8 +13,8 @@ public class UpdateResourceStateHandler : IRequestHandler<UpdateResourceStateReq
 
     public UpdateResourceStateHandler(IGrainFactory grainFactory)
     {
-        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(ObjectNames.TenantManagerName);
-        _resourceManager = grainFactory.GetGrain<IResourceManagerGrain>(ObjectNames.ResourceManagerName);
+        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManagerName);
+        _resourceManager = grainFactory.GetGrain<IResourceManagerGrain>(FlownodesObjectNames.ResourceManagerName);
     }
 
     public async Task<UpdateResourceStateResponse> Handle(UpdateResourceStateRequest request,

@@ -11,7 +11,7 @@ public interface IResourceGrain : IGrainWithStringKey
     ///     Gets the resource POCO.
     /// </summary>
     /// <returns>The resource POCO. </returns>
-    public ValueTask<Resource> GetPoco();
+    public ValueTask<ResourceSummary> GetPoco();
 
     /// <summary>
     ///     Get the resource kind.

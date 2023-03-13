@@ -11,7 +11,7 @@ internal class WorkflowManagerStore
     [Id(0)] public List<string> WorkflowRegistrations { get; set; } = new();
 }
 
-[GrainType(ObjectNames.WorkflowManagerName)]
+[GrainType(FlownodesObjectNames.WorkflowManagerName)]
 internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
 {
     private readonly IGrainFactory _grainFactory;

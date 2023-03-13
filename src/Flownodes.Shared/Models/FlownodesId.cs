@@ -30,25 +30,25 @@ public record FlownodesId
         { typeof(IDeviceGrain), FlownodesObject.Device },
         { typeof(IDataSourceGrain), FlownodesObject.DataSource },
         { typeof(IAssetGrain), FlownodesObject.Asset },
-        { typeof(IScriptResourceGrain), FlownodesObject.Script },
+        { typeof(IScriptGrain), FlownodesObject.Script },
         { typeof(IWorkflowManagerGrain), FlownodesObject.WorkflowManager },
         { typeof(IWorkflowGrain), FlownodesObject.Workflow }
     };
 
     private static readonly Dictionary<string, FlownodesObject> StringToFlownodesObject = new()
     {
-        { ObjectNames.TenantManagerName, FlownodesObject.TenantManager },
-        { ObjectNames.TenantName, FlownodesObject.Tenant },
-        { ObjectNames.AlertManagerName, FlownodesObject.AlertManager },
-        { ObjectNames.AlertName, FlownodesObject.Alert },
-        { ObjectNames.ResourceManagerName, FlownodesObject.ResourceManager },
-        { ObjectNames.DeviceName, FlownodesObject.Device },
-        { ObjectNames.DataSourceName, FlownodesObject.DataSource },
-        { ObjectNames.AssetName, FlownodesObject.Asset },
-        { ObjectNames.ScriptName, FlownodesObject.Script },
-        { ObjectNames.WorkflowManagerName, FlownodesObject.WorkflowManager },
-        { ObjectNames.WorkflowName, FlownodesObject.Workflow },
-        { ObjectNames.OtherName, FlownodesObject.Other }
+        { FlownodesObjectNames.TenantManagerName, FlownodesObject.TenantManager },
+        { FlownodesObjectNames.TenantName, FlownodesObject.Tenant },
+        { FlownodesObjectNames.AlertManagerName, FlownodesObject.AlertManager },
+        { FlownodesObjectNames.AlertName, FlownodesObject.Alert },
+        { FlownodesObjectNames.ResourceManagerName, FlownodesObject.ResourceManager },
+        { FlownodesObjectNames.DeviceName, FlownodesObject.Device },
+        { FlownodesObjectNames.DataSourceName, FlownodesObject.DataSource },
+        { FlownodesObjectNames.AssetName, FlownodesObject.Asset },
+        { FlownodesObjectNames.ScriptName, FlownodesObject.Script },
+        { FlownodesObjectNames.WorkflowManagerName, FlownodesObject.WorkflowManager },
+        { FlownodesObjectNames.WorkflowName, FlownodesObject.Workflow },
+        { FlownodesObjectNames.OtherName, FlownodesObject.Other }
     };
 
     private static readonly Dictionary<FlownodesObject, string> FlownodesObjectToString = new()

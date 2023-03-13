@@ -6,7 +6,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-[GrainType(ObjectNames.DataSourceName)]
+[GrainType(FlownodesObjectNames.DataSourceName)]
 internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
     public DataSourceGrain(ILogger<DataSourceGrain> logger, IEnvironmentService environmentService,

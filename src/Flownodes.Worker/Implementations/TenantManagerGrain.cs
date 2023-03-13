@@ -5,7 +5,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-[GrainType(ObjectNames.TenantManagerName)]
+[GrainType(FlownodesObjectNames.TenantManagerName)]
 public class TenantManagerGrain : ITenantManagerGrain
 {
     private readonly IGrainFactory _grainFactory;
