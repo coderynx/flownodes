@@ -29,6 +29,16 @@ public class ResourceGrainTests
     }
 
     [Fact]
+    public async Task GetConfiguration_ShouldReturnNullDateTimeWhenNotUpdated()
+    {
+        var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
+
+        var configurationTuple = await grain.GetConfiguration();
+        configurationTuple.Configuration.Should().BeEmpty();
+        configurationTuple.LastUpdateDate.Should().BeNull();
+    }
+
+    [Fact]
     public async Task UpdateConfiguration_ShouldUpdateConfigurationAsync()
     {
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
@@ -37,7 +47,7 @@ public class ResourceGrainTests
         await grain.UpdateConfigurationAsync(configuration);
 
         var newConfiguration = await grain.GetConfiguration();
-        newConfiguration.Should().BeEquivalentTo(configuration);
+        newConfiguration.Configuration.Should().BeEquivalentTo(configuration);
     }
 
     [Fact]
@@ -62,9 +72,20 @@ public class ResourceGrainTests
 
         await grain.ClearConfigurationAsync();
 
-        var newConfiguration = await grain.GetConfiguration();
-        newConfiguration.Should().NotBeEquivalentTo(configuration);
-        newConfiguration.Should().BeEmpty();
+        var configurationTuple = await grain.GetConfiguration();
+        configurationTuple.Configuration.Should().NotBeEquivalentTo(configuration);
+        configurationTuple.Configuration.Should().BeEmpty();
+        configurationTuple.LastUpdateDate.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetMetadata_ShouldReturnNullDateTimeWhenNotUpdated()
+    {
+        var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
+
+        var configurationTuple = await grain.GetMetadata();
+        configurationTuple.Metadata.Should().BeEmpty();
+        configurationTuple.LastUpdateDate.Should().BeNull();
     }
 
     [Fact]
@@ -76,7 +97,7 @@ public class ResourceGrainTests
         await grain.UpdateMetadataAsync(metadata);
 
         var newMetadata = await grain.GetMetadata();
-        newMetadata.Proprties.Should().BeEquivalentTo(metadata);
+        newMetadata.Metadata.Should().BeEquivalentTo(metadata);
     }
 
     [Fact]
@@ -89,8 +110,10 @@ public class ResourceGrainTests
 
         await grain.ClearMetadataAsync();
 
-        var newMetadata = await grain.GetMetadata();
-        newMetadata.Proprties.Should().BeEmpty();
+        var metadataTuple = await grain.GetMetadata();
+        metadataTuple.Metadata.Should().NotBeEquivalentTo(metadata);
+        metadataTuple.Metadata.Should().BeEmpty();
+        metadataTuple.LastUpdateDate.Should().NotBeNull();
     }
 
     [Fact]
@@ -100,5 +123,31 @@ public class ResourceGrainTests
 
         var state = await grain.GetState();
         state.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetState_ShouldReturnNullDateTimeWhenNotUpdated()
+    {
+        var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
+
+        var stateTuple = await grain.GetState();
+        stateTuple.State.Should().BeEmpty();
+        stateTuple.LastUpdateDate.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ClearState_ShouldClearState()
+    {
+        var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
+
+        var state = _fixture.Create<Dictionary<string, object?>>();
+        await grain.UpdateStateAsync(state);
+
+        await grain.ClearStateAsync();
+
+        var stateTuple = await grain.GetState();
+        stateTuple.State.Should().NotBeEquivalentTo(state);
+        stateTuple.State.Should().BeEmpty();
+        stateTuple.LastUpdateDate.Should().NotBeNull();
     }
 }

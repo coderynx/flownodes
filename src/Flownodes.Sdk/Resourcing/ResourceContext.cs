@@ -7,7 +7,7 @@ public sealed class ResourceContext
 {
     public ResourceContext(string serviceId, string clusterId, string tenantName, string resourceName,
         DateTime createdAt, string? behaviourId, Dictionary<string, object?>? configuration,
-        Dictionary<string, string?> metadata, Dictionary<string, object?>? state)
+        Dictionary<string, string?> metadata, Dictionary<string, object?>? state, DateTime? lastStateUpdateDate)
     {
         ServiceId = serviceId;
         ClusterId = clusterId;
@@ -18,17 +18,18 @@ public sealed class ResourceContext
         Configuration = configuration;
         Metadata = metadata;
         State = state;
+        LastStateUpdateDate = lastStateUpdateDate;
     }
 
-    public string ServiceId { get; init; }
-    public string ClusterId { get; init; }
-    public string TenantName { get; init; }
+    public string ServiceId { get; }
+    public string ClusterId { get; }
+    public string TenantName { get; }
     public string ResourceId => $"{TenantName}/{ResourceName}";
-    public string ResourceName { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public string? BehaviourId { get; init; }
-    public Dictionary<string, object?>? Configuration { get; set; }
-    public Dictionary<string, string?> Metadata { get; set; }
-    public Dictionary<string, object?>? State { get; set; }
-    public DateTime? LastStateUpdate { get; init; }
+    public string ResourceName { get; }
+    public DateTime CreatedAt { get; }
+    public string? BehaviourId { get; }
+    public Dictionary<string, object?>? Configuration { get; }
+    public Dictionary<string, string?> Metadata { get; }
+    public Dictionary<string, object?>? State { get; }
+    public DateTime? LastStateUpdateDate { get; }
 }

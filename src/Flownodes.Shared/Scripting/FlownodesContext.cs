@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Flownodes.Sdk.Alerting;
 using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
@@ -45,7 +44,7 @@ public class FlownodesContext
             TenantName, message);
     }
 
-    public async Task<(Dictionary<string, object?> Properties, DateTime LastUpdate)> GetResourceState(
+    public async Task<(Dictionary<string, object?> State, DateTime? LastUpdateDate)> GetResourceState(
         string resourceName)
     {
         var resource = await _resourceManager.GetGenericResourceAsync(TenantName, resourceName);
@@ -58,14 +57,12 @@ public class FlownodesContext
         await resource.AsReference<IStatefulResource>().UpdateStateAsync(state);
     }
 
-    public async ValueTask<string> GetDataFromDataSourceAsync(string dataSourceName, string actionId, Dictionary<string, object?>? parameters = null)
+    public async ValueTask<string> GetDataFromDataSourceAsync(string dataSourceName, string actionId,
+        Dictionary<string, object?>? parameters = null)
     {
         var dataSource = await _resourceManager.GetResourceAsync<IDataSourceGrain>(TenantName, dataSourceName);
-        if (dataSource is null)
-        {
-            throw new ResourceNotFoundException(TenantName, dataSourceName);
-        }
-        
+        if (dataSource is null) throw new ResourceNotFoundException(TenantName, dataSourceName);
+
         var data = await dataSource.GetDataAsync(actionId, parameters);
         return data.JsonString;
     }

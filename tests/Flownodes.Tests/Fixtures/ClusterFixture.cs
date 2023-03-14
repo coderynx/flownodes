@@ -21,13 +21,13 @@ internal static class TestGlobals
 
 public class ClusterFixture : IAsyncLifetime
 {
-    private readonly RedisContainer _redisContainer = new RedisBuilder()
-        .WithImage("redis:latest")
-        .WithCleanUp(true)
-        .Build();
-    
     private readonly MongoDbContainer _mongoContainer = new MongoDbBuilder()
         .WithImage("mongo:latest")
+        .WithCleanUp(true)
+        .Build();
+
+    private readonly RedisContainer _redisContainer = new RedisBuilder()
+        .WithImage("redis:latest")
         .WithCleanUp(true)
         .Build();
 
@@ -40,7 +40,7 @@ public class ClusterFixture : IAsyncLifetime
 
         await _mongoContainer.StartAsync();
         TestGlobals.MongoConnectionString = _mongoContainer.GetConnectionString();
-        
+
         var builder = new TestClusterBuilder();
         builder.AddSiloBuilderConfigurator<SiloConfigurator>();
 
@@ -78,10 +78,7 @@ public class ClusterFixture : IAsyncLifetime
                     options.Database = 0;
                 })
                 .UseMongoDBClient(TestGlobals.MongoConnectionString)
-                .AddMongoDBGrainStorageAsDefault(options =>
-                {
-                    options.DatabaseName = "flownodes-storage";
-                });
+                .AddMongoDBGrainStorageAsDefault(options => { options.DatabaseName = "flownodes-storage"; });
         }
     }
 }

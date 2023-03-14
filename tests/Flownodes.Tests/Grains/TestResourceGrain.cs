@@ -5,7 +5,6 @@ using Flownodes.Worker.Implementations;
 using Flownodes.Worker.Services;
 using Microsoft.Extensions.Logging;
 using Orleans;
-using Orleans.Runtime;
 
 namespace Flownodes.Tests.Grains;
 
@@ -15,9 +14,8 @@ internal sealed class TestResourceGrain : ResourceGrain, ITestResourceGrain
     private readonly IContainer _container;
 
     public TestResourceGrain(ILogger<TestResourceGrain> logger, IEnvironmentService environmentService,
-        IPluginProvider pluginProvider, IPersistentStateFactory persistentStateFactory, IGrainContext grainContext,
-        IContainer container) :
-        base(logger, environmentService, pluginProvider, persistentStateFactory, grainContext)
+        IPluginProvider pluginProvider, IContainer container) :
+        base(logger, environmentService, pluginProvider)
     {
         _container = container;
     }

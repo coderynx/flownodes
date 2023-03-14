@@ -1,8 +1,8 @@
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared;
 using Flownodes.Shared.Interfaces;
+using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
-using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
@@ -10,9 +10,8 @@ namespace Flownodes.Worker.Implementations;
 internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
     public DeviceGrain(IPluginProvider pluginProvider, ILogger<DeviceGrain> logger,
-        IEnvironmentService environmentService, IPersistentStateFactory persistentStateFactory,
-        IGrainContext grainContext) :
-        base(logger, environmentService, pluginProvider, persistentStateFactory, grainContext)
+        IEnvironmentService environmentService) :
+        base(logger, environmentService, pluginProvider)
     {
     }
 
@@ -27,8 +26,6 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 
         var @event = new UpdateResourceStateEvent(context.State!);
         await RaiseConditionalEvent(@event);
-
-        Logger.LogDebug("Updated state for device {@DeviceId}: {@State}", Id, State.Properties);
     }
 
     protected override Task OnBehaviourChangedAsync()
@@ -42,7 +39,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         if (!isReadable)
             return Task.CompletedTask;
 
-        if (Configuration?.Properties.GetValueOrDefault("updateStateTimeSpan") is not int updateState)
+        if (State.Configuration?.GetValueOrDefault("updateStateTimeSpan") is not int updateState)
             return Task.CompletedTask;
 
         var timeSpan = TimeSpan.FromSeconds(updateState);

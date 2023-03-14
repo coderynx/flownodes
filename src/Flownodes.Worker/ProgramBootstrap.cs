@@ -7,7 +7,6 @@ using Mapster;
 using MapsterMapper;
 using Orleans.Configuration;
 using Serilog;
-using StackExchange.Redis;
 
 namespace Flownodes.Worker;
 
@@ -70,10 +69,7 @@ public static partial class Program
                 options.Database = 0;
             })
             .UseMongoDBClient(_mongoConnectionString)
-            .AddMongoDBGrainStorageAsDefault(options =>
-            {
-                options.DatabaseName = "flownodes-storage";
-            });
+            .AddMongoDBGrainStorageAsDefault(options => { options.DatabaseName = "flownodes-storage"; });
     }
 
     private static void UseManualConfiguration(this ISiloBuilder builder)
@@ -96,7 +92,7 @@ public static partial class Program
 
         var clusterId = Environment.GetEnvironmentVariable("ORLEANS_CLUSTER_ID") ?? "dev";
         var serviceId = Environment.GetEnvironmentVariable("ORLEANS_SERVICE_ID") ?? "flownodes";
-        
+
         builder.Configure<ClusterOptions>(options =>
         {
             options.ClusterId = clusterId;

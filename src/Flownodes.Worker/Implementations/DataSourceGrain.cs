@@ -2,7 +2,6 @@ using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Worker.Services;
-using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
@@ -10,14 +9,15 @@ namespace Flownodes.Worker.Implementations;
 internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
     public DataSourceGrain(ILogger<DataSourceGrain> logger, IEnvironmentService environmentService,
-        IPluginProvider pluginProvider, IPersistentStateFactory persistentStateFactory, IGrainContext grainContext)
-        : base(logger, environmentService, pluginProvider, persistentStateFactory, grainContext)
+        IPluginProvider pluginProvider)
+        : base(logger, environmentService, pluginProvider)
     {
     }
 
     private new IDataSourceBehaviour? Behaviour => base.Behaviour as IDataSourceBehaviour;
 
-    public async ValueTask<DataSourceResult> GetDataAsync(string actionId, Dictionary<string, object?>? parameters = null)
+    public async ValueTask<DataSourceResult> GetDataAsync(string actionId,
+        Dictionary<string, object?>? parameters = null)
     {
         if (Behaviour is null) throw new NullReferenceException("Behaviour should not be null");
 

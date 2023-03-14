@@ -35,7 +35,7 @@ public interface IResourceGrain : IGrainWithStringKey
     ///     Gets the stored resource metadata.
     /// </summary>
     /// <returns>The stored metadata.</returns>
-    ValueTask<(Dictionary<string, string?> Proprties, DateTime CreatedAt)> GetMetadata();
+    ValueTask<(Dictionary<string, string?> Metadata, DateTime? LastUpdateDate, DateTime CreatedAtDate)> GetMetadata();
 
     /// <summary>
     ///     Clears the resource metadata.
