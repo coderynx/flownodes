@@ -9,10 +9,9 @@ Flownodes is an experimental automation distributed platform designed to integra
 graph TD
     Devices(Devices) --- Flownodes
     DataSources(Data sources) --- Flownodes
-    Flownodes --- OperationalDatabase("Operational database (Redis)")
-    Flownodes --- StorageDatabase("Storage Database")
-    Flownodes --- ApiGateway(Api Gateway)
-    ApiGateway --- WebApp(Web App)
+    Flownodes --- ClusteringDb("Clustering database (Redis)")
+    Flownodes --- StorageDb("Storage database (MongoDB)")
+    Flownodes --- ApiGateway(Api gateway)
 ```
 
 ## Additional notes
