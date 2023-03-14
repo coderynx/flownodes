@@ -5,21 +5,32 @@ using Flownodes.Shared.Models;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 using Orleans.Concurrency;
+using Orleans.EventSourcing;
+using Orleans.Providers;
 using Orleans.Runtime;
+using ZstdSharp.Unsafe;
 
 namespace Flownodes.Worker.Implementations;
+
+public interface IResourceStateEvent
+{
+    Dictionary<string, object?> Properties { get; }
+}
+
+public record UpdateResourceStateEvent(Dictionary<string, object?> Properties) : IResourceStateEvent;
 
 internal record PersistenceStateConfiguration
     (string StateName, string? StorageName = null) : IPersistentStateConfiguration;
 
 [Reentrant]
-internal abstract class ResourceGrain : Grain
+[StorageProvider]
+[LogConsistencyProvider]
+internal abstract class ResourceGrain : JournaledGrain<ResourceStateStore, IResourceStateEvent>
 {
     private readonly IPersistentState<ResourceConfigurationStore>? _configurationStore;
     private readonly IEnvironmentService _environmentService;
     private readonly IPersistentState<ResourceMetadataStore> _metadataStore;
     private readonly IPluginProvider _pluginProvider;
-    private readonly IPersistentState<ResourceStateStore>? _stateStore;
 
     protected readonly ILogger<ResourceGrain> Logger;
 
@@ -41,12 +52,6 @@ internal abstract class ResourceGrain : Grain
 
         var metadataStoreConfiguration = new PersistenceStateConfiguration($"{Kind}MetadataStore");
         _metadataStore = persistentStateFactory.Create<ResourceMetadataStore>(grainContext, metadataStoreConfiguration);
-
-        if (IsStateful)
-        {
-            var stateStoreConfiguration = new PersistenceStateConfiguration($"{Kind}StateStore");
-            _stateStore = persistentStateFactory.Create<ResourceStateStore>(grainContext, stateStoreConfiguration);
-        }
     }
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
@@ -70,7 +75,6 @@ internal abstract class ResourceGrain : Grain
     protected IAlertManagerGrain AlertManager => _environmentService.GetAlertManagerGrain();
     protected ResourceMetadataStore Metadata => _metadataStore.State;
     protected ResourceConfigurationStore? Configuration => _configurationStore?.State;
-    protected ResourceStateStore? State => _stateStore?.State;
 
     public ValueTask<ResourceSummary> GetPoco()
     {
@@ -166,8 +170,8 @@ internal abstract class ResourceGrain : Grain
 
     public async Task UpdateStateAsync(Dictionary<string, object?> state)
     {
-        State?.UpdateState(state);
-        // await StoreStateAsync();
+        await RaiseConditionalEvent(new UpdateResourceStateEvent(state));
+        await ConfirmEvents();
         await OnUpdateStateAsync(state);
     }
 
@@ -191,12 +195,12 @@ internal abstract class ResourceGrain : Grain
         Logger.LogInformation("Cleared metadata of resource {ResourceId}", Id);
     }
 
-    public virtual async Task ClearStateAsync()
+    public Task ClearStateAsync()
     {
-        if (_stateStore is null) throw new ResourceNotStatefulException(TenantName, Kind, ResourceName);
-
-        await _stateStore.ClearStateAsync();
+        if (!IsStateful) throw new ResourceNotStatefulException(TenantName, Kind, ResourceName);
+        
         Logger.LogInformation("Cleared state of resource {ResourceId}", Id);
+        return Task.CompletedTask;
     }
 
     protected async Task StoreConfigurationAsync()
@@ -213,22 +217,13 @@ internal abstract class ResourceGrain : Grain
         Logger.LogInformation("Updated metadata of resource {ResourceId}", Id);
     }
 
-    protected async Task StoreStateAsync()
-    {
-        if (_stateStore is null) throw new ResourceNotStatefulException(TenantName, Kind, ResourceName);
-
-        // TODO: Decide when to store the resource state.
-        await _stateStore.WriteStateAsync();
-        Logger.LogInformation("Updated state of resource {ResourceId}", Id);
-    }
-
     public virtual async Task SelfRemoveAsync()
     {
         await _metadataStore.ClearStateAsync();
 
         if (_configurationStore is not null) await _configurationStore.ClearStateAsync();
-
-        if (_stateStore is not null) await _stateStore.ClearStateAsync();
+        
+        // TODO: Add clear state.
 
         Logger.LogInformation("Cleared persistence of resource {ResourceId}", Id);
     }
@@ -241,5 +236,11 @@ internal abstract class ResourceGrain : Grain
     public ValueTask<bool> GetIsStateful()
     {
         return ValueTask.FromResult(IsStateful);
+    }
+
+    protected override void TransitionState(ResourceStateStore state, IResourceStateEvent @event)
+    {
+        state.Update(@event.Properties);
+        Logger.LogInformation("Updated state of resource {@ResourceId}", Id);
     }
 }

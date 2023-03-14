@@ -42,8 +42,10 @@ public class TestWorker : BackgroundService
         {
             { "behaviourId", "open_weather_map" }
         };
-        var openWeather = await resourceManager.DeployResourceAsync<IDataSourceGrain>("default", "open_weather_map", openWeatherConfiguration);
-        
+        var openWeather =
+            await resourceManager.DeployResourceAsync<IDataSourceGrain>("default", "open_weather_map",
+                openWeatherConfiguration);
+
         const string code = """
         // #!/usr/local/bin/cscs
         using System.Collections.Generic;

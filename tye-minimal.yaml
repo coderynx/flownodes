@@ -1,5 +1,16 @@
 name: flownodes
 services:
+  - name: mongo
+    image: mongo
+    env:
+      - name: MONGO_INITDB_ROOT_USERNAME
+        value: mongo
+      - name: MONGO_INITDB_ROOT_PASSWORD
+        value: mongo
+    bindings:
+      - port: 27017
+        connectionString: "mongodb://mongo:mongo@${host}:${port}"
+
   - name: redis
     image: redis
     bindings:
@@ -16,5 +27,3 @@ services:
       - DOTNET_ENVIRONMENT=Staging
       - ORLEANS_CLUSTER_ID=dev
       - ORLEANS_SERVICE_ID=flownodes
-      - RESOURCE_MANAGER_NAME=resource_manager
-      - ALERT_MANAGER_NAME=alert_manager

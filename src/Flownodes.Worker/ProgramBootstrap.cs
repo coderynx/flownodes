@@ -7,6 +7,7 @@ using Mapster;
 using MapsterMapper;
 using Orleans.Configuration;
 using Serilog;
+using StackExchange.Redis;
 
 namespace Flownodes.Worker;
 
@@ -14,6 +15,7 @@ namespace Flownodes.Worker;
 public static partial class Program
 {
     private static string? _redisConnectionString;
+    private static string? _mongoConnectionString;
 
     private static void ConfigurePluginsContainer(this IServiceCollection services)
     {
@@ -67,10 +69,10 @@ public static partial class Program
                 options.ConnectionString = _redisConnectionString;
                 options.Database = 0;
             })
-            .AddRedisGrainStorageAsDefault(options =>
+            .UseMongoDBClient(_mongoConnectionString)
+            .AddMongoDBGrainStorageAsDefault(options =>
             {
-                options.ConnectionString = _redisConnectionString;
-                options.DatabaseNumber = 1;
+                options.DatabaseName = "flownodes-storage";
             });
     }
 
@@ -83,20 +85,25 @@ public static partial class Program
 
     private static void ConfigureOrleans(HostBuilderContext context, ISiloBuilder builder)
     {
-        _redisConnectionString = $"{Environment.GetEnvironmentVariable("REDIS")}:6379";
-
-        var configurationConnectionString = context.Configuration.GetConnectionString("redis");
-        if (configurationConnectionString is not null) _redisConnectionString = configurationConnectionString;
+        _redisConnectionString = Environment.GetEnvironmentVariable("REDIS")
+                                 ?? context.Configuration.GetConnectionString("redis")
+                                 ?? "localhost:6379";
+        _mongoConnectionString = Environment.GetEnvironmentVariable("MONGO")
+                                 ?? context.Configuration.GetConnectionString("mongo")
+                                 ?? "mongodb://locahost:27017";
 
         builder.ConfigureServices(ConfigureServices);
 
         var clusterId = Environment.GetEnvironmentVariable("ORLEANS_CLUSTER_ID") ?? "dev";
         var serviceId = Environment.GetEnvironmentVariable("ORLEANS_SERVICE_ID") ?? "flownodes";
+        
         builder.Configure<ClusterOptions>(options =>
         {
             options.ClusterId = clusterId;
             options.ServiceId = serviceId;
         });
+
+        builder.AddLogStorageBasedLogConsistencyProviderAsDefault();
 
         // Initialize node with localhost clustering and in-memory persistence.
         if (context.HostingEnvironment.IsDevelopment())
@@ -108,7 +115,8 @@ public static partial class Program
         }
 
         // Initialize node with redis clustering and redis persistence.
-        builder.ConfigureProductionStorage();
+        builder
+            .ConfigureProductionStorage();
 
         // Check if the node is deployed on a Kubernetes cluster.
         if (Environment.GetEnvironmentVariable("KUBERNETES_SERVICE_HOST") is not null)
