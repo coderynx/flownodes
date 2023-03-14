@@ -15,9 +15,9 @@ internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
     {
     }
 
-    private new BaseDataSource? Behaviour => base.Behaviour as BaseDataSource;
+    private new IDataSourceBehaviour? Behaviour => base.Behaviour as IDataSourceBehaviour;
 
-    public async ValueTask<DataSourceResult> GetData(string actionId, Dictionary<string, object?>? parameters = null)
+    public async ValueTask<DataSourceResult> GetDataAsync(string actionId, Dictionary<string, object?>? parameters = null)
     {
         if (Behaviour is null) throw new NullReferenceException("Behaviour should not be null");
 

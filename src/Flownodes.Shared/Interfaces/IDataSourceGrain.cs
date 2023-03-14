@@ -11,7 +11,7 @@ public sealed record DataSourceResult
         JsonString = JsonSerializer.Serialize(inputObj);
     }
 
-    [Id(0)] public string JsonString { get; init; }
+    [Id(0)] public string JsonString { get; }
 
     public object? ToObject()
     {
@@ -26,5 +26,5 @@ public sealed record DataSourceResult
 
 public interface IDataSourceGrain : IConfigurableResource
 {
-    ValueTask<DataSourceResult> GetData(string actionId, Dictionary<string, object?>? parameters = null);
+    ValueTask<DataSourceResult> GetDataAsync(string actionId, Dictionary<string, object?>? parameters = null);
 }

@@ -53,18 +53,18 @@ public record FlownodesId
 
     private static readonly Dictionary<FlownodesObject, string> FlownodesObjectToString = new()
     {
-        { FlownodesObject.TenantManager, "tenantManager" },
-        { FlownodesObject.Tenant, "tenant" },
-        { FlownodesObject.AlertManager, "alertManager" },
-        { FlownodesObject.Alert, "alert" },
-        { FlownodesObject.ResourceManager, "resourceManager" },
-        { FlownodesObject.Device, "device" },
-        { FlownodesObject.DataSource, "dataSource" },
-        { FlownodesObject.Asset, "asset" },
-        { FlownodesObject.Script, "script" },
-        { FlownodesObject.WorkflowManager, "workflowManager" },
-        { FlownodesObject.Workflow, "workflow" },
-        { FlownodesObject.Other, "other" }
+        { FlownodesObject.TenantManager, FlownodesObjectNames.TenantManagerName },
+        { FlownodesObject.Tenant, FlownodesObjectNames.TenantName },
+        { FlownodesObject.AlertManager, FlownodesObjectNames.AlertManagerName },
+        { FlownodesObject.Alert, FlownodesObjectNames.AlertName },
+        { FlownodesObject.ResourceManager, FlownodesObjectNames.ResourceManagerName },
+        { FlownodesObject.Device, FlownodesObjectNames.DeviceName },
+        { FlownodesObject.DataSource, FlownodesObjectNames.DataSourceName },
+        { FlownodesObject.Asset, FlownodesObjectNames.AssetName },
+        { FlownodesObject.Script, FlownodesObjectNames.ScriptName },
+        { FlownodesObject.WorkflowManager, FlownodesObjectNames.WorkflowManagerName },
+        { FlownodesObject.Workflow, FlownodesObjectNames.WorkflowName },
+        { FlownodesObject.Other, FlownodesObjectNames.OtherName }
     };
 
     public FlownodesId(string objectKind, string firstName, string? secondName = null)

@@ -1,4 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using Flownodes.Sdk.Alerting;
+using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
 using Microsoft.Extensions.Logging;
@@ -54,6 +56,18 @@ public class FlownodesContext
     {
         var resource = await _resourceManager.GetGenericResourceAsync(TenantName, resourceName);
         await resource.AsReference<IStatefulResource>().UpdateStateAsync(state);
+    }
+
+    public async ValueTask<string> GetDataFromDataSourceAsync(string dataSourceName, string actionId, Dictionary<string, object?>? parameters = null)
+    {
+        var dataSource = await _resourceManager.GetResourceAsync<IDataSourceGrain>(TenantName, dataSourceName);
+        if (dataSource is null)
+        {
+            throw new ResourceNotFoundException(TenantName, dataSourceName);
+        }
+        
+        var data = await dataSource.GetDataAsync(actionId, parameters);
+        return data.JsonString;
     }
 
     public async Task CreateAlertAsync(AlertSeverity severity, string description, ISet<string> drivers)

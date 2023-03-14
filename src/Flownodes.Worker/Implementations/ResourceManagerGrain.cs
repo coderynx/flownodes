@@ -67,7 +67,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             return default;
         }
 
-        var grain = _grainFactory.GetGrain<TResourceGrain>($"{tenantName}/{resourceName}");
+        var id = new FlownodesId(typeof(TResourceGrain), tenantName, resourceName);
+        var grain = _grainFactory.GetGrain<TResourceGrain>(id);
 
         _logger.LogDebug("Retrieved resource {ResourceName} of tenant {TenantName}", resourceName, tenantName);
         return ValueTask.FromResult<TResourceGrain?>(grain);
