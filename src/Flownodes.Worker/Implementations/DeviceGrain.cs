@@ -1,12 +1,12 @@
+using Flownodes.Sdk;
 using Flownodes.Sdk.Resourcing;
-using Flownodes.Shared;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Worker.Models;
 using Flownodes.Worker.Services;
 
 namespace Flownodes.Worker.Implementations;
 
-[GrainType(FlownodesObjectNames.DeviceName)]
+[GrainType(FlownodesObjectNames.Device)]
 internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
     public DeviceGrain(IPluginProvider pluginProvider, ILogger<DeviceGrain> logger,

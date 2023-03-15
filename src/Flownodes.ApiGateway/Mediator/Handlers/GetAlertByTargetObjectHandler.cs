@@ -1,6 +1,6 @@
 using Flownodes.ApiGateway.Mediator.Requests;
 using Flownodes.ApiGateway.Mediator.Responses;
-using Flownodes.Shared;
+using Flownodes.Sdk;
 using Flownodes.Shared.Interfaces;
 using MediatR;
 
@@ -15,8 +15,8 @@ public class
 
     public GetAlertByTargetObjectHandler(IGrainFactory grainFactory)
     {
-        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManagerName);
-        _alertManager = grainFactory.GetGrain<IAlertManagerGrain>(FlownodesObjectNames.AlertManagerName);
+        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManager);
+        _alertManager = grainFactory.GetGrain<IAlertManagerGrain>(FlownodesObjectNames.AlertManager);
     }
 
     public async Task<GetAlertByTargetObjectResponse> Handle(GetAlertByTargetObjectRequest request,

@@ -1,3 +1,4 @@
+using Flownodes.Sdk;
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
@@ -104,9 +105,8 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
 
     protected ResourceContext GetResourceContext()
     {
-        return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, TenantName,
-            ResourceName, CreatedAt, BehaviourId, State.Configuration, State.Metadata,
-            State.State, State.LastStateUpdateDate);
+        return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id, CreatedAt,
+            BehaviourId, State.Configuration, State.Metadata, State.State, State.LastStateUpdateDate);
     }
 
     public async Task UpdateConfigurationAsync(Dictionary<string, object?> properties)

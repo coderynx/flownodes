@@ -46,7 +46,7 @@ public class FritzBox : IReadableDeviceBehaviour
         context.State!["internet_connected"] =
             json?["data"]?["internet"]?["connections"]?[0]?["connected"]?.GetValue<bool>();
 
-        _logger.LogInformation("Setup device FritzBox {@DeviceId}", context.ResourceId);
+        _logger.LogInformation("Setup device FritzBox {@DeviceId}", context.Id);
     }
 
     public async Task OnPullStateAsync(ResourceContext context)
@@ -55,7 +55,7 @@ public class FritzBox : IReadableDeviceBehaviour
         context.State!["internet_connected"] =
             json?["data"]?["internet"]?["connections"]?[0]?["connected"]?.GetValue<bool>();
 
-        _logger.LogInformation("Pulled state from FritzBox device {@DeviceId}", context.ResourceId);
+        _logger.LogInformation("Pulled state from FritzBox device {@DeviceId}", context.Id);
     }
 
     // TODO: Refactor code.

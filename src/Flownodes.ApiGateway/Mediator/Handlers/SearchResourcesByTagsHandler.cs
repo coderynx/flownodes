@@ -1,6 +1,6 @@
 using Flownodes.ApiGateway.Mediator.Requests;
 using Flownodes.ApiGateway.Mediator.Responses;
-using Flownodes.Shared;
+using Flownodes.Sdk;
 using Flownodes.Shared.Interfaces;
 using MediatR;
 
@@ -14,8 +14,8 @@ public class SearchResourcesByTagsHandler : IRequestHandler<SearchResourcesByTag
 
     public SearchResourcesByTagsHandler(IGrainFactory grainFactory)
     {
-        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManagerName);
-        _resourceManager = grainFactory.GetGrain<IResourceManagerGrain>(FlownodesObjectNames.ResourceManagerName);
+        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManager);
+        _resourceManager = grainFactory.GetGrain<IResourceManagerGrain>(FlownodesObjectNames.ResourceManager);
     }
 
     public async Task<SearchResourceByTagsResponse> Handle(SearchResourcesByTagsRequest request,

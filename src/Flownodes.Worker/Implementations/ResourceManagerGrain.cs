@@ -1,14 +1,15 @@
 using System.Collections.ObjectModel;
-using Flownodes.Shared;
+using Flownodes.Sdk;
 using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Models;
+using Flownodes.Worker.Builders;
 using Flownodes.Worker.Models;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
 
-[GrainType(FlownodesObjectNames.ResourceManagerName)]
+[GrainType(FlownodesObjectNames.ResourceManager)]
 public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 {
     private readonly IGrainFactory _grainFactory;
@@ -67,7 +68,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             return default;
         }
 
-        var id = new FlownodesId(typeof(TResourceGrain), tenantName, resourceName);
+        var id = FlownodesIdBuilder.CreateFromType(typeof(TResourceGrain), tenantName, resourceName);
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
 
         _logger.LogDebug("Retrieved resource {ResourceName} of tenant {TenantName}", resourceName, tenantName);
@@ -119,7 +120,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (_persistence.State.IsResourceRegistered(tenantName, resourceName))
             throw new ResourceAlreadyRegisteredException(tenantName, resourceName);
 
-        var id = new FlownodesId(typeof(TResourceGrain), tenantName, resourceName);
+        var id = FlownodesIdBuilder.CreateFromType(typeof(TResourceGrain), tenantName, resourceName);
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
         var kind = await grain.GetKind();
         var tags = new HashSet<string> { resourceName, kind };

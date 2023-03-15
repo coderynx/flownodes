@@ -10,37 +10,37 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
-        <PackageReference Include="CS-Script" Version="4.6.2" />
-        <PackageReference Include="Mapster.DependencyInjection" Version="1.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
-        <PackageReference Include="Microsoft.Orleans.EventSourcing" Version="7.1.0" />
-        <PackageReference Include="Microsoft.Orleans.Hosting.Kubernetes" Version="7.1.0" />
-        <PackageReference Include="Microsoft.Orleans.Server" Version="7.1.0" />
+        <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0"/>
+        <PackageReference Include="CS-Script" Version="4.6.2"/>
+        <PackageReference Include="Mapster.DependencyInjection" Version="1.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1"/>
+        <PackageReference Include="Microsoft.Orleans.EventSourcing" Version="7.1.0"/>
+        <PackageReference Include="Microsoft.Orleans.Hosting.Kubernetes" Version="7.1.0"/>
+        <PackageReference Include="Microsoft.Orleans.Server" Version="7.1.0"/>
         <PackageReference Include="Microsoft.Orleans.CodeGenerator" Version="7.1.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Orleans.Persistence.Memory" Version="7.1.0" />
-        <PackageReference Include="Orleans.Clustering.Redis" Version="7.0.0" />
-        <PackageReference Include="Microsoft.Tye.Extensions.Configuration" Version="0.10.0-alpha.21420.1" />
-        <PackageReference Include="Orleans.Providers.MongoDB" Version="7.4.0" />
-        <PackageReference Include="OrleansDashboard" Version="7.2.0" />
-        <PackageReference Include="RulesEngine" Version="4.0.0" />
-        <PackageReference Include="Serilog.Extensions.Autofac.DependencyInjection" Version="5.0.0" />
-        <PackageReference Include="Serilog.Extensions.Hosting" Version="5.0.1" />
-        <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
-        <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+        <PackageReference Include="Microsoft.Orleans.Persistence.Memory" Version="7.1.0"/>
+        <PackageReference Include="Orleans.Clustering.Redis" Version="7.0.0"/>
+        <PackageReference Include="Microsoft.Tye.Extensions.Configuration" Version="0.10.0-alpha.21420.1"/>
+        <PackageReference Include="Orleans.Providers.MongoDB" Version="7.4.0"/>
+        <PackageReference Include="OrleansDashboard" Version="7.2.0"/>
+        <PackageReference Include="RulesEngine" Version="4.0.0"/>
+        <PackageReference Include="Serilog.Extensions.Autofac.DependencyInjection" Version="5.0.0"/>
+        <PackageReference Include="Serilog.Extensions.Hosting" Version="5.0.1"/>
+        <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0"/>
+        <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0"/>
+        <PackageReference Include="System.Linq.Async" Version="6.0.1"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Flownodes.Shared\Flownodes.Shared.csproj" />
-        <ProjectReference Include="..\Flownodes.Sdk\Flownodes.Sdk.csproj" />
+        <ProjectReference Include="..\Flownodes.Shared\Flownodes.Shared.csproj"/>
+        <ProjectReference Include="..\Flownodes.Sdk\Flownodes.Sdk.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="Flownodes.Tests" />
+        <InternalsVisibleTo Include="Flownodes.Tests"/>
     </ItemGroup>
 
 </Project>

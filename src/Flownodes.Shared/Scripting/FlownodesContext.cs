@@ -1,7 +1,7 @@
+using Flownodes.Sdk;
 using Flownodes.Sdk.Alerting;
 using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
-using Flownodes.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Flownodes.Shared.Scripting;

@@ -1,12 +1,12 @@
 using CSScriptLib;
-using Flownodes.Shared;
+using Flownodes.Sdk;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Shared.Scripting;
 using Flownodes.Worker.Services;
 
 namespace Flownodes.Worker.Implementations;
 
-[GrainType(FlownodesObjectNames.ScriptName)]
+[GrainType(FlownodesObjectNames.Script)]
 internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
 {
     private readonly ILogger<ScriptGrain> _logger;

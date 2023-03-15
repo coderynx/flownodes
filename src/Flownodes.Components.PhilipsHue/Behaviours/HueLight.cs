@@ -43,7 +43,7 @@ public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
 
             context.State!["reachable"] = json?["state"]?["reachable"]?.GetValue<bool>();
 
-            _logger.LogInformation("Setup device {@DeviceId} as HueLight with ID {@HueLightId}", context.ResourceId,
+            _logger.LogInformation("Setup device {@DeviceId} as HueLight with ID {@HueLightId}", context.Id,
                 lightId);
         }
     }
@@ -62,7 +62,7 @@ public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
             context.State["reachable"] = json?["state"]?["reachable"]?.GetValue<bool>();
 
             _logger.LogInformation("Pulled state from HueLight device {@DeviceId} with ID {@HueLightId}",
-                context.ResourceId, lightId);
+                context.Id, lightId);
         }
     }
 
@@ -79,7 +79,7 @@ public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
 
             if (response.IsSuccessStatusCode && content.Contains("success"))
                 _logger.LogInformation("Pushed power on state to HueLight device {@DeviceId} with ID {@HueLightId}",
-                    context.ResourceId, lightId);
+                    context.Id, lightId);
             else
                 _logger.LogError("Failed to update light power state of {LightId} to on", lightId);
         }

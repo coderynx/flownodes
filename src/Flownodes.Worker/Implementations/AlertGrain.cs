@@ -1,5 +1,5 @@
+using Flownodes.Sdk;
 using Flownodes.Sdk.Alerting;
-using Flownodes.Shared;
 using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Worker.Services;
@@ -20,7 +20,7 @@ internal sealed record AlertPersistence
     [Id(4)] public ISet<string> DriverIds { get; set; } = new HashSet<string>();
 }
 
-[GrainType(FlownodesObjectNames.AlertName)]
+[GrainType(FlownodesObjectNames.Alert)]
 internal class AlertGrain : Grain, IAlertGrain
 {
     private readonly IList<IAlerterDriver> _drivers = new List<IAlerterDriver>();

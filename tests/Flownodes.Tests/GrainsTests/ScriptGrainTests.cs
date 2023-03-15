@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
+using Flownodes.Sdk;
 using Flownodes.Shared.Interfaces;
-using Flownodes.Shared.Models;
 using Flownodes.Tests.Fixtures;
 using Orleans.TestingHost;
 using Xunit;

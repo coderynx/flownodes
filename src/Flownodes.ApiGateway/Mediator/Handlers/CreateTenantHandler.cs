@@ -1,6 +1,6 @@
 using Flownodes.ApiGateway.Mediator.Requests;
 using Flownodes.ApiGateway.Mediator.Responses;
-using Flownodes.Shared;
+using Flownodes.Sdk;
 using Flownodes.Shared.Exceptions;
 using Flownodes.Shared.Interfaces;
 using MediatR;
@@ -13,7 +13,7 @@ public class CreateTenantHandler : IRequestHandler<CreateTenantRequest, CreateTe
 
     public CreateTenantHandler(IGrainFactory grainFactory)
     {
-        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManagerName);
+        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManager);
     }
 
     public async Task<CreateTenantResponse> Handle(CreateTenantRequest request, CancellationToken cancellationToken)

@@ -1,6 +1,6 @@
 using Flownodes.ApiGateway.Mediator.Requests;
 using Flownodes.ApiGateway.Mediator.Responses;
-using Flownodes.Shared;
+using Flownodes.Sdk;
 using Flownodes.Shared.Interfaces;
 using MediatR;
 
@@ -14,8 +14,8 @@ public class GetTenantHandler : IRequestHandler<GetTenantRequest, GetTenantRespo
 
     public GetTenantHandler(IGrainFactory clusterClient)
     {
-        _tenantManager = clusterClient.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManagerName);
-        _resourceManager = clusterClient.GetGrain<IResourceManagerGrain>(FlownodesObjectNames.ResourceManagerName);
+        _tenantManager = clusterClient.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManager);
+        _resourceManager = clusterClient.GetGrain<IResourceManagerGrain>(FlownodesObjectNames.ResourceManager);
     }
 
 

@@ -1,6 +1,5 @@
-using Flownodes.Shared;
+using Flownodes.Sdk;
 using Flownodes.Shared.Interfaces;
-using Flownodes.Shared.Models;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Implementations;
@@ -11,7 +10,7 @@ internal class WorkflowManagerStore
     [Id(0)] public List<string> WorkflowRegistrations { get; set; } = new();
 }
 
-[GrainType(FlownodesObjectNames.WorkflowManagerName)]
+[GrainType(FlownodesObjectNames.WorkflowManager)]
 internal class WorkflowManagerGrain : Grain, IWorkflowManagerGrain
 {
     private readonly IGrainFactory _grainFactory;
