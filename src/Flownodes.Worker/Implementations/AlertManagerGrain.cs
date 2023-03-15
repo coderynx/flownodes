@@ -80,7 +80,7 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         if (!_alertRegistrations.State.Any(x => x.TenantName.Equals(tenantName) && x.AlertName.Equals(alertName)))
             return default;
 
-        var id = $"{tenantName}/{alertName}";
+        var id = new FlownodesId(FlownodesObject.Alert, tenantName, alertName);
         var grain = _grainFactory.GetGrain<IAlertGrain>(id);
 
         _logger.LogDebug("Retrieved alert grain {@AlertGrainId}", id);
@@ -105,7 +105,11 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
 
         var alerts = _alertRegistrations.State
             .Where(x => x.TenantName.Equals(tenantName))
-            .Select(x => _grainFactory.GetGrain<IAlertGrain>($"{x.TenantName}/{x.AlertName}"))
+            .Select(x =>
+            {
+                var id = new FlownodesId(FlownodesObject.Alert, x.TenantName, x.AlertName);
+                return _grainFactory.GetGrain<IAlertGrain>(id);
+            })
             .ToHashSet();
 
         return ValueTask.FromResult(alerts);
@@ -121,7 +125,8 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
 
         if (registration is null) throw new AlertNotFoundException(tenantName, alertName);
 
-        var grain = _grainFactory.GetGrain<IAlertGrain>(alertName);
+        var id = new FlownodesId(FlownodesObject.Alert, tenantName, alertName);
+        var grain = _grainFactory.GetGrain<IAlertGrain>(id);
         await grain.ClearStateAsync();
         _alertRegistrations.State.Remove(registration);
 

@@ -37,9 +37,9 @@ internal class AlertGrain : Grain, IAlertGrain
         _pluginProvider = pluginProvider;
     }
 
-    private string Id => this.GetPrimaryKeyString();
-    private string TenantName => Id.Split('/')[0];
-    private string AlertName => Id.Split('/')[1];
+    private FlownodesId Id => this.GetPrimaryKeyString();
+    private string TenantName => Id.FirstName;
+    private string AlertName => Id.SecondName!;
 
     private AlertPersistence State => _persistence.State;
 

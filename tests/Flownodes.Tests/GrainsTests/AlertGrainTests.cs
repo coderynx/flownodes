@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
+using Flownodes.Sdk;
 using Flownodes.Sdk.Alerting;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Tests.Fixtures;
 using FluentAssertions;
 using Orleans.TestingHost;
+using OrleansCodeGen.Orleans.Serialization;
 using Xunit;
 
 namespace Flownodes.Tests.GrainsTests;
@@ -23,10 +25,15 @@ public class AlertGrainTests
         _fixture = new Fixture();
     }
 
+    private FlownodesId ProvideFakeFlownodesId()
+    {
+        return new FlownodesId(FlownodesObject.Alert, _fixture.Create<string>(), _fixture.Create<string>());
+    }
+    
     [Fact]
     public async Task Initialize_ShouldInitializeAlert()
     {
-        var alert = _cluster.GrainFactory.GetGrain<IAlertGrain>(_fixture.Create<string>());
+        var alert = _cluster.GrainFactory.GetGrain<IAlertGrain>(ProvideFakeFlownodesId());
 
         await alert.InitializeAsync("target", DateTime.Now, AlertSeverity.Informational, "description",
             new HashSet<string> { "TestAlerterDriver" });
@@ -39,7 +46,7 @@ public class AlertGrainTests
     [Fact]
     public async Task Fire_ShouldFireAlert()
     {
-        var alert = _cluster.GrainFactory.GetGrain<IAlertGrain>(_fixture.Create<string>());
+        var alert = _cluster.GrainFactory.GetGrain<IAlertGrain>(ProvideFakeFlownodesId());
 
         await alert.InitializeAsync("target", DateTime.Now, AlertSeverity.Informational, "description",
             new HashSet<string> { "TestAlerterDriver" });

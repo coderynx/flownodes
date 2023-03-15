@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
+using Flownodes.Sdk;
 using Flownodes.Sdk.Alerting;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Tests.Fixtures;
@@ -77,7 +78,7 @@ public class AlertManagerGrainTests
     }
 
     [Fact]
-    public async Task RemoveAlerts_ShouldRemoveAlerts()
+    public async Task RemoveAlert_ShouldRemoveAlert()
     {
         var alertManager = ProvideAlertManagerGrain();
 
@@ -86,7 +87,7 @@ public class AlertManagerGrainTests
 
         await alertManager.RemoveAlertAsync("tenant", "alert");
 
-        var alert = alertManager.GetAlert("tenant", "alert");
-        alert.Should().NotBeNull();
+        var alert = await alertManager.GetAlert("tenant", "alert");
+        alert.Should().BeNull();
     }
 }
