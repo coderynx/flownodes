@@ -1,8 +1,5 @@
-using Refit;
-
 namespace Flownodes.Components.Discord;
 
-public record DiscordWebhookMessage([AliasAs("content")] string Content,
-    [AliasAs("embeds")] DiscordWebhookEmbed[]? Embeds = null, [AliasAs("attachments")] string[]? Attachments = null);
+public record DiscordWebhookMessage(string Content, DiscordWebhookEmbed[]? Embeds = null, string[]? Attachments = null);
 
-public record DiscordWebhookEmbed([AliasAs("title")] string Title, [AliasAs("description")] string Description);
+public record DiscordWebhookEmbed(string Title, string Description);
