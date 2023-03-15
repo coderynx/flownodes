@@ -41,7 +41,7 @@ public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
             context.Metadata["manufacturer_name"] = json?["manufacturername"]?.GetValue<string>();
             context.Metadata["product_name"] = json?["productname"]?.GetValue<string>();
 
-            context.State!["reachable"] = json?["state"]?["reachable"]?.GetValue<bool>();
+            context.State["reachable"] = json?["state"]?["reachable"]?.GetValue<bool>();
 
             _logger.LogInformation("Setup device {@DeviceId} as HueLight with ID {@HueLightId}", context.Id,
                 lightId);
@@ -58,7 +58,7 @@ public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
         {
             var json = await response.Content.ReadFromJsonAsync<JsonNode>();
 
-            context.State!["power"] = json?["state"]?["on"]?.GetValue<bool>();
+            context.State["power"] = json?["state"]?["on"]?.GetValue<bool>();
             context.State["reachable"] = json?["state"]?["reachable"]?.GetValue<bool>();
 
             _logger.LogInformation("Pulled state from HueLight device {@DeviceId} with ID {@HueLightId}",

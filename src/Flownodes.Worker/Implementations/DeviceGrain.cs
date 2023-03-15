@@ -24,7 +24,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         var deviceBehaviour = (IReadableDeviceBehaviour)Behaviour;
         await deviceBehaviour.OnPullStateAsync(context);
 
-        var @event = new UpdateResourceStateEvent(context.State!);
+        var @event = new UpdateResourceStateEvent(context.State);
         await RaiseConditionalEvent(@event);
     }
 

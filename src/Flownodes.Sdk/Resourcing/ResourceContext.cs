@@ -6,8 +6,8 @@ namespace Flownodes.Sdk.Resourcing;
 public sealed class ResourceContext
 {
     public ResourceContext(string serviceId, string clusterId, FlownodesId id, DateTime createdAt, string? behaviourId,
-        Dictionary<string, object?>? configuration, DateTime? configurationLastUpdateDate,
-        Dictionary<string, string?> metadata, DateTime? metadataLastUpdateDate, Dictionary<string, object?>? state,
+        bool isConfigurable, Dictionary<string, object?>? configuration, DateTime? configurationLastUpdateDate,
+        Dictionary<string, string?> metadata, DateTime? metadataLastUpdateDate, bool isStateful, Dictionary<string, object?>? state,
         DateTime? stateLastUpdateDate)
     {
         ServiceId = serviceId;
@@ -18,11 +18,13 @@ public sealed class ResourceContext
 
         CreatedAt = createdAt;
         BehaviourId = behaviourId;
-        Configuration = configuration;
+        IsConfigurable = isConfigurable;
+        _configuration = configuration;
         ConfigurationLastUpdateDate = configurationLastUpdateDate;
         Metadata = metadata;
         MetadataLastUpdateDate = metadataLastUpdateDate;
-        State = state;
+        IsStateful = isStateful;
+        _state = state;
         StateLastUpdateDate = stateLastUpdateDate;
     }
 
@@ -34,10 +36,32 @@ public sealed class ResourceContext
     public string ResourceName => Id.SecondName ?? throw new InvalidOperationException("Provided invalid FlownodesId");
     public DateTime CreatedAt { get; }
     public string? BehaviourId { get; }
-    public Dictionary<string, object?>? Configuration { get; }
+
+    public bool IsConfigurable { get; }
+    public Dictionary<string, object?>? Configuration
+    {
+        get
+        {
+            if (IsConfigurable && _configuration is not null) return _configuration;
+            throw new InvalidOperationException("Resource is not configurable");
+        }
+    }
     public DateTime? ConfigurationLastUpdateDate { get; }
+    
     public Dictionary<string, string?> Metadata { get; }
     public DateTime? MetadataLastUpdateDate { get; }
-    public Dictionary<string, object?>? State { get; }
+
+    public bool IsStateful { get; }
+    public Dictionary<string, object?> State
+    {
+        get
+        {
+            if (IsStateful && _state is not null) return _state;
+            throw new InvalidOperationException("Resource is not stateful");
+        }
+    }
     public DateTime? StateLastUpdateDate { get; }
+
+    private readonly Dictionary<string, object?>? _configuration;
+    private readonly Dictionary<string, object?>? _state;
 }

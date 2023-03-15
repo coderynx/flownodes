@@ -105,9 +105,9 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
 
     protected ResourceContext GetResourceContext()
     {
-        return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id, CreatedAt,
-            BehaviourId, State.Configuration, State.LastConfigurationUpdateDate, State.Metadata,
-            State.LastMetadataUpdateDate, State.State, State.LastStateUpdateDate);
+        return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id, CreatedAt, BehaviourId,
+            IsConfigurable, State.Configuration, State.LastConfigurationUpdateDate, State.Metadata,
+            State.LastMetadataUpdateDate, IsStateful, State.State, State.LastStateUpdateDate);
     }
 
     public async Task UpdateConfigurationAsync(Dictionary<string, object?> properties)
