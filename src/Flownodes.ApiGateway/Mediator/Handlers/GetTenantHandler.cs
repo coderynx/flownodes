@@ -27,7 +27,7 @@ public class GetTenantHandler : IRequestHandler<GetTenantRequest, GetTenantRespo
         try
         {
             var resources = await _resourceManager.GetAllResourceSummaries(request.TenantName);
-            return new GetTenantResponse(request.TenantName, resources.Select(x => x.Id).ToList(),
+            return new GetTenantResponse(request.TenantName, resources.Select(x => x.Id.Id).ToList(),
                 await tenant.GetMetadata());
         }
         catch

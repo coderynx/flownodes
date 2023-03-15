@@ -27,7 +27,7 @@ public class GetResourcesHandler : IRequestHandler<GetResourcesRequest, GetResou
         try
         {
             var resources = await _resourceManager.GetAllResourceSummaries(request.TenantName);
-            return new GetResourcesResponse(request.TenantName, resources.Select(x => x.Id).ToList());
+            return new GetResourcesResponse(request.TenantName, resources.Select(x => x.Id.Id).ToList());
         }
         catch
         {

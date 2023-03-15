@@ -43,8 +43,8 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
     public ValueTask<ResourceSummary> GetPoco()
     {
         Logger.LogDebug("Retrieved POCO of resource {@ResourceId}", Id);
-        return ValueTask.FromResult(new ResourceSummary(Id, TenantName, ResourceName, Kind, BehaviourId, CreatedAt,
-            State.Configuration, State.Metadata, State.State, State?.LastStateUpdateDate));
+        return ValueTask.FromResult(new ResourceSummary(Id, BehaviourId, CreatedAt, State.Configuration, State.Metadata,
+            State.State, State?.LastStateUpdateDate));
     }
 
     public override async Task OnActivateAsync(CancellationToken cancellationToken)
@@ -106,7 +106,8 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
     protected ResourceContext GetResourceContext()
     {
         return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id, CreatedAt,
-            BehaviourId, State.Configuration, State.Metadata, State.State, State.LastStateUpdateDate);
+            BehaviourId, State.Configuration, State.LastConfigurationUpdateDate, State.Metadata,
+            State.LastMetadataUpdateDate, State.State, State.LastStateUpdateDate);
     }
 
     public async Task UpdateConfigurationAsync(Dictionary<string, object?> properties)

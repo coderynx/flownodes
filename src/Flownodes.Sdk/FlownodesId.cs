@@ -187,4 +187,9 @@ public record FlownodesId
 
         throw new ArgumentException($"Provided invalid {nameof(kind)}");
     }
+
+    public string ToObjectKindString()
+    {
+        return KindToString(ObjectKind);
+    }
 }
