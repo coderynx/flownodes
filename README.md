@@ -1,5 +1,10 @@
-<h1 align="center">Flownodes</h1>
-<p align="center">🦾 Experimental distributed automation platform.</p>
+<div align="center">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="./assets/logo-rectangle_white.png">
+        <img alt="Flownodes logo" src="./assets/logo-rectangle_black.png" style="width:350px;">
+    </picture>
+</div>
+<hr/>
 
 Flownodes is an experimental automation distributed platform designed to integrate devices and different kinds of data sources. The main focus of the application is to provide easy extendability with a user friendly SDK.
 
