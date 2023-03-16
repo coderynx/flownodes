@@ -1,7 +1,7 @@
 <div align="center">
     <picture>
         <source media="(prefers-color-scheme: dark)" srcset="./assets/logo-rectangle_white.png">
-        <img alt="Flownodes logo" src="./assets/logo-rectangle_black.png" style="width:350px;">
+        <img alt="Flownodes logo" src="./assets/logo-rectangle_black.png" width="500">
     </picture>
 </div>
 <hr/>
