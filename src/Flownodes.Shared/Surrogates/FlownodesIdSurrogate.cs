@@ -1,6 +1,6 @@
 using Flownodes.Sdk;
 
-namespace Flownodes.Worker.Surrogates;
+namespace Flownodes.Shared.Surrogates;
 
 [GenerateSerializer]
 internal struct FlownodesIdSurrogate
