@@ -14,7 +14,7 @@ public class FlownodesIdTests
         var id = new FlownodesId(FlownodesObject.Other, "firstName", "secondName");
 
         // Act.
-        id.Id.Should().Be("firstName/other:secondName");
+        id.IdString.Should().Be("firstName/other:secondName");
         id.ObjectKind.Should().Be(FlownodesObject.Other);
         id.FirstName.Should().Be("firstName");
         id.SecondName.Should().Be("secondName");
@@ -27,7 +27,7 @@ public class FlownodesIdTests
         var id = new FlownodesId("other", "firstName", "secondName");
 
         // Assert.
-        id.Id.Should().Be("firstName/other:secondName");
+        id.IdString.Should().Be("firstName/other:secondName");
         id.ObjectKind.Should().Be(FlownodesObject.Other);
         id.FirstName.Should().Be("firstName");
         id.SecondName.Should().Be("secondName");

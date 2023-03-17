@@ -56,18 +56,6 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         var deviceBehaviour = (IWritableDeviceBehaviour)Behaviour;
         await deviceBehaviour.OnPushStateAsync(newState, GetResourceContext());
 
-        _logger.LogInformation("Applied new state for device {DeviceId}", Id);
-    }
-
-    public override Task OnActivateAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Activated device {DeviceId}", Id);
-        return base.OnActivateAsync(cancellationToken);
-    }
-
-    public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Deactivated device {DeviceId}", Id);
-        return base.OnDeactivateAsync(reason, cancellationToken);
+        _logger.LogInformation("Applied new state for device {@DeviceId}", Id);
     }
 }

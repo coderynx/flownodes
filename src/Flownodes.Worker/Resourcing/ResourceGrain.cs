@@ -29,21 +29,22 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
     }
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
-    protected FlownodesId Id => this.GetPrimaryKeyString();
+    protected FlownodesId Id => (FlownodesId) this.GetPrimaryKeyString();
     protected string TenantName => Id.FirstName;
     protected string ResourceName => Id.SecondName!;
     protected bool IsConfigurable => GetType().IsAssignableTo(typeof(IConfigurableResource));
     protected bool IsStateful => GetType().IsAssignableTo(typeof(IStatefulResource));
     protected string? BehaviourId => State.Configuration?.GetValueOrDefault("behaviourId") as string;
-    protected DateTime CreatedAt => State.CreatedAtDate;
     protected IResourceManagerGrain ResourceManager => _environmentService.GetResourceManagerGrain();
     protected IAlertManagerGrain AlertManager => _environmentService.GetAlertManagerGrain();
 
-    public ValueTask<ResourceSummary> GetPoco()
+    public ValueTask<ResourceSummary> GetSummary()
     {
-        _logger.LogDebug("Retrieved POCO of resource {@ResourceId}", Id);
-        return ValueTask.FromResult(new ResourceSummary(Id, BehaviourId, CreatedAt, State.Configuration, State.Metadata,
-            State.State, State?.LastStateUpdateDate));
+        _logger.LogDebug("Retrieved summary of resource {@ResourceId}", Id);
+
+        var summary = new ResourceSummary(Id, BehaviourId, State.CreatedAtDate, State.Configuration, State.Metadata, State.State,
+            State.LastStateUpdateDate);
+        return ValueTask.FromResult(summary);
     }
 
     public override async Task OnActivateAsync(CancellationToken cancellationToken)
@@ -69,14 +70,9 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
         return base.OnDeactivateAsync(reason, cancellationToken);
     }
 
-    public ValueTask<string> GetKind()
+    public ValueTask<FlownodesId> GetId()
     {
-        return ValueTask.FromResult(Kind);
-    }
-
-    public ValueTask<string> GetId()
-    {
-        return ValueTask.FromResult<string>(Id);
+        return ValueTask.FromResult(Id);
     }
 
     public ValueTask<(Dictionary<string, string?> Metadata, DateTime? LastUpdateDate, DateTime CreatedAtDate)>
@@ -104,7 +100,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
 
     protected ResourceContext GetResourceContext()
     {
-        return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id, CreatedAt,
+        return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id, State.CreatedAtDate,
             BehaviourId,
             IsConfigurable, State.Configuration, State.LastConfigurationUpdateDate, State.Metadata,
             State.LastMetadataUpdateDate, IsStateful, State.State, State.LastStateUpdateDate);

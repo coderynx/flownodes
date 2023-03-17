@@ -69,7 +69,7 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         if (registration is null) return default;
 
         var id = new FlownodesId(FlownodesObject.Alert, registration.TenantName, registration.AlertName);
-        return ValueTask.FromResult<IAlertGrain?>(_grainFactory.GetGrain<IAlertGrain>(id));
+        return ValueTask.FromResult<IAlertGrain?>(_grainFactory.GetGrain<IAlertGrain>(id.IdString));
     }
 
     public ValueTask<IAlertGrain?> GetAlert(string tenantName, string alertName)

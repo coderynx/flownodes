@@ -1,3 +1,5 @@
+using Flownodes.Sdk;
+
 namespace Flownodes.Shared.Resourcing;
 
 /// <summary>
@@ -9,19 +11,13 @@ public interface IResourceGrain : IGrainWithStringKey
     ///     Gets the resource POCO.
     /// </summary>
     /// <returns>The resource POCO. </returns>
-    public ValueTask<ResourceSummary> GetPoco();
-
-    /// <summary>
-    ///     Get the resource kind.
-    /// </summary>
-    /// <returns>The resource kind.</returns>
-    public ValueTask<string> GetKind();
-
+    public ValueTask<ResourceSummary> GetSummary();
+    
     /// <summary>
     ///     Gets the resource ID.
     /// </summary>
     /// <returns>The resource ID.</returns>
-    public ValueTask<string> GetId();
+    public ValueTask<FlownodesId> GetId();
 
     /// <summary>
     ///     Updates the state of the resource by storing the new state and applying it.

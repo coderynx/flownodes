@@ -129,7 +129,7 @@ public record FlownodesId
     /// <summary>
     ///     The string representation of the Flownodes ID.
     /// </summary>
-    public string Id => ToString();
+    public string IdString => ToString();
 
     /// <summary>
     ///     If the Flownodes ID refers to a manager.
@@ -169,7 +169,7 @@ public record FlownodesId
         return id.ToString();
     }
 
-    public static implicit operator FlownodesId(string id)
+    public static explicit operator FlownodesId(string id)
     {
         return new FlownodesId(id);
     }

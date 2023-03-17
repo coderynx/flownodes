@@ -9,5 +9,5 @@ public enum AlertSeverity
     Critical
 }
 
-public record AlertToFire(string Id, DateTime FiredAt, AlertSeverity Severity, string TargetResourceId,
+public record AlertToFire(FlownodesId Id, DateTime FiredAt, AlertSeverity Severity, string TargetResourceId,
     string Description);

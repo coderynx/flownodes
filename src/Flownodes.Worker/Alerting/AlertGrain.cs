@@ -37,7 +37,7 @@ internal class AlertGrain : Grain, IAlertGrain
         _pluginProvider = pluginProvider;
     }
 
-    private FlownodesId Id => this.GetPrimaryKeyString();
+    private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
     private string TenantName => Id.FirstName;
     private string AlertName => Id.SecondName!;
 

@@ -54,7 +54,7 @@ public class ResourceManagerTests
 
         // Assert.
         var id = await resource.GetId();
-        id.Should().Be("tenant/other:resource");
+        id.IdString.Should().Be("tenant/other:resource");
     }
 
     [Fact]

@@ -32,7 +32,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (registration is null) return default;
 
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
-        var summary = await grain.GetPoco();
+        var summary = await grain.GetSummary();
 
         _logger.LogDebug("Retrieved resource summary of resource {ResourceName} of tenant {TenantName}", resourceName,
             tenantName);
@@ -47,7 +47,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             .GetRegistrationsOfTenant(tenantName)
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>())
             .ToAsyncEnumerable()
-            .SelectAwait(async grain => await grain.GetPoco())
+            .SelectAwait(async grain => await grain.GetSummary())
             .ToListAsync();
 
         return summaries.AsReadOnly();
@@ -119,8 +119,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             throw new ResourceAlreadyRegisteredException(tenantName, resourceName);
 
         var id = FlownodesIdBuilder.CreateFromType(typeof(TResourceGrain), tenantName, resourceName);
+        var kind = id.ToObjectKindString();
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
-        var kind = await grain.GetKind();
         var tags = new HashSet<string> { resourceName, kind };
 
         // TODO: Further investigation for singleton resource is needed.

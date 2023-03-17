@@ -33,8 +33,7 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
 
         try
         {
-            var kind = await resource.GetKind();
-            var fullId = await resource.GetId();
+            var id = await resource.GetId();
 
             var metadata = await resource.GetMetadata();
 
@@ -53,7 +52,7 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
                 state = await statefulResource.GetState();
             }
 
-            return new GetResourceResponse(fullId, request.TenantName, request.ResourceName, kind,
+            return new GetResourceResponse(id, request.TenantName, request.ResourceName, id.ToObjectKindString(),
                 metadata.CreatedAtDate,
                 metadata.Metadata, configuration, state.Properties, state.LastUpdate);
         }
