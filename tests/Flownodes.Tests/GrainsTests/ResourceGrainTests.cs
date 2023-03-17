@@ -33,10 +33,10 @@ public class ResourceGrainTests
     {
         // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
-        
+
         // Act.
         var configurationTuple = await grain.GetConfiguration();
-        
+
         // Assert.
         configurationTuple.Configuration.Should().BeEmpty();
         configurationTuple.LastUpdateDate.Should().BeNull();
@@ -48,7 +48,7 @@ public class ResourceGrainTests
         // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
         var configuration = _fixture.Create<Dictionary<string, object?>>();
-        
+
         // Act.
         await grain.UpdateConfigurationAsync(configuration);
 
@@ -64,7 +64,7 @@ public class ResourceGrainTests
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
         var configuration = _fixture.Create<Dictionary<string, object?>>();
         configuration.Add("behaviourId", "unknown");
-        
+
         // Act & Assert.
         var act = async () => { await grain.UpdateConfigurationAsync(configuration); };
         await act.Should().ThrowAsync<Exception>();
@@ -77,7 +77,7 @@ public class ResourceGrainTests
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
         var configuration = _fixture.Create<Dictionary<string, object?>>();
         await grain.UpdateConfigurationAsync(configuration);
-        
+
         // Act.
         await grain.ClearConfigurationAsync();
 
@@ -96,7 +96,7 @@ public class ResourceGrainTests
 
         // Act.
         var configurationTuple = await grain.GetMetadata();
-        
+
         // Assert.
         configurationTuple.Metadata.Should().BeEmpty();
         configurationTuple.LastUpdateDate.Should().BeNull();
@@ -108,7 +108,7 @@ public class ResourceGrainTests
         // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
         var metadata = _fixture.Create<Dictionary<string, string?>>();
-        
+
         // Act.
         await grain.UpdateMetadataAsync(metadata);
 
@@ -143,7 +143,7 @@ public class ResourceGrainTests
 
         // Act.
         var state = await grain.GetState();
-        
+
         // Assert.
         state.Should().NotBeNull();
     }
@@ -156,7 +156,7 @@ public class ResourceGrainTests
 
         // Act.
         var stateTuple = await grain.GetState();
-        
+
         // Assert.
         stateTuple.State.Should().BeEmpty();
         stateTuple.LastUpdateDate.Should().BeNull();

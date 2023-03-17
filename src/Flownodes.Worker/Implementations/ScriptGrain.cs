@@ -38,6 +38,6 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
 
         await _script.ExecuteAsync(parameters);
 
-        Logger.LogInformation("Executed script {ResourceId}", Id);
+        _logger.LogInformation("Executed script {ResourceId}", Id);
     }
 }

@@ -10,49 +10,39 @@ public class FlownodesIdTests
     [Fact]
     public void ConstructFlownodesIdFromEnumKind_ShouldConstruct()
     {
+        // Arrange & Act.
         var id = new FlownodesId(FlownodesObject.Other, "firstName", "secondName");
-        id.Should().NotBeNull();
+
+        // Act.
+        id.Id.Should().Be("firstName/other:secondName");
+        id.ObjectKind.Should().Be(FlownodesObject.Other);
+        id.FirstName.Should().Be("firstName");
+        id.SecondName.Should().Be("secondName");
     }
 
     [Fact]
     public void ConstructFlownodesIdFromStringKind_ShouldConstruct()
     {
+        // Arrange & Act.
         var id = new FlownodesId("other", "firstName", "secondName");
-        id.Should().NotBeNull();
+
+        // Assert.
+        id.Id.Should().Be("firstName/other:secondName");
+        id.ObjectKind.Should().Be(FlownodesObject.Other);
+        id.FirstName.Should().Be("firstName");
+        id.SecondName.Should().Be("secondName");
     }
 
     [Fact]
-    public void ConstructFlownodesIdFromStringKind_ShouldThrowWhenInvalidKindIsPassed()
+    public void ConstructFlownodesIdFromStringKind_ShouldThrow_WhenInvalidKindIsPassed()
     {
+        // Act.
         var act = () =>
         {
             var unused = new FlownodesId("invalid", "firstName", "secondName");
         };
 
+        // Act & Assert.
         act.Should().Throw<ArgumentException>();
-    }
-
-    [Fact]
-    public void Id_ShouldGetCorrectIdString()
-    {
-        var id = new FlownodesId("other", "firstName", "secondName");
-
-        id.Id.Should().Be("firstName/other:secondName");
-    }
-
-    [Fact]
-    public void FirstName_ShouldGetCorrectFirstNameString()
-    {
-        var id = new FlownodesId("other", "firstName", "secondName");
-
-        id.FirstName.Should().Be("firstName");
-    }
-
-    [Fact]
-    public void SecondName_ShouldGetCorrectSecondNameString()
-    {
-        var id = new FlownodesId("other", "firstName", "secondName");
-
-        id.SecondName.Should().Be("secondName");
     }
 }

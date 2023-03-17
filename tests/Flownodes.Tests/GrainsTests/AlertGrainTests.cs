@@ -8,7 +8,6 @@ using Flownodes.Shared.Interfaces;
 using Flownodes.Tests.Fixtures;
 using FluentAssertions;
 using Orleans.TestingHost;
-using OrleansCodeGen.Orleans.Serialization;
 using Xunit;
 
 namespace Flownodes.Tests.GrainsTests;
@@ -29,13 +28,13 @@ public class AlertGrainTests
     {
         return new FlownodesId(FlownodesObject.Alert, _fixture.Create<string>(), _fixture.Create<string>());
     }
-    
+
     [Fact]
     public async Task Initialize_ShouldInitializeAlert()
     {
         // Arrange.
         var alert = _cluster.GrainFactory.GetGrain<IAlertGrain>(ProvideFakeFlownodesId());
-        
+
         // Act.
         await alert.InitializeAsync("target", DateTime.Now, AlertSeverity.Informational, "description",
             new HashSet<string> { "TestAlerterDriver" });

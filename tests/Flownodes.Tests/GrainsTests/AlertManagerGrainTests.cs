@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
-using Flownodes.Sdk;
 using Flownodes.Sdk.Alerting;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Tests.Fixtures;
@@ -52,11 +51,11 @@ public class AlertManagerGrainTests
 
         // Act.
         var alert = await alertManager.GetAlert("tenant", "alert");
-        
+
         // Assert.
         alert.Should().NotBeNull();
     }
-    
+
     [Fact]
     public async Task GetAlert_ShouldReturnNull_WhenAlertIsNotFound()
     {
@@ -67,7 +66,7 @@ public class AlertManagerGrainTests
 
         // Act.
         var alert = await alertManager.GetAlert("tenant", "alert_1");
-        
+
         // Assert.
         alert.Should().BeNull();
     }
@@ -86,7 +85,7 @@ public class AlertManagerGrainTests
         var alert = await alertManager.GetAlertByTargetObjectName("tenant", "targetObject");
         alert.Should().NotBeNull();
     }
-    
+
     [Fact]
     public async Task GetAlertByTargetObjectName_ShouldReturnNull_WhenAlertIsNotFound()
     {

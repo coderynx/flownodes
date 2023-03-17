@@ -27,7 +27,7 @@ public class TenantGrainTests
         // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITenantGrain>(_fixture.Create<string>());
         var metadata = _fixture.Create<Dictionary<string, string?>>();
-        
+
         // Act.
         await grain.UpdateMetadataAsync(metadata);
 

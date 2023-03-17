@@ -11,9 +11,9 @@
 <br />
 <br />
 
-![Flownodes checks](https://badgen.net/github/checks/coderynx/flownodes)
-![Flownodes commits](https://badgen.net/github/commits/coderynx/flownodes)
-![Flownodes license](https://badgen.net/github/license/coderynx/flownodes)
+![Checks](https://flat.badgen.net/github/checks/coderynx/flownodes)
+![Commits](https://flat.badgen.net/github/commits/coderynx/flownodes)
+![License](https://flat.badgen.net/github/license/coderynx/flownodes)
 
 <div align="left">
 

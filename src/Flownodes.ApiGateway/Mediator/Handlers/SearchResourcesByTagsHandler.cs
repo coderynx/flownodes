@@ -33,7 +33,8 @@ public class SearchResourcesByTagsHandler : IRequestHandler<SearchResourcesByTag
             foreach (var resource in resources)
             {
                 var poco = await resource.GetPoco();
-                var result = new ResourceSearchResult(poco.Id, poco.Id.FirstName, poco.Id.SecondName!, poco.Id.ToObjectKindString(),
+                var result = new ResourceSearchResult(poco.Id, poco.Id.FirstName, poco.Id.SecondName!,
+                    poco.Id.ToObjectKindString(),
                     poco.BehaviorId);
                 searchResults.Add(result);
             }

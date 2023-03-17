@@ -5,9 +5,13 @@ namespace Flownodes.Sdk.Resourcing;
 /// </summary>
 public sealed class ResourceContext
 {
+    private readonly Dictionary<string, object?>? _configuration;
+    private readonly Dictionary<string, object?>? _state;
+
     public ResourceContext(string serviceId, string clusterId, FlownodesId id, DateTime createdAt, string? behaviourId,
         bool isConfigurable, Dictionary<string, object?>? configuration, DateTime? configurationLastUpdateDate,
-        Dictionary<string, string?> metadata, DateTime? metadataLastUpdateDate, bool isStateful, Dictionary<string, object?>? state,
+        Dictionary<string, string?> metadata, DateTime? metadataLastUpdateDate, bool isStateful,
+        Dictionary<string, object?>? state,
         DateTime? stateLastUpdateDate)
     {
         ServiceId = serviceId;
@@ -38,6 +42,7 @@ public sealed class ResourceContext
     public string? BehaviourId { get; }
 
     public bool IsConfigurable { get; }
+
     public Dictionary<string, object?>? Configuration
     {
         get
@@ -46,12 +51,14 @@ public sealed class ResourceContext
             throw new InvalidOperationException("Resource is not configurable");
         }
     }
+
     public DateTime? ConfigurationLastUpdateDate { get; }
-    
+
     public Dictionary<string, string?> Metadata { get; }
     public DateTime? MetadataLastUpdateDate { get; }
 
     public bool IsStateful { get; }
+
     public Dictionary<string, object?> State
     {
         get
@@ -60,8 +67,6 @@ public sealed class ResourceContext
             throw new InvalidOperationException("Resource is not stateful");
         }
     }
-    public DateTime? StateLastUpdateDate { get; }
 
-    private readonly Dictionary<string, object?>? _configuration;
-    private readonly Dictionary<string, object?>? _state;
+    public DateTime? StateLastUpdateDate { get; }
 }

@@ -9,10 +9,13 @@ namespace Flownodes.Worker.Implementations;
 [GrainType(FlownodesObjectNames.Device)]
 internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
+    private readonly ILogger<DeviceGrain> _logger;
+
     public DeviceGrain(IPluginProvider pluginProvider, ILogger<DeviceGrain> logger,
         IEnvironmentService environmentService) :
         base(logger, environmentService, pluginProvider)
     {
+        _logger = logger;
     }
 
     private async Task ExecuteTimerBehaviourAsync(object arg)
@@ -54,18 +57,18 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         var deviceBehaviour = (IWritableDeviceBehaviour)Behaviour;
         await deviceBehaviour.OnPushStateAsync(newState, GetResourceContext());
 
-        Logger.LogInformation("Applied new state for device {DeviceId}", Id);
+        _logger.LogInformation("Applied new state for device {DeviceId}", Id);
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
-        Logger.LogInformation("Activated device {DeviceId}", Id);
+        _logger.LogInformation("Activated device {DeviceId}", Id);
         return base.OnActivateAsync(cancellationToken);
     }
 
     public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
     {
-        Logger.LogInformation("Deactivated device {DeviceId}", Id);
+        _logger.LogInformation("Deactivated device {DeviceId}", Id);
         return base.OnDeactivateAsync(reason, cancellationToken);
     }
 }

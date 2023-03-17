@@ -28,7 +28,7 @@ public class TenantManagerGrainTests
 
         // Act.
         var tenant = await tenantManager.CreateTenantAsync("tenant_1");
-        
+
         // Assert.
         tenant.Should().NotBeNull();
     }
@@ -40,24 +40,24 @@ public class TenantManagerGrainTests
         var tenantManager = _cluster.GrainFactory.GetGrain<ITenantManagerGrain>(_fixture.Create<string>());
         const string tenantId = "tenant_1";
         await tenantManager.CreateTenantAsync(tenantId);
-        
+
         // Act.
         var tenant = await tenantManager.GetTenantAsync(tenantId);
-        
+
         // Assert.
         tenant.Should().NotBeNull();
     }
-    
+
     [Fact]
     public async Task GetTenant_ShouldReturnNull_WhenTenantIsNotFound()
     {
         // Arrange.
         var tenantManager = _cluster.GrainFactory.GetGrain<ITenantManagerGrain>(_fixture.Create<string>());
         await tenantManager.CreateTenantAsync("tenant_1");
-        
+
         // Act.
         var tenant = await tenantManager.GetTenantAsync("tenant_2");
-        
+
         // Assert.
         tenant.Should().BeNull();
     }
@@ -72,7 +72,7 @@ public class TenantManagerGrainTests
 
         // Act.
         var tenants = await tenantManager.GetTenantsAsync();
-        
+
         // Assert.
         tenants.Should().HaveCount(2);
     }

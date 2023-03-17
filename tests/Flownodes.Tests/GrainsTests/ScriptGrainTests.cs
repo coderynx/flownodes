@@ -53,7 +53,7 @@ public class ScriptGrainTests
             { "code", code }
         };
         await script.UpdateConfigurationAsync(configuration);
-        
+
         // Act & Assert.
         var act = async () => { await script.ExecuteAsync(); };
         await act.Should().NotThrowAsync();

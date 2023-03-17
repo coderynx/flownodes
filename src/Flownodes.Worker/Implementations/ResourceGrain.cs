@@ -17,14 +17,14 @@ namespace Flownodes.Worker.Implementations;
 internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IResourceGrainStoreEvent>
 {
     private readonly IEnvironmentService _environmentService;
+    private readonly ILogger<ResourceGrain> _logger;
     private readonly IPluginProvider _pluginProvider;
-    protected readonly ILogger<ResourceGrain> Logger;
     protected IBehaviour? Behaviour;
 
     protected ResourceGrain(ILogger<ResourceGrain> logger, IEnvironmentService environmentService,
         IPluginProvider pluginProvider)
     {
-        Logger = logger;
+        _logger = logger;
         _environmentService = environmentService;
         _pluginProvider = pluginProvider;
     }
@@ -42,7 +42,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
 
     public ValueTask<ResourceSummary> GetPoco()
     {
-        Logger.LogDebug("Retrieved POCO of resource {@ResourceId}", Id);
+        _logger.LogDebug("Retrieved POCO of resource {@ResourceId}", Id);
         return ValueTask.FromResult(new ResourceSummary(Id, BehaviourId, CreatedAt, State.Configuration, State.Metadata,
             State.State, State?.LastStateUpdateDate));
     }
@@ -61,12 +61,12 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
             await RaiseConditionalEvent(@event);
         }
 
-        Logger.LogInformation("Activated resource grain {@ResourceId}", Id);
+        _logger.LogInformation("Activated resource grain {@ResourceId}", Id);
     }
 
     public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
     {
-        Logger.LogInformation("Deactivated resource grain {@ResourceId} for reason {Reason}", Id, reason.Description);
+        _logger.LogInformation("Deactivated resource grain {@ResourceId} for reason {Reason}", Id, reason.Description);
         return base.OnDeactivateAsync(reason, cancellationToken);
     }
 
@@ -83,7 +83,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
     public ValueTask<(Dictionary<string, string?> Metadata, DateTime? LastUpdateDate, DateTime CreatedAtDate)>
         GetMetadata()
     {
-        Logger.LogInformation("Retrieved metadata of resource {@ResourceId}", Id);
+        _logger.LogInformation("Retrieved metadata of resource {@ResourceId}", Id);
         return ValueTask.FromResult((State.Metadata, State.LastMetadataUpdateDate, State.CreatedAtDate));
     }
 
@@ -91,7 +91,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
     {
         if (!IsConfigurable) throw new ResourceNotConfigurableException(TenantName, Kind, ResourceName);
 
-        Logger.LogInformation("Retrieved configuration of resource {@ResourceId}", Id);
+        _logger.LogInformation("Retrieved configuration of resource {@ResourceId}", Id);
         return ValueTask.FromResult((State.Configuration, State.LastConfigurationUpdateDate))!;
     }
 
@@ -99,13 +99,14 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
     {
         if (!IsStateful) throw new ResourceNotStatefulException(TenantName, Kind, ResourceName);
 
-        Logger.LogDebug("Retrieved state of resource {@ResourceId}", Id);
+        _logger.LogDebug("Retrieved state of resource {@ResourceId}", Id);
         return ValueTask.FromResult((State.State, State.LastStateUpdateDate))!;
     }
 
     protected ResourceContext GetResourceContext()
     {
-        return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id, CreatedAt, BehaviourId,
+        return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id, CreatedAt,
+            BehaviourId,
             IsConfigurable, State.Configuration, State.LastConfigurationUpdateDate, State.Metadata,
             State.LastMetadataUpdateDate, IsStateful, State.State, State.LastStateUpdateDate);
     }
@@ -116,7 +117,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
         await RaiseConditionalEvent(@event);
         await GetRequiredBehaviour();
 
-        Logger.LogInformation("Updated configuration of resource {@ResourceId}", Id);
+        _logger.LogInformation("Updated configuration of resource {@ResourceId}", Id);
     }
 
     public async Task ClearConfigurationAsync()
@@ -124,7 +125,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
         var @event = new ClearResourceConfigurationEvent();
         await RaiseConditionalEvent(@event);
 
-        Logger.LogInformation("Cleared configuration of resource {@ResourceId}", Id);
+        _logger.LogInformation("Cleared configuration of resource {@ResourceId}", Id);
     }
 
     private async Task GetRequiredBehaviour()
@@ -157,7 +158,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
         await RaiseConditionalEvent(@event);
 
         await OnUpdateStateAsync(state);
-        Logger.LogInformation("Updated state of resource {@ResourceId}", Id);
+        _logger.LogInformation("Updated state of resource {@ResourceId}", Id);
     }
 
     public async Task ClearStateAsync()
@@ -165,7 +166,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
         var @event = new ClearResourceStateEvent();
         await RaiseConditionalEvent(@event);
 
-        Logger.LogInformation("Cleared state of resource {@ResourceId}", Id);
+        _logger.LogInformation("Cleared state of resource {@ResourceId}", Id);
     }
 
     public virtual async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
@@ -173,7 +174,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
         var @event = new UpdateResourceMetadataEvent(metadata);
         await RaiseConditionalEvent(@event);
 
-        Logger.LogInformation("Updated metadata of resource {@ResourceId}", Id);
+        _logger.LogInformation("Updated metadata of resource {@ResourceId}", Id);
     }
 
     public async Task ClearMetadataAsync()
@@ -181,13 +182,13 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
         var @event = new ClearResourceMetadataEvent();
         await RaiseConditionalEvent(@event);
 
-        Logger.LogInformation("Cleared metadata of Resource {@ResourceId}", Id);
+        _logger.LogInformation("Cleared metadata of Resource {@ResourceId}", Id);
     }
 
     public virtual Task SelfRemoveAsync()
     {
         // TODO: Add clear state.
-        Logger.LogInformation("Cleared persistence of resource {@ResourceId}", Id);
+        _logger.LogInformation("Cleared persistence of resource {@ResourceId}", Id);
         return Task.CompletedTask;
     }
 
@@ -233,6 +234,6 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
                 throw new ArgumentOutOfRangeException(nameof(@event));
         }
 
-        Logger.LogInformation("Raised event on {@ResourceId}", Id);
+        _logger.LogInformation("Raised event on {@ResourceId}", Id);
     }
 }

@@ -25,10 +25,10 @@ public class ClusterGrainTests
     {
         // Arrange.
         var clusterGrain = _cluster.GrainFactory.GetGrain<IClusterGrain>(0);
-        
+
         // Act.
         var clusterInformation = await clusterGrain.GetClusterInformation();
-        
+
         // Assert.
         clusterInformation.Should().NotBeNull();
     }
