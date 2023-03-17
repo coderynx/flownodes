@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using Flownodes.Sdk.Resourcing;
+using Flownodes.Sdk.Resourcing.Attributes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 

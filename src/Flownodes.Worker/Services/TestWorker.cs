@@ -1,4 +1,7 @@
-using Flownodes.Shared.Interfaces;
+using Flownodes.Shared.Alerting;
+using Flownodes.Shared.Resourcing;
+using Flownodes.Shared.Resourcing.Scripts;
+using Flownodes.Shared.Tenanting;
 
 namespace Flownodes.Worker.Services;
 
@@ -49,7 +52,7 @@ public class TestWorker : BackgroundService
         // #!/usr/local/bin/cscs
         using System.Collections.Generic;
         using System.Threading.Tasks;
-        using Flownodes.Shared.Scripting;
+        using Flownodes.Shared.Resourcing.Scripts;
         using Flownodes.Sdk.Alerting;
 
     public class TestScript : IScript

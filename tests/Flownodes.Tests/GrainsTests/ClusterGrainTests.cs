@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using AutoFixture;
-using Flownodes.Shared.Interfaces;
+using Flownodes.Shared.Cluster;
 using Flownodes.Tests.Fixtures;
 using FluentAssertions;
 using Orleans.TestingHost;

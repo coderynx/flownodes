@@ -1,4 +1,5 @@
 ﻿using Flownodes.Sdk.Resourcing;
+using Flownodes.Sdk.Resourcing.Attributes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OpenWeatherMap.Standard;

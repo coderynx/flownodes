@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
 using Flownodes.Sdk;
-using Flownodes.Shared.Interfaces;
+using Flownodes.Shared.Resourcing.Scripts;
 using Flownodes.Tests.Fixtures;
 using FluentAssertions;
 using Orleans.TestingHost;
@@ -36,7 +36,7 @@ public class ScriptGrainTests
         // #!/usr/local/bin/cscs
         using System.Collections.Generic;
         using System.Threading.Tasks;
-        using Flownodes.Shared.Scripting;
+        using Flownodes.Shared.Resourcing.Scripts;
 
         public class TestScript : IScript
         {

@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Flownodes.Shared.Interfaces;
+using Flownodes.Shared.Resourcing;
 
 namespace Flownodes.Tests.Interfaces;
 

@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Autofac;
 using Flownodes.Tests.Interfaces;
-using Flownodes.Worker.Implementations;
+using Flownodes.Worker.Resourcing;
 using Flownodes.Worker.Services;
 using Microsoft.Extensions.Logging;
 using Orleans;

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
-using Flownodes.Shared.Interfaces;
+using Flownodes.Shared.Resourcing;
 using Flownodes.Tests.Fixtures;
 using Flownodes.Tests.Interfaces;
 using FluentAssertions;

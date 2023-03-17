@@ -1,7 +1,8 @@
 using Flownodes.ApiGateway.Mediator.Requests;
 using Flownodes.ApiGateway.Mediator.Responses;
 using Flownodes.Sdk;
-using Flownodes.Shared.Interfaces;
+using Flownodes.Shared.Resourcing;
+using Flownodes.Shared.Tenanting;
 using MediatR;
 
 namespace Flownodes.ApiGateway.Mediator.Handlers;
