@@ -4,6 +4,7 @@ using AutoFixture;
 using Flownodes.Sdk;
 using Flownodes.Shared.Interfaces;
 using Flownodes.Tests.Fixtures;
+using FluentAssertions;
 using Orleans.TestingHost;
 using Xunit;
 
@@ -26,13 +27,11 @@ public class ScriptGrainTests
         return new FlownodesId(FlownodesObject.Script, _fixture.Create<string>(), _fixture.Create<string>());
     }
 
-    // TODO: Add more relevant tests.
-
     [Fact]
     public async Task ExecuteAsync_ShouldExecuteScriptWithoutThrowing()
     {
+        // Arrange.
         var script = _cluster.GrainFactory.GetGrain<IScriptGrain>(GetFakeFlownodesId());
-
         const string code = """
         // #!/usr/local/bin/cscs
         using System.Collections.Generic;
@@ -54,6 +53,9 @@ public class ScriptGrainTests
             { "code", code }
         };
         await script.UpdateConfigurationAsync(configuration);
-        await script.ExecuteAsync();
+        
+        // Act & Assert.
+        var act = async () => { await script.ExecuteAsync(); };
+        await act.Should().NotThrowAsync();
     }
 }

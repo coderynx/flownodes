@@ -33,11 +33,14 @@ public class AlertGrainTests
     [Fact]
     public async Task Initialize_ShouldInitializeAlert()
     {
+        // Arrange.
         var alert = _cluster.GrainFactory.GetGrain<IAlertGrain>(ProvideFakeFlownodesId());
-
+        
+        // Act.
         await alert.InitializeAsync("target", DateTime.Now, AlertSeverity.Informational, "description",
             new HashSet<string> { "TestAlerterDriver" });
 
+        // Assert.
         var state = await alert.GetState();
         state.TargetObjectName.Should().NotBeNullOrEmpty();
         state.Description.Should().NotBeNullOrEmpty();
@@ -46,11 +49,14 @@ public class AlertGrainTests
     [Fact]
     public async Task Fire_ShouldFireAlert()
     {
+        // Arrange.
         var alert = _cluster.GrainFactory.GetGrain<IAlertGrain>(ProvideFakeFlownodesId());
 
+        // Act.
         await alert.InitializeAsync("target", DateTime.Now, AlertSeverity.Informational, "description",
             new HashSet<string> { "TestAlerterDriver" });
 
+        // Assert.
         await alert.FireAsync();
     }
 }

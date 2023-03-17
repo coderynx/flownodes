@@ -52,12 +52,13 @@ public class ResourceManagerTests
             "tenant",
             "resource");
 
+        // Assert.
         var id = await resource.GetId();
         id.Should().Be("tenant/other:resource");
     }
 
     [Fact]
-    public async Task DeployResource_ShouldThrowWhenResourceNameIsNullOrEmpty()
+    public async Task DeployResource_ShouldThrow_WhenResourceNameIsNullOrEmpty()
     {
         // Arrange.
         var manager = ProvideResourceManager();
@@ -68,7 +69,7 @@ public class ResourceManagerTests
     }
 
     [Fact]
-    public async Task DeployResource_ShouldNotThrowWhenConfigurationIsNull()
+    public async Task DeployResource_ShouldNotThrow_WhenConfigurationIsNull()
     {
         // Arrange.
         var manager = ProvideResourceManager();
@@ -114,7 +115,7 @@ public class ResourceManagerTests
     }
 
     [Fact]
-    public async Task GetResource_ShouldReturnNullWhenResourceDoesNotExist()
+    public async Task GetResource_ShouldReturnNull_WhenResourceDoesNotExist()
     {
         // Arrange.
         var manager = ProvideResourceManager();

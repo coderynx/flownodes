@@ -34,23 +34,23 @@ public class WorkflowManagerGrainTests
     }
 
     [Fact]
-    public async Task GetWorkflow_ShouldGetWorkflow()
+    public async Task GetWorkflow_ShouldReturnWorkflow()
     {
         // Arrange,
         var workflowManager = _cluster.GrainFactory.GetGrain<IWorkflowManagerGrain>(_fixture.Create<string>());
 
         var workflowName = _fixture.Create<string>();
-        var workflow = await workflowManager.CreateWorkflowAsync(workflowName, _fixture.Create<string>());
+        await workflowManager.CreateWorkflowAsync(workflowName, _fixture.Create<string>());
 
         // Act.
-        workflow = await workflowManager.GetWorkflowAsync(workflowName);
+        var workflow = await workflowManager.GetWorkflowAsync(workflowName);
 
         // Assert.
         workflow.Should().NotBeNull();
     }
 
     [Fact]
-    public async Task GetWorkflows_ShouldGetWorkflows()
+    public async Task GetWorkflows_ShouldReturnWorkflows()
     {
         // Arrange,
         var workflowManager = _cluster.GrainFactory.GetGrain<IWorkflowManagerGrain>(_fixture.Create<string>());
@@ -72,11 +72,11 @@ public class WorkflowManagerGrainTests
         var workflowManager = _cluster.GrainFactory.GetGrain<IWorkflowManagerGrain>(_fixture.Create<string>());
 
         var workflowName = _fixture.Create<string>();
-        var workflow = await workflowManager.CreateWorkflowAsync(workflowName, _fixture.Create<string>());
+        await workflowManager.CreateWorkflowAsync(workflowName, _fixture.Create<string>());
 
         // Act.
         await workflowManager.RemoveWorkflowAsync(workflowName);
-        workflow = await workflowManager.GetWorkflowAsync(workflowName);
+        var workflow = await workflowManager.GetWorkflowAsync(workflowName);
 
         // Assert.
         workflow.Should().BeNull();

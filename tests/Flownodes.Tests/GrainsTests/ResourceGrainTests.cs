@@ -29,11 +29,15 @@ public class ResourceGrainTests
     }
 
     [Fact]
-    public async Task GetConfiguration_ShouldReturnNullDateTimeWhenNotUpdated()
+    public async Task GetConfiguration_ShouldReturnNullDateTime_WhenNotUpdated()
     {
+        // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
-
+        
+        // Act.
         var configurationTuple = await grain.GetConfiguration();
+        
+        // Assert.
         configurationTuple.Configuration.Should().BeEmpty();
         configurationTuple.LastUpdateDate.Should().BeNull();
     }
@@ -41,23 +45,27 @@ public class ResourceGrainTests
     [Fact]
     public async Task UpdateConfiguration_ShouldUpdateConfigurationAsync()
     {
+        // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
-
         var configuration = _fixture.Create<Dictionary<string, object?>>();
+        
+        // Act.
         await grain.UpdateConfigurationAsync(configuration);
 
+        // Assert.
         var newConfiguration = await grain.GetConfiguration();
         newConfiguration.Configuration.Should().BeEquivalentTo(configuration);
     }
 
     [Fact]
-    public async Task UpdateConfiguration_ShouldThrowWhenBehaviourIsNotRegistered()
+    public async Task UpdateConfiguration_ShouldThrow_WhenBehaviourIsNotRegistered()
     {
+        // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
-
         var configuration = _fixture.Create<Dictionary<string, object?>>();
         configuration.Add("behaviourId", "unknown");
-
+        
+        // Act & Assert.
         var act = async () => { await grain.UpdateConfigurationAsync(configuration); };
         await act.Should().ThrowAsync<Exception>();
     }
@@ -65,13 +73,15 @@ public class ResourceGrainTests
     [Fact]
     public async Task ClearConfiguration_ShouldClearConfiguration()
     {
+        // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
-
         var configuration = _fixture.Create<Dictionary<string, object?>>();
         await grain.UpdateConfigurationAsync(configuration);
-
+        
+        // Act.
         await grain.ClearConfigurationAsync();
 
+        // Assert.
         var configurationTuple = await grain.GetConfiguration();
         configurationTuple.Configuration.Should().NotBeEquivalentTo(configuration);
         configurationTuple.Configuration.Should().BeEmpty();
@@ -79,11 +89,15 @@ public class ResourceGrainTests
     }
 
     [Fact]
-    public async Task GetMetadata_ShouldReturnNullDateTimeWhenNotUpdated()
+    public async Task GetMetadata_ShouldReturnNullDateTime_WhenNotUpdated()
     {
+        // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
 
+        // Act.
         var configurationTuple = await grain.GetMetadata();
+        
+        // Assert.
         configurationTuple.Metadata.Should().BeEmpty();
         configurationTuple.LastUpdateDate.Should().BeNull();
     }
@@ -91,11 +105,14 @@ public class ResourceGrainTests
     [Fact]
     public async Task UpdateMetadata_ShouldUpdateMetadata()
     {
+        // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
-
         var metadata = _fixture.Create<Dictionary<string, string?>>();
+        
+        // Act.
         await grain.UpdateMetadataAsync(metadata);
 
+        // Assert.
         var newMetadata = await grain.GetMetadata();
         newMetadata.Metadata.Should().BeEquivalentTo(metadata);
     }
@@ -103,13 +120,15 @@ public class ResourceGrainTests
     [Fact]
     public async Task ClearMetadata_ShouldClearMetadata()
     {
+        // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
-
         var metadata = _fixture.Create<Dictionary<string, string?>>();
         await grain.UpdateMetadataAsync(metadata);
 
+        // Act.
         await grain.ClearMetadataAsync();
 
+        // Assert.
         var metadataTuple = await grain.GetMetadata();
         metadataTuple.Metadata.Should().NotBeEquivalentTo(metadata);
         metadataTuple.Metadata.Should().BeEmpty();
@@ -119,18 +138,26 @@ public class ResourceGrainTests
     [Fact]
     public async Task GetState_ShouldGetState()
     {
+        // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
 
+        // Act.
         var state = await grain.GetState();
+        
+        // Assert.
         state.Should().NotBeNull();
     }
 
     [Fact]
-    public async Task GetState_ShouldReturnNullDateTimeWhenNotUpdated()
+    public async Task GetState_ShouldReturnNullDateTime_WhenNotUpdated()
     {
+        // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
 
+        // Act.
         var stateTuple = await grain.GetState();
+        
+        // Assert.
         stateTuple.State.Should().BeEmpty();
         stateTuple.LastUpdateDate.Should().BeNull();
     }
@@ -138,13 +165,15 @@ public class ResourceGrainTests
     [Fact]
     public async Task ClearState_ShouldClearState()
     {
+        // Arrange.
         var grain = _cluster.GrainFactory.GetGrain<ITestResourceGrain>(ProvideFakeFlownodesId());
-
         var state = _fixture.Create<Dictionary<string, object?>>();
         await grain.UpdateStateAsync(state);
 
+        // Act.
         await grain.ClearStateAsync();
 
+        // Assert.
         var stateTuple = await grain.GetState();
         stateTuple.State.Should().NotBeEquivalentTo(state);
         stateTuple.State.Should().BeEmpty();

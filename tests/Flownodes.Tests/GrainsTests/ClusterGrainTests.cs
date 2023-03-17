@@ -21,10 +21,15 @@ public class ClusterGrainTests
     }
 
     [Fact]
-    public async Task ShouldGetClusterInformation()
+    public async Task GetClusterInformation_ShouldReturnClusterInformation()
     {
+        // Arrange.
         var clusterGrain = _cluster.GrainFactory.GetGrain<IClusterGrain>(0);
+        
+        // Act.
         var clusterInformation = await clusterGrain.GetClusterInformation();
+        
+        // Assert.
         clusterInformation.Should().NotBeNull();
     }
 }

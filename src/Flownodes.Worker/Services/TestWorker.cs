@@ -29,7 +29,6 @@ public class TestWorker : BackgroundService
 
         var hueLight =
             await resourceManager.DeployResourceAsync<IDeviceGrain>("default", "hue_light", hueLightConfiguration);
-        var hueLightState = await hueLight.GetState();
 
         var routerConfiguration = new Dictionary<string, object?>
         {
