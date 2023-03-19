@@ -14,8 +14,6 @@ public enum FlownodesObject
     DataSource,
     Asset,
     Script,
-    WorkflowManager,
-    Workflow,
     Other
 }
 
