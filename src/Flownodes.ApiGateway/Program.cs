@@ -1,5 +1,6 @@
 using Carter;
 using Flownodes.ApiGateway.Mediator.Requests;
+using Flownodes.ApiGateway.Services;
 using Orleans.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +30,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddAuthorization();
 builder.Services.AddMediatR(config => { config.RegisterServicesFromAssembly(typeof(GetTenantRequest).Assembly); });
 builder.Services.AddCarter();
+builder.Services.AddSingleton<IManagersService, ManagersService>();
 
 var app = builder.Build();
 

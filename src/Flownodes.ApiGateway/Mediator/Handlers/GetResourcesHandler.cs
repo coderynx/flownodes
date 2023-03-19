@@ -1,5 +1,6 @@
 using Flownodes.ApiGateway.Mediator.Requests;
 using Flownodes.ApiGateway.Mediator.Responses;
+using Flownodes.ApiGateway.Services;
 using Flownodes.Sdk;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Tenanting;
@@ -9,22 +10,20 @@ namespace Flownodes.ApiGateway.Mediator.Handlers;
 
 public class GetResourcesHandler : IRequestHandler<GetResourcesRequest, GetResourcesResponse>
 {
-    private readonly ITenantManagerGrain _tenantManager;
+    private readonly IManagersService _managersService;
 
-    public GetResourcesHandler(IGrainFactory grainFactory)
+    public GetResourcesHandler(IManagersService managersService)
     {
-        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManager);
+        _managersService = managersService;
     }
 
     public async Task<GetResourcesResponse> Handle(GetResourcesRequest request, CancellationToken cancellationToken)
     {
-        var tenant = await _tenantManager.GetTenantAsync(request.TenantName);
-        if (tenant is null)
+        var resourceManager = await _managersService.GetResourceManager(request.TenantName);
+        if (resourceManager is null)
         {
             return new GetResourcesResponse(request.TenantName, "Tenant not found", ResponseKind.NotFound);
         }
-
-        var resourceManager = await tenant.GetResourceManager();
         
         try
         {
