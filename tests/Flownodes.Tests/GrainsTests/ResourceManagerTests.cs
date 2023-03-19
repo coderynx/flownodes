@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
+using Flownodes.Sdk;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Tests.Fixtures;
 using Flownodes.Tests.Interfaces;
@@ -23,17 +24,16 @@ public class ResourceManagerTests
         _fixture = new Fixture();
     }
 
-    private IResourceManagerGrain ProvideResourceManager()
-    {
-        var grain = _cluster.GrainFactory.GetGrain<IResourceManagerGrain>(_fixture.Create<string>());
-        return grain;
-    }
+    private FlownodesId NewFlownodesId => new(FlownodesObject.ResourceManager, _fixture.Create<string>());
+
+    private IResourceManagerGrain NewResourceManagerGrain =>
+        _cluster.GrainFactory.GetGrain<IResourceManagerGrain>(NewFlownodesId);
 
     [Fact]
     public async Task DeployResource_ShouldDeployResource()
     {
         // Arrange.
-        var manager = ProvideResourceManager();
+        var manager = NewResourceManagerGrain;
 
         // Act & Assert.
         await manager.DeployResourceAsync<ITestResourceGrain>(
@@ -45,7 +45,7 @@ public class ResourceManagerTests
     public async Task DeployResource_ShouldDeployResourceWithValidId()
     {
         // Arrange.
-        var manager = ProvideResourceManager();
+        var manager = NewResourceManagerGrain;
 
         // Act.
         var resource = await manager.DeployResourceAsync<ITestResourceGrain>(
@@ -61,7 +61,7 @@ public class ResourceManagerTests
     public async Task DeployResource_ShouldThrow_WhenResourceNameIsNullOrEmpty()
     {
         // Arrange.
-        var manager = ProvideResourceManager();
+        var manager = NewResourceManagerGrain;
 
         // Act & Assert.
         var act = async () => { await manager.DeployResourceAsync<ITestResourceGrain>("tenant", string.Empty); };
@@ -72,7 +72,7 @@ public class ResourceManagerTests
     public async Task DeployResource_ShouldNotThrow_WhenConfigurationIsNull()
     {
         // Arrange.
-        var manager = ProvideResourceManager();
+        var manager = NewResourceManagerGrain;
 
         // Act & Assert.
         var act = async () =>
@@ -87,7 +87,7 @@ public class ResourceManagerTests
     public async Task GetResource_ShouldGetResourceGrain()
     {
         // Arrange.
-        var manager = ProvideResourceManager();
+        var manager = NewResourceManagerGrain;
         await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource");
 
         // Act.
@@ -101,7 +101,7 @@ public class ResourceManagerTests
     public async Task SearchResourcesByTags_ShouldReturnResources()
     {
         // Arrange.
-        var manager = ProvideResourceManager();
+        var manager = NewResourceManagerGrain;
         await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource_1");
         await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource_2");
 
@@ -118,7 +118,7 @@ public class ResourceManagerTests
     public async Task GetResource_ShouldReturnNull_WhenResourceDoesNotExist()
     {
         // Arrange.
-        var manager = ProvideResourceManager();
+        var manager = NewResourceManagerGrain;
         await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource");
 
         // Act.
@@ -132,7 +132,7 @@ public class ResourceManagerTests
     public async Task RemoveResource_ShouldRemoveResource()
     {
         // Arrange.
-        var manager = ProvideResourceManager();
+        var manager = NewResourceManagerGrain;
         await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource");
 
         // Act.
@@ -146,7 +146,7 @@ public class ResourceManagerTests
     public async Task RemoveAllResources_ShouldRemoveAllResources()
     {
         // Arrange.
-        var manager = ProvideResourceManager();
+        var manager = NewResourceManagerGrain;
         await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource1");
         await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource2");
 
@@ -164,7 +164,7 @@ public class ResourceManagerTests
     public async Task GetAllResourceSummaries_ShouldGetAllResourceSummaries()
     {
         // Arrange.
-        var manager = ProvideResourceManager();
+        var manager = NewResourceManagerGrain;
         await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource1");
         await manager.DeployResourceAsync<ITestResourceGrain>("tenant", "resource2");
 

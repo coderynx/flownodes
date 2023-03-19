@@ -12,7 +12,7 @@ public interface IResourceGrain : IGrainWithStringKey
     /// </summary>
     /// <returns>The resource POCO. </returns>
     public ValueTask<ResourceSummary> GetSummary();
-    
+
     /// <summary>
     ///     Gets the resource ID.
     /// </summary>

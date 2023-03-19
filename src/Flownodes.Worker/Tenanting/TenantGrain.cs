@@ -11,7 +11,8 @@ public class TenantGrain : Grain, ITenantGrain
     private readonly IPersistentState<Dictionary<string, string?>> _metadataStore;
 
     public TenantGrain(ILogger<TenantGrain> logger,
-        [PersistentState("tenantMetadata")] IPersistentState<Dictionary<string, string?>> metadataStore)
+        [PersistentState("tenantMetadataStore")]
+        IPersistentState<Dictionary<string, string?>> metadataStore)
     {
         _logger = logger;
         _metadataStore = metadataStore;
@@ -23,25 +24,25 @@ public class TenantGrain : Grain, ITenantGrain
         set => _metadataStore.State = value;
     }
 
-    private string Name => this.GetPrimaryKeyString();
+    private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
 
     public async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
     {
         Metadata = metadata;
         await _metadataStore.WriteStateAsync();
 
-        _logger.LogInformation("Updated metadata of tenant {TenantName}", Name);
+        _logger.LogInformation("Updated metadata of tenant {@TenantId}", Id);
     }
 
     public async Task ClearMetadataAsync()
     {
         await _metadataStore.ClearStateAsync();
-        _logger.LogInformation("Cleared metadata of tenant {TenantName}", Name);
+        _logger.LogInformation("Cleared metadata of tenant {@TenantId}", Id);
     }
 
     public ValueTask<Dictionary<string, string?>> GetMetadata()
     {
-        _logger.LogDebug("Retrieved metadata of tenant {TenantName}", Name);
+        _logger.LogDebug("Retrieved metadata of tenant {@TenantId}", Id);
         return ValueTask.FromResult(Metadata);
     }
 }

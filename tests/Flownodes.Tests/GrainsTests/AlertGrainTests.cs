@@ -24,16 +24,16 @@ public class AlertGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId ProvideFakeFlownodesId()
-    {
-        return new FlownodesId(FlownodesObject.Alert, _fixture.Create<string>(), _fixture.Create<string>());
-    }
+    private FlownodesId NewFlownodesId =>
+        new(FlownodesObject.Alert, _fixture.Create<string>(), _fixture.Create<string>());
+
+    private IAlertGrain NewAlertGrain => _cluster.GrainFactory.GetGrain<IAlertGrain>(NewFlownodesId);
 
     [Fact]
     public async Task Initialize_ShouldInitializeAlert()
     {
         // Arrange.
-        var alert = _cluster.GrainFactory.GetGrain<IAlertGrain>(ProvideFakeFlownodesId());
+        var alert = NewAlertGrain;
 
         // Act.
         await alert.InitializeAsync("target", DateTime.Now, AlertSeverity.Informational, "description",
@@ -49,7 +49,7 @@ public class AlertGrainTests
     public async Task Fire_ShouldFireAlert()
     {
         // Arrange.
-        var alert = _cluster.GrainFactory.GetGrain<IAlertGrain>(ProvideFakeFlownodesId());
+        var alert = NewAlertGrain;
 
         // Act.
         await alert.InitializeAsync("target", DateTime.Now, AlertSeverity.Informational, "description",

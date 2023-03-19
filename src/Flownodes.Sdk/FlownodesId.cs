@@ -66,10 +66,9 @@ public record FlownodesId
     {
         ArgumentException.ThrowIfNullOrEmpty(objectKind);
         ArgumentException.ThrowIfNullOrEmpty(firstName);
-        ArgumentException.ThrowIfNullOrEmpty(secondName);
 
         ObjectKind = KindFromString(objectKind);
-        if (IsManager && secondName is not null) throw new ArgumentException($"Passed invalid {nameof(objectKind)}");
+        if (IsShort && secondName is not null) throw new ArgumentException($"Passed invalid {nameof(objectKind)}");
 
         FirstName = firstName;
         SecondName = secondName;
@@ -84,10 +83,9 @@ public record FlownodesId
     public FlownodesId(FlownodesObject objectKind, string firstName, string? secondName = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(firstName);
-        ArgumentException.ThrowIfNullOrEmpty(secondName);
 
         ObjectKind = objectKind;
-        if (IsManager && secondName is not null) throw new ArgumentException($"Passed invalid {nameof(objectKind)}");
+        if (IsShort && secondName is not null) throw new ArgumentException($"Passed invalid {nameof(objectKind)}");
 
         FirstName = firstName;
         SecondName = secondName;
@@ -108,22 +106,20 @@ public record FlownodesId
 
             var secondName = tokens[1].Split(':');
             ObjectKind = KindFromString(secondName[0]);
-            if (IsManager) throw new ArgumentException($"Passed invalid {nameof(id)}");
+            if (IsShort) throw new ArgumentException($"Passed invalid {nameof(id)}");
 
             SecondName = secondName[1];
 
             return;
         }
 
-        if (id.Contains(':')) throw new ArgumentException("Passed invalid FlownodesId string");
+        if (!id.Contains(':')) throw new ArgumentException("Passed invalid FlownodesId string");
 
         var firstName = id.Split(':');
         ObjectKind = KindFromString(firstName[0]);
-        if (!IsManager) throw new ArgumentException($"Passed invalid {nameof(id)}");
+        if (!IsShort) throw new ArgumentException($"Passed invalid {nameof(id)}");
 
         FirstName = firstName[1];
-
-        throw new ArgumentException("Passed invalid FlownodesId string");
     }
 
     /// <summary>
@@ -137,6 +133,8 @@ public record FlownodesId
     public bool IsManager => ObjectKind is FlownodesObject.TenantManager
         or FlownodesObject.AlertManager
         or FlownodesObject.ResourceManager;
+
+    private bool IsShort => IsManager || ObjectKind == FlownodesObject.Tenant;
 
     /// <summary>
     ///     The object to which the Flownodes ID refers to.
@@ -159,9 +157,9 @@ public record FlownodesId
     /// <returns>The string representation.</returns>
     public override string ToString()
     {
-        return !IsManager
+        return !IsShort
             ? $"{FirstName}/{KindToString(ObjectKind)}:{SecondName}"
-            : $"{KindToString(ObjectKind)}:{SecondName}";
+            : $"{KindToString(ObjectKind)}:{FirstName}";
     }
 
     public static implicit operator string(FlownodesId id)

@@ -29,7 +29,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
     }
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
-    protected FlownodesId Id => (FlownodesId) this.GetPrimaryKeyString();
+    protected FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
     protected string TenantName => Id.FirstName;
     protected string ResourceName => Id.SecondName!;
     protected bool IsConfigurable => GetType().IsAssignableTo(typeof(IConfigurableResource));
@@ -42,7 +42,8 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
     {
         _logger.LogDebug("Retrieved summary of resource {@ResourceId}", Id);
 
-        var summary = new ResourceSummary(Id, BehaviourId, State.CreatedAtDate, State.Configuration, State.Metadata, State.State,
+        var summary = new ResourceSummary(Id, BehaviourId, State.CreatedAtDate, State.Configuration, State.Metadata,
+            State.State,
             State.LastStateUpdateDate);
         return ValueTask.FromResult(summary);
     }
@@ -100,7 +101,8 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
 
     protected ResourceContext GetResourceContext()
     {
-        return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id, State.CreatedAtDate,
+        return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id,
+            State.CreatedAtDate,
             BehaviourId,
             IsConfigurable, State.Configuration, State.LastConfigurationUpdateDate, State.Metadata,
             State.LastMetadataUpdateDate, IsStateful, State.State, State.LastStateUpdateDate);

@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using AutoFixture;
+using Flownodes.Sdk;
 using Flownodes.Shared.Tenanting;
 using Flownodes.Tests.Fixtures;
 using FluentAssertions;
@@ -20,11 +21,16 @@ public class TenantManagerGrainTests
         _fixture = new Fixture();
     }
 
+    private FlownodesId NewFlownodesId => new(FlownodesObject.TenantManager, _fixture.Create<string>());
+
+    private ITenantManagerGrain NewTenantManagerGrain =>
+        _cluster.GrainFactory.GetGrain<ITenantManagerGrain>(NewFlownodesId);
+
     [Fact]
     public async Task CreateTenant_ShouldCreateTenant()
     {
         // Arrange.
-        var tenantManager = _cluster.GrainFactory.GetGrain<ITenantManagerGrain>(_fixture.Create<string>());
+        var tenantManager = NewTenantManagerGrain;
 
         // Act.
         var tenant = await tenantManager.CreateTenantAsync("tenant_1");
@@ -37,7 +43,7 @@ public class TenantManagerGrainTests
     public async Task GetTenant_ShouldReturnTenant()
     {
         // Arrange.
-        var tenantManager = _cluster.GrainFactory.GetGrain<ITenantManagerGrain>(_fixture.Create<string>());
+        var tenantManager = NewTenantManagerGrain;
         const string tenantId = "tenant_1";
         await tenantManager.CreateTenantAsync(tenantId);
 
@@ -52,7 +58,7 @@ public class TenantManagerGrainTests
     public async Task GetTenant_ShouldReturnNull_WhenTenantIsNotFound()
     {
         // Arrange.
-        var tenantManager = _cluster.GrainFactory.GetGrain<ITenantManagerGrain>(_fixture.Create<string>());
+        var tenantManager = NewTenantManagerGrain;
         await tenantManager.CreateTenantAsync("tenant_1");
 
         // Act.
@@ -66,7 +72,7 @@ public class TenantManagerGrainTests
     public async Task GetTenants_ShouldReturnTenants()
     {
         // Arrange.
-        var tenantManager = _cluster.GrainFactory.GetGrain<ITenantManagerGrain>(_fixture.Create<string>());
+        var tenantManager = NewTenantManagerGrain;
         await tenantManager.CreateTenantAsync("tenant_1");
         await tenantManager.CreateTenantAsync("tenant_2");
 

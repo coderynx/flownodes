@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
+using Flownodes.Sdk;
 using Flownodes.Shared.Tenanting;
 using Flownodes.Tests.Fixtures;
 using FluentAssertions;
@@ -21,11 +22,14 @@ public class TenantGrainTests
         _fixture = new Fixture();
     }
 
+    private FlownodesId NewFlownodesId => new(FlownodesObject.Tenant, _fixture.Create<string>());
+    private ITenantGrain NewTenantGrain => _cluster.GrainFactory.GetGrain<ITenantGrain>(NewFlownodesId);
+
     [Fact]
     public async Task UpdateMetadata_ShouldUpdateMetadata()
     {
         // Arrange.
-        var grain = _cluster.GrainFactory.GetGrain<ITenantGrain>(_fixture.Create<string>());
+        var grain = NewTenantGrain;
         var metadata = _fixture.Create<Dictionary<string, string?>>();
 
         // Act.
@@ -40,7 +44,7 @@ public class TenantGrainTests
     public async Task ClearMetadata_ShouldClearMetadata()
     {
         // Arrange.
-        var grain = _cluster.GrainFactory.GetGrain<ITenantGrain>(_fixture.Create<string>());
+        var grain = NewTenantGrain;
         var metadata = _fixture.Create<Dictionary<string, string?>>();
         await grain.UpdateMetadataAsync(metadata);
 

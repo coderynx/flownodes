@@ -22,16 +22,16 @@ public class ScriptGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId GetFakeFlownodesId()
-    {
-        return new FlownodesId(FlownodesObject.Script, _fixture.Create<string>(), _fixture.Create<string>());
-    }
+    private FlownodesId NewFlownodesId =>
+        new(FlownodesObject.Script, _fixture.Create<string>(), _fixture.Create<string>());
+
+    private IScriptGrain NewScriptGrain => _cluster.GrainFactory.GetGrain<IScriptGrain>(NewFlownodesId);
 
     [Fact]
     public async Task ExecuteAsync_ShouldExecuteScriptWithoutThrowing()
     {
         // Arrange.
-        var script = _cluster.GrainFactory.GetGrain<IScriptGrain>(GetFakeFlownodesId());
+        var grain = NewScriptGrain;
         const string code = """
         // #!/usr/local/bin/cscs
         using System.Collections.Generic;
@@ -52,10 +52,10 @@ public class ScriptGrainTests
         {
             { "code", code }
         };
-        await script.UpdateConfigurationAsync(configuration);
+        await grain.UpdateConfigurationAsync(configuration);
 
         // Act & Assert.
-        var act = async () => { await script.ExecuteAsync(); };
+        var act = async () => { await grain.ExecuteAsync(); };
         await act.Should().NotThrowAsync();
     }
 }

@@ -25,15 +25,16 @@ public class TenantManagerGrain : ITenantManagerGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 
+        var id = new FlownodesId(FlownodesObject.Tenant, name);
         if (await IsTenantRegistered(name))
         {
-            var grain = _grainFactory.GetGrain<ITenantGrain>(name);
+            var grain = _grainFactory.GetGrain<ITenantGrain>(id);
 
-            _logger.LogDebug("Retrieved tenant with ID {Id}", name);
+            _logger.LogDebug("Retrieved tenant {@TenantId}", id);
             return grain;
         }
 
-        _logger.LogError("Could not retrieve tenant with ID {Id}", name);
+        _logger.LogError("Could not retrieve tenant {@TenantId}", id);
         return default;
     }
 
@@ -57,9 +58,10 @@ public class TenantManagerGrain : ITenantManagerGrain
         _registrations.State.Add(name);
         await _registrations.WriteStateAsync();
 
-        var grain = _grainFactory.GetGrain<ITenantGrain>(name);
+        var id = new FlownodesId(FlownodesObject.Tenant, name);
+        var grain = _grainFactory.GetGrain<ITenantGrain>(id);
 
-        _logger.LogInformation("Created tenant with ID {Id}", name);
+        _logger.LogInformation("Created tenant with ID {@TenantId}", id);
         return grain;
     }
 
@@ -76,7 +78,7 @@ public class TenantManagerGrain : ITenantManagerGrain
 
         // TODO: Perform tenant removal.
 
-        _logger.LogInformation("Removed tenant with ID {Id}", name);
+        _logger.LogInformation("Removed tenant with ID {@TenantId}", name);
         return Task.CompletedTask;
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
+using Flownodes.Sdk;
 using Flownodes.Sdk.Alerting;
 using Flownodes.Shared.Alerting;
 using Flownodes.Tests.Fixtures;
@@ -22,16 +23,16 @@ public class AlertManagerGrainTests
         _fixture = new Fixture();
     }
 
-    private IAlertManagerGrain ProvideAlertManagerGrain()
-    {
-        return _cluster.GrainFactory.GetGrain<IAlertManagerGrain>(_fixture.Create<string>());
-    }
+    private FlownodesId NewFlownodesId => new(FlownodesObject.AlertManager, _fixture.Create<string>());
+
+    private IAlertManagerGrain NewAlertManagerGrain =>
+        _cluster.GrainFactory.GetGrain<IAlertManagerGrain>(NewFlownodesId);
 
     [Fact]
     public async Task CreateAlert_ShouldCreateAlert()
     {
         // Arrange.
-        var alertManager = ProvideAlertManagerGrain();
+        var alertManager = NewAlertManagerGrain;
 
         // Act.
         var alert = await alertManager.CreateAlertAsync("tenant", "targetObject",
@@ -45,7 +46,7 @@ public class AlertManagerGrainTests
     public async Task GetAlert_ShouldGetAlert()
     {
         // Arrange.
-        var alertManager = ProvideAlertManagerGrain();
+        var alertManager = NewAlertManagerGrain;
         await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
             AlertSeverity.Informational, "description", new HashSet<string>());
 
@@ -60,7 +61,7 @@ public class AlertManagerGrainTests
     public async Task GetAlert_ShouldReturnNull_WhenAlertIsNotFound()
     {
         // Arrange.
-        var alertManager = ProvideAlertManagerGrain();
+        var alertManager = NewAlertManagerGrain;
         await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
             AlertSeverity.Informational, "description", new HashSet<string>());
 
@@ -75,7 +76,7 @@ public class AlertManagerGrainTests
     public async Task GetAlertByTargetObjectName_ShouldReturnAlert()
     {
         // Arrange.
-        var alertManager = ProvideAlertManagerGrain();
+        var alertManager = NewAlertManagerGrain;
 
         // Act.
         await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
@@ -90,7 +91,7 @@ public class AlertManagerGrainTests
     public async Task GetAlertByTargetObjectName_ShouldReturnNull_WhenAlertIsNotFound()
     {
         // Arrange.
-        var alertManager = ProvideAlertManagerGrain();
+        var alertManager = NewAlertManagerGrain;
 
         // Act.
         await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
@@ -105,7 +106,7 @@ public class AlertManagerGrainTests
     public async Task GetAlerts_ShouldGetAlerts()
     {
         // Arrange.
-        var alertManager = ProvideAlertManagerGrain();
+        var alertManager = NewAlertManagerGrain;
 
         // Act.
         await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
@@ -122,7 +123,7 @@ public class AlertManagerGrainTests
     public async Task RemoveAlert_ShouldRemoveAlert()
     {
         // Arrange.
-        var alertManager = ProvideAlertManagerGrain();
+        var alertManager = NewAlertManagerGrain;
         await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
             AlertSeverity.Informational, "description", new HashSet<string>());
 

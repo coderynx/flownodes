@@ -45,4 +45,20 @@ public class FlownodesIdTests
         // Act & Assert.
         act.Should().Throw<ArgumentException>();
     }
+
+    [Theory]
+    [InlineData(FlownodesObject.TenantManager)]
+    [InlineData(FlownodesObject.ResourceManager)]
+    [InlineData(FlownodesObject.AlertManager)]
+    [InlineData(FlownodesObject.Tenant)]
+    public void ConstructFlownodesId_ShouldConstruct_WhenIdIsShort(FlownodesObject objectKind)
+    {
+        // Arrange & Act.
+        var id = new FlownodesId(objectKind, "firstName");
+
+        // Assert.
+        id.ObjectKind.Should().Be(objectKind);
+        id.FirstName.Should().Be("firstName");
+        id.SecondName.Should().BeNull();
+    }
 }

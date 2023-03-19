@@ -11,10 +11,6 @@
 <br />
 <br />
 
-![Checks](https://flat.badgen.net/github/checks/coderynx/flownodes)
-![Commits](https://flat.badgen.net/github/commits/coderynx/flownodes)
-![License](https://flat.badgen.net/github/license/coderynx/flownodes)
-
 <div align="left">
 
 Flownodes is an experimental automation distributed platform designed to integrate devices and different kinds of data sources. The main focus of the application is to provide easy extendability with a user friendly SDK.
