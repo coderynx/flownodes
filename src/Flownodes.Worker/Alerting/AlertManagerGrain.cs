@@ -7,8 +7,7 @@ using Orleans.Runtime;
 namespace Flownodes.Worker.Alerting;
 
 [GenerateSerializer]
-internal sealed record AlertRegistration([property: Id(0)] string TenantName, [property: Id(1)] string AlertName,
-    [property: Id(2)] string TargetObjectName);
+internal sealed record AlertRegistration([property: Id(0)] string AlertName, [property: Id(1)] string TargetObjectName);
 
 [GrainType(FlownodesObjectNames.AlertManager)]
 internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
@@ -17,6 +16,9 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
     private readonly IGrainFactory _grainFactory;
     private readonly ILogger<AlertManagerGrain> _logger;
 
+    private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
+    private string TenantName => Id.FirstName;
+    
     public AlertManagerGrain(ILogger<AlertManagerGrain> logger, IGrainFactory grainFactory,
         [PersistentState("alertRegistrations")]
         IPersistentState<HashSet<AlertRegistration>> alertRegistrations)
@@ -26,88 +28,68 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         _alertRegistrations = alertRegistrations;
     }
 
-    public async ValueTask<IAlertGrain> CreateAlertAsync(string tenantName, string targetObjectName,
-        AlertSeverity severity, string description, ISet<string> driverIds)
+    public async ValueTask<IAlertGrain> CreateAlertAsync(string targetObjectName, AlertSeverity severity, string description, ISet<string> driverIds)
     {
-        ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(targetObjectName);
 
         var alertName = Guid.NewGuid().ToString();
-        return await CreateAlertAsync(tenantName, alertName, targetObjectName, severity, description, driverIds);
+        return await CreateAlertAsync(alertName, targetObjectName, severity, description, driverIds);
     }
 
-    public async ValueTask<IAlertGrain> CreateAlertAsync(string tenantName, string alertName, string targetObjectName,
+    public async ValueTask<IAlertGrain> CreateAlertAsync(string alertName, string targetObjectName,
         AlertSeverity severity,
         string description, ISet<string> driverIds)
     {
-        ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(alertName);
         ArgumentException.ThrowIfNullOrEmpty(targetObjectName);
 
-        if (_alertRegistrations.State.Any(x => x.TenantName.Equals(tenantName) && x.AlertName.Equals(alertName)))
-            throw new AlertAlreadyRegisteredException(tenantName, alertName);
+        if (_alertRegistrations.State.Any(x => x.AlertName.Equals(alertName)))
+            throw new AlertAlreadyRegisteredException(TenantName, alertName);
 
-        var id = new FlownodesId(FlownodesObject.Alert, tenantName, alertName);
+        var id = new FlownodesId(FlownodesObject.Alert, TenantName, alertName);
         var grain = _grainFactory.GetGrain<IAlertGrain>(id);
         await grain.InitializeAsync(targetObjectName, DateTime.Now, severity, description, driverIds);
 
-        var registration = await AddRegistrationAsync(tenantName, alertName, targetObjectName);
+        var registration = await AddRegistrationAsync(alertName, targetObjectName);
 
         _logger.LogInformation("Registered alert {@AlertRegistration}", registration);
 
         return grain;
     }
 
-    public ValueTask<IAlertGrain?> GetAlertByTargetObjectName(string tenantName, string targetObjectName)
+    public ValueTask<IAlertGrain?> GetAlertByTargetObjectName(string targetObjectName)
     {
-        ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(targetObjectName);
 
         var registration = _alertRegistrations.State
-            .FirstOrDefault(x => x.TenantName.Equals(tenantName) && x.TargetObjectName.Equals(targetObjectName));
+            .FirstOrDefault(x => x.TargetObjectName.Equals(targetObjectName));
 
         if (registration is null) return default;
 
-        var id = new FlownodesId(FlownodesObject.Alert, registration.TenantName, registration.AlertName);
+        var id = new FlownodesId(FlownodesObject.Alert, registration.AlertName);
         return ValueTask.FromResult<IAlertGrain?>(_grainFactory.GetGrain<IAlertGrain>(id.IdString));
     }
 
-    public ValueTask<IAlertGrain?> GetAlert(string tenantName, string alertName)
+    public ValueTask<IAlertGrain?> GetAlert(string alertName)
     {
-        ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(alertName);
 
-        if (!_alertRegistrations.State.Any(x => x.TenantName.Equals(tenantName) && x.AlertName.Equals(alertName)))
+        if (!_alertRegistrations.State.Any(x => x.AlertName.Equals(alertName)))
             return default;
 
-        var id = new FlownodesId(FlownodesObject.Alert, tenantName, alertName);
+        var id = new FlownodesId(FlownodesObject.Alert, alertName);
         var grain = _grainFactory.GetGrain<IAlertGrain>(id);
 
         _logger.LogDebug("Retrieved alert grain {@AlertGrainId}", id);
         return ValueTask.FromResult<IAlertGrain?>(grain);
     }
 
-    public ValueTask<HashSet<string>> GetAlertNames(string tenantName)
+    public ValueTask<HashSet<IAlertGrain>> GetAlerts()
     {
-        ArgumentException.ThrowIfNullOrEmpty(tenantName);
-
-        var names = _alertRegistrations.State
-            .Where(x => x.TenantName.Equals(tenantName))
-            .Select(x => x.AlertName)
-            .ToHashSet();
-
-        return ValueTask.FromResult(names);
-    }
-
-    public ValueTask<HashSet<IAlertGrain>> GetAlerts(string tenantName)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(tenantName);
-
         var alerts = _alertRegistrations.State
-            .Where(x => x.TenantName.Equals(tenantName))
             .Select(x =>
             {
-                var id = new FlownodesId(FlownodesObject.Alert, x.TenantName, x.AlertName);
+                var id = new FlownodesId(FlownodesObject.Alert, x.AlertName);
                 return _grainFactory.GetGrain<IAlertGrain>(id);
             })
             .ToHashSet();
@@ -115,17 +97,16 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         return ValueTask.FromResult(alerts);
     }
 
-    public async Task RemoveAlertAsync(string tenantName, string alertName)
+    public async Task RemoveAlertAsync(string alertName)
     {
-        ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(alertName);
 
         var registration = _alertRegistrations.State
-            .SingleOrDefault(x => x.TenantName.Equals(tenantName) && x.AlertName.Equals(alertName));
+            .SingleOrDefault(x => x.AlertName.Equals(alertName));
 
-        if (registration is null) throw new AlertNotFoundException(tenantName, alertName);
+        if (registration is null) throw new AlertNotFoundException(TenantName, alertName);
 
-        var id = new FlownodesId(FlownodesObject.Alert, tenantName, alertName);
+        var id = new FlownodesId(FlownodesObject.Alert, alertName);
         var grain = _grainFactory.GetGrain<IAlertGrain>(id);
         await grain.ClearStateAsync();
         _alertRegistrations.State.Remove(registration);
@@ -133,13 +114,11 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         _logger.LogInformation("Removed alert {@AlertRegistration}", registration);
     }
 
-    private async ValueTask<AlertRegistration> AddRegistrationAsync(string tenantName, string alertName,
-        string targetObjectName)
+    private async ValueTask<AlertRegistration> AddRegistrationAsync(string alertName, string targetObjectName)
     {
-        ArgumentException.ThrowIfNullOrEmpty(tenantName);
         ArgumentException.ThrowIfNullOrEmpty(alertName);
 
-        var registration = new AlertRegistration(tenantName, alertName, targetObjectName);
+        var registration = new AlertRegistration(alertName, targetObjectName);
         _alertRegistrations.State.Add(registration);
         await _alertRegistrations.WriteStateAsync();
         return registration;

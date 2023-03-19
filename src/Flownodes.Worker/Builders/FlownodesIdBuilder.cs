@@ -3,7 +3,6 @@ using Flownodes.Shared.Alerting;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Scripts;
 using Flownodes.Shared.Tenanting;
-using Flownodes.Shared.Workflows;
 
 namespace Flownodes.Worker.Builders;
 
@@ -19,9 +18,7 @@ public static class FlownodesIdBuilder
         { typeof(IDeviceGrain), FlownodesObject.Device },
         { typeof(IDataSourceGrain), FlownodesObject.DataSource },
         { typeof(IAssetGrain), FlownodesObject.Asset },
-        { typeof(IScriptGrain), FlownodesObject.Script },
-        { typeof(IWorkflowManagerGrain), FlownodesObject.WorkflowManager },
-        { typeof(IWorkflowGrain), FlownodesObject.Workflow }
+        { typeof(IScriptGrain), FlownodesObject.Script }
     };
 
     private static FlownodesObject KindFromType(this Type type)

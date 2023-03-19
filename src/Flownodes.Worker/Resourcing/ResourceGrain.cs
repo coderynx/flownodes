@@ -35,8 +35,10 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
     protected bool IsConfigurable => GetType().IsAssignableTo(typeof(IConfigurableResource));
     protected bool IsStateful => GetType().IsAssignableTo(typeof(IStatefulResource));
     protected string? BehaviourId => State.Configuration?.GetValueOrDefault("behaviourId") as string;
-    protected IResourceManagerGrain ResourceManager => _environmentService.GetResourceManagerGrain();
-    protected IAlertManagerGrain AlertManager => _environmentService.GetAlertManagerGrain();
+    private FlownodesId ResourceManagerId => new(FlownodesObject.ResourceManager, TenantName);
+    protected IResourceManagerGrain ResourceManager => GrainFactory.GetGrain<IResourceManagerGrain>(ResourceManagerId);
+    private FlownodesId AlertManagerId => new(FlownodesObject.AlertManager, TenantName);
+    protected IAlertManagerGrain AlertManager => GrainFactory.GetGrain<IAlertManagerGrain>(AlertManagerId);
 
     public ValueTask<ResourceSummary> GetSummary()
     {

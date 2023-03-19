@@ -9,26 +9,27 @@ namespace Flownodes.ApiGateway.Mediator.Handlers;
 
 public class SearchResourcesByTagsHandler : IRequestHandler<SearchResourcesByTagsRequest, SearchResourceByTagsResponse>
 {
-    private readonly IResourceManagerGrain _resourceManager;
-
     private readonly ITenantManagerGrain _tenantManager;
 
     public SearchResourcesByTagsHandler(IGrainFactory grainFactory)
     {
         _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManager);
-        _resourceManager = grainFactory.GetGrain<IResourceManagerGrain>(FlownodesObjectNames.ResourceManager);
     }
 
     public async Task<SearchResourceByTagsResponse> Handle(SearchResourcesByTagsRequest request,
         CancellationToken cancellationToken)
     {
-        if (!await _tenantManager.IsTenantRegistered(request.TenantName))
-            return new SearchResourceByTagsResponse(request.TenantName, request.Tags, "Tenant not found",
-                ResponseKind.NotFound);
+        var tenant = await _tenantManager.GetTenantAsync(request.TenantName);
+        if (tenant is null)
+        {
+            return new SearchResourceByTagsResponse(request.TenantName, request.Tags, "Tenant not found", ResponseKind.NotFound);
+        }
+
+        var resourceManager = await tenant.GetResourceManager();
 
         try
         {
-            var resources = await _resourceManager.SearchResourcesByTags(request.TenantName, request.Tags);
+            var resources = await resourceManager.SearchResourcesByTags(request.Tags);
 
             var searchResults = new HashSet<ResourceSearchResult>();
             foreach (var resource in resources)

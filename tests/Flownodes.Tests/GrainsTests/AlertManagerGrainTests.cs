@@ -35,8 +35,8 @@ public class AlertManagerGrainTests
         var alertManager = NewAlertManagerGrain;
 
         // Act.
-        var alert = await alertManager.CreateAlertAsync("tenant", "targetObject",
-            AlertSeverity.Informational, "description", new HashSet<string>());
+        var alert = await alertManager.CreateAlertAsync("targetObject", AlertSeverity.Informational, "description",
+            new HashSet<string>());
 
         // Assert.
         alert.Should().NotBeNull();
@@ -47,11 +47,11 @@ public class AlertManagerGrainTests
     {
         // Arrange.
         var alertManager = NewAlertManagerGrain;
-        await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
-            AlertSeverity.Informational, "description", new HashSet<string>());
+        await alertManager.CreateAlertAsync("alert", "targetObject", AlertSeverity.Informational, "description",
+            new HashSet<string>());
 
         // Act.
-        var alert = await alertManager.GetAlert("tenant", "alert");
+        var alert = await alertManager.GetAlert("alert");
 
         // Assert.
         alert.Should().NotBeNull();
@@ -62,11 +62,11 @@ public class AlertManagerGrainTests
     {
         // Arrange.
         var alertManager = NewAlertManagerGrain;
-        await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
-            AlertSeverity.Informational, "description", new HashSet<string>());
+        await alertManager.CreateAlertAsync("alert", "targetObject", AlertSeverity.Informational, "description",
+            new HashSet<string>());
 
         // Act.
-        var alert = await alertManager.GetAlert("tenant", "alert_1");
+        var alert = await alertManager.GetAlert("alert_1");
 
         // Assert.
         alert.Should().BeNull();
@@ -79,11 +79,11 @@ public class AlertManagerGrainTests
         var alertManager = NewAlertManagerGrain;
 
         // Act.
-        await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
-            AlertSeverity.Informational, "description", new HashSet<string>());
+        await alertManager.CreateAlertAsync("alert", "targetObject", AlertSeverity.Informational, "description",
+            new HashSet<string>());
 
         // Assert.
-        var alert = await alertManager.GetAlertByTargetObjectName("tenant", "targetObject");
+        var alert = await alertManager.GetAlertByTargetObjectName("targetObject");
         alert.Should().NotBeNull();
     }
 
@@ -94,11 +94,11 @@ public class AlertManagerGrainTests
         var alertManager = NewAlertManagerGrain;
 
         // Act.
-        await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
-            AlertSeverity.Informational, "description", new HashSet<string>());
+        await alertManager.CreateAlertAsync("alert", "targetObject", AlertSeverity.Informational, "description",
+            new HashSet<string>());
 
         // Assert.
-        var alert = await alertManager.GetAlertByTargetObjectName("tenant", "targetObject_1");
+        var alert = await alertManager.GetAlertByTargetObjectName("targetObject_1");
         alert.Should().BeNull();
     }
 
@@ -109,13 +109,13 @@ public class AlertManagerGrainTests
         var alertManager = NewAlertManagerGrain;
 
         // Act.
-        await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
-            AlertSeverity.Informational, "description", new HashSet<string>());
-        await alertManager.CreateAlertAsync("tenant", "alert1", "targetObject",
-            AlertSeverity.Informational, "description", new HashSet<string>());
+        await alertManager.CreateAlertAsync("alert", "targetObject", AlertSeverity.Informational, "description",
+            new HashSet<string>());
+        await alertManager.CreateAlertAsync("alert1", "targetObject", AlertSeverity.Informational, "description",
+            new HashSet<string>());
 
         // Assert.
-        var alerts = await alertManager.GetAlerts("tenant");
+        var alerts = await alertManager.GetAlerts();
         alerts.Should().HaveCount(2);
     }
 
@@ -124,14 +124,14 @@ public class AlertManagerGrainTests
     {
         // Arrange.
         var alertManager = NewAlertManagerGrain;
-        await alertManager.CreateAlertAsync("tenant", "alert", "targetObject",
-            AlertSeverity.Informational, "description", new HashSet<string>());
+        await alertManager.CreateAlertAsync("alert", "targetObject", AlertSeverity.Informational, "description",
+            new HashSet<string>());
 
         // Act.
-        await alertManager.RemoveAlertAsync("tenant", "alert");
+        await alertManager.RemoveAlertAsync("alert");
 
         // Assert.
-        var alert = await alertManager.GetAlert("tenant", "alert");
+        var alert = await alertManager.GetAlert("alert");
         alert.Should().BeNull();
     }
 }

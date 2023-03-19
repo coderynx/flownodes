@@ -1,4 +1,6 @@
 using Flownodes.Sdk;
+using Flownodes.Shared.Alerting;
+using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Tenanting;
 using Orleans.Runtime;
 
@@ -44,5 +46,17 @@ public class TenantGrain : Grain, ITenantGrain
     {
         _logger.LogDebug("Retrieved metadata of tenant {@TenantId}", Id);
         return ValueTask.FromResult(Metadata);
+    }
+
+    public ValueTask<IResourceManagerGrain> GetResourceManager()
+    {
+        var id = new FlownodesId(FlownodesObject.ResourceManager, Id.FirstName);
+        return ValueTask.FromResult(GrainFactory.GetGrain<IResourceManagerGrain>(id));
+    }
+
+    public ValueTask<IAlertManagerGrain> GetAlertManager()
+    {
+        var id = new FlownodesId(FlownodesObject.AlertManager, Id.FirstName);
+        return ValueTask.FromResult(GrainFactory.GetGrain<IAlertManagerGrain>(id));
     }
 }

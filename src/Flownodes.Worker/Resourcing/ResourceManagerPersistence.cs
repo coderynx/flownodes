@@ -7,22 +7,19 @@ namespace Flownodes.Worker.Resourcing;
 [GenerateSerializer]
 public sealed class ResourceRegistration
 {
-    public ResourceRegistration(string tenantName, string resourceName, GrainId grainId, string kind,
-        HashSet<string>? tags = null)
+    public ResourceRegistration(string resourceName, GrainId grainId, string kind, HashSet<string>? tags = null)
     {
-        TenantName = tenantName;
         ResourceName = resourceName;
         GrainId = grainId;
         Kind = kind;
 
         if (tags is not null) Tags = tags;
     }
-
-    [Id(0)] public string TenantName { get; set; }
-    [Id(1)] public string ResourceName { get; set; }
-    [Id(2)] public GrainId GrainId { get; set; }
-    [Id(3)] public string Kind { get; set; }
-    [Id(4)] public HashSet<string> Tags { get; } = new();
+    
+    [Id(0)] public string ResourceName { get; set; }
+    [Id(1)] public GrainId GrainId { get; set; }
+    [Id(2)] public string Kind { get; set; }
+    [Id(3)] public HashSet<string> Tags { get; } = new();
 }
 
 [GenerateSerializer]
@@ -30,23 +27,15 @@ public sealed class ResourceManagerPersistence
 {
     [Id(0)] public List<ResourceRegistration> Registrations { get; set; } = new();
 
-    public void AddRegistration(string tenantId, string resourceId, GrainId grainId, string kind,
-        HashSet<string>? tags = null)
+    public void AddRegistration(string resourceName, GrainId grainId, string kind, HashSet<string>? tags = null)
     {
-        Registrations.Add(new ResourceRegistration(tenantId, resourceId, grainId, kind, tags));
+        Registrations.Add(new ResourceRegistration(resourceName, grainId, kind, tags));
     }
 
-    public ResourceRegistration? GetRegistration(string tenantName, string resourceName)
+    public ResourceRegistration? GetRegistration(string resourceName)
     {
         return Registrations
-            .FirstOrDefault(x => x.TenantName.Equals(tenantName) && x.ResourceName.Equals(resourceName));
-    }
-
-    public IEnumerable<ResourceRegistration> GetRegistrationsOfTenant(string tenantName)
-    {
-        return Registrations
-            .Where(x => x.TenantName.Equals(tenantName))
-            .ToList();
+            .FirstOrDefault(x => x.ResourceName.Equals(resourceName));
     }
 
     public bool IsSingletonResourceRegistered<TResourceGrain>(string kind) where TResourceGrain : IResourceGrain
@@ -55,10 +44,10 @@ public sealed class ResourceManagerPersistence
                && IsKindRegistered(kind);
     }
 
-    public bool IsResourceRegistered(string tenantName, string resourceName)
+    public bool IsResourceRegistered(string resourceName)
     {
         return Registrations
-            .Any(x => x.TenantName.Equals(tenantName) && x.ResourceName.Equals(resourceName));
+            .Any(x => x.ResourceName.Equals(resourceName));
     }
 
     public bool IsKindRegistered(string kind)

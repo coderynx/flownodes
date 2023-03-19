@@ -43,8 +43,4 @@
         <InternalsVisibleTo Include="Flownodes.Tests" />
     </ItemGroup>
 
-    <ItemGroup>
-        <Folder Include="Workflows\Actions" />
-    </ItemGroup>
-
 </Project>

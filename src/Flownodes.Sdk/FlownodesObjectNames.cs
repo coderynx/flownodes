@@ -11,7 +11,5 @@ public static class FlownodesObjectNames
     public const string DataSource = "data_source";
     public const string Script = "script";
     public const string Asset = "asset";
-    public const string WorkflowManager = "workflow_manager";
-    public const string Workflow = "workflow";
     public const string Other = "other";
 }

@@ -10,24 +10,26 @@ namespace Flownodes.ApiGateway.Mediator.Handlers;
 public class
     GetAlertByTargetObjectHandler : IRequestHandler<GetAlertByTargetObjectRequest, GetAlertByTargetObjectResponse>
 {
-    private readonly IAlertManagerGrain _alertManager;
-
     private readonly ITenantManagerGrain _tenantManager;
 
     public GetAlertByTargetObjectHandler(IGrainFactory grainFactory)
     {
         _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManager);
-        _alertManager = grainFactory.GetGrain<IAlertManagerGrain>(FlownodesObjectNames.AlertManager);
     }
 
     public async Task<GetAlertByTargetObjectResponse> Handle(GetAlertByTargetObjectRequest request,
         CancellationToken cancellationToken)
     {
-        if (!await _tenantManager.IsTenantRegistered(request.TenantName))
+        var tenant = await _tenantManager.GetTenantAsync(request.TenantName);
+        if (tenant is null)
+        {
             return new GetAlertByTargetObjectResponse(request.TenantName, request.TargetObjectName, "Tenant not found",
                 ResponseKind.NotFound);
+        }
 
-        var alert = await _alertManager.GetAlertByTargetObjectName(request.TenantName, request.TargetObjectName);
+        var alertManager = await tenant.GetAlertManager();
+        
+        var alert = await alertManager.GetAlertByTargetObjectName(request.TargetObjectName);
         if (alert is null)
             return new GetAlertByTargetObjectResponse(request.TenantName, request.TargetObjectName, "Alert not found",
                 ResponseKind.NotFound);

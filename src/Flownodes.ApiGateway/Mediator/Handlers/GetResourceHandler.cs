@@ -9,24 +9,25 @@ namespace Flownodes.ApiGateway.Mediator.Handlers;
 
 public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourceResponse>
 {
-    private readonly IResourceManagerGrain _resourceManager;
-
     private readonly ITenantManagerGrain _tenantManager;
 
     public GetResourceHandler(IGrainFactory grainFactory)
     {
         _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManager);
-        _resourceManager = grainFactory.GetGrain<IResourceManagerGrain>(FlownodesObjectNames.ResourceManager);
     }
 
     public async Task<GetResourceResponse> Handle(GetResourceRequest request, CancellationToken cancellationToken)
     {
-        if (!await _tenantManager.IsTenantRegistered(request.TenantName))
+        var tenant = await _tenantManager.GetTenantAsync(request.TenantName);
+        if (tenant is null)
+        {
             return new GetResourceResponse(request.TenantName, request.ResourceName, "Tenant not found",
                 ResponseKind.NotFound);
+        }
 
-        var resource = await _resourceManager.GetGenericResourceAsync(request.TenantName, request.ResourceName);
+        var resourceManager = await tenant.GetResourceManager();
 
+        var resource = await resourceManager.GetGenericResourceAsync(request.ResourceName);
         if (resource is null)
             return new GetResourceResponse(request.TenantName, request.ResourceName, "Resource not found",
                 ResponseKind.NotFound);

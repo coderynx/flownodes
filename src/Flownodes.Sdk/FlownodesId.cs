@@ -35,8 +35,6 @@ public record FlownodesId
         { FlownodesObjectNames.DataSource, FlownodesObject.DataSource },
         { FlownodesObjectNames.Asset, FlownodesObject.Asset },
         { FlownodesObjectNames.Script, FlownodesObject.Script },
-        { FlownodesObjectNames.WorkflowManager, FlownodesObject.WorkflowManager },
-        { FlownodesObjectNames.Workflow, FlownodesObject.Workflow },
         { FlownodesObjectNames.Other, FlownodesObject.Other }
     };
 
@@ -51,8 +49,6 @@ public record FlownodesId
         { FlownodesObject.DataSource, FlownodesObjectNames.DataSource },
         { FlownodesObject.Asset, FlownodesObjectNames.Asset },
         { FlownodesObject.Script, FlownodesObjectNames.Script },
-        { FlownodesObject.WorkflowManager, FlownodesObjectNames.WorkflowManager },
-        { FlownodesObject.Workflow, FlownodesObjectNames.Workflow },
         { FlownodesObject.Other, FlownodesObjectNames.Other }
     };
 

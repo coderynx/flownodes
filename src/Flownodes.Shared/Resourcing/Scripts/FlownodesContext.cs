@@ -47,20 +47,20 @@ public class FlownodesContext
     public async Task<(Dictionary<string, object?> State, DateTime? LastUpdateDate)> GetResourceState(
         string resourceName)
     {
-        var resource = await _resourceManager.GetGenericResourceAsync(TenantName, resourceName);
+        var resource = await _resourceManager.GetGenericResourceAsync(resourceName);
         return await resource.AsReference<IStatefulResource>().GetState();
     }
 
     public async Task UpdateResourceStateAsync(string resourceName, Dictionary<string, object?> state)
     {
-        var resource = await _resourceManager.GetGenericResourceAsync(TenantName, resourceName);
+        var resource = await _resourceManager.GetGenericResourceAsync(resourceName);
         await resource.AsReference<IStatefulResource>().UpdateStateAsync(state);
     }
 
     public async ValueTask<string> GetDataFromDataSourceAsync(string dataSourceName, string actionId,
         Dictionary<string, object?>? parameters = null)
     {
-        var dataSource = await _resourceManager.GetResourceAsync<IDataSourceGrain>(TenantName, dataSourceName);
+        var dataSource = await _resourceManager.GetResourceAsync<IDataSourceGrain>(dataSourceName);
         if (dataSource is null) throw new ResourceNotFoundException(TenantName, dataSourceName);
 
         var data = await dataSource.GetDataAsync(actionId, parameters);
