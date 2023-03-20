@@ -5,7 +5,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Tenanting;
 
-[GrainType(FlownodesObjectNames.TenantManager)]
+[GrainType(FlownodesEntityNames.TenantManager)]
 public class TenantManagerGrain : ITenantManagerGrain
 {
     private readonly IGrainFactory _grainFactory;
@@ -25,7 +25,7 @@ public class TenantManagerGrain : ITenantManagerGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 
-        var id = new FlownodesId(FlownodesObject.Tenant, name);
+        var id = new FlownodesId(FlownodesEntity.Tenant, name);
         if (await IsTenantRegistered(name))
         {
             var grain = _grainFactory.GetGrain<ITenantGrain>(id);
@@ -58,7 +58,7 @@ public class TenantManagerGrain : ITenantManagerGrain
         _registrations.State.Add(name);
         await _registrations.WriteStateAsync();
 
-        var id = new FlownodesId(FlownodesObject.Tenant, name);
+        var id = new FlownodesId(FlownodesEntity.Tenant, name);
         var grain = _grainFactory.GetGrain<ITenantGrain>(id);
 
         _logger.LogInformation("Created tenant with ID {@TenantId}", id);

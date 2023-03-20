@@ -22,7 +22,7 @@ public class TenantGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId => new(FlownodesObject.Tenant, _fixture.Create<string>());
+    private FlownodesId NewFlownodesId => new(FlownodesEntity.Tenant, _fixture.Create<string>());
     private ITenantGrain NewTenantGrain => _cluster.GrainFactory.GetGrain<ITenantGrain>(NewFlownodesId);
 
     [Fact]

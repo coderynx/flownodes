@@ -11,11 +11,11 @@ public class FlownodesIdTests
     public void ConstructFlownodesIdFromEnumKind_ShouldConstruct()
     {
         // Arrange & Act.
-        var id = new FlownodesId(FlownodesObject.Other, "firstName", "secondName");
+        var id = new FlownodesId(FlownodesEntity.Other, "firstName", "secondName");
 
         // Act.
         id.IdString.Should().Be("firstName/other:secondName");
-        id.ObjectKind.Should().Be(FlownodesObject.Other);
+        id.EntityKind.Should().Be(FlownodesEntity.Other);
         id.FirstName.Should().Be("firstName");
         id.SecondName.Should().Be("secondName");
     }
@@ -28,7 +28,7 @@ public class FlownodesIdTests
 
         // Assert.
         id.IdString.Should().Be("firstName/other:secondName");
-        id.ObjectKind.Should().Be(FlownodesObject.Other);
+        id.EntityKind.Should().Be(FlownodesEntity.Other);
         id.FirstName.Should().Be("firstName");
         id.SecondName.Should().Be("secondName");
     }
@@ -47,17 +47,17 @@ public class FlownodesIdTests
     }
 
     [Theory]
-    [InlineData(FlownodesObject.TenantManager)]
-    [InlineData(FlownodesObject.ResourceManager)]
-    [InlineData(FlownodesObject.AlertManager)]
-    [InlineData(FlownodesObject.Tenant)]
-    public void ConstructFlownodesId_ShouldConstruct_WhenIdIsShort(FlownodesObject objectKind)
+    [InlineData(FlownodesEntity.TenantManager)]
+    [InlineData(FlownodesEntity.ResourceManager)]
+    [InlineData(FlownodesEntity.AlertManager)]
+    [InlineData(FlownodesEntity.Tenant)]
+    public void ConstructFlownodesId_ShouldConstruct_WhenIdIsShort(FlownodesEntity entityKind)
     {
         // Arrange & Act.
-        var id = new FlownodesId(objectKind, "firstName");
+        var id = new FlownodesId(entityKind, "firstName");
 
         // Assert.
-        id.ObjectKind.Should().Be(objectKind);
+        id.EntityKind.Should().Be(entityKind);
         id.FirstName.Should().Be("firstName");
         id.SecondName.Should().BeNull();
     }

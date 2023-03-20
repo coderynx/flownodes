@@ -5,7 +5,7 @@ using Flownodes.Worker.Services;
 
 namespace Flownodes.Worker.Resourcing;
 
-[GrainType(FlownodesObjectNames.Script)]
+[GrainType(FlownodesEntityNames.Script)]
 internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
 {
     private readonly ILogger<ScriptGrain> _logger;

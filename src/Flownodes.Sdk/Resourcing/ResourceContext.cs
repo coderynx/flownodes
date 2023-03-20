@@ -35,7 +35,7 @@ public sealed class ResourceContext
     public string ServiceId { get; }
     public string ClusterId { get; }
     public FlownodesId Id { get; }
-    public FlownodesObject ObjectKind => Id.ObjectKind;
+    public FlownodesEntity EntityKind => Id.EntityKind;
     public string TenantName => Id.FirstName;
     public string ResourceName => Id.SecondName ?? throw new InvalidOperationException("Provided invalid FlownodesId");
     public DateTime CreatedAt { get; }

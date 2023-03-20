@@ -21,7 +21,7 @@ public class TenantManagerGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId => new(FlownodesObject.TenantManager, _fixture.Create<string>());
+    private FlownodesId NewFlownodesId => new(FlownodesEntity.TenantManager, _fixture.Create<string>());
 
     private ITenantManagerGrain NewTenantManagerGrain =>
         _cluster.GrainFactory.GetGrain<ITenantManagerGrain>(NewFlownodesId);

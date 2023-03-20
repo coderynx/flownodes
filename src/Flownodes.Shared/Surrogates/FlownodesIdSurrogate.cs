@@ -5,14 +5,14 @@ namespace Flownodes.Shared.Surrogates;
 [GenerateSerializer]
 internal struct FlownodesIdSurrogate
 {
-    public FlownodesIdSurrogate(FlownodesObject objectKind, string firstName, string? secondName = null)
+    public FlownodesIdSurrogate(FlownodesEntity entityKind, string firstName, string? secondName = null)
     {
-        ObjectKind = objectKind;
+        EntityKind = entityKind;
         FirstName = firstName;
         SecondName = secondName;
     }
 
-    [Id(0)] public FlownodesObject ObjectKind { get; }
+    [Id(0)] public FlownodesEntity EntityKind { get; }
 
     [Id(1)] public string FirstName { get; }
 
@@ -25,11 +25,11 @@ internal sealed class FlownodesIdSurrogateConverter :
 {
     public FlownodesId ConvertFromSurrogate(in FlownodesIdSurrogate surrogate)
     {
-        return new FlownodesId(surrogate.ObjectKind, surrogate.FirstName, surrogate.SecondName);
+        return new FlownodesId(surrogate.EntityKind, surrogate.FirstName, surrogate.SecondName);
     }
 
     public FlownodesIdSurrogate ConvertToSurrogate(in FlownodesId value)
     {
-        return new FlownodesIdSurrogate(value.ObjectKind, value.FirstName, value.SecondName);
+        return new FlownodesIdSurrogate(value.EntityKind, value.FirstName, value.SecondName);
     }
 }

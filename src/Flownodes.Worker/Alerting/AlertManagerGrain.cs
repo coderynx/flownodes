@@ -9,7 +9,7 @@ namespace Flownodes.Worker.Alerting;
 [GenerateSerializer]
 internal sealed record AlertRegistration([property: Id(0)] string AlertName, [property: Id(1)] string TargetObjectName);
 
-[GrainType(FlownodesObjectNames.AlertManager)]
+[GrainType(FlownodesEntityNames.AlertManager)]
 internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
 {
     private readonly IPersistentState<HashSet<AlertRegistration>> _alertRegistrations;
@@ -47,7 +47,7 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         if (_alertRegistrations.State.Any(x => x.AlertName.Equals(alertName)))
             throw new AlertAlreadyRegisteredException(TenantName, alertName);
 
-        var id = new FlownodesId(FlownodesObject.Alert, TenantName, alertName);
+        var id = new FlownodesId(FlownodesEntity.Alert, TenantName, alertName);
         var grain = _grainFactory.GetGrain<IAlertGrain>(id);
         await grain.InitializeAsync(targetObjectName, DateTime.Now, severity, description, driverIds);
 
@@ -67,7 +67,7 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
 
         if (registration is null) return default;
 
-        var id = new FlownodesId(FlownodesObject.Alert, registration.AlertName);
+        var id = new FlownodesId(FlownodesEntity.Alert, registration.AlertName);
         return ValueTask.FromResult<IAlertGrain?>(_grainFactory.GetGrain<IAlertGrain>(id.IdString));
     }
 
@@ -78,7 +78,7 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         if (!_alertRegistrations.State.Any(x => x.AlertName.Equals(alertName)))
             return default;
 
-        var id = new FlownodesId(FlownodesObject.Alert, alertName);
+        var id = new FlownodesId(FlownodesEntity.Alert, alertName);
         var grain = _grainFactory.GetGrain<IAlertGrain>(id);
 
         _logger.LogDebug("Retrieved alert grain {@AlertGrainId}", id);
@@ -90,7 +90,7 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         var alerts = _alertRegistrations.State
             .Select(x =>
             {
-                var id = new FlownodesId(FlownodesObject.Alert, x.AlertName);
+                var id = new FlownodesId(FlownodesEntity.Alert, x.AlertName);
                 return _grainFactory.GetGrain<IAlertGrain>(id);
             })
             .ToHashSet();
@@ -107,7 +107,7 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
 
         if (registration is null) throw new AlertNotFoundException(TenantName, alertName);
 
-        var id = new FlownodesId(FlownodesObject.Alert, alertName);
+        var id = new FlownodesId(FlownodesEntity.Alert, alertName);
         var grain = _grainFactory.GetGrain<IAlertGrain>(id);
         await grain.ClearStateAsync();
         _alertRegistrations.State.Remove(registration);

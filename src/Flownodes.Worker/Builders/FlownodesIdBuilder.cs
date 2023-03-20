@@ -8,22 +8,22 @@ namespace Flownodes.Worker.Builders;
 
 public static class FlownodesIdBuilder
 {
-    private static readonly Dictionary<Type, FlownodesObject> TypeToFlownodesObject = new()
+    private static readonly Dictionary<Type, FlownodesEntity> TypeToFlownodesObject = new()
     {
-        { typeof(ITenantManagerGrain), FlownodesObject.TenantManager },
-        { typeof(ITenantGrain), FlownodesObject.Tenant },
-        { typeof(IAlertManagerGrain), FlownodesObject.AlertManager },
-        { typeof(IAlertGrain), FlownodesObject.Alert },
-        { typeof(IResourceManagerGrain), FlownodesObject.ResourceManager },
-        { typeof(IDeviceGrain), FlownodesObject.Device },
-        { typeof(IDataSourceGrain), FlownodesObject.DataSource },
-        { typeof(IAssetGrain), FlownodesObject.Asset },
-        { typeof(IScriptGrain), FlownodesObject.Script }
+        { typeof(ITenantManagerGrain), FlownodesEntity.TenantManager },
+        { typeof(ITenantGrain), FlownodesEntity.Tenant },
+        { typeof(IAlertManagerGrain), FlownodesEntity.AlertManager },
+        { typeof(IAlertGrain), FlownodesEntity.Alert },
+        { typeof(IResourceManagerGrain), FlownodesEntity.ResourceManager },
+        { typeof(IDeviceGrain), FlownodesEntity.Device },
+        { typeof(IDataSourceGrain), FlownodesEntity.DataSource },
+        { typeof(IAssetGrain), FlownodesEntity.Asset },
+        { typeof(IScriptGrain), FlownodesEntity.Script }
     };
 
-    private static FlownodesObject KindFromType(this Type type)
+    private static FlownodesEntity KindFromType(this Type type)
     {
-        return TypeToFlownodesObject.TryGetValue(type, out var result) ? result : FlownodesObject.Other;
+        return TypeToFlownodesObject.TryGetValue(type, out var result) ? result : FlownodesEntity.Other;
     }
 
     public static FlownodesId CreateFromType(Type objectType, string firstName, string? secondName = null)

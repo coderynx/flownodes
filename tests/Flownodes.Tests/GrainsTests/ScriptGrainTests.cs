@@ -23,7 +23,7 @@ public class ScriptGrainTests
     }
 
     private FlownodesId NewFlownodesId =>
-        new(FlownodesObject.Script, _fixture.Create<string>(), _fixture.Create<string>());
+        new(FlownodesEntity.Script, _fixture.Create<string>(), _fixture.Create<string>());
 
     private IScriptGrain NewScriptGrain => _cluster.GrainFactory.GetGrain<IScriptGrain>(NewFlownodesId);
 

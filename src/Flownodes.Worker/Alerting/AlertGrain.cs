@@ -20,7 +20,7 @@ internal sealed record AlertPersistence
     [Id(4)] public ISet<string> DriverIds { get; set; } = new HashSet<string>();
 }
 
-[GrainType(FlownodesObjectNames.Alert)]
+[GrainType(FlownodesEntityNames.Alert)]
 internal class AlertGrain : Grain, IAlertGrain
 {
     private readonly IList<IAlerterDriver> _drivers = new List<IAlerterDriver>();

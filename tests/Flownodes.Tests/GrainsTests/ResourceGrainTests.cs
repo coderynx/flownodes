@@ -25,7 +25,7 @@ public class ResourceGrainTests
     }
 
     private FlownodesId NewFlownodesId =>
-        new(FlownodesObject.Other, _fixture.Create<string>(), _fixture.Create<string>());
+        new(FlownodesEntity.Other, _fixture.Create<string>(), _fixture.Create<string>());
 
     private ITestResourceGrain NewTestResourceGrain =>
         _cluster.GrainFactory.GetGrain<ITestResourceGrain>(NewFlownodesId);

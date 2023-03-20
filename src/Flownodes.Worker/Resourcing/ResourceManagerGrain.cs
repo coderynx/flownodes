@@ -7,7 +7,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
 
-[GrainType(FlownodesObjectNames.ResourceManager)]
+[GrainType(FlownodesEntityNames.ResourceManager)]
 public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 {
     private readonly IGrainFactory _grainFactory;
@@ -115,7 +115,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             throw new ResourceAlreadyRegisteredException(TenantName, resourceName);
 
         var id = FlownodesIdBuilder.CreateFromType(typeof(TResourceGrain), TenantName, resourceName);
-        var kind = id.ToObjectKindString();
+        var kind = id.ToEntityKindString();
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
         var tags = new HashSet<string> { resourceName, kind };
 

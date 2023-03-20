@@ -23,7 +23,7 @@ public class AlertManagerGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId => new(FlownodesObject.AlertManager, _fixture.Create<string>());
+    private FlownodesId NewFlownodesId => new(FlownodesEntity.AlertManager, _fixture.Create<string>());
 
     private IAlertManagerGrain NewAlertManagerGrain =>
         _cluster.GrainFactory.GetGrain<IAlertManagerGrain>(NewFlownodesId);

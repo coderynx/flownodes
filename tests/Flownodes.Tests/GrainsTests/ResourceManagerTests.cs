@@ -24,7 +24,7 @@ public class ResourceManagerTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId => new(FlownodesObject.ResourceManager, _fixture.Create<string>());
+    private FlownodesId NewFlownodesId => new(FlownodesEntity.ResourceManager, _fixture.Create<string>());
 
     private IResourceManagerGrain NewResourceManagerGrain =>
         _cluster.GrainFactory.GetGrain<IResourceManagerGrain>(NewFlownodesId);
@@ -50,7 +50,7 @@ public class ResourceManagerTests
 
         // Assert.
         var id = await resource.GetId();
-        id.ObjectKind.Should().Be(FlownodesObject.Other);
+        id.EntityKind.Should().Be(FlownodesEntity.Other);
         id.SecondName.Should().Be("resource");
     }
 

@@ -6,7 +6,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Tenanting;
 
-[GrainType(FlownodesObjectNames.Tenant)]
+[GrainType(FlownodesEntityNames.Tenant)]
 public class TenantGrain : Grain, ITenantGrain
 {
     private readonly ILogger<TenantGrain> _logger;
@@ -50,13 +50,13 @@ public class TenantGrain : Grain, ITenantGrain
 
     public ValueTask<IResourceManagerGrain> GetResourceManager()
     {
-        var id = new FlownodesId(FlownodesObject.ResourceManager, Id.FirstName);
+        var id = new FlownodesId(FlownodesEntity.ResourceManager, Id.FirstName);
         return ValueTask.FromResult(GrainFactory.GetGrain<IResourceManagerGrain>(id));
     }
 
     public ValueTask<IAlertManagerGrain> GetAlertManager()
     {
-        var id = new FlownodesId(FlownodesObject.AlertManager, Id.FirstName);
+        var id = new FlownodesId(FlownodesEntity.AlertManager, Id.FirstName);
         return ValueTask.FromResult(GrainFactory.GetGrain<IAlertManagerGrain>(id));
     }
 }

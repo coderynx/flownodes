@@ -25,7 +25,7 @@ public class AlertGrainTests
     }
 
     private FlownodesId NewFlownodesId =>
-        new(FlownodesObject.Alert, _fixture.Create<string>(), _fixture.Create<string>());
+        new(FlownodesEntity.Alert, _fixture.Create<string>(), _fixture.Create<string>());
 
     private IAlertGrain NewAlertGrain => _cluster.GrainFactory.GetGrain<IAlertGrain>(NewFlownodesId);
 

@@ -31,12 +31,12 @@ public class EnvironmentService : IEnvironmentService
 
     public ITenantManagerGrain GetTenantManagerGrain()
     {
-        return _grainFactory.GetGrain<ITenantManagerGrain>(FlownodesObjectNames.TenantManager);
+        return _grainFactory.GetGrain<ITenantManagerGrain>(FlownodesEntityNames.TenantManager);
     }
 
     public IResourceManagerGrain GetResourceManagerGrain()
     {
-        return _grainFactory.GetGrain<IResourceManagerGrain>(FlownodesObjectNames.ResourceManager);
+        return _grainFactory.GetGrain<IResourceManagerGrain>(FlownodesEntityNames.ResourceManager);
     }
 
     public string ServiceId => _clusterOptions.ServiceId;
@@ -44,7 +44,7 @@ public class EnvironmentService : IEnvironmentService
 
     public IAlertManagerGrain GetAlertManagerGrain()
     {
-        return _grainFactory.GetGrain<IAlertManagerGrain>(FlownodesObjectNames.AlertManager);
+        return _grainFactory.GetGrain<IAlertManagerGrain>(FlownodesEntityNames.AlertManager);
     }
 
     public IClusterGrain GetClusterGrain()

@@ -5,7 +5,7 @@ using Flownodes.Worker.Services;
 
 namespace Flownodes.Worker.Resourcing;
 
-[GrainType(FlownodesObjectNames.Device)]
+[GrainType(FlownodesEntityNames.Device)]
 internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
     private readonly ILogger<DeviceGrain> _logger;

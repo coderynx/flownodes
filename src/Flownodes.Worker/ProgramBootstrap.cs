@@ -100,7 +100,7 @@ public static partial class Program
         });
 
         builder.AddLogStorageBasedLogConsistencyProviderAsDefault();
-        
+
         if (context.HostingEnvironment.IsDevelopment())
         {
             var instanceId = context.Configuration.GetValue<int>("InstanceId");
@@ -114,9 +114,9 @@ public static partial class Program
 
             return;
         }
-        
+
         builder.ConfigureProductionStorage();
-        
+
         if (EnvironmentVariables.KubernetesServiceHost is not null) builder.UseKubernetesHosting();
         else builder.UseManualConfiguration();
     }

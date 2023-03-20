@@ -5,7 +5,7 @@ using Flownodes.Worker.Services;
 
 namespace Flownodes.Worker.Resourcing;
 
-[GrainType(FlownodesObjectNames.DataSource)]
+[GrainType(FlownodesEntityNames.DataSource)]
 internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
     public DataSourceGrain(ILogger<DataSourceGrain> logger, IEnvironmentService environmentService,

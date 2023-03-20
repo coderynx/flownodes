@@ -1,9 +1,9 @@
 namespace Flownodes.Sdk;
 
 /// <summary>
-///     Enumeration of all the Flownodes objects.
+///     Enumeration of all Flownodes entities.
 /// </summary>
-public enum FlownodesObject
+public enum FlownodesEntity
 {
     TenantManager,
     Tenant,
@@ -18,68 +18,68 @@ public enum FlownodesObject
 }
 
 /// <summary>
-///     The Flownodes ID is used to represent an object in the Flownodes cluster.
+///     The Flownodes ID is used to represent an entity in the Flownodes cluster.
 /// </summary>
 public record FlownodesId
 {
-    private static readonly Dictionary<string, FlownodesObject> StringToFlownodesObject = new()
+    private static readonly Dictionary<string, FlownodesEntity> StringToFlownodesEntity = new()
     {
-        { FlownodesObjectNames.TenantManager, FlownodesObject.TenantManager },
-        { FlownodesObjectNames.Tenant, FlownodesObject.Tenant },
-        { FlownodesObjectNames.AlertManager, FlownodesObject.AlertManager },
-        { FlownodesObjectNames.Alert, FlownodesObject.Alert },
-        { FlownodesObjectNames.ResourceManager, FlownodesObject.ResourceManager },
-        { FlownodesObjectNames.Device, FlownodesObject.Device },
-        { FlownodesObjectNames.DataSource, FlownodesObject.DataSource },
-        { FlownodesObjectNames.Asset, FlownodesObject.Asset },
-        { FlownodesObjectNames.Script, FlownodesObject.Script },
-        { FlownodesObjectNames.Other, FlownodesObject.Other }
+        { FlownodesEntityNames.TenantManager, FlownodesEntity.TenantManager },
+        { FlownodesEntityNames.Tenant, FlownodesEntity.Tenant },
+        { FlownodesEntityNames.AlertManager, FlownodesEntity.AlertManager },
+        { FlownodesEntityNames.Alert, FlownodesEntity.Alert },
+        { FlownodesEntityNames.ResourceManager, FlownodesEntity.ResourceManager },
+        { FlownodesEntityNames.Device, FlownodesEntity.Device },
+        { FlownodesEntityNames.DataSource, FlownodesEntity.DataSource },
+        { FlownodesEntityNames.Asset, FlownodesEntity.Asset },
+        { FlownodesEntityNames.Script, FlownodesEntity.Script },
+        { FlownodesEntityNames.Other, FlownodesEntity.Other }
     };
 
-    private static readonly Dictionary<FlownodesObject, string> FlownodesObjectToString = new()
+    private static readonly Dictionary<FlownodesEntity, string> FlownodesEntityToString = new()
     {
-        { FlownodesObject.TenantManager, FlownodesObjectNames.TenantManager },
-        { FlownodesObject.Tenant, FlownodesObjectNames.Tenant },
-        { FlownodesObject.AlertManager, FlownodesObjectNames.AlertManager },
-        { FlownodesObject.Alert, FlownodesObjectNames.Alert },
-        { FlownodesObject.ResourceManager, FlownodesObjectNames.ResourceManager },
-        { FlownodesObject.Device, FlownodesObjectNames.Device },
-        { FlownodesObject.DataSource, FlownodesObjectNames.DataSource },
-        { FlownodesObject.Asset, FlownodesObjectNames.Asset },
-        { FlownodesObject.Script, FlownodesObjectNames.Script },
-        { FlownodesObject.Other, FlownodesObjectNames.Other }
+        { FlownodesEntity.TenantManager, FlownodesEntityNames.TenantManager },
+        { FlownodesEntity.Tenant, FlownodesEntityNames.Tenant },
+        { FlownodesEntity.AlertManager, FlownodesEntityNames.AlertManager },
+        { FlownodesEntity.Alert, FlownodesEntityNames.Alert },
+        { FlownodesEntity.ResourceManager, FlownodesEntityNames.ResourceManager },
+        { FlownodesEntity.Device, FlownodesEntityNames.Device },
+        { FlownodesEntity.DataSource, FlownodesEntityNames.DataSource },
+        { FlownodesEntity.Asset, FlownodesEntityNames.Asset },
+        { FlownodesEntity.Script, FlownodesEntityNames.Script },
+        { FlownodesEntity.Other, FlownodesEntityNames.Other }
     };
 
     /// <summary>
-    ///     Creates a Flownodes ID from a string objectKind.
+    ///     Creates a Flownodes ID from a string entityKind.
     /// </summary>
-    /// <param name="objectKind">The object kind string to create the ID from.</param>
+    /// <param name="entityKind">The entity kind string to create the ID from.</param>
     /// <param name="firstName">The first part of the ID.</param>
     /// <param name="secondName">The second part of the ID.</param>
-    public FlownodesId(string objectKind, string firstName, string? secondName = null)
+    public FlownodesId(string entityKind, string firstName, string? secondName = null)
     {
-        ArgumentException.ThrowIfNullOrEmpty(objectKind);
+        ArgumentException.ThrowIfNullOrEmpty(entityKind);
         ArgumentException.ThrowIfNullOrEmpty(firstName);
 
-        ObjectKind = KindFromString(objectKind);
-        if (IsShort && secondName is not null) throw new ArgumentException($"Passed invalid {nameof(objectKind)}");
+        EntityKind = KindFromString(entityKind);
+        if (IsShort && secondName is not null) throw new ArgumentException($"Passed invalid {nameof(entityKind)}");
 
         FirstName = firstName;
         SecondName = secondName;
     }
 
     /// <summary>
-    ///     Creates a Flownodes ID from an enum ObjectKind.
+    ///     Creates a Flownodes ID from an enum EntityKind.
     /// </summary>
-    /// <param name="objectKind">The objectKind enum to create the ID from.</param>
+    /// <param name="entityKind">The entityKind enum to create the ID from.</param>
     /// <param name="firstName">The first part of the ID.</param>
     /// <param name="secondName">Te secondo part of the ID.</param>
-    public FlownodesId(FlownodesObject objectKind, string firstName, string? secondName = null)
+    public FlownodesId(FlownodesEntity entityKind, string firstName, string? secondName = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(firstName);
 
-        ObjectKind = objectKind;
-        if (IsShort && secondName is not null) throw new ArgumentException($"Passed invalid {nameof(objectKind)}");
+        EntityKind = entityKind;
+        if (IsShort && secondName is not null) throw new ArgumentException($"Passed invalid {nameof(entityKind)}");
 
         FirstName = firstName;
         SecondName = secondName;
@@ -99,7 +99,7 @@ public record FlownodesId
             FirstName = tokens[0];
 
             var secondName = tokens[1].Split(':');
-            ObjectKind = KindFromString(secondName[0]);
+            EntityKind = KindFromString(secondName[0]);
             if (IsShort) throw new ArgumentException($"Passed invalid {nameof(id)}");
 
             SecondName = secondName[1];
@@ -110,7 +110,7 @@ public record FlownodesId
         if (!id.Contains(':')) throw new ArgumentException("Passed invalid FlownodesId string");
 
         var firstName = id.Split(':');
-        ObjectKind = KindFromString(firstName[0]);
+        EntityKind = KindFromString(firstName[0]);
         if (!IsShort) throw new ArgumentException($"Passed invalid {nameof(id)}");
 
         FirstName = firstName[1];
@@ -124,16 +124,16 @@ public record FlownodesId
     /// <summary>
     ///     If the Flownodes ID refers to a manager.
     /// </summary>
-    public bool IsManager => ObjectKind is FlownodesObject.TenantManager
-        or FlownodesObject.AlertManager
-        or FlownodesObject.ResourceManager;
+    public bool IsManager => EntityKind is FlownodesEntity.TenantManager
+        or FlownodesEntity.AlertManager
+        or FlownodesEntity.ResourceManager;
 
-    private bool IsShort => IsManager || ObjectKind == FlownodesObject.Tenant;
+    private bool IsShort => IsManager || EntityKind == FlownodesEntity.Tenant;
 
     /// <summary>
-    ///     The object to which the Flownodes ID refers to.
+    ///     The entity to which the Flownodes ID refers to.
     /// </summary>
-    public FlownodesObject ObjectKind { get; }
+    public FlownodesEntity EntityKind { get; }
 
     /// <summary>
     ///     The first part of the Flownodes ID.
@@ -152,8 +152,8 @@ public record FlownodesId
     public override string ToString()
     {
         return !IsShort
-            ? $"{FirstName}/{KindToString(ObjectKind)}:{SecondName}"
-            : $"{KindToString(ObjectKind)}:{FirstName}";
+            ? $"{FirstName}/{KindToString(EntityKind)}:{SecondName}"
+            : $"{KindToString(EntityKind)}:{FirstName}";
     }
 
     public static implicit operator string(FlownodesId id)
@@ -166,22 +166,22 @@ public record FlownodesId
         return new FlownodesId(id);
     }
 
-    private static FlownodesObject KindFromString(string kind)
+    private static FlownodesEntity KindFromString(string kind)
     {
-        if (StringToFlownodesObject.TryGetValue(kind, out var result)) return result;
+        if (StringToFlownodesEntity.TryGetValue(kind, out var result)) return result;
 
         throw new ArgumentException($"Provided invalid {nameof(kind)}");
     }
 
-    private static string KindToString(FlownodesObject kind)
+    private static string KindToString(FlownodesEntity kind)
     {
-        if (FlownodesObjectToString.TryGetValue(kind, out var result)) return result;
+        if (FlownodesEntityToString.TryGetValue(kind, out var result)) return result;
 
         throw new ArgumentException($"Provided invalid {nameof(kind)}");
     }
 
-    public string ToObjectKindString()
+    public string ToEntityKindString()
     {
-        return KindToString(ObjectKind);
+        return KindToString(EntityKind);
     }
 }

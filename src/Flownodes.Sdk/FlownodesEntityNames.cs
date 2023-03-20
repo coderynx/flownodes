@@ -1,6 +1,6 @@
 namespace Flownodes.Sdk;
 
-public static class FlownodesObjectNames
+public static class FlownodesEntityNames
 {
     public const string TenantManager = "tenant_manager";
     public const string Tenant = "tenant";
