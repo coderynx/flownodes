@@ -1,6 +1,6 @@
 using Flownodes.Worker.Extensions;
 
-namespace Flownodes.Worker;
+namespace Flownodes.Worker.Bootstrap;
 
 internal static class EnvironmentVariables
 {
