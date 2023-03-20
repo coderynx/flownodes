@@ -4,9 +4,6 @@ namespace Flownodes.Worker.Bootstrap;
 
 internal static class EnvironmentVariables
 {
-    public static readonly string? KubernetesServiceHost =
-        Environment.GetEnvironmentVariable("KUBERNETES_SERVICE_HOST");
-
     public static string? RedisConnectionString => Environment.GetEnvironmentVariable("REDIS");
     public static string? MongoConnectionString => Environment.GetEnvironmentVariable("MONGO");
     public static string? OrleansServiceId => Environment.GetEnvironmentVariable("ORLEANS_SERVICE_ID");
