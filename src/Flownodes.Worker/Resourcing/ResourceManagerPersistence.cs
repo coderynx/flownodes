@@ -15,7 +15,7 @@ public sealed class ResourceRegistration
 
         if (tags is not null) Tags = tags;
     }
-    
+
     [Id(0)] public string ResourceName { get; set; }
     [Id(1)] public GrainId GrainId { get; set; }
     [Id(2)] public string Kind { get; set; }

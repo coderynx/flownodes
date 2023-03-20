@@ -1,3 +1,4 @@
+using System.Net;
 using System.Reflection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -76,6 +77,7 @@ public static partial class Program
     {
         var siloPort = Environment.GetEnvironmentVariable("ORLEANS_SILO_PORT") ?? "11111";
         var gatewayPort = Environment.GetEnvironmentVariable("ORLEANS_GATEWAY_PORT") ?? "30000";
+
         builder.ConfigureEndpoints(int.Parse(siloPort), int.Parse(gatewayPort));
     }
 
@@ -104,9 +106,13 @@ public static partial class Program
         // Initialize node with localhost clustering and in-memory persistence.
         if (context.HostingEnvironment.IsDevelopment())
         {
+            var instanceId = context.Configuration.GetValue<int>("InstanceId");
+
             builder
                 .AddMemoryGrainStorageAsDefault()
-                .UseLocalhostClustering();
+                .UseLocalhostClustering(11111 + instanceId, 30000 + instanceId,
+                    new IPEndPoint(IPAddress.Loopback, 11111));
+
             return;
         }
 

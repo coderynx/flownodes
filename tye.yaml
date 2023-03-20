@@ -21,22 +21,12 @@ services:
     image: redis
     args: "redis-cli -h redis MONITOR"
 
-  - name: worker-1
+  - name: worker
     project: src/Flownodes.Worker/Flownodes.Worker.csproj
-    bindings:
-      - port: 6000
-        protocol: http
-    env:
-      - DOTNET_ENVIRONMENT=Staging
-      - ORLEANS_CLUSTER_ID=dev
-      - ORLEANS_SERVICE_ID=flownodes
-
-  - name: api
-    project: src/Flownodes.ApiGateway/Flownodes.ApiGateway.csproj
-    env:
-      - DOTNET_ENVIRONMENT=Staging
-      - ORLEANS_CLUSTER_ID=dev
-      - ORLEANS_SERVICE_ID=flownodes
     bindings:
       - port: 5000
         protocol: http
+    env:
+      - DOTNET_ENVIRONMENT=Staging
+      - ORLEANS_CLUSTER_ID=dev
+      - ORLEANS_SERVICE_ID=flownodes

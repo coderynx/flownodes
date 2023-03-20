@@ -3,7 +3,6 @@ using Flownodes.Sdk;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Worker.Builders;
-using Mapster;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
@@ -43,7 +42,6 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public async ValueTask<ReadOnlyCollection<ResourceSummary>> GetAllResourceSummaries()
     {
-
         var summaries = await _persistence.State.Registrations
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>())
             .ToAsyncEnumerable()
@@ -60,7 +58,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         if (!_persistence.State.IsResourceRegistered(resourceName))
         {
-            _logger.LogError("Could not find a resource with name {@ResourceName} of tenant {@TenantName}", resourceName,
+            _logger.LogError("Could not find a resource with name {@ResourceName} of tenant {@TenantName}",
+                resourceName,
                 TenantName);
             return default;
         }
@@ -79,7 +78,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var registration = _persistence.State.GetRegistration(resourceName);
         if (registration is null)
         {
-            _logger.LogError("Could not find resource {@ResourceName} in tenant {@TenantName}", resourceName, TenantName);
+            _logger.LogError("Could not find resource {@ResourceName} in tenant {@TenantName}", resourceName,
+                TenantName);
             return default;
         }
 
@@ -87,7 +87,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
         var id = await grain.GetId();
         _logger.LogDebug("Retrieved resource {@ResourceId}", id);
-        
+
         return grain;
     }
 

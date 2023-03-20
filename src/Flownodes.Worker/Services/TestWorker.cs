@@ -26,7 +26,7 @@ public class TestWorker : BackgroundService
         var tenant = await tenantManager.CreateTenantAsync("default");
 
         var resourceManager = await tenant.GetResourceManager();
-        
+
         var hueLightConfiguration = new Dictionary<string, object?>
         {
             { "lightId", 1 }, { "behaviourId", "hue_light" }, { "updateStateTimeSpan", 5 }
@@ -44,7 +44,8 @@ public class TestWorker : BackgroundService
         {
             { "behaviourId", "open_weather_map" }
         };
-        var openWeather = await resourceManager.DeployResourceAsync<IDataSourceGrain>("open_weather_map", openWeatherConfiguration);
+        var openWeather =
+            await resourceManager.DeployResourceAsync<IDataSourceGrain>("open_weather_map", openWeatherConfiguration);
 
         const string code = """
         // #!/usr/local/bin/cscs

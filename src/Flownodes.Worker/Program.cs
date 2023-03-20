@@ -1,3 +1,6 @@
+using Carter;
+using Flownodes.Worker.Mediator.Requests;
+using Flownodes.Worker.Services;
 using Serilog;
 
 namespace Flownodes.Worker;
@@ -6,11 +9,30 @@ public static partial class Program
 {
     public static async Task Main(string[] args)
     {
-        var host = Host.CreateDefaultBuilder(args)
-            .UseOrleans(ConfigureOrleans)
-            .UseSerilog(ConfigureLogging)
-            .Build();
+        var builder = WebApplication.CreateBuilder(args);
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+        builder.Services.AddAuthorization();
+        builder.Services.AddMediatR(config =>
+        {
+            config.RegisterServicesFromAssembly(typeof(GetTenantRequest).Assembly);
+        });
+        builder.Services.AddCarter();
+        builder.Services.AddSingleton<IManagersService, ManagersService>();
+        builder.Host.UseOrleans(ConfigureOrleans).UseSerilog(ConfigureLogging);
 
-        await host.RunAsync();
+        var app = builder.Build();
+
+        if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
+        app.UseHttpsRedirection();
+        app.UseAuthorization();
+
+        app.MapCarter();
+        await app.RunAsync();
     }
 }

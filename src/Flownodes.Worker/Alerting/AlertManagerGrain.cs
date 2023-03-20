@@ -16,9 +16,6 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
     private readonly IGrainFactory _grainFactory;
     private readonly ILogger<AlertManagerGrain> _logger;
 
-    private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
-    private string TenantName => Id.FirstName;
-    
     public AlertManagerGrain(ILogger<AlertManagerGrain> logger, IGrainFactory grainFactory,
         [PersistentState("alertRegistrations")]
         IPersistentState<HashSet<AlertRegistration>> alertRegistrations)
@@ -28,7 +25,11 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         _alertRegistrations = alertRegistrations;
     }
 
-    public async ValueTask<IAlertGrain> CreateAlertAsync(string targetObjectName, AlertSeverity severity, string description, ISet<string> driverIds)
+    private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
+    private string TenantName => Id.FirstName;
+
+    public async ValueTask<IAlertGrain> CreateAlertAsync(string targetObjectName, AlertSeverity severity,
+        string description, ISet<string> driverIds)
     {
         ArgumentException.ThrowIfNullOrEmpty(targetObjectName);
 
