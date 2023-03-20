@@ -70,6 +70,11 @@ internal static class Bootstrap
         {
             siloBuilder.Services.ConfigureOrleansServices();
 
+            siloBuilder.ConfigureEndpoints(
+                EnvironmentVariables.OrleansSiloPort ?? 11111,
+                EnvironmentVariables.OrleansGatewayPort ?? 30000
+            );
+
             siloBuilder.Configure<ClusterOptions>(options =>
             {
                 options.ClusterId = EnvironmentVariables.OrleansClusterId ?? "dev";

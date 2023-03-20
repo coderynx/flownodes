@@ -1,8 +1,6 @@
 using System.Threading.Tasks;
 using Flownodes.Tests.Extensions;
 using Flownodes.Worker.Services;
-using Mapster;
-using MapsterMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Orleans.Hosting;
@@ -63,10 +61,7 @@ public class ClusterFixture : IAsyncLifetime
             {
                 services.AddSingleton<IPluginProvider, PluginProvider>();
                 services.AddSingleton<IEnvironmentService, EnvironmentService>();
-
-                var config = new TypeAdapterConfig();
-                services.AddSingleton(config);
-                services.AddScoped<IMapper, ServiceMapper>();
+                
                 services.ConfigurePluginsContainer();
             });
 
