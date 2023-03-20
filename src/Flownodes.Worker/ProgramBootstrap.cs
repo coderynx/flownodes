@@ -75,56 +75,50 @@ public static partial class Program
 
     private static void UseManualConfiguration(this ISiloBuilder builder)
     {
-        var siloPort = Environment.GetEnvironmentVariable("ORLEANS_SILO_PORT") ?? "11111";
-        var gatewayPort = Environment.GetEnvironmentVariable("ORLEANS_GATEWAY_PORT") ?? "30000";
-
-        builder.ConfigureEndpoints(int.Parse(siloPort), int.Parse(gatewayPort));
+        builder.ConfigureEndpoints(
+            EnvironmentVariables.OrleansSiloPort ?? 11111,
+            EnvironmentVariables.OrleansGatewayPort ?? 30000
+        );
     }
 
     private static void ConfigureOrleans(HostBuilderContext context, ISiloBuilder builder)
     {
-        _redisConnectionString = Environment.GetEnvironmentVariable("REDIS")
+        _redisConnectionString = EnvironmentVariables.RedisConnectionString
                                  ?? context.Configuration.GetConnectionString("redis")
                                  ?? "localhost:6379";
-        _mongoConnectionString = Environment.GetEnvironmentVariable("MONGO")
+        _mongoConnectionString = EnvironmentVariables.MongoConnectionString
                                  ?? context.Configuration.GetConnectionString("mongo")
                                  ?? "mongodb://locahost:27017";
 
         builder.ConfigureServices(ConfigureServices);
 
-        var clusterId = Environment.GetEnvironmentVariable("ORLEANS_CLUSTER_ID") ?? "dev";
-        var serviceId = Environment.GetEnvironmentVariable("ORLEANS_SERVICE_ID") ?? "flownodes";
 
         builder.Configure<ClusterOptions>(options =>
         {
-            options.ClusterId = clusterId;
-            options.ServiceId = serviceId;
+            options.ClusterId = EnvironmentVariables.OrleansClusterId ?? "dev";
+            options.ServiceId = EnvironmentVariables.OrleansServiceId ?? "flownodes";
         });
 
         builder.AddLogStorageBasedLogConsistencyProviderAsDefault();
-
-        // Initialize node with localhost clustering and in-memory persistence.
+        
         if (context.HostingEnvironment.IsDevelopment())
         {
             var instanceId = context.Configuration.GetValue<int>("InstanceId");
-
             builder
                 .AddMemoryGrainStorageAsDefault()
-                .UseLocalhostClustering(11111 + instanceId, 30000 + instanceId,
-                    new IPEndPoint(IPAddress.Loopback, 11111));
+                .UseLocalhostClustering(
+                    11111 + instanceId,
+                    30000 + instanceId,
+                    new IPEndPoint(IPAddress.Loopback, 11111)
+                );
 
             return;
         }
-
-        // Initialize node with redis clustering and redis persistence.
-        builder
-            .ConfigureProductionStorage();
-
-        // Check if the node is deployed on a Kubernetes cluster.
-        if (Environment.GetEnvironmentVariable("KUBERNETES_SERVICE_HOST") is not null)
-            builder.UseKubernetesHosting();
-        else
-            builder.UseManualConfiguration();
+        
+        builder.ConfigureProductionStorage();
+        
+        if (EnvironmentVariables.KubernetesServiceHost is not null) builder.UseKubernetesHosting();
+        else builder.UseManualConfiguration();
     }
 
     private static void ConfigureLogging(HostBuilderContext context, IServiceProvider provider,
