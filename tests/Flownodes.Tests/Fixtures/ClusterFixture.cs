@@ -61,7 +61,7 @@ public class ClusterFixture : IAsyncLifetime
             {
                 services.AddSingleton<IPluginProvider, PluginProvider>();
                 services.AddSingleton<IEnvironmentService, EnvironmentService>();
-                
+
                 services.ConfigurePluginsContainer();
             });
 

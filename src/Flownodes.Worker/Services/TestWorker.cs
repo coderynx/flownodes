@@ -34,6 +34,9 @@ public class TestWorker : BackgroundService
 
         var hueLight = await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light", hueLightConfiguration);
 
+        var room = await resourceManager.DeployResourceAsync<IResourceGroupGrain>("room");
+        await room.RegisterResourceAsync("hue_light");
+
         var routerConfiguration = new Dictionary<string, object?>
         {
             { "behaviourId", "fritz_box" }, { "updateStateTimeSpan", 5 }

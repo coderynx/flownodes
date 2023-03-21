@@ -23,7 +23,7 @@ public class UpdateResourceStateHandler : IRequestHandler<UpdateResourceStateReq
             return new UpdateResourceStateResponse(request.TenantName, request.ResourceName, "Tenant not found",
                 ResponseKind.NotFound);
 
-        var grain = await resourceManager.GetGenericResourceAsync(request.ResourceName);
+        var grain = await resourceManager.GetResourceAsync(request.ResourceName);
         if (grain is null)
             return new UpdateResourceStateResponse(request.TenantName,
                 request.ResourceName, "Resource not found",

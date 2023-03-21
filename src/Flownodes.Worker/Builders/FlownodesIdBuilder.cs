@@ -15,6 +15,7 @@ public static class FlownodesIdBuilder
         { typeof(IAlertManagerGrain), FlownodesEntity.AlertManager },
         { typeof(IAlertGrain), FlownodesEntity.Alert },
         { typeof(IResourceManagerGrain), FlownodesEntity.ResourceManager },
+        { typeof(IResourceGroupGrain), FlownodesEntity.ResourceGroup },
         { typeof(IDeviceGrain), FlownodesEntity.Device },
         { typeof(IDataSourceGrain), FlownodesEntity.DataSource },
         { typeof(IAssetGrain), FlownodesEntity.Asset },

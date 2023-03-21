@@ -51,34 +51,34 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return summaries.AsReadOnly();
     }
 
-    public ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string resourceName)
+    public ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string name)
         where TResourceGrain : IResourceGrain
     {
-        ArgumentException.ThrowIfNullOrEmpty(resourceName);
+        ArgumentException.ThrowIfNullOrEmpty(name);
 
-        if (!_persistence.State.IsResourceRegistered(resourceName))
+        if (!_persistence.State.IsResourceRegistered(name))
         {
             _logger.LogError("Could not find a resource with name {@ResourceName} of tenant {@TenantName}",
-                resourceName,
+                name,
                 TenantName);
             return default;
         }
 
-        var id = FlownodesIdBuilder.CreateFromType(typeof(TResourceGrain), TenantName, resourceName);
+        var id = FlownodesIdBuilder.CreateFromType(typeof(TResourceGrain), TenantName, name);
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
 
         _logger.LogDebug("Retrieved resource {@ResourceId}", id);
         return ValueTask.FromResult<TResourceGrain?>(grain);
     }
 
-    public async ValueTask<IResourceGrain?> GetGenericResourceAsync(string resourceName)
+    public async ValueTask<IResourceGrain?> GetResourceAsync(string name)
     {
-        ArgumentException.ThrowIfNullOrEmpty(resourceName);
+        ArgumentException.ThrowIfNullOrEmpty(name);
 
-        var registration = _persistence.State.GetRegistration(resourceName);
+        var registration = _persistence.State.GetRegistration(name);
         if (registration is null)
         {
-            _logger.LogError("Could not find resource {@ResourceName} in tenant {@TenantName}", resourceName,
+            _logger.LogError("Could not find resource {@ResourceName} in tenant {@TenantName}", name,
                 TenantName);
             return default;
         }

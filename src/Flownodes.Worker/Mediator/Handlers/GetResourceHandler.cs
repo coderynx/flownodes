@@ -22,7 +22,7 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
             return new GetResourceResponse(request.TenantName, request.ResourceName, "Tenant not found",
                 ResponseKind.NotFound);
 
-        var resource = await resourceManager.GetGenericResourceAsync(request.ResourceName);
+        var resource = await resourceManager.GetResourceAsync(request.ResourceName);
         if (resource is null)
             return new GetResourceResponse(request.TenantName, request.ResourceName, "Resource not found",
                 ResponseKind.NotFound);

@@ -17,11 +17,11 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
 {
     private readonly IEnvironmentService _environmentService;
     private readonly ILogger<ResourceGrain> _logger;
-    private readonly IPluginProvider _pluginProvider;
+    private readonly IPluginProvider? _pluginProvider;
     protected IBehaviour? Behaviour;
 
     protected ResourceGrain(ILogger<ResourceGrain> logger, IEnvironmentService environmentService,
-        IPluginProvider pluginProvider)
+        IPluginProvider? pluginProvider)
     {
         _logger = logger;
         _environmentService = environmentService;
@@ -129,7 +129,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
 
     private async Task GetRequiredBehaviour()
     {
-        if (BehaviourId is null) return;
+        if (_pluginProvider is null || BehaviourId is null) return;
 
         Behaviour = _pluginProvider.GetBehaviour(BehaviourId);
 

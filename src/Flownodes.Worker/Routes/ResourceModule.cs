@@ -76,5 +76,14 @@ public class ResourceModule : ICarterModule
                 })
             .WithName("SearchResourcesByTags")
             .WithDisplayName("Search resources by tags");
+
+        app.MapGet("api/tenants/{tenantName}/resources/groups/{resourceGroupName}",
+            async ([FromServices] IMediator mediator, string tenantName, string resourceGroupName) =>
+            {
+                var request = new GetResourceGroupRequest(tenantName, resourceGroupName);
+                var response = await mediator.Send(request);
+
+                return response.GetResult();
+            });
     }
 }

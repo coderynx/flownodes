@@ -47,13 +47,13 @@ public class FlownodesContext
     public async Task<(Dictionary<string, object?> State, DateTime? LastUpdateDate)> GetResourceState(
         string resourceName)
     {
-        var resource = await _resourceManager.GetGenericResourceAsync(resourceName);
+        var resource = await _resourceManager.GetResourceAsync(resourceName);
         return await resource.AsReference<IStatefulResource>().GetState();
     }
 
     public async Task UpdateResourceStateAsync(string resourceName, Dictionary<string, object?> state)
     {
-        var resource = await _resourceManager.GetGenericResourceAsync(resourceName);
+        var resource = await _resourceManager.GetResourceAsync(resourceName);
         await resource.AsReference<IStatefulResource>().UpdateStateAsync(state);
     }
 
