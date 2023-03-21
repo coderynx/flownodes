@@ -5,13 +5,11 @@ namespace Flownodes.Worker.Services;
 
 public class TestWorker : BackgroundService
 {
-    private readonly IGrainFactory _grainFactory;
     private readonly ILogger<TestWorker> _logger;
     private readonly IManagersService _managersService;
 
-    public TestWorker(IGrainFactory grainFactory, ILogger<TestWorker> logger, IManagersService managersService)
+    public TestWorker(ILogger<TestWorker> logger, IManagersService managersService)
     {
-        _grainFactory = grainFactory;
         _logger = logger;
         _managersService = managersService;
     }
