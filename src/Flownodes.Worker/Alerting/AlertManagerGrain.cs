@@ -2,12 +2,10 @@ using Flownodes.Sdk.Alerting;
 using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Alerting.Exceptions;
 using Flownodes.Shared.Alerting.Grains;
+using Flownodes.Worker.Alerting.Persistence;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Alerting;
-
-[GenerateSerializer]
-internal sealed record AlertRegistration([property: Id(0)] string AlertName, [property: Id(1)] string TargetObjectName);
 
 [GrainType(FlownodesEntityNames.AlertManager)]
 internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain

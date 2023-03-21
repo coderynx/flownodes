@@ -2,7 +2,7 @@ using Flownodes.Shared.Resourcing.Attributes;
 using Flownodes.Shared.Resourcing.Grains;
 using Orleans.Runtime;
 
-namespace Flownodes.Worker.Resourcing;
+namespace Flownodes.Worker.Resourcing.Persistence;
 
 [GenerateSerializer]
 public sealed class ResourceRegistration

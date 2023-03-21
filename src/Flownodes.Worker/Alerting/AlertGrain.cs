@@ -2,23 +2,11 @@ using Flownodes.Sdk.Alerting;
 using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Alerting.Exceptions;
 using Flownodes.Shared.Alerting.Grains;
+using Flownodes.Worker.Alerting.Persistence;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Alerting;
-
-[GenerateSerializer]
-internal sealed record AlertPersistence
-{
-    [Id(0)] public string? TargetObjectName { get; set; }
-
-    [Id(1)] public DateTime FiredAt { get; set; }
-
-    [Id(2)] public AlertSeverity Severity { get; set; }
-
-    [Id(3)] public string? Description { get; set; }
-    [Id(4)] public ISet<string> DriverIds { get; set; } = new HashSet<string>();
-}
 
 [GrainType(FlownodesEntityNames.Alert)]
 internal class AlertGrain : Grain, IAlertGrain

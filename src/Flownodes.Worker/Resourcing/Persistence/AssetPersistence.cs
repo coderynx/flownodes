@@ -1,6 +1,6 @@
 using Newtonsoft.Json.Linq;
 
-namespace Flownodes.Worker.Resourcing;
+namespace Flownodes.Worker.Resourcing.Persistence;
 
 [GenerateSerializer]
 public class AssetPersistence

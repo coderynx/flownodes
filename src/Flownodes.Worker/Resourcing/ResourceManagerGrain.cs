@@ -4,6 +4,7 @@ using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Builders;
+using Flownodes.Worker.Resourcing.Persistence;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;

@@ -5,6 +5,7 @@ using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
+using Flownodes.Worker.Resourcing.Persistence;
 using Flownodes.Worker.Services;
 using Orleans.Concurrency;
 using Orleans.EventSourcing;
@@ -15,7 +16,7 @@ namespace Flownodes.Worker.Resourcing;
 [Reentrant]
 [StorageProvider]
 [LogConsistencyProvider]
-internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IResourceGrainStoreEvent>
+internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence, IResourceGrainPersistenceEvent>
 {
     private readonly IEnvironmentService _environmentService;
     private readonly ILogger<ResourceGrain> _logger;
@@ -199,7 +200,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
         return ValueTask.FromResult(IsStateful);
     }
 
-    protected override void TransitionState(ResourceGrainStore state, IResourceGrainStoreEvent @event)
+    protected override void TransitionState(ResourceGrainPersistence state, IResourceGrainPersistenceEvent @event)
     {
         switch (@event)
         {

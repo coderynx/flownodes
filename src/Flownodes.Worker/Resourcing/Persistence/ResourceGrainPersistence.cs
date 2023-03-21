@@ -1,30 +1,9 @@
 using Flownodes.Worker.Extensions;
 
-namespace Flownodes.Worker.Resourcing;
-
-internal interface IResourceGrainStoreEvent
-{
-}
-
-internal sealed record InitializeResourceConfigurationEvent : IResourceGrainStoreEvent;
-
-internal sealed record ClearResourceConfigurationEvent : IResourceGrainStoreEvent;
-
-internal sealed record UpdateResourceConfigurationEvent
-    (IDictionary<string, object?> Configuration) : IResourceGrainStoreEvent;
-
-internal sealed record UpdateResourceMetadataEvent(IDictionary<string, string?> Metadata) : IResourceGrainStoreEvent;
-
-internal sealed record ClearResourceMetadataEvent : IResourceGrainStoreEvent;
-
-internal sealed record InitializeResourceStateEvent : IResourceGrainStoreEvent;
-
-internal sealed record UpdateResourceStateEvent(IDictionary<string, object?> State) : IResourceGrainStoreEvent;
-
-internal sealed record ClearResourceStateEvent : IResourceGrainStoreEvent;
+namespace Flownodes.Worker.Resourcing.Persistence;
 
 [GenerateSerializer]
-internal sealed record ResourceGrainStore
+internal sealed record ResourceGrainPersistence
 {
     [Id(0)] public DateTime CreatedAtDate { get; } = DateTime.Now;
 
