@@ -1,30 +1,33 @@
-using Flownodes.Shared.Cluster;
 using Flownodes.Worker.Mediator.Requests;
 using Flownodes.Worker.Mediator.Responses;
+using Flownodes.Worker.Services;
 using MediatR;
 
 namespace Flownodes.Worker.Mediator.Handlers;
 
 public class GetClusterInfoHandler : IRequestHandler<GetClusterInfoRequest, GetClusterInfoResponse>
 {
-    private readonly IClusterGrain _cluster;
+    private readonly IEnvironmentService _environmentService;
 
-    public GetClusterInfoHandler(IGrainFactory grainFactory)
+    public GetClusterInfoHandler(IEnvironmentService environmentService)
     {
-        _cluster = grainFactory.GetGrain<IClusterGrain>(0);
+        _environmentService = environmentService;
     }
 
-    public async Task<GetClusterInfoResponse> Handle(GetClusterInfoRequest request, CancellationToken cancellationToken)
+    public Task<GetClusterInfoResponse> Handle(GetClusterInfoRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            var clusterInfo = await _cluster.GetClusterInformation();
-            return new GetClusterInfoResponse(clusterInfo.ClusterId, clusterInfo.ServiceId, clusterInfo.NumberOfNodes);
+            var response = new GetClusterInfoResponse(_environmentService.ClusterId, _environmentService.ServiceId,
+                _environmentService.SilosCount);
+            return Task.FromResult(response);
         }
         catch
         {
-            return new GetClusterInfoResponse("There was an internal error while retrieving cluster information",
+            var response = new GetClusterInfoResponse(
+                "There was an internal error while retrieving cluster information",
                 ResponseKind.InternalError);
+            return Task.FromResult(response);
         }
     }
 }

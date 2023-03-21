@@ -8,11 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Orleans.Sdk" Version="7.1.0"/>
+        <PackageReference Include="Microsoft.Orleans.Sdk" Version="7.1.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Flownodes.Sdk\Flownodes.Sdk.csproj"/>
+        <ProjectReference Include="..\Flownodes.Sdk\Flownodes.Sdk.csproj" />
     </ItemGroup>
 
 </Project>
