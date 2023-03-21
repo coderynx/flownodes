@@ -8,7 +8,11 @@
 </h1>
 
 **A distributed automation platform.**
-<br />
+
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/coderynx/flownodes/dotnet.yml)
+![GitHub license](https://img.shields.io/github/license/coderynx/flownodes)
+![GitHub top language](https://img.shields.io/github/languages/top/coderynx/flownodes)
+
 <br />
 
 <div align="left">
