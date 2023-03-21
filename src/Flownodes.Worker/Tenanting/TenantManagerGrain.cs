@@ -21,6 +21,8 @@ public class TenantManagerGrain : ITenantManagerGrain
         _grainFactory = grainFactory;
     }
 
+    private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
+
     public async ValueTask<ITenantGrain?> GetTenantAsync(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
@@ -80,5 +82,10 @@ public class TenantManagerGrain : ITenantManagerGrain
 
         _logger.LogInformation("Removed tenant with ID {@TenantId}", name);
         return Task.CompletedTask;
+    }
+
+    public ValueTask<FlownodesId> GetId()
+    {
+        return ValueTask.FromResult(Id);
     }
 }

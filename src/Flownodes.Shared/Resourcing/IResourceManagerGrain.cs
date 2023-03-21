@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 
 namespace Flownodes.Shared.Resourcing;
 
-public interface IResourceManagerGrain : IGrainWithStringKey
+public interface IResourceManagerGrain : IEntityGrain
 {
     ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string name)
         where TResourceGrain : IResourceGrain;

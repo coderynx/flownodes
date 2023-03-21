@@ -115,6 +115,11 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         _logger.LogInformation("Removed alert {@AlertRegistration}", registration);
     }
 
+    public ValueTask<FlownodesId> GetId()
+    {
+        return ValueTask.FromResult(Id);
+    }
+
     private async ValueTask<AlertRegistration> AddRegistrationAsync(string alertName, string targetObjectName)
     {
         ArgumentException.ThrowIfNullOrEmpty(alertName);

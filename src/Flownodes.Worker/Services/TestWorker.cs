@@ -1,7 +1,5 @@
-using Flownodes.Shared.Alerting;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Scripts;
-using Flownodes.Shared.Tenanting;
 
 namespace Flownodes.Worker.Services;
 
@@ -9,23 +7,23 @@ public class TestWorker : BackgroundService
 {
     private readonly IGrainFactory _grainFactory;
     private readonly ILogger<TestWorker> _logger;
+    private readonly IManagersService _managersService;
 
-    public TestWorker(IGrainFactory grainFactory, ILogger<TestWorker> logger)
+    public TestWorker(IGrainFactory grainFactory, ILogger<TestWorker> logger, IManagersService managersService)
     {
         _grainFactory = grainFactory;
         _logger = logger;
+        _managersService = managersService;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var tenantManager = _grainFactory.GetGrain<ITenantManagerGrain>("tenant_manager");
-        var alertManager = _grainFactory.GetGrain<IAlertManagerGrain>("alert_manager");
-
+        var tenantManager = _managersService.GetTenantManager();
         if (await tenantManager.IsTenantRegistered("default")) return;
 
         var tenant = await tenantManager.CreateTenantAsync("default");
-
         var resourceManager = await tenant.GetResourceManager();
+        var alertManager = await tenant.GetAlertManager();
 
         var hueLightConfiguration = new Dictionary<string, object?>
         {

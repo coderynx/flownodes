@@ -172,6 +172,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _logger.LogInformation("Removed all resources of resource manager {@ResourceManagerId}", Id);
     }
 
+    public ValueTask<FlownodesId> GetId()
+    {
+        return ValueTask.FromResult(Id);
+    }
+
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Resource manager {@ResourceManagerId} activated", Id);

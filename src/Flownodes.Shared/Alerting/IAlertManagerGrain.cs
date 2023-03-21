@@ -2,7 +2,7 @@ using Flownodes.Sdk.Alerting;
 
 namespace Flownodes.Shared.Alerting;
 
-public interface IAlertManagerGrain : IGrainWithStringKey
+public interface IAlertManagerGrain : IEntityGrain
 {
     ValueTask<IAlertGrain> CreateAlertAsync(string targetObjectName, AlertSeverity severity, string description,
         ISet<string> driverIds);

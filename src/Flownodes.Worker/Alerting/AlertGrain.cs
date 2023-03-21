@@ -93,6 +93,11 @@ internal class AlertGrain : Grain, IAlertGrain
         _logger.LogInformation("Cleared state of alert {@AlertGrainId}", Id);
     }
 
+    public ValueTask<FlownodesId> GetId()
+    {
+        return ValueTask.FromResult(Id);
+    }
+
     private void LoadDrivers()
     {
         foreach (var alertDriverId in _persistence.State.DriverIds)

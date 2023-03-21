@@ -1,6 +1,6 @@
 namespace Flownodes.Shared.Tenanting;
 
-public interface ITenantManagerGrain : IGrainWithStringKey
+public interface ITenantManagerGrain : IEntityGrain
 {
     ValueTask<ITenantGrain?> GetTenantAsync(string name);
     ValueTask<IList<ITenantGrain>> GetTenantsAsync();

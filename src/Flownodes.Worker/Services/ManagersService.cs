@@ -11,7 +11,8 @@ public class ManagersService : IManagersService
 
     public ManagersService(IGrainFactory grainFactory)
     {
-        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(FlownodesEntityNames.TenantManager);
+        var id = new FlownodesId(FlownodesEntity.TenantManager, FlownodesEntityNames.TenantManager);
+        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(id);
     }
 
     public ITenantManagerGrain GetTenantManager()

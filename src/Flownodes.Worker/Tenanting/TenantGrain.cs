@@ -59,4 +59,9 @@ public class TenantGrain : Grain, ITenantGrain
         var id = new FlownodesId(FlownodesEntity.AlertManager, Id.FirstName);
         return ValueTask.FromResult(GrainFactory.GetGrain<IAlertManagerGrain>(id));
     }
+
+    public ValueTask<FlownodesId> GetId()
+    {
+        return ValueTask.FromResult(Id);
+    }
 }

@@ -1,23 +1,15 @@
-using Flownodes.Sdk;
-
 namespace Flownodes.Shared.Resourcing;
 
 /// <summary>
 ///     The interface that defines the base resource methods.
 /// </summary>
-public interface IResourceGrain : IGrainWithStringKey
+public interface IResourceGrain : IEntityGrain
 {
     /// <summary>
     ///     Gets the resource POCO.
     /// </summary>
     /// <returns>The resource POCO. </returns>
     public ValueTask<ResourceSummary> GetSummary();
-
-    /// <summary>
-    ///     Gets the resource ID.
-    /// </summary>
-    /// <returns>The resource ID.</returns>
-    public ValueTask<FlownodesId> GetId();
 
     /// <summary>
     ///     Updates the state of the resource by storing the new state and applying it.
