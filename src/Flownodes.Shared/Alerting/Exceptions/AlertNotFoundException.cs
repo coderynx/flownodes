@@ -1,5 +1,6 @@
 namespace Flownodes.Shared.Alerting.Exceptions;
 
+[GenerateSerializer]
 public class AlertNotFoundException : Exception
 {
     public AlertNotFoundException(string tenantName, string alertId) : base(
@@ -9,6 +10,7 @@ public class AlertNotFoundException : Exception
         AlertId = alertId;
     }
 
-    public string TenantName { get; }
-    public string AlertId { get; }
+    [Id(0)] public string TenantName { get; }
+
+    [Id(1)] public string AlertId { get; }
 }

@@ -1,5 +1,6 @@
 namespace Flownodes.Shared.Resourcing.Exceptions;
 
+[GenerateSerializer]
 public class ResourceNotStatefulException : Exception
 {
     public ResourceNotStatefulException(string tenantName, string kind, string resourceName) : base(
@@ -10,7 +11,9 @@ public class ResourceNotStatefulException : Exception
         ResourceName = resourceName;
     }
 
-    public string TenantName { get; }
-    public string Kind { get; }
-    public string ResourceName { get; }
+    [Id(0)] public string TenantName { get; }
+
+    [Id(1)] public string Kind { get; }
+
+    [Id(2)] public string ResourceName { get; }
 }

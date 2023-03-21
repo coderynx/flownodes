@@ -1,5 +1,6 @@
 namespace Flownodes.Shared.Alerting.Exceptions;
 
+[GenerateSerializer]
 public class AlertAlreadyRegisteredException : Exception
 {
     public AlertAlreadyRegisteredException(string tenantName, string alertName) : base(
@@ -9,6 +10,7 @@ public class AlertAlreadyRegisteredException : Exception
         AlertName = alertName;
     }
 
-    public string TenantName { get; }
-    public string AlertName { get; }
+    [Id(0)] public string TenantName { get; }
+
+    [Id(1)] public string AlertName { get; }
 }

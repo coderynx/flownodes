@@ -1,5 +1,6 @@
 namespace Flownodes.Shared.Resourcing.Exceptions;
 
+[GenerateSerializer]
 public class ResourceNotFoundException : Exception
 {
     public ResourceNotFoundException(string tenantName, string resourceName) :
@@ -9,6 +10,7 @@ public class ResourceNotFoundException : Exception
         ResourceName = resourceName;
     }
 
-    public string TenantName { get; }
-    public string ResourceName { get; }
+    [Id(0)] public string TenantName { get; }
+
+    [Id(1)] public string ResourceName { get; }
 }

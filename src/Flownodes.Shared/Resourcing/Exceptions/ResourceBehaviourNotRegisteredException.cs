@@ -1,5 +1,6 @@
 namespace Flownodes.Shared.Resourcing.Exceptions;
 
+[GenerateSerializer]
 public class ResourceBehaviourNotRegisteredException : Exception
 {
     public ResourceBehaviourNotRegisteredException(string behaviourId) : base(
@@ -8,5 +9,5 @@ public class ResourceBehaviourNotRegisteredException : Exception
         BehaviourId = behaviourId;
     }
 
-    public string BehaviourId { get; }
+    [Id(0)] public string BehaviourId { get; }
 }

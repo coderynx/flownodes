@@ -1,5 +1,6 @@
 namespace Flownodes.Shared.Resourcing.Exceptions;
 
+[GenerateSerializer]
 public class ResourceAlreadyRegisteredException : Exception
 {
     public ResourceAlreadyRegisteredException(string tenantNane, string resourceName) : base(
@@ -9,6 +10,6 @@ public class ResourceAlreadyRegisteredException : Exception
         ResourceName = resourceName;
     }
 
-    public string TenantName { get; }
-    public string ResourceName { get; }
+    [Id(0)] public string TenantName { get; }
+    [Id(1)] public string ResourceName { get; }
 }
