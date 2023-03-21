@@ -5,18 +5,18 @@ namespace Flownodes.Worker.Services;
 
 public class TestWorker : BackgroundService
 {
+    private readonly IEnvironmentService _environmentService;
     private readonly ILogger<TestWorker> _logger;
-    private readonly IManagersService _managersService;
 
-    public TestWorker(ILogger<TestWorker> logger, IManagersService managersService)
+    public TestWorker(ILogger<TestWorker> logger, IEnvironmentService environmentService)
     {
         _logger = logger;
-        _managersService = managersService;
+        _environmentService = environmentService;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var tenantManager = _managersService.GetTenantManager();
+        var tenantManager = _environmentService.GetTenantManager();
         if (await tenantManager.IsTenantRegistered("default")) return;
 
         var tenant = await tenantManager.CreateTenantAsync("default");

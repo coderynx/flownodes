@@ -28,7 +28,6 @@ internal static class Bootstrap
         services.AddAuthorization();
         services.AddMediatR(config => { config.RegisterServicesFromAssembly(typeof(GetTenantRequest).Assembly); });
         services.AddCarter();
-        services.AddSingleton<IManagersService, ManagersService>();
     }
 
     private static void ConfigureOrleansServices(this IServiceCollection services)

@@ -8,17 +8,17 @@ namespace Flownodes.Worker.Mediator.Handlers;
 public class
     GetAlertByTargetObjectHandler : IRequestHandler<GetAlertByTargetObjectRequest, GetAlertByTargetObjectResponse>
 {
-    private readonly IManagersService _managersService;
+    private readonly IEnvironmentService _environmentService;
 
-    public GetAlertByTargetObjectHandler(IManagersService managersService)
+    public GetAlertByTargetObjectHandler(IEnvironmentService environmentService)
     {
-        _managersService = managersService;
+        _environmentService = environmentService;
     }
 
     public async Task<GetAlertByTargetObjectResponse> Handle(GetAlertByTargetObjectRequest request,
         CancellationToken cancellationToken)
     {
-        var alertManager = await _managersService.GetAlertManager(request.TenantName);
+        var alertManager = await _environmentService.GetAlertManager(request.TenantName);
         if (alertManager is null)
             return new GetAlertByTargetObjectResponse(request.TenantName, request.TargetObjectName, "Tenant not found",
                 ResponseKind.NotFound);

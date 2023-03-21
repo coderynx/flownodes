@@ -9,11 +9,11 @@ namespace Flownodes.Worker.Mediator.Handlers;
 
 public class GetResourceGroupHandler : IRequestHandler<GetResourceGroupRequest, GetResourceGroupResponse>
 {
-    private readonly IManagersService _managersService;
+    private readonly IEnvironmentService _environmentService;
 
-    public GetResourceGroupHandler(IManagersService managersService)
+    public GetResourceGroupHandler(IEnvironmentService environmentService)
     {
-        _managersService = managersService;
+        _environmentService = environmentService;
     }
 
     public async Task<GetResourceGroupResponse> Handle(GetResourceGroupRequest request,
@@ -21,7 +21,7 @@ public class GetResourceGroupHandler : IRequestHandler<GetResourceGroupRequest, 
     {
         var id = new FlownodesId(FlownodesEntity.ResourceGroup, request.TenantName, request.ResourceGroupName);
 
-        var resourceManager = await _managersService.GetResourceManager(request.TenantName);
+        var resourceManager = await _environmentService.GetResourceManager(request.TenantName);
         if (resourceManager is null)
             return new GetResourceGroupResponse(id, "Tenant not found", ResponseKind.NotFound);
 

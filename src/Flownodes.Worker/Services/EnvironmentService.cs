@@ -21,11 +21,12 @@ public interface IEnvironmentService
 
 public class EnvironmentService : IEnvironmentService
 {
-    private readonly ClusterOptions _clusterOptions;
     private readonly IClusterManifestProvider _clusterManifestProvider;
+    private readonly ClusterOptions _clusterOptions;
     private readonly ITenantManagerGrain _tenantManager;
 
-    public EnvironmentService(IOptions<ClusterOptions> clusterOptions, IGrainFactory grainFactory, IClusterManifestProvider clusterManifestProvider)
+    public EnvironmentService(IOptions<ClusterOptions> clusterOptions, IGrainFactory grainFactory,
+        IClusterManifestProvider clusterManifestProvider)
     {
         _clusterOptions = clusterOptions.Value;
 

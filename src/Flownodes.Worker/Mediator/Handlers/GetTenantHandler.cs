@@ -10,9 +10,9 @@ public class GetTenantHandler : IRequestHandler<GetTenantRequest, GetTenantRespo
 {
     private readonly ITenantManagerGrain _tenantManager;
 
-    public GetTenantHandler(IManagersService managersService)
+    public GetTenantHandler(IEnvironmentService environmentService)
     {
-        _tenantManager = managersService.GetTenantManager();
+        _tenantManager = environmentService.GetTenantManager();
     }
 
     public async Task<GetTenantResponse> Handle(GetTenantRequest request, CancellationToken cancellationToken)

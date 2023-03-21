@@ -11,9 +11,9 @@ public class CreateTenantHandler : IRequestHandler<CreateTenantRequest, CreateTe
 {
     private readonly ITenantManagerGrain _tenantManager;
 
-    public CreateTenantHandler(IManagersService managersService)
+    public CreateTenantHandler(IEnvironmentService environmentService)
     {
-        _tenantManager = managersService.GetTenantManager();
+        _tenantManager = environmentService.GetTenantManager();
     }
 
     public async Task<CreateTenantResponse> Handle(CreateTenantRequest request, CancellationToken cancellationToken)

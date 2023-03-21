@@ -7,16 +7,16 @@ namespace Flownodes.Worker.Mediator.Handlers;
 
 public class GetResourcesHandler : IRequestHandler<GetResourcesRequest, GetResourcesResponse>
 {
-    private readonly IManagersService _managersService;
+    private readonly IEnvironmentService _environmentService;
 
-    public GetResourcesHandler(IManagersService managersService)
+    public GetResourcesHandler(IEnvironmentService environmentService)
     {
-        _managersService = managersService;
+        _environmentService = environmentService;
     }
 
     public async Task<GetResourcesResponse> Handle(GetResourcesRequest request, CancellationToken cancellationToken)
     {
-        var resourceManager = await _managersService.GetResourceManager(request.TenantName);
+        var resourceManager = await _environmentService.GetResourceManager(request.TenantName);
         if (resourceManager is null)
             return new GetResourcesResponse(request.TenantName, "Tenant not found", ResponseKind.NotFound);
 
