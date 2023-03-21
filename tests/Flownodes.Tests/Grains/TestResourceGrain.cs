@@ -8,7 +8,6 @@ using Orleans;
 
 namespace Flownodes.Tests.Grains;
 
-[GrainType("other")]
 internal sealed class TestResourceGrain : ResourceGrain, ITestResourceGrain
 {
     private readonly IContainer _container;

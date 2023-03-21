@@ -24,10 +24,10 @@ internal static class TestServiceExtensions
 
     private static void ConfigureContainer(this ContainerBuilder builder)
     {
-        var deviceBehaviorTest = Substitute.For<IBehaviour>();
+        var deviceBehaviorTest = Substitute.For<IReadableDeviceBehaviour, IWritableDeviceBehaviour>();
         builder.RegisterInstance(deviceBehaviorTest)
             .As<IBehaviour>()
-            .Keyed<IBehaviour>("TestDeviceBehavior");
+            .Keyed<IBehaviour>("TestDeviceBehaviour");
 
         var alertBehaviorTest = Substitute.For<IAlerterDriver>();
         builder.RegisterInstance(alertBehaviorTest)

@@ -21,9 +21,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     {
         var context = GetResourceContext();
 
-        if (Behaviour is null) throw new InvalidOperationException("Behaviour cannot be null");
-
-        var deviceBehaviour = (IReadableDeviceBehaviour)Behaviour;
+        var deviceBehaviour = (IReadableDeviceBehaviour)Behaviour!;
         await deviceBehaviour.OnPullStateAsync(context);
 
         var @event = new UpdateResourceStateEvent(context.State);
@@ -32,9 +30,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 
     protected override Task OnBehaviourChangedAsync()
     {
-        if (Behaviour is null) throw new InvalidOperationException("Behaviour cannot be null");
-
-        var isReadable = Behaviour
+        var isReadable = Behaviour!
             .GetType()
             .IsAssignableTo(typeof(IReadableDeviceBehaviour));
 

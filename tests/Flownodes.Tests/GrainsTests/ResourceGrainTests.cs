@@ -61,6 +61,19 @@ public class ResourceGrainTests
     }
 
     [Fact]
+    public async Task UpdateConfiguration_ShouldUpdateConfiguration_WithBehaviourId()
+    {
+        // Arrange.
+        var grain = NewTestResourceGrain;
+        var configuration = _fixture.Create<Dictionary<string, object?>>();
+        configuration.Add("behaviourId", "TestDeviceBehaviour");
+
+        // Act & Assert.
+        var act = async () => { await grain.UpdateConfigurationAsync(configuration); };
+        await act.Should().NotThrowAsync();
+    }
+    
+    [Fact]
     public async Task
         UpdateConfiguration_ShouldThrowResourceBehaviourNotRegisteredException_WhenBehaviourIsNotRegistered()
     {

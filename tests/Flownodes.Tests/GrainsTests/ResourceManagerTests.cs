@@ -116,7 +116,7 @@ public class ResourceManagerTests
 
         // Act.
         var result =
-            await manager.SearchResourcesByTags(new HashSet<string> { "TestDeviceBehavior", "other" });
+            await manager.SearchResourcesByTags(new HashSet<string> { "other" });
 
         // Assert.
         result.Should().HaveCount(2);
