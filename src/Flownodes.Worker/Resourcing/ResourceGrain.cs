@@ -89,16 +89,12 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
 
     public ValueTask<(Dictionary<string, object?> Configuration, DateTime? LastUpdateDate)> GetConfiguration()
     {
-        if (!IsConfigurable) throw new ResourceNotConfigurableException(TenantName, Kind, ResourceName);
-
         _logger.LogInformation("Retrieved configuration of resource {@ResourceId}", Id);
         return ValueTask.FromResult((State.Configuration, State.LastConfigurationUpdateDate))!;
     }
 
     public ValueTask<(Dictionary<string, object?> State, DateTime? LastUpdateDate)> GetState()
     {
-        if (!IsStateful) throw new ResourceNotStatefulException(TenantName, Kind, ResourceName);
-
         _logger.LogDebug("Retrieved state of resource {@ResourceId}", Id);
         return ValueTask.FromResult((State.State, State.LastStateUpdateDate))!;
     }

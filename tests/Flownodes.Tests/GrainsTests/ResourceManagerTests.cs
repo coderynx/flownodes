@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
 using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Tests.Fixtures;
 using Flownodes.Tests.Interfaces;
@@ -55,7 +56,7 @@ public class ResourceManagerTests
     }
 
     [Fact]
-    public async Task DeployResource_ShouldThrow_WhenResourceNameIsNullOrEmpty()
+    public async Task DeployResource_ShouldThrowArgumentException_WhenResourceNameIsNullOrEmpty()
     {
         // Arrange.
         var manager = NewResourceManagerGrain;
@@ -77,6 +78,18 @@ public class ResourceManagerTests
             await manager.DeployResourceAsync<ITestResourceGrain>("resource", new Dictionary<string, object?>());
         };
         await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task DeployResource_ShouldThrowResourceAlreadyRegisteredException_WhenResourceIsAlreadyRegistered()
+    {
+        // Arrange.
+        var manager = NewResourceManagerGrain;
+        await manager.DeployResourceAsync<ITestResourceGrain>("resource");
+        
+        // Act & Assert.
+        var act = async () => { await manager.DeployResourceAsync<ITestResourceGrain>("resource"); };
+        await act.Should().ThrowAsync<ResourceAlreadyRegisteredException>();
     }
 
     [Fact]
