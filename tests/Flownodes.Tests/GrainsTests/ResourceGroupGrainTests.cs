@@ -1,7 +1,7 @@
-using System;
 using System.Threading.Tasks;
 using AutoFixture;
 using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Tests.Fixtures;
 using Flownodes.Tests.Interfaces;
@@ -53,7 +53,7 @@ public class ResourceGroupGrainTests
         // Act & Assert.
         var act = async () => { await resourceGroup.RegisterResourceAsync("test_resource"); };
 
-        await act.Should().ThrowAsync<Exception>();
+        await act.Should().ThrowAsync<ResourceNotFoundException>();
     }
 
     [Fact]

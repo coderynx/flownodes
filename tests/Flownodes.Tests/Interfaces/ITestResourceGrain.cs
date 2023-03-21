@@ -5,5 +5,5 @@ namespace Flownodes.Tests.Interfaces;
 
 public interface ITestResourceGrain : IConfigurableResourceGrain, IStatefulResourceGrain
 {
-    ValueTask<TService> GetService<TService>() where TService : notnull;
+    ValueTask<TService> ResolveService<TService>() where TService : notnull;
 }

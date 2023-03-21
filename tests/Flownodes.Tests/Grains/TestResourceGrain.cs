@@ -20,7 +20,7 @@ internal sealed class TestResourceGrain : ResourceGrain, ITestResourceGrain
         _container = container;
     }
 
-    public ValueTask<TService> GetService<TService>() where TService : notnull
+    public ValueTask<TService> ResolveService<TService>() where TService : notnull
     {
         var service = _container.Resolve<TService>();
         return ValueTask.FromResult(service);

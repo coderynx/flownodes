@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
 using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Tests.Fixtures;
 using Flownodes.Tests.Interfaces;
 using Flownodes.Worker.Services;
@@ -60,7 +61,8 @@ public class ResourceGrainTests
     }
 
     [Fact]
-    public async Task UpdateConfiguration_ShouldThrow_WhenBehaviourIsNotRegistered()
+    public async Task
+        UpdateConfiguration_ShouldThrowResourceBehaviourNotRegisteredException_WhenBehaviourIsNotRegistered()
     {
         // Arrange.
         var grain = NewTestResourceGrain;
@@ -69,7 +71,7 @@ public class ResourceGrainTests
 
         // Act & Assert.
         var act = async () => { await grain.UpdateConfigurationAsync(configuration); };
-        await act.Should().ThrowAsync<Exception>();
+        await act.Should().ThrowAsync<ResourceBehaviourNotRegisteredException>();
     }
 
     [Fact]
@@ -183,13 +185,13 @@ public class ResourceGrainTests
     }
 
     [Fact]
-    public async Task GetService_ShouldNotResolveMainContainerServices()
+    public async Task GetService_ShouldThrowException_WhenResolvingServiceInMainContainer()
     {
         // Arrange.
         var grain = NewTestResourceGrain;
 
         // Act & Assert.
-        var act = async () => { await grain.GetService<IEnvironmentService>(); };
+        var act = async () => { await grain.ResolveService<IEnvironmentService>(); };
         await act.Should().ThrowAsync<Exception>();
     }
 }
