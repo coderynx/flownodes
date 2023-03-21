@@ -1,7 +1,8 @@
 using System.Collections.ObjectModel;
-using Flownodes.Sdk;
+using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
+using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Builders;
 using Orleans.Runtime;
 
@@ -127,7 +128,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         {
             configuration ??= new Dictionary<string, object?>();
 
-            var configurableGrain = (IConfigurableResource)grain;
+            var configurableGrain = (IConfigurableResourceGrain)grain;
             await configurableGrain.UpdateConfigurationAsync(configuration);
 
             if (configuration.GetValueOrDefault("behaviourId") is string behaviourId) tags.Add(behaviourId);

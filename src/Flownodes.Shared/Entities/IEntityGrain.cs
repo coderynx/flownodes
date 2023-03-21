@@ -1,6 +1,6 @@
-using Flownodes.Sdk;
+using Flownodes.Sdk.Entities;
 
-namespace Flownodes.Shared;
+namespace Flownodes.Shared.Entities;
 
 public interface IEntityGrain : IGrainWithStringKey
 {

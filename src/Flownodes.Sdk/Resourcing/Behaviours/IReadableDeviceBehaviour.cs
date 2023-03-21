@@ -1,4 +1,4 @@
-namespace Flownodes.Sdk.Resourcing;
+namespace Flownodes.Sdk.Resourcing.Behaviours;
 
 /// <summary>
 ///     The interface for implementing custom device behaviours with readable state.

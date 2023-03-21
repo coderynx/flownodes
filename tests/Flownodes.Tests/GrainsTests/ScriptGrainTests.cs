@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
-using Flownodes.Sdk;
-using Flownodes.Shared.Resourcing.Scripts;
+using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Tests.Fixtures;
 using FluentAssertions;
 using Orleans.TestingHost;

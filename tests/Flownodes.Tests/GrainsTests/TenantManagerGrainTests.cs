@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using AutoFixture;
-using Flownodes.Sdk;
-using Flownodes.Shared.Tenanting;
+using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Tenanting.Grains;
 using Flownodes.Tests.Fixtures;
 using FluentAssertions;
 using Orleans.TestingHost;

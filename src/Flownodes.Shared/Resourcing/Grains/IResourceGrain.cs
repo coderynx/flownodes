@@ -1,4 +1,6 @@
-namespace Flownodes.Shared.Resourcing;
+using Flownodes.Shared.Entities;
+
+namespace Flownodes.Shared.Resourcing.Grains;
 
 /// <summary>
 ///     The interface that defines the base resource methods.

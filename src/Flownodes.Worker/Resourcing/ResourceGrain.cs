@@ -1,8 +1,10 @@
-using Flownodes.Sdk;
+using Flownodes.Sdk.Entities;
 using Flownodes.Sdk.Resourcing;
-using Flownodes.Shared.Alerting;
+using Flownodes.Sdk.Resourcing.Behaviours;
+using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
+using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Services;
 using Orleans.Concurrency;
 using Orleans.EventSourcing;
@@ -32,8 +34,8 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainStore, IReso
     protected FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
     protected string TenantName => Id.FirstName;
     protected string ResourceName => Id.SecondName!;
-    protected bool IsConfigurable => GetType().IsAssignableTo(typeof(IConfigurableResource));
-    protected bool IsStateful => GetType().IsAssignableTo(typeof(IStatefulResource));
+    protected bool IsConfigurable => GetType().IsAssignableTo(typeof(IConfigurableResourceGrain));
+    protected bool IsStateful => GetType().IsAssignableTo(typeof(IStatefulResourceGrain));
     protected string? BehaviourId => State.Configuration?.GetValueOrDefault("behaviourId") as string;
     private FlownodesId ResourceManagerId => new(FlownodesEntity.ResourceManager, TenantName);
     protected IResourceManagerGrain ResourceManager => GrainFactory.GetGrain<IResourceManagerGrain>(ResourceManagerId);

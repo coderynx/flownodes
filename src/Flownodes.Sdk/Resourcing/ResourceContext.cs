@@ -1,3 +1,5 @@
+using Flownodes.Sdk.Entities;
+
 namespace Flownodes.Sdk.Resourcing;
 
 /// <summary>

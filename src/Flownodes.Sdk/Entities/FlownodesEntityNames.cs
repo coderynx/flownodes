@@ -1,4 +1,4 @@
-namespace Flownodes.Sdk;
+namespace Flownodes.Sdk.Entities;
 
 public static class FlownodesEntityNames
 {

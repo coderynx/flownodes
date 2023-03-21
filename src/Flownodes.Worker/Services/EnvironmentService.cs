@@ -1,7 +1,7 @@
-using Flownodes.Sdk;
-using Flownodes.Shared.Alerting;
-using Flownodes.Shared.Resourcing;
-using Flownodes.Shared.Tenanting;
+using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Alerting.Grains;
+using Flownodes.Shared.Resourcing.Grains;
+using Flownodes.Shared.Tenanting.Grains;
 using Microsoft.Extensions.Options;
 using Orleans.Configuration;
 using Orleans.Runtime;

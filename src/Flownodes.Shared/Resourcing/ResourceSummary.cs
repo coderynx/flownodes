@@ -1,4 +1,4 @@
-using Flownodes.Sdk;
+using Flownodes.Sdk.Entities;
 
 namespace Flownodes.Shared.Resourcing;
 

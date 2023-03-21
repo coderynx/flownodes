@@ -1,7 +1,8 @@
-using Flownodes.Sdk;
 using Flownodes.Sdk.Alerting;
-using Flownodes.Shared.Alerting;
+using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Shared.Resourcing.Exceptions;
+using Flownodes.Shared.Resourcing.Grains;
 using Microsoft.Extensions.Logging;
 
 namespace Flownodes.Shared.Resourcing.Scripts;
@@ -48,13 +49,13 @@ public class FlownodesContext
         string resourceName)
     {
         var resource = await _resourceManager.GetResourceAsync(resourceName);
-        return await resource.AsReference<IStatefulResource>().GetState();
+        return await resource.AsReference<IStatefulResourceGrain>().GetState();
     }
 
     public async Task UpdateResourceStateAsync(string resourceName, Dictionary<string, object?> state)
     {
         var resource = await _resourceManager.GetResourceAsync(resourceName);
-        await resource.AsReference<IStatefulResource>().UpdateStateAsync(state);
+        await resource.AsReference<IStatefulResourceGrain>().UpdateStateAsync(state);
     }
 
     public async ValueTask<string> GetDataFromDataSourceAsync(string dataSourceName, string actionId,

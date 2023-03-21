@@ -1,6 +1,6 @@
-using Flownodes.Sdk;
-using Flownodes.Sdk.Resourcing;
-using Flownodes.Shared.Resourcing;
+using Flownodes.Sdk.Entities;
+using Flownodes.Sdk.Resourcing.Behaviours;
+using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Services;
 
 namespace Flownodes.Worker.Resourcing;

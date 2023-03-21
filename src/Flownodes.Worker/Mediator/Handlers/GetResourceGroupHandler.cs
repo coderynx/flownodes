@@ -1,5 +1,5 @@
-using Flownodes.Sdk;
-using Flownodes.Shared.Resourcing;
+using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Mediator.Requests;
 using Flownodes.Worker.Mediator.Responses;
 using Flownodes.Worker.Services;

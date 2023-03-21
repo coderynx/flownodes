@@ -1,4 +1,4 @@
-using Flownodes.Shared.Resourcing;
+using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Mediator.Requests;
 using Flownodes.Worker.Mediator.Responses;
 using Flownodes.Worker.Services;
@@ -36,7 +36,7 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
             Dictionary<string, object?>? configuration = null;
             if (await resource.GetIsConfigurable())
             {
-                var configurableResource = resource.AsReference<IConfigurableResource>();
+                var configurableResource = resource.AsReference<IConfigurableResourceGrain>();
                 var configurationTuple = await configurableResource.GetConfiguration();
                 configuration = configurationTuple.Configuration;
             }
@@ -44,7 +44,7 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
             (Dictionary<string, object?>? Properties, DateTime? LastUpdate) state = (null, null);
             if (await resource.GetIsStateful())
             {
-                var statefulResource = resource.AsReference<IStatefulResource>();
+                var statefulResource = resource.AsReference<IStatefulResourceGrain>();
                 state = await statefulResource.GetState();
             }
 

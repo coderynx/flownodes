@@ -1,4 +1,4 @@
-namespace Flownodes.Sdk;
+namespace Flownodes.Sdk.Entities;
 
 /// <summary>
 ///     Enumeration of all Flownodes entities.

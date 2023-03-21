@@ -1,9 +1,9 @@
-namespace Flownodes.Shared.Resourcing;
+namespace Flownodes.Shared.Resourcing.Grains;
 
 /// <summary>
 ///     The interface for defining resource with configuration.
 /// </summary>
-public interface IConfigurableResource : IResourceGrain
+public interface IConfigurableResourceGrain : IResourceGrain
 {
     /// <summary>
     ///     Gets the stored configuration of the resource.

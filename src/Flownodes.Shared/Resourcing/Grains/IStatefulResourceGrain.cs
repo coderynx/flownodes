@@ -1,9 +1,9 @@
-namespace Flownodes.Shared.Resourcing;
+namespace Flownodes.Shared.Resourcing.Grains;
 
 /// <summary>
 ///     The interface that defines a resource with state.
 /// </summary>
-public interface IStatefulResource : IResourceGrain
+public interface IStatefulResourceGrain : IResourceGrain
 {
     /// <summary>
     ///     Updates the state of the resource by storing the new state and applying it.

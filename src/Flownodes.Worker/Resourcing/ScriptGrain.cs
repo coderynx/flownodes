@@ -1,5 +1,6 @@
 using CSScriptLib;
-using Flownodes.Sdk;
+using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Shared.Resourcing.Scripts;
 using Flownodes.Worker.Services;
 

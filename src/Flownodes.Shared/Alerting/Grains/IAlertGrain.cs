@@ -1,6 +1,7 @@
 using Flownodes.Sdk.Alerting;
+using Flownodes.Shared.Entities;
 
-namespace Flownodes.Shared.Alerting;
+namespace Flownodes.Shared.Alerting.Grains;
 
 public interface IAlertGrain : IEntityGrain
 {

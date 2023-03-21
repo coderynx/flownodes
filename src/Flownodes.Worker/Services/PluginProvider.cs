@@ -1,6 +1,6 @@
 using Autofac;
 using Flownodes.Sdk.Alerting;
-using Flownodes.Sdk.Resourcing;
+using Flownodes.Sdk.Resourcing.Behaviours;
 
 namespace Flownodes.Worker.Services;
 

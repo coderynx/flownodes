@@ -1,4 +1,4 @@
-namespace Flownodes.Sdk.Resourcing;
+namespace Flownodes.Sdk.Resourcing.Behaviours;
 
 public interface IDataSourceBehaviour : IBehaviour
 {

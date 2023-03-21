@@ -1,7 +1,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Flownodes.Sdk.Alerting;
-using Flownodes.Sdk.Resourcing;
+using Flownodes.Sdk.Resourcing.Behaviours;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 

@@ -1,4 +1,6 @@
-﻿namespace Flownodes.Sdk.Alerting;
+﻿using Flownodes.Sdk.Entities;
+
+namespace Flownodes.Sdk.Alerting;
 
 public enum AlertSeverity
 {

@@ -1,4 +1,6 @@
-namespace Flownodes.Shared.Tenanting;
+using Flownodes.Shared.Entities;
+
+namespace Flownodes.Shared.Tenanting.Grains;
 
 public interface ITenantManagerGrain : IEntityGrain
 {

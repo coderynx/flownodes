@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Flownodes.Shared.Resourcing;
+namespace Flownodes.Shared.Resourcing.Grains;
 
 [GenerateSerializer]
 public sealed record DataSourceResult
@@ -24,7 +24,7 @@ public sealed record DataSourceResult
     }
 }
 
-public interface IDataSourceGrain : IConfigurableResource
+public interface IDataSourceGrain : IConfigurableResourceGrain
 {
     ValueTask<DataSourceResult> GetDataAsync(string actionId, Dictionary<string, object?>? parameters = null);
 }

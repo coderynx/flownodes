@@ -2,8 +2,8 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Autofac;
 using Flownodes.Sdk.Alerting;
-using Flownodes.Sdk.Resourcing;
 using Flownodes.Sdk.Resourcing.Attributes;
+using Flownodes.Sdk.Resourcing.Behaviours;
 using Module = Autofac.Module;
 
 namespace Flownodes.Worker.Modules;

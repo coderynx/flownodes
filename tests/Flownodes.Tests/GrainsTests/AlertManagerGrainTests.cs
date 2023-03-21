@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
-using Flownodes.Sdk;
 using Flownodes.Sdk.Alerting;
-using Flownodes.Shared.Alerting;
+using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Tests.Fixtures;
 using FluentAssertions;
 using Orleans.TestingHost;

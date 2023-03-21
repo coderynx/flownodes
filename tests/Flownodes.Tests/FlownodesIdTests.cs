@@ -1,5 +1,5 @@
 using System;
-using Flownodes.Sdk;
+using Flownodes.Sdk.Entities;
 using FluentAssertions;
 using Xunit;
 

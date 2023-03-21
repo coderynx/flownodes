@@ -1,4 +1,4 @@
-using Flownodes.Shared.Resourcing;
+using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Mediator.Requests;
 using Flownodes.Worker.Mediator.Responses;
 using Flownodes.Worker.Services;
@@ -33,7 +33,7 @@ public class UpdateResourceStateHandler : IRequestHandler<UpdateResourceStateReq
             return new UpdateResourceStateResponse(request.TenantName, request.ResourceName,
                 "Cannot update state of a non stateful resource", ResponseKind.BadRequest);
 
-        var statefulResource = grain.AsReference<IStatefulResource>();
+        var statefulResource = grain.AsReference<IStatefulResourceGrain>();
 
         try
         {

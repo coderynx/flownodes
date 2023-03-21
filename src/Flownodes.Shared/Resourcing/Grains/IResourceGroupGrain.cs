@@ -1,6 +1,6 @@
-using Flownodes.Sdk;
+using Flownodes.Sdk.Entities;
 
-namespace Flownodes.Shared.Resourcing;
+namespace Flownodes.Shared.Resourcing.Grains;
 
 public interface IResourceGroupGrain : IResourceGrain
 {

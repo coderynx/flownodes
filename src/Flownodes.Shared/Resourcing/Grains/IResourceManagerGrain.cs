@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
+using Flownodes.Shared.Entities;
 
-namespace Flownodes.Shared.Resourcing;
+namespace Flownodes.Shared.Resourcing.Grains;
 
 public interface IResourceManagerGrain : IEntityGrain
 {
