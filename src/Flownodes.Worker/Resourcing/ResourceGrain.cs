@@ -5,6 +5,7 @@ using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
+using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Resourcing.Persistence;
 using Flownodes.Worker.Services;
 using Orleans.Concurrency;
@@ -20,15 +21,15 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
 {
     private readonly IEnvironmentService _environmentService;
     private readonly ILogger<ResourceGrain> _logger;
-    private readonly IPluginProvider? _pluginProvider;
+    private readonly IComponentProvider? _componentProvider;
     protected IBehaviour? Behaviour;
 
     protected ResourceGrain(ILogger<ResourceGrain> logger, IEnvironmentService environmentService,
-        IPluginProvider? pluginProvider)
+        IComponentProvider? componentProvider)
     {
         _logger = logger;
         _environmentService = environmentService;
-        _pluginProvider = pluginProvider;
+        _componentProvider = componentProvider;
     }
 
     protected string Kind => this.GetGrainId().Type.ToString()!;
@@ -128,9 +129,9 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
 
     private async Task GetRequiredBehaviour()
     {
-        if (_pluginProvider is null || BehaviourId is null) return;
+        if (_componentProvider is null || BehaviourId is null) return;
 
-        Behaviour = _pluginProvider.GetBehaviour(BehaviourId);
+        Behaviour = _componentProvider.GetBehaviour(BehaviourId);
 
         if (Behaviour is null) throw new ResourceBehaviourNotRegisteredException(BehaviourId);
 

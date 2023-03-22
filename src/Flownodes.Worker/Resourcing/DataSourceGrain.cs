@@ -1,6 +1,7 @@
 using Flownodes.Sdk.Entities;
 using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Shared.Resourcing.Grains;
+using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Services;
 
 namespace Flownodes.Worker.Resourcing;
@@ -9,8 +10,8 @@ namespace Flownodes.Worker.Resourcing;
 internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
     public DataSourceGrain(ILogger<DataSourceGrain> logger, IEnvironmentService environmentService,
-        IPluginProvider pluginProvider)
-        : base(logger, environmentService, pluginProvider)
+        IComponentProvider componentProvider)
+        : base(logger, environmentService, componentProvider)
     {
     }
 

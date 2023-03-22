@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Flownodes.Tests.Extensions;
+using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,7 +29,7 @@ public class ClusterFixture : IAsyncLifetime
         .WithCleanUp(true)
         .Build();
 
-    public TestCluster? Cluster { get; set; }
+    public TestCluster? Cluster { get; private set; }
 
     public async Task InitializeAsync()
     {
@@ -59,10 +59,8 @@ public class ClusterFixture : IAsyncLifetime
         {
             siloBuilder.ConfigureServices(services =>
             {
-                services.AddSingleton<IPluginProvider, PluginProvider>();
+                services.AddSingleton<IComponentProvider, TestComponentProvider>();
                 services.AddSingleton<IEnvironmentService, EnvironmentService>();
-
-                services.ConfigurePluginsContainer();
             });
 
             siloBuilder

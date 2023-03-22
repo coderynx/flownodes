@@ -6,7 +6,7 @@ using Flownodes.Sdk.Resourcing.Attributes;
 using Flownodes.Sdk.Resourcing.Behaviours;
 using Module = Autofac.Module;
 
-namespace Flownodes.Worker.Modules;
+namespace Flownodes.Worker.Extendability.Modules;
 
 public class ComponentsModule : Module
 {
@@ -34,7 +34,8 @@ public class ComponentsModule : Module
 
         if (!Directory.Exists(componentsPath)) Directory.CreateDirectory(componentsPath);
 
-        var assemblies = Directory.EnumerateFiles(componentsPath, "*.dll", SearchOption.AllDirectories)
+        var assemblies = Directory
+            .EnumerateFiles(componentsPath, "*.dll", SearchOption.AllDirectories)
             .Where(filename => scannerPattern.Any(pattern => Regex.IsMatch(filename, pattern)))
             .Select(Assembly.LoadFrom)
             .ToArray();

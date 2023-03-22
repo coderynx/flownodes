@@ -1,7 +1,6 @@
-using Autofac;
 using Carter;
+using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Mediator.Requests;
-using Flownodes.Worker.Modules;
 using Flownodes.Worker.Services;
 using Orleans.Configuration;
 using Serilog;
@@ -10,17 +9,6 @@ namespace Flownodes.Worker.Bootstrap;
 
 internal static class Bootstrap
 {
-    private static void ConfigurePluginsServices(this IServiceCollection services)
-    {
-        var containerBuilder = new ContainerBuilder();
-
-        containerBuilder.RegisterModule<ComponentsContainerModule>();
-        containerBuilder.RegisterModule<ComponentsModule>();
-
-        var container = containerBuilder.Build();
-        services.AddSingleton(container);
-    }
-
     public static void ConfigureWebServices(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
@@ -33,10 +21,9 @@ internal static class Bootstrap
     private static void ConfigureOrleansServices(this IServiceCollection services)
     {
         services.AddOptions();
-        services.AddSingleton<IPluginProvider, PluginProvider>();
+        services.AddSingleton<IComponentProvider, ComponentProvider>();
         services.AddSingleton<IEnvironmentService, EnvironmentService>();
         services.AddHostedService<TestWorker>();
-        services.ConfigurePluginsServices();
     }
 
     private static void ConfigureDevelopment(this ISiloBuilder builder)

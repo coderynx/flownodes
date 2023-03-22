@@ -1,20 +1,25 @@
 using Flownodes.Shared.Resourcing.Grains;
+using Flownodes.Worker.Extendability;
 
 namespace Flownodes.Worker.Services;
 
 public class TestWorker : BackgroundService
 {
     private readonly IEnvironmentService _environmentService;
+    private readonly IComponentProvider _componentProvider;
     private readonly ILogger<TestWorker> _logger;
 
-    public TestWorker(ILogger<TestWorker> logger, IEnvironmentService environmentService)
+    public TestWorker(ILogger<TestWorker> logger, IEnvironmentService environmentService, IComponentProvider componentProvider)
     {
         _logger = logger;
         _environmentService = environmentService;
+        _componentProvider = componentProvider;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _componentProvider.BuildContainer();
+        
         var tenantManager = _environmentService.GetTenantManager();
         if (await tenantManager.IsTenantRegistered("default")) return;
 
@@ -83,6 +88,11 @@ public class TestWorker : BackgroundService
 
         var script = await resourceManager.DeployResourceAsync<IScriptGrain>("script", scriptConfiguration);
         await script.ExecuteAsync();
+        
         _logger.LogInformation("Executed script");
+
+        await Task.Delay(5000, stoppingToken);
+        
+        _componentProvider.BuildContainer();
     }
 }

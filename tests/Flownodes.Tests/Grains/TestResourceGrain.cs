@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Autofac;
 using Flownodes.Tests.Interfaces;
+using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Resourcing;
 using Flownodes.Worker.Services;
 using Microsoft.Extensions.Logging;
@@ -10,18 +11,8 @@ namespace Flownodes.Tests.Grains;
 
 internal sealed class TestResourceGrain : ResourceGrain, ITestResourceGrain
 {
-    private readonly IContainer _container;
-
     public TestResourceGrain(ILogger<TestResourceGrain> logger, IEnvironmentService environmentService,
-        IPluginProvider pluginProvider, IContainer container) :
-        base(logger, environmentService, pluginProvider)
+        IComponentProvider componentProvider) : base(logger, environmentService, componentProvider)
     {
-        _container = container;
-    }
-
-    public ValueTask<TService> ResolveService<TService>() where TService : notnull
-    {
-        var service = _container.Resolve<TService>();
-        return ValueTask.FromResult(service);
     }
 }

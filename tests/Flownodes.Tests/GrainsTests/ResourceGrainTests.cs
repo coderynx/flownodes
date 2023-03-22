@@ -196,15 +196,4 @@ public class ResourceGrainTests
         stateTuple.State.Should().BeEmpty();
         stateTuple.LastUpdateDate.Should().NotBeNull();
     }
-
-    [Fact]
-    public async Task GetService_ShouldThrowException_WhenResolvingServiceInMainContainer()
-    {
-        // Arrange.
-        var grain = NewTestResourceGrain;
-
-        // Act & Assert.
-        var act = async () => { await grain.ResolveService<IEnvironmentService>(); };
-        await act.Should().ThrowAsync<Exception>();
-    }
 }

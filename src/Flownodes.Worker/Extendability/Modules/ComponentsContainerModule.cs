@@ -4,7 +4,7 @@ using Autofac.Extensions.DependencyInjection;
 using Serilog;
 using Module = Autofac.Module;
 
-namespace Flownodes.Worker.Modules;
+namespace Flownodes.Worker.Extendability.Modules;
 
 public class ComponentsContainerModule : Module
 {
@@ -30,7 +30,6 @@ public class ComponentsContainerModule : Module
         pluginServices.AddHttpClient();
 
         builder.Populate(pluginServices);
-        builder.RegisterModule<ComponentsModule>();
         builder.RegisterInstance<IConfiguration>(configuration.GetSection("Plugins"));
     }
 }

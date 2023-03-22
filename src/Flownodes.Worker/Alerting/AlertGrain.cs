@@ -3,6 +3,7 @@ using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Alerting.Exceptions;
 using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Worker.Alerting.Persistence;
+using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
@@ -14,15 +15,15 @@ internal class AlertGrain : Grain, IAlertGrain
     private readonly IList<IAlerterDriver> _drivers = new List<IAlerterDriver>();
     private readonly ILogger<AlertGrain> _logger;
     private readonly IPersistentState<AlertPersistence> _persistence;
-    private readonly IPluginProvider _pluginProvider;
+    private readonly IComponentProvider _componentProvider;
 
     public AlertGrain(ILogger<AlertGrain> logger,
-        IPluginProvider pluginProvider,
+        IComponentProvider componentProvider,
         [PersistentState("alertPersistence")] IPersistentState<AlertPersistence> persistence)
     {
         _logger = logger;
         _persistence = persistence;
-        _pluginProvider = pluginProvider;
+        _componentProvider = componentProvider;
     }
 
     private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
@@ -90,7 +91,7 @@ internal class AlertGrain : Grain, IAlertGrain
     {
         foreach (var alertDriverId in _persistence.State.DriverIds)
         {
-            var alertDriver = _pluginProvider.GetAlerterDriver(alertDriverId);
+            var alertDriver = _componentProvider.GetAlerterDriver(alertDriverId);
             if (alertDriver is null)
             {
                 _logger.LogError("Alerter driver {@AlerterDriverId} not found, skipped", alertDriverId);

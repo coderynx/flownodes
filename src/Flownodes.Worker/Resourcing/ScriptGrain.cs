@@ -2,6 +2,7 @@ using CSScriptLib;
 using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Shared.Resourcing.Scripts;
+using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Services;
 
 namespace Flownodes.Worker.Resourcing;
@@ -14,8 +15,8 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
     private IScript? _script;
 
     public ScriptGrain(ILogger<ScriptGrain> logger, IEnvironmentService environmentService,
-        IPluginProvider pluginProvider, ILoggerFactory loggerFactory) :
-        base(logger, environmentService, pluginProvider)
+        IComponentProvider componentProvider, ILoggerFactory loggerFactory) :
+        base(logger, environmentService, componentProvider)
     {
         _logger = logger;
         _loggerFactory = loggerFactory;

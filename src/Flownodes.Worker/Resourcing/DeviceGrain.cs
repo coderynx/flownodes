@@ -1,6 +1,7 @@
 using Flownodes.Sdk.Entities;
 using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Shared.Resourcing.Grains;
+using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Resourcing.Persistence;
 using Flownodes.Worker.Services;
 
@@ -11,9 +12,9 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
     private readonly ILogger<DeviceGrain> _logger;
 
-    public DeviceGrain(IPluginProvider pluginProvider, ILogger<DeviceGrain> logger,
+    public DeviceGrain(IComponentProvider componentProvider, ILogger<DeviceGrain> logger,
         IEnvironmentService environmentService) :
-        base(logger, environmentService, pluginProvider)
+        base(logger, environmentService, componentProvider)
     {
         _logger = logger;
     }
