@@ -28,7 +28,9 @@ internal static class Bootstrap
 
     private static void ConfigureDevelopment(this ISiloBuilder builder)
     {
-        builder.AddMemoryGrainStorageAsDefault().UseLocalhostClustering();
+        builder.AddMemoryGrainStorageAsDefault()
+            .UseLocalhostClustering()
+            .UseDashboard();
     }
 
     private static void ConfigureProduction(this ISiloBuilder builder, HostBuilderContext context)

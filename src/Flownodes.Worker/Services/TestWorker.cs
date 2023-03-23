@@ -66,7 +66,6 @@ public class TestWorker : BackgroundService
 
         public async Task ExecuteAsync(Dictionary<string, object?> parameters)
         {
-            Context.LogInformation("Hello");
             var state = new Dictionary<string, object?>
             {
                 { "test", true }
@@ -98,7 +97,6 @@ public class TestWorker : BackgroundService
         await script.ExecuteAsync();
 
         _logger.LogInformation("Executed script");
-        _logger.LogInformation("Weather asset data: {@WeatherAssetData}", await weatherAsset.GetState());
 
         await Task.Delay(5000, stoppingToken);
         
