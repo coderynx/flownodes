@@ -14,12 +14,12 @@ using Xunit;
 namespace Flownodes.Tests.GrainsTests;
 
 [Collection("TestCluster")]
-public class ResourceManagerTests
+public class ResourceManagerGrainTests
 {
     private readonly TestCluster _cluster;
     private readonly IFixture _fixture;
 
-    public ResourceManagerTests(ClusterFixture fixture)
+    public ResourceManagerGrainTests(ClusterFixture fixture)
     {
         _cluster = fixture.Cluster!;
         _fixture = new Fixture();
@@ -31,28 +31,67 @@ public class ResourceManagerTests
         _cluster.GrainFactory.GetGrain<IResourceManagerGrain>(NewFlownodesId);
 
     [Fact]
-    public async Task DeployResource_ShouldDeployResource()
-    {
-        // Arrange.
-        var manager = NewResourceManagerGrain;
-
-        // Act & Assert.
-        await manager.DeployResourceAsync<ITestResourceGrain>(_fixture.Create<string>());
-    }
-
-    [Fact]
-    public async Task DeployResource_ShouldDeployResourceWithValidId()
+    public async Task DeployResource_ShouldDeployAssetGrain_WithCorrectId()
     {
         // Arrange.
         var manager = NewResourceManagerGrain;
 
         // Act.
-        var resource = await manager.DeployResourceAsync<ITestResourceGrain>("resource");
+        var grain = await manager.DeployResourceAsync<IAssetGrain>(_fixture.Create<string>());
+        
+        // Assert.
+        grain.Should().NotBeNull();
+        var id = await grain.GetId();
+        id.IsManager.Should().Be(false);
+        id.EntityKind.Should().Be(FlownodesEntity.Asset);
+    }
+
+    [Fact]
+    public async Task DeployResource_ShouldDeployDataSourceGrain_WithCorrectId()
+    {
+        // Arrange.
+        var manager = NewResourceManagerGrain;
+
+        // Act.
+        var grain = await manager.DeployResourceAsync<IDataSourceGrain>(_fixture.Create<string>());
+        
+        // Assert.
+        grain.Should().NotBeNull();
+        var id = await grain.GetId();
+        id.IsManager.Should().Be(false);
+        id.EntityKind.Should().Be(FlownodesEntity.DataSource);
+    }
+    
+    [Fact]
+    public async Task DeployResource_ShouldDeployResourceGroupGrain_WithCorrectId()
+    {
+        // Arrange.
+        var manager = NewResourceManagerGrain;
+
+        // Act.
+        var grain = await manager.DeployResourceAsync<IResourceGroupGrain>(_fixture.Create<string>());
 
         // Assert.
-        var id = await resource.GetId();
-        id.EntityKind.Should().Be(FlownodesEntity.Other);
-        id.SecondName.Should().Be("resource");
+        grain.Should().NotBeNull();
+        var id = await grain.GetId();
+        id.IsManager.Should().Be(false);
+        id.EntityKind.Should().Be(FlownodesEntity.ResourceGroup);
+    }
+    
+    [Fact]
+    public async Task DeployResource_ShouldDeployDeviceGrain_WithCorrectId()
+    {
+        // Arrange.
+        var manager = NewResourceManagerGrain;
+
+        // Act.
+        var grain = await manager.DeployResourceAsync<IDeviceGrain>(_fixture.Create<string>());
+
+        // Assert.
+        grain.Should().NotBeNull();
+        var id = await grain.GetId();
+        id.IsManager.Should().Be(false);
+        id.EntityKind.Should().Be(FlownodesEntity.Device);
     }
 
     [Fact]
