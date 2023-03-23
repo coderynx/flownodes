@@ -169,14 +169,14 @@ public record FlownodesId
         return new FlownodesId(id);
     }
 
-    private static FlownodesEntity KindFromString(string kind)
+    internal static FlownodesEntity KindFromString(string kind)
     {
         if (StringToFlownodesEntity.TryGetValue(kind, out var result)) return result;
 
         throw new ArgumentException($"Provided invalid {nameof(kind)}");
     }
 
-    private static string KindToString(FlownodesEntity kind)
+    internal static string KindToString(FlownodesEntity kind)
     {
         if (FlownodesEntityToString.TryGetValue(kind, out var result)) return result;
 
