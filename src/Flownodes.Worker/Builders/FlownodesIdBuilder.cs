@@ -21,13 +21,13 @@ public static class FlownodesIdBuilder
         { typeof(IScriptGrain), FlownodesEntity.Script }
     };
 
-    private static FlownodesEntity KindFromType(this Type type)
+    private static FlownodesEntity GetKindFromType(Type type)
     {
         return TypeToFlownodesObject.TryGetValue(type, out var result) ? result : FlownodesEntity.Other;
     }
 
     public static FlownodesId CreateFromType(Type objectType, string firstName, string? secondName = null)
     {
-        return new FlownodesId(KindFromType(objectType), firstName, secondName);
+        return new FlownodesId(GetKindFromType(objectType), firstName, secondName);
     }
 }

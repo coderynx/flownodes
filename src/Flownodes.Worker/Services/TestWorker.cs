@@ -50,12 +50,15 @@ public class TestWorker : BackgroundService
         var openWeather =
             await resourceManager.DeployResourceAsync<IDataSourceGrain>("open_weather_map", openWeatherConfiguration);
 
+        var weatherAsset = await resourceManager.DeployResourceAsync<IAssetGrain>("weather_asset");
+
         const string code = """
         // #!/usr/local/bin/cscs
         using System.Collections.Generic;
         using System.Threading.Tasks;
         using Flownodes.Shared.Resourcing.Scripts;
         using Flownodes.Sdk.Alerting;
+        using System.Text.Json.Nodes;
 
     public class TestScript : IScript
     {
@@ -77,7 +80,12 @@ public class TestWorker : BackgroundService
                 { "city", "Roma" }
             };
             var data = await Context.GetDataFromDataSourceAsync("open_weather_map", "get_current_by_city", @params);
-            Context.LogInformation(data);
+           
+            var assetState = new Dictionary<string, object?>
+            {
+                { "weather", data }
+            };
+            await Context.UpdateResourceStateAsync("weather_asset", assetState);
         }
     }
 """;
@@ -88,8 +96,9 @@ public class TestWorker : BackgroundService
 
         var script = await resourceManager.DeployResourceAsync<IScriptGrain>("script", scriptConfiguration);
         await script.ExecuteAsync();
-        
+
         _logger.LogInformation("Executed script");
+        _logger.LogInformation("Weather asset data: {@WeatherAssetData}", await weatherAsset.GetState());
 
         await Task.Delay(5000, stoppingToken);
         
