@@ -5,6 +5,8 @@ namespace Flownodes.Sdk.Entities;
 /// </summary>
 public enum FlownodesEntity
 {
+    UserManager,
+    ApiKeyManager,
     TenantManager,
     Tenant,
     AlertManager,
@@ -25,6 +27,8 @@ public record FlownodesId
 {
     private static readonly Dictionary<string, FlownodesEntity> StringToFlownodesEntity = new()
     {
+        { FlownodesEntityNames.UserManager, FlownodesEntity.UserManager },
+        { FlownodesEntityNames.ApiKeyManager, FlownodesEntity.ApiKeyManager },
         { FlownodesEntityNames.TenantManager, FlownodesEntity.TenantManager },
         { FlownodesEntityNames.Tenant, FlownodesEntity.Tenant },
         { FlownodesEntityNames.AlertManager, FlownodesEntity.AlertManager },
@@ -40,6 +44,8 @@ public record FlownodesId
 
     private static readonly Dictionary<FlownodesEntity, string> FlownodesEntityToString = new()
     {
+        { FlownodesEntity.UserManager, FlownodesEntityNames.UserManager },
+        { FlownodesEntity.ApiKeyManager, FlownodesEntityNames.ApiKeyManager },
         { FlownodesEntity.TenantManager, FlownodesEntityNames.TenantManager },
         { FlownodesEntity.Tenant, FlownodesEntityNames.Tenant },
         { FlownodesEntity.AlertManager, FlownodesEntityNames.AlertManager },

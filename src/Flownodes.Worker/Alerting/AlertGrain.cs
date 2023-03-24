@@ -4,7 +4,6 @@ using Flownodes.Shared.Alerting.Exceptions;
 using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Worker.Alerting.Persistence;
 using Flownodes.Worker.Extendability;
-using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Alerting;
@@ -12,10 +11,10 @@ namespace Flownodes.Worker.Alerting;
 [GrainType(FlownodesEntityNames.Alert)]
 internal class AlertGrain : Grain, IAlertGrain
 {
+    private readonly IComponentProvider _componentProvider;
     private readonly IList<IAlerterDriver> _drivers = new List<IAlerterDriver>();
     private readonly ILogger<AlertGrain> _logger;
     private readonly IPersistentState<AlertPersistence> _persistence;
-    private readonly IComponentProvider _componentProvider;
 
     public AlertGrain(ILogger<AlertGrain> logger,
         IComponentProvider componentProvider,

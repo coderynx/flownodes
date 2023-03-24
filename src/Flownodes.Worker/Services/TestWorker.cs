@@ -1,25 +1,32 @@
 using Flownodes.Shared.Resourcing.Grains;
+using Flownodes.Shared.Users;
 using Flownodes.Worker.Extendability;
+using Microsoft.AspNetCore.Identity;
 
 namespace Flownodes.Worker.Services;
 
 public class TestWorker : BackgroundService
 {
-    private readonly IEnvironmentService _environmentService;
     private readonly IComponentProvider _componentProvider;
+    private readonly IEnvironmentService _environmentService;
     private readonly ILogger<TestWorker> _logger;
+    private readonly IServiceProvider _serviceProvider;
 
-    public TestWorker(ILogger<TestWorker> logger, IEnvironmentService environmentService, IComponentProvider componentProvider)
+    public TestWorker(ILogger<TestWorker> logger, IEnvironmentService environmentService,
+        IComponentProvider componentProvider, IServiceProvider serviceProvider)
     {
         _logger = logger;
         _environmentService = environmentService;
         _componentProvider = componentProvider;
+        _serviceProvider = serviceProvider;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _componentProvider.BuildContainer();
-        
+
+        await SeedUsers();
+
         var tenantManager = _environmentService.GetTenantManager();
         if (await tenantManager.IsTenantRegistered("default")) return;
 
@@ -99,7 +106,20 @@ public class TestWorker : BackgroundService
         _logger.LogInformation("Executed script");
 
         await Task.Delay(5000, stoppingToken);
-        
+
         _componentProvider.BuildContainer();
+    }
+
+    private async Task SeedUsers()
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+        var user = new ApplicationUser
+        {
+            Email = "user@example.com",
+            UserName = "user"
+        };
+        await userManager.CreateAsync(user, "P@ssw0rd");
     }
 }

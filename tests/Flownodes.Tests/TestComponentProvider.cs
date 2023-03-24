@@ -14,10 +14,9 @@ public class TestComponentProvider : IComponentProvider
     {
         BuildContainer();
     }
-    
+
     public IBehaviour? GetBehaviour(string id)
     {
-       
         return _container.ResolveOptionalKeyed<IBehaviour>(id);
     }
 

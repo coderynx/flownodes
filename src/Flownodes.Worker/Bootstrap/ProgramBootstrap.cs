@@ -1,7 +1,11 @@
 using Carter;
+using Flownodes.Shared.Users;
 using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Mediator.Requests;
 using Flownodes.Worker.Services;
+using Flownodes.Worker.Users;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.OpenApi.Models;
 using Orleans.Configuration;
 using Serilog;
 
@@ -12,7 +16,38 @@ internal static class Bootstrap
     public static void ConfigureWebServices(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+
+        services.AddSwaggerGen(config =>
+        {
+            config.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+            {
+                Description = "The API key to access the cluster API",
+                Type = SecuritySchemeType.ApiKey,
+                Name = "X-Api-Key",
+                In = ParameterLocation.Header,
+                Scheme = "ApiKeyScheme"
+            });
+            var scheme = new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "ApiKey"
+                },
+                In = ParameterLocation.Header
+            };
+            var requirement = new OpenApiSecurityRequirement
+            {
+                { scheme, new List<string>() }
+            };
+            config.AddSecurityRequirement(requirement);
+        });
+
+        services.AddIdentityCore<ApplicationUser>()
+            .AddUserStore<GrainUserStore>()
+            .AddUserManager<UserManager<ApplicationUser>>()
+            .AddDefaultTokenProviders();
+        services.AddAuthentication();
         services.AddAuthorization();
         services.AddMediatR(config => { config.RegisterServicesFromAssembly(typeof(GetTenantRequest).Assembly); });
         services.AddCarter();

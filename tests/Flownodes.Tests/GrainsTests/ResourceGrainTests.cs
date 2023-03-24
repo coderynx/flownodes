@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
@@ -6,7 +5,6 @@ using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Tests.Fixtures;
 using Flownodes.Tests.Interfaces;
-using Flownodes.Worker.Services;
 using FluentAssertions;
 using Orleans.TestingHost;
 using Xunit;
@@ -72,7 +70,7 @@ public class ResourceGrainTests
         var act = async () => { await grain.UpdateConfigurationAsync(configuration); };
         await act.Should().NotThrowAsync();
     }
-    
+
     [Fact]
     public async Task
         UpdateConfiguration_ShouldThrowResourceBehaviourNotRegisteredException_WhenBehaviourIsNotRegistered()

@@ -2,6 +2,7 @@ using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Shared.Tenanting.Grains;
+using Flownodes.Shared.Users;
 
 namespace Flownodes.Worker.Builders;
 
@@ -9,7 +10,8 @@ public static class FlownodesIdBuilder
 {
     private static readonly Dictionary<Type, FlownodesEntity> TypeToFlownodesObject = new()
     {
-        { typeof(ITenantManagerGrain), FlownodesEntity.TenantManager },
+        { typeof(IUserManagerGrain), FlownodesEntity.UserManager },
+        { typeof(IApiKeyManagerGrain), FlownodesEntity.ApiKeyManager },
         { typeof(ITenantGrain), FlownodesEntity.Tenant },
         { typeof(IAlertManagerGrain), FlownodesEntity.AlertManager },
         { typeof(IAlertGrain), FlownodesEntity.Alert },

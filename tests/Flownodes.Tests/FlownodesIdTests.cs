@@ -1,6 +1,5 @@
 using System;
 using Flownodes.Sdk.Entities;
-using Flownodes.Worker.Builders;
 using FluentAssertions;
 using Xunit;
 
@@ -8,7 +7,6 @@ namespace Flownodes.Tests;
 
 public class FlownodesIdTests
 {
-
     [Theory]
     [InlineData(FlownodesEntity.Device)]
     [InlineData(FlownodesEntity.ResourceGroup)]
@@ -58,7 +56,7 @@ public class FlownodesIdTests
         id.FirstName.Should().Be("firstName");
         id.SecondName.Should().BeNull();
     }
-    
+
     [Fact]
     public void ConstructFlownodesIdFromStringKind_ShouldThrow_WhenInvalidKindIsPassed()
     {

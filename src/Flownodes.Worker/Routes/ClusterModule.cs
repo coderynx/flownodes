@@ -15,6 +15,7 @@ public class ClusterModule : ICarterModule
                 var response = await mediator.Send(new GetClusterInfoRequest());
                 return response.GetResult();
             })
+            .AddEndpointFilter<ApiKeyEndpointFilter>()
             .WithName("GetClusterInfo")
             .WithDisplayName("Get cluster information");
     }

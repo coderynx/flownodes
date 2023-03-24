@@ -19,9 +19,9 @@ namespace Flownodes.Worker.Resourcing;
 [LogConsistencyProvider]
 internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence, IResourceGrainPersistenceEvent>
 {
+    private readonly IComponentProvider? _componentProvider;
     private readonly IEnvironmentService _environmentService;
     private readonly ILogger<ResourceGrain> _logger;
-    private readonly IComponentProvider? _componentProvider;
     protected IBehaviour? Behaviour;
 
     protected ResourceGrain(ILogger<ResourceGrain> logger, IEnvironmentService environmentService,

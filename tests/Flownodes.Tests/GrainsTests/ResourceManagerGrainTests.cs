@@ -38,7 +38,7 @@ public class ResourceManagerGrainTests
 
         // Act.
         var grain = await manager.DeployResourceAsync<IAssetGrain>(_fixture.Create<string>());
-        
+
         // Assert.
         grain.Should().NotBeNull();
         var id = await grain.GetId();
@@ -54,14 +54,14 @@ public class ResourceManagerGrainTests
 
         // Act.
         var grain = await manager.DeployResourceAsync<IDataSourceGrain>(_fixture.Create<string>());
-        
+
         // Assert.
         grain.Should().NotBeNull();
         var id = await grain.GetId();
         id.IsManager.Should().Be(false);
         id.EntityKind.Should().Be(FlownodesEntity.DataSource);
     }
-    
+
     [Fact]
     public async Task DeployResource_ShouldDeployResourceGroupGrain_WithCorrectId()
     {
@@ -77,7 +77,7 @@ public class ResourceManagerGrainTests
         id.IsManager.Should().Be(false);
         id.EntityKind.Should().Be(FlownodesEntity.ResourceGroup);
     }
-    
+
     [Fact]
     public async Task DeployResource_ShouldDeployDeviceGrain_WithCorrectId()
     {
@@ -125,7 +125,7 @@ public class ResourceManagerGrainTests
         // Arrange.
         var manager = NewResourceManagerGrain;
         await manager.DeployResourceAsync<ITestResourceGrain>("resource");
-        
+
         // Act & Assert.
         var act = async () => { await manager.DeployResourceAsync<ITestResourceGrain>("resource"); };
         await act.Should().ThrowAsync<ResourceAlreadyRegisteredException>();

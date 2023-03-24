@@ -18,7 +18,7 @@ public class ComponentProvider : IComponentProvider
     public IBehaviour? GetBehaviour(string id)
     {
         if (_container is null) throw new InvalidOperationException("The container is not built yet");
-        
+
         _logger.LogDebug("Retrieving behavior {@DeviceBehaviourId}", id);
         return _container.ResolveOptionalKeyed<IBehaviour>(id);
     }
@@ -26,7 +26,7 @@ public class ComponentProvider : IComponentProvider
     public IAlerterDriver? GetAlerterDriver(string id)
     {
         if (_container is null) throw new InvalidOperationException("The container is not built yet");
-        
+
         _logger.LogDebug("Retrieving alerter driver {@AlerterDriverId}", id);
         return _container.ResolveOptionalKeyed<IAlerterDriver>(id);
     }

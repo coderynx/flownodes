@@ -2,6 +2,7 @@ using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Shared.Tenanting.Grains;
+using Flownodes.Shared.Users;
 using Microsoft.Extensions.Options;
 using Orleans.Configuration;
 using Orleans.Runtime;
@@ -17,21 +18,31 @@ public interface IEnvironmentService
     ITenantManagerGrain GetTenantManager();
     Task<IResourceManagerGrain?> GetResourceManager(string tenantName);
     Task<IAlertManagerGrain?> GetAlertManager(string tenantName);
+    IUserManagerGrain GetUserManager();
+    IApiKeyManagerGrain GetApiKeyManager();
 }
 
 public class EnvironmentService : IEnvironmentService
 {
+    private readonly IApiKeyManagerGrain _apiKeyManager;
     private readonly IClusterManifestProvider _clusterManifestProvider;
     private readonly ClusterOptions _clusterOptions;
     private readonly ITenantManagerGrain _tenantManager;
+    private readonly IUserManagerGrain _userManager;
 
     public EnvironmentService(IOptions<ClusterOptions> clusterOptions, IGrainFactory grainFactory,
         IClusterManifestProvider clusterManifestProvider)
     {
         _clusterOptions = clusterOptions.Value;
 
-        var id = new FlownodesId(FlownodesEntity.TenantManager, FlownodesEntityNames.TenantManager);
-        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(id);
+        var userManagerId = new FlownodesId(FlownodesEntity.UserManager, FlownodesEntityNames.UserManager);
+        _userManager = grainFactory.GetGrain<IUserManagerGrain>(userManagerId);
+
+        var apiKeyManagerId = new FlownodesId(FlownodesEntity.ApiKeyManager, FlownodesEntityNames.ApiKeyManager);
+        _apiKeyManager = grainFactory.GetGrain<IApiKeyManagerGrain>(apiKeyManagerId);
+
+        var tenantManagerId = new FlownodesId(FlownodesEntity.TenantManager, FlownodesEntityNames.TenantManager);
+        _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(tenantManagerId);
 
         _clusterManifestProvider = clusterManifestProvider;
     }
@@ -39,6 +50,16 @@ public class EnvironmentService : IEnvironmentService
     public string ServiceId => _clusterOptions.ServiceId;
     public string ClusterId => _clusterOptions.ClusterId;
     public int SilosCount => _clusterManifestProvider.Current.Silos.Count;
+
+    public IUserManagerGrain GetUserManager()
+    {
+        return _userManager;
+    }
+
+    public IApiKeyManagerGrain GetApiKeyManager()
+    {
+        return _apiKeyManager;
+    }
 
     public ITenantManagerGrain GetTenantManager()
     {
