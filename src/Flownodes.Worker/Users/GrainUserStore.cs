@@ -42,7 +42,7 @@ public class GrainUserStore : IUserPasswordStore<ApplicationUser>
         ArgumentNullException.ThrowIfNull(user);
         ArgumentException.ThrowIfNullOrEmpty(normalizedName);
 
-        user.NormalizedEmail = normalizedName;
+        user.NormalizedUserName = normalizedName;
 
         return Task.CompletedTask;
     }

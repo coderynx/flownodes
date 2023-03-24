@@ -9,27 +9,21 @@ internal struct ApplicationUserSurrogate
     {
     }
 
-    [Id(0)] public string Id { get; set; } = default!;
-    [Id(1)] public string? UserName { get; set; }
-    [Id(2)] public string? NormalizedUserName { get; set; }
-    [Id(3)] public string? Email { get; set; }
-    [Id(4)] public string? NormalizedEmail { get; set; }
-    [Id(5)] public bool EmailConfirmed { get; set; }
-    [Id(6)] public string? PasswordHash { get; set; }
-    [Id(7)] public string? SecurityStamp { get; set; }
-    [Id(8)] public string? ConcurrencyStamp { get; set; } = Guid.NewGuid().ToString();
-    [Id(9)] public string? PhoneNumber { get; set; }
-    [Id(10)] public bool PhoneNumberConfirmed { get; set; }
-    [Id(11)] public bool TwoFactorEnabled { get; set; }
-    [Id(12)] public DateTimeOffset? LockoutEnd { get; set; }
-    [Id(13)] public bool LockoutEnabled { get; set; }
-
-    [Id(14)] public int AccessFailedCount { get; set; }
-
-    public override string ToString()
-    {
-        return UserName ?? string.Empty;
-    }
+    [Id(0)] public string Id { get; init; } = default!;
+    [Id(1)] public string? UserName { get; init; }
+    [Id(2)] public string? NormalizedUserName { get; init; }
+    [Id(3)] public string? Email { get; init; }
+    [Id(4)] public string? NormalizedEmail { get; init; }
+    [Id(5)] public bool EmailConfirmed { get; init; }
+    [Id(6)] public string? PasswordHash { get; init; }
+    [Id(7)] public string? SecurityStamp { get; init; }
+    [Id(8)] public string? ConcurrencyStamp { get; init; } = Guid.NewGuid().ToString();
+    [Id(9)] public string? PhoneNumber { get; init; }
+    [Id(10)] public bool PhoneNumberConfirmed { get; init; }
+    [Id(11)] public bool TwoFactorEnabled { get; init; }
+    [Id(12)] public DateTimeOffset? LockoutEnd { get; init; }
+    [Id(13)] public bool LockoutEnabled { get; init; }
+    [Id(14)] public int AccessFailedCount { get; init; }
 }
 
 [RegisterConverter]

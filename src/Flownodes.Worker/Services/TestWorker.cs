@@ -120,6 +120,6 @@ public class TestWorker : BackgroundService
             Email = "user@example.com",
             UserName = "user"
         };
-        await userManager.CreateAsync(user, "P@ssw0rd");
+        await userManager.CreateAsync(user, "P@ssw0rd1");
     }
 }
