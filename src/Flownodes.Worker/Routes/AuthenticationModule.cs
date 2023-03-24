@@ -1,5 +1,5 @@
 using Carter;
-using Flownodes.Shared.Users;
+using Flownodes.Shared.Authentication.Models;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Mediator.Requests;
 using MediatR;

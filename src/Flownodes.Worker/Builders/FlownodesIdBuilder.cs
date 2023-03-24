@@ -1,8 +1,8 @@
 using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Alerting.Grains;
+using Flownodes.Shared.Authentication;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Shared.Tenanting.Grains;
-using Flownodes.Shared.Users;
 
 namespace Flownodes.Worker.Builders;
 

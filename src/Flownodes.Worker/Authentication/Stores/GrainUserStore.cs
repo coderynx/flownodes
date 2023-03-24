@@ -1,8 +1,9 @@
-using Flownodes.Shared.Users;
+using Flownodes.Shared.Authentication;
+using Flownodes.Shared.Authentication.Models;
 using Flownodes.Worker.Services;
 using Microsoft.AspNetCore.Identity;
 
-namespace Flownodes.Worker.Users;
+namespace Flownodes.Worker.Authentication.Stores;
 
 public class GrainUserStore : IUserPasswordStore<ApplicationUser>
 {

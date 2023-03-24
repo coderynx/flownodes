@@ -1,9 +1,9 @@
 using Carter;
-using Flownodes.Shared.Users;
+using Flownodes.Shared.Authentication.Models;
+using Flownodes.Worker.Authentication.Stores;
 using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Mediator.Requests;
 using Flownodes.Worker.Services;
-using Flownodes.Worker.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using Orleans.Configuration;

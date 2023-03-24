@@ -1,4 +1,4 @@
-namespace Flownodes.Shared.Users;
+namespace Flownodes.Shared.Authentication;
 
 public interface IApiKeyManagerGrain : IGrainWithStringKey
 {

@@ -1,4 +1,4 @@
-using Flownodes.Shared.Users;
+using Flownodes.Shared.Authentication;
 using Flownodes.Worker.Services;
 
 namespace Flownodes.Worker.Routes;

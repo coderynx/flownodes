@@ -1,9 +1,9 @@
 using System.Security.Cryptography;
 using Flownodes.Sdk.Entities;
-using Flownodes.Shared.Users;
+using Flownodes.Shared.Authentication;
 using Orleans.Runtime;
 
-namespace Flownodes.Worker.Users;
+namespace Flownodes.Worker.Authentication;
 
 internal sealed record ApiKey(string Name, string Username, string Value);
 

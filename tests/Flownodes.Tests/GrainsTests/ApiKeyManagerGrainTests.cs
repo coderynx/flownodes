@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using AutoFixture;
 using Flownodes.Sdk.Entities;
-using Flownodes.Shared.Users;
+using Flownodes.Shared.Authentication;
 using Flownodes.Tests.Fixtures;
 using FluentAssertions;
 using Orleans.TestingHost;

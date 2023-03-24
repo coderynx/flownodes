@@ -1,5 +1,5 @@
+using Flownodes.Shared.Authentication.Models;
 using Flownodes.Shared.Resourcing.Grains;
-using Flownodes.Shared.Users;
 using Flownodes.Worker.Extendability;
 using Microsoft.AspNetCore.Identity;
 

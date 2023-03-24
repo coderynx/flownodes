@@ -1,8 +1,9 @@
 using Flownodes.Sdk.Entities;
-using Flownodes.Shared.Users;
+using Flownodes.Shared.Authentication;
+using Flownodes.Shared.Authentication.Models;
 using Orleans.Runtime;
 
-namespace Flownodes.Worker.Users;
+namespace Flownodes.Worker.Authentication;
 
 [GrainType(FlownodesEntityNames.UserManager)]
 public class UserManagerGrain : Grain, IUserManagerGrain

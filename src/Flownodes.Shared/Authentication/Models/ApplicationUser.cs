@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace Flownodes.Shared.Users;
+namespace Flownodes.Shared.Authentication.Models;
 
 public class ApplicationUser : IdentityUser
 {

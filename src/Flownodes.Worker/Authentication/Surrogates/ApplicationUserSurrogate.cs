@@ -1,6 +1,6 @@
-using Flownodes.Shared.Users;
+using Flownodes.Shared.Authentication.Models;
 
-namespace Flownodes.Worker.Users.Surrogates;
+namespace Flownodes.Worker.Authentication.Surrogates;
 
 [GenerateSerializer]
 internal struct ApplicationUserSurrogate

@@ -1,4 +1,6 @@
-namespace Flownodes.Shared.Users;
+using Flownodes.Shared.Authentication.Models;
+
+namespace Flownodes.Shared.Authentication;
 
 public interface IUserManagerGrain : IGrainWithStringKey
 {

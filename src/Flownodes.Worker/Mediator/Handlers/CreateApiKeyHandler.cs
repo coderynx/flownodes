@@ -1,4 +1,5 @@
-using Flownodes.Shared.Users;
+using Flownodes.Shared.Authentication;
+using Flownodes.Shared.Authentication.Models;
 using Flownodes.Worker.Mediator.Requests;
 using Flownodes.Worker.Mediator.Responses;
 using Flownodes.Worker.Services;
