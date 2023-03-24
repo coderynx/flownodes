@@ -1,5 +1,5 @@
-using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Users;
+using Flownodes.Worker.Services;
 
 namespace Flownodes.Worker.Routes;
 
@@ -7,14 +7,16 @@ public class ApiKeyEndpointFilter : IEndpointFilter
 {
     private readonly IApiKeyManagerGrain _apiKeyManager;
 
-    public ApiKeyEndpointFilter(IGrainFactory grainFactory)
+    public ApiKeyEndpointFilter(IEnvironmentService environmentService)
     {
-        _apiKeyManager = grainFactory.GetGrain<IApiKeyManagerGrain>(FlownodesEntityNames.ApiKeyManager);
+        _apiKeyManager = environmentService.GetApiKeyManager();
     }
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        if (!context.HttpContext.Request.Headers.TryGetValue("X-Api-Key", out var receivedApiKey))
+        const string apiKeyHeaderName = "X-Api-Key";
+
+        if (!context.HttpContext.Request.Headers.TryGetValue(apiKeyHeaderName, out var receivedApiKey))
             return TypedResults.Unauthorized();
 
         if (!await _apiKeyManager.IsApiKeyValid(receivedApiKey.ToString())) return TypedResults.Unauthorized();

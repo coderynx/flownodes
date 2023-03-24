@@ -17,7 +17,7 @@ internal struct ApplicationUserSurrogate
     [Id(5)] public bool EmailConfirmed { get; init; }
     [Id(6)] public string? PasswordHash { get; init; }
     [Id(7)] public string? SecurityStamp { get; init; }
-    [Id(8)] public string? ConcurrencyStamp { get; init; } = Guid.NewGuid().ToString();
+    [Id(8)] public string? ConcurrencyStamp { get; init; }
     [Id(9)] public string? PhoneNumber { get; init; }
     [Id(10)] public bool PhoneNumberConfirmed { get; init; }
     [Id(11)] public bool TwoFactorEnabled { get; init; }

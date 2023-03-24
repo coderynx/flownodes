@@ -21,10 +21,8 @@ public class CreateApiKeyHandler : IRequestHandler<CreateApiKeyRequest, CreateAp
     public async Task<CreateApiKeyResponse> Handle(CreateApiKeyRequest request, CancellationToken cancellationToken)
     {
         if (await _userManager.FindByNameAsync(request.Username) is null)
-        {
             return new CreateApiKeyResponse(request.Username, request.Name, "The user was not found",
                 ResponseKind.NotFound);
-        }
 
         try
         {

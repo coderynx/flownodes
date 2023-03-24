@@ -67,8 +67,8 @@ internal sealed class ApiKeyManagerGrain : Grain, IApiKeyManagerGrain
             .Replace("+", "-")
             .Replace("/", "_");
 
-        var keyLength = lenght - "CT-".Length;
+        var keyLength = lenght - "FN-".Length;
 
-        return "CT-" + base64String[..keyLength];
+        return "FN-" + base64String[..keyLength];
     }
 }
