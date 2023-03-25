@@ -60,6 +60,7 @@ internal sealed class ApiKeyManagerGrain : Grain, IApiKeyManagerGrain
 
     private static string GenerateApiKey()
     {
+        const string keyPrefix = "FN-";
         const int lenght = 32;
         var bytes = RandomNumberGenerator.GetBytes(lenght);
 
@@ -67,8 +68,8 @@ internal sealed class ApiKeyManagerGrain : Grain, IApiKeyManagerGrain
             .Replace("+", "-")
             .Replace("/", "_");
 
-        var keyLength = lenght - "FN-".Length;
+        var keyLength = lenght - keyPrefix.Length;
 
-        return "FN-" + base64String[..keyLength];
+        return keyPrefix + base64String[..keyLength];
     }
 }

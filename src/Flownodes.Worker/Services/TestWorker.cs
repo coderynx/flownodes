@@ -11,21 +11,24 @@ public class TestWorker : BackgroundService
     private readonly IEnvironmentService _environmentService;
     private readonly ILogger<TestWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IHostEnvironment _hostEnvironment;
 
     public TestWorker(ILogger<TestWorker> logger, IEnvironmentService environmentService,
-        IComponentProvider componentProvider, IServiceProvider serviceProvider)
+        IComponentProvider componentProvider, IServiceProvider serviceProvider, IHostEnvironment hostEnvironment)
     {
         _logger = logger;
         _environmentService = environmentService;
         _componentProvider = componentProvider;
         _serviceProvider = serviceProvider;
+        _hostEnvironment = hostEnvironment;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _componentProvider.BuildContainer();
+        _logger.LogInformation("Starting Flownodes node");
 
-        await SeedUsers();
+        _componentProvider.BuildContainer();
+        if (_hostEnvironment.IsDevelopment() || _hostEnvironment.IsStaging()) await SeedDefaultUserAndApiKey();
 
         var tenantManager = _environmentService.GetTenantManager();
         if (await tenantManager.IsTenantRegistered("default")) return;
@@ -33,6 +36,8 @@ public class TestWorker : BackgroundService
         var tenant = await tenantManager.CreateTenantAsync("default");
         var resourceManager = await tenant.GetResourceManager();
         var alertManager = await tenant.GetAlertManager();
+
+        _logger.LogInformation("Flownodes node successfully started");
 
         var hueLightConfiguration = new Dictionary<string, object?>
         {
@@ -60,40 +65,39 @@ public class TestWorker : BackgroundService
         var weatherAsset = await resourceManager.DeployResourceAsync<IAssetGrain>("weather_asset");
 
         const string code = """
-        // #!/usr/local/bin/cscs
-        using System.Collections.Generic;
-        using System.Threading.Tasks;
-        using Flownodes.Shared.Resourcing.Scripts;
-        using Flownodes.Sdk.Alerting;
-        using System.Text.Json.Nodes;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Flownodes.Shared.Resourcing.Scripts;
+using Flownodes.Sdk.Alerting;
+using System.Text.Json.Nodes;
 
-    public class TestScript : IScript
+public class TestScript : IScript
+{
+    public FlownodesContext Context { get; set; }
+
+    public async Task ExecuteAsync(Dictionary<string, object?> parameters)
     {
-        public FlownodesContext Context { get; set; }
-
-        public async Task ExecuteAsync(Dictionary<string, object?> parameters)
+        var state = new Dictionary<string, object?>
         {
-            var state = new Dictionary<string, object?>
-            {
-                { "test", true }
-            };
-            await Context.UpdateResourceStateAsync("hue_light", state);
+            { "test", true }
+        };
+        await Context.UpdateResourceStateAsync("hue_light", state);
 
-            await Context.CreateAlertAsync(AlertSeverity.Informational, "Hello", new HashSet<string>());
+        await Context.CreateAlertAsync(AlertSeverity.Informational, "Hello", new HashSet<string>());
             
-            var @params = new Dictionary<string, object?>
-            {
-                { "city", "Roma" }
-            };
-            var data = await Context.GetDataFromDataSourceAsync("open_weather_map", "get_current_by_city", @params);
+        var @params = new Dictionary<string, object?>
+        {
+            { "city", "Roma" }
+        };
+        var data = await Context.GetDataFromDataSourceAsync("open_weather_map", "get_current_by_city", @params);
            
-            var assetState = new Dictionary<string, object?>
-            {
-                { "weather", data }
-            };
-            await Context.UpdateResourceStateAsync("weather_asset", assetState);
-        }
+        var assetState = new Dictionary<string, object?>
+        {
+            { "weather", data }
+        };
+        await Context.UpdateResourceStateAsync("weather_asset", assetState);
     }
+}
 """;
         var scriptConfiguration = new Dictionary<string, object?>
         {
@@ -104,22 +108,24 @@ public class TestWorker : BackgroundService
         await script.ExecuteAsync();
 
         _logger.LogInformation("Executed script");
-
-        await Task.Delay(5000, stoppingToken);
-
-        _componentProvider.BuildContainer();
     }
 
-    private async Task SeedUsers()
+    private async Task<string> SeedDefaultUserAndApiKey()
     {
         using var scope = _serviceProvider.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var apiKeyManager = _environmentService.GetApiKeyManager();
 
         var user = new ApplicationUser
         {
-            Email = "user@example.com",
-            UserName = "user"
+            Email = "admin@flownodes.com",
+            UserName = "admin"
         };
         await userManager.CreateAsync(user, "P@ssw0rd1");
+
+        var apiKey = await apiKeyManager.GenerateApiKeyAsync("default", user.UserName);
+        _logger.LogInformation("Seeded default user and default ApiKey");
+
+        return apiKey;
     }
 }

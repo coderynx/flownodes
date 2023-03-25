@@ -1,4 +1,5 @@
 using Carter;
+using Carter.OpenApi;
 using Flownodes.Shared.Authentication.Models;
 using Flownodes.Worker.Authentication.Stores;
 using Flownodes.Worker.Extendability;
@@ -17,9 +18,15 @@ internal static class Bootstrap
     {
         services.AddEndpointsApiExplorer();
 
-        services.AddSwaggerGen(config =>
+        services.AddSwaggerGen(options =>
         {
-            config.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Description = "Flownodes API to manage the cluster",
+                Version = "v1",
+                Title = "Flownodes API"
+            });
+            options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
             {
                 Description = "The API key to access the cluster API",
                 Type = SecuritySchemeType.ApiKey,
@@ -40,13 +47,15 @@ internal static class Bootstrap
             {
                 { scheme, new List<string>() }
             };
-            config.AddSecurityRequirement(requirement);
+            options.AddSecurityRequirement(requirement);
         });
 
-        services.AddIdentityCore<ApplicationUser>()
+        services.AddIdentityCore<ApplicationUser>(config => { config.SignIn.RequireConfirmedEmail = false; })
             .AddUserStore<GrainUserStore>()
             .AddUserManager<UserManager<ApplicationUser>>()
+            .AddSignInManager<SignInManager<ApplicationUser>>()
             .AddDefaultTokenProviders();
+        
         services.AddAuthentication();
         services.AddAuthorization();
         services.AddMediatR(config => { config.RegisterServicesFromAssembly(typeof(GetTenantRequest).Assembly); });

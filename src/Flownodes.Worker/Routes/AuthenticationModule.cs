@@ -15,27 +15,22 @@ public class AuthenticationModule : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapPost("/api/authentication/users", [AllowAnonymous]
-            async (UserManager<ApplicationUser> userManager, User user) =>
+            async (IMediator mediator, CreateUserRequest request) =>
             {
-                var applicationUser = new ApplicationUser
-                {
-                    UserName = user.Username,
-                    Email = user.Email
-                };
-                var result = await userManager.CreateAsync(applicationUser, user.Password);
-
-                return result.Succeeded ? Results.Ok() : Results.BadRequest(result.Errors);
+                var response = await mediator.Send(request);
+                return response.GetResult();
             });
 
         app.MapPost("/api/authentication/login", [AllowAnonymous]
-            async (UserManager<ApplicationUser> userManager, User user) =>
+            async (SignInManager<ApplicationUser> manager, User request) =>
             {
-                var applicationUser = await userManager.FindByNameAsync(user.Username);
-
-                if (applicationUser is not null && await userManager.CheckPasswordAsync(applicationUser, user.Password))
-                    return Results.Ok("Authorized");
-
-                return Results.Unauthorized();
+                var user = new ApplicationUser
+                {
+                    UserName = request.Username,
+                    Email = request.Email
+                };
+                var result = await manager.CheckPasswordSignInAsync(user, request.Password, false);
+                return result.Succeeded ? Results.Ok() : Results.Unauthorized();
             });
 
         app.MapPost("/api/authentication/apikey", [AllowAnonymous]

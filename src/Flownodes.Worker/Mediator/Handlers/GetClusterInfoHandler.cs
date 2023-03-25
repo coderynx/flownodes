@@ -14,20 +14,24 @@ public class GetClusterInfoHandler : IRequestHandler<GetClusterInfoRequest, GetC
         _environmentService = environmentService;
     }
 
-    public Task<GetClusterInfoResponse> Handle(GetClusterInfoRequest request, CancellationToken cancellationToken)
+    public async Task<GetClusterInfoResponse> Handle(GetClusterInfoRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            var response = new GetClusterInfoResponse(_environmentService.ClusterId, _environmentService.ServiceId,
-                _environmentService.SilosCount);
-            return Task.FromResult(response);
+            var userManager = _environmentService.GetUserManager();
+
+            ClusterStatus clusterStatus;
+            if (await userManager.HasUsers()) clusterStatus = ClusterStatus.Ready;
+            else clusterStatus = ClusterStatus.Uninitialized;
+
+            return new GetClusterInfoResponse(_environmentService.ClusterId, _environmentService.ServiceId, _environmentService.SilosCount, clusterStatus);
         }
         catch
         {
             var response = new GetClusterInfoResponse(
                 "There was an internal error while retrieving cluster information",
                 ResponseKind.InternalError);
-            return Task.FromResult(response);
+            return response;
         }
     }
 }

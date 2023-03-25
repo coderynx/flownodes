@@ -63,6 +63,11 @@ public class UserManagerGrain : Grain, IUserManagerGrain
         return ValueTask.FromResult(record);
     }
 
+    public ValueTask<bool> HasUsers()
+    {
+        return ValueTask.FromResult(_store.State.Count > 0);
+    }
+
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Activated user manager grain");
