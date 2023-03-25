@@ -2,13 +2,12 @@ using Carter;
 using Flownodes.Shared.Authentication.Models;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Mediator.Requests;
+using Flownodes.Worker.Mediator.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 
 namespace Flownodes.Worker.Routes;
-
-public record User(string Username, string Password);
 
 public class AuthenticationModule : ICarterModule
 {
@@ -22,13 +21,10 @@ public class AuthenticationModule : ICarterModule
             });
 
         app.MapPost("/api/authentication/signin", [AllowAnonymous]
-            async (SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager,
-                User request) =>
+            async (IMediator mediator, SignInUserRequest request) =>
             {
-                var user = await userManager.FindByNameAsync(request.Username);
-                if (user is null) return Results.Unauthorized();
-                var result = await signInManager.PasswordSignInAsync(user, request.Password, false, false);
-                return result.Succeeded ? Results.Ok() : Results.Unauthorized();
+                var response = await mediator.Send(request);
+                return !response.IsSuccess ? Results.Unauthorized() : Results.Ok();
             });
 
         app.MapPost("/api/authentication/signout",
