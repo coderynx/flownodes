@@ -3,6 +3,7 @@ namespace Flownodes.Sdk.Entities;
 public static class FlownodesEntityNames
 {
     public const string UserManager = "user_manager";
+    public const string RoleClaimManager = "role_claim_manager";
     public const string ApiKeyManager = "apikey_manager";
     public const string TenantManager = "tenant_manager";
     public const string Tenant = "tenant";

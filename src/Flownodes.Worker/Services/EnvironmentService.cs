@@ -20,6 +20,7 @@ public interface IEnvironmentService
     Task<IAlertManagerGrain?> GetAlertManager(string tenantName);
     IUserManagerGrain GetUserManager();
     IApiKeyManagerGrain GetApiKeyManager();
+    IRoleClaimManagerGrain GetRoleClaimManager();
 }
 
 public class EnvironmentService : IEnvironmentService
@@ -27,6 +28,7 @@ public class EnvironmentService : IEnvironmentService
     private readonly IApiKeyManagerGrain _apiKeyManager;
     private readonly IClusterManifestProvider _clusterManifestProvider;
     private readonly ClusterOptions _clusterOptions;
+    private readonly IRoleClaimManagerGrain _roleClaimManager;
     private readonly ITenantManagerGrain _tenantManager;
     private readonly IUserManagerGrain _userManager;
 
@@ -37,6 +39,9 @@ public class EnvironmentService : IEnvironmentService
 
         var userManagerId = new FlownodesId(FlownodesEntity.UserManager, FlownodesEntityNames.UserManager);
         _userManager = grainFactory.GetGrain<IUserManagerGrain>(userManagerId);
+
+        var rolesManagerId = new FlownodesId(FlownodesEntity.RoleClaimManager, FlownodesEntityNames.RoleClaimManager);
+        _roleClaimManager = grainFactory.GetGrain<IRoleClaimManagerGrain>(rolesManagerId);
 
         var apiKeyManagerId = new FlownodesId(FlownodesEntity.ApiKeyManager, FlownodesEntityNames.ApiKeyManager);
         _apiKeyManager = grainFactory.GetGrain<IApiKeyManagerGrain>(apiKeyManagerId);
@@ -59,6 +64,11 @@ public class EnvironmentService : IEnvironmentService
     public IApiKeyManagerGrain GetApiKeyManager()
     {
         return _apiKeyManager;
+    }
+
+    public IRoleClaimManagerGrain GetRoleClaimManager()
+    {
+        return _roleClaimManager;
     }
 
     public ITenantManagerGrain GetTenantManager()

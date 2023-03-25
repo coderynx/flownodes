@@ -8,12 +8,12 @@ namespace Flownodes.Worker.Mediator.Handlers;
 
 public class CreateUserHandler : IRequestHandler<CreateUserRequest, CreateUserResponse>
 {
+    private readonly UserManager<ApplicationUser> _userManager;
+
     public CreateUserHandler(UserManager<ApplicationUser> userManager)
     {
         _userManager = userManager;
     }
-
-    private readonly UserManager<ApplicationUser> _userManager;
 
     public async Task<CreateUserResponse> Handle(CreateUserRequest request, CancellationToken cancellationToken)
     {

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Flownodes.Worker.Routes;
 
-public record User(string Username, string Email, string Password);
+public record User(string Username, string Password);
 
 public class AuthenticationModule : ICarterModule
 {
@@ -21,16 +21,20 @@ public class AuthenticationModule : ICarterModule
                 return response.GetResult();
             });
 
-        app.MapPost("/api/authentication/login", [AllowAnonymous]
-            async (SignInManager<ApplicationUser> manager, User request) =>
+        app.MapPost("/api/authentication/signin", [AllowAnonymous]
+            async (SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager,
+                User request) =>
             {
-                var user = new ApplicationUser
-                {
-                    UserName = request.Username,
-                    Email = request.Email
-                };
-                var result = await manager.CheckPasswordSignInAsync(user, request.Password, false);
+                var user = await userManager.FindByNameAsync(request.Username);
+                if (user is null) return Results.Unauthorized();
+                var result = await signInManager.PasswordSignInAsync(user, request.Password, false, false);
                 return result.Succeeded ? Results.Ok() : Results.Unauthorized();
+            });
+
+        app.MapPost("/api/authentication/signout",
+            [AllowAnonymous] async (SignInManager<ApplicationUser> signInManager) =>
+            {
+                await signInManager.SignOutAsync();
             });
 
         app.MapPost("/api/authentication/apikey", [AllowAnonymous]

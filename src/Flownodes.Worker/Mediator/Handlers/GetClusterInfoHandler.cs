@@ -24,7 +24,8 @@ public class GetClusterInfoHandler : IRequestHandler<GetClusterInfoRequest, GetC
             if (await userManager.HasUsers()) clusterStatus = ClusterStatus.Ready;
             else clusterStatus = ClusterStatus.Uninitialized;
 
-            return new GetClusterInfoResponse(_environmentService.ClusterId, _environmentService.ServiceId, _environmentService.SilosCount, clusterStatus);
+            return new GetClusterInfoResponse(_environmentService.ClusterId, _environmentService.ServiceId,
+                _environmentService.SilosCount, clusterStatus);
         }
         catch
         {

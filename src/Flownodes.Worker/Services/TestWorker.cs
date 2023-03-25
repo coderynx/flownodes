@@ -1,5 +1,4 @@
 using Flownodes.Shared.Authentication.Models;
-using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
 using Microsoft.AspNetCore.Identity;
 
@@ -9,9 +8,9 @@ public class TestWorker : BackgroundService
 {
     private readonly IComponentProvider _componentProvider;
     private readonly IEnvironmentService _environmentService;
+    private readonly IHostEnvironment _hostEnvironment;
     private readonly ILogger<TestWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
-    private readonly IHostEnvironment _hostEnvironment;
 
     public TestWorker(ILogger<TestWorker> logger, IEnvironmentService environmentService,
         IComponentProvider componentProvider, IServiceProvider serviceProvider, IHostEnvironment hostEnvironment)
@@ -33,7 +32,7 @@ public class TestWorker : BackgroundService
         var tenantManager = _environmentService.GetTenantManager();
         if (await tenantManager.IsTenantRegistered("default")) return;
 
-        var tenant = await tenantManager.CreateTenantAsync("default");
+        /*var tenant = await tenantManager.CreateTenantAsync("default");
         var resourceManager = await tenant.GetResourceManager();
         var alertManager = await tenant.GetAlertManager();
 
@@ -107,7 +106,7 @@ public class TestScript : IScript
         var script = await resourceManager.DeployResourceAsync<IScriptGrain>("script", scriptConfiguration);
         await script.ExecuteAsync();
 
-        _logger.LogInformation("Executed script");
+        _logger.LogInformation("Executed script");*/
     }
 
     private async Task<string> SeedDefaultUserAndApiKey()

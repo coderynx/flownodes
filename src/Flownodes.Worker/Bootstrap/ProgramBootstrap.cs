@@ -1,5 +1,4 @@
 using Carter;
-using Carter.OpenApi;
 using Flownodes.Shared.Authentication.Models;
 using Flownodes.Worker.Authentication.Stores;
 using Flownodes.Worker.Extendability;
@@ -50,12 +49,24 @@ internal static class Bootstrap
             options.AddSecurityRequirement(requirement);
         });
 
-        services.AddIdentityCore<ApplicationUser>(config => { config.SignIn.RequireConfirmedEmail = false; })
+        /*services.AddIdentityCore<ApplicationUser>(config => { config.SignIn.RequireConfirmedEmail = false; })
             .AddUserStore<GrainUserStore>()
             .AddUserManager<UserManager<ApplicationUser>>()
             .AddSignInManager<SignInManager<ApplicationUser>>()
+            .AddDefaultTokenProviders();*/
+
+        services.AddIdentity<ApplicationUser, ApplicationRole>()
+            .AddUserStore<GrainUserStore>()
+            .AddRoleStore<GrainRoleClaimStore>()
             .AddDefaultTokenProviders();
-        
+
+        services.Configure<IdentityOptions>(options =>
+        {
+            options.SignIn.RequireConfirmedAccount = false;
+            options.SignIn.RequireConfirmedEmail = false;
+            options.SignIn.RequireConfirmedPhoneNumber = false;
+        });
+
         services.AddAuthentication();
         services.AddAuthorization();
         services.AddMediatR(config => { config.RegisterServicesFromAssembly(typeof(GetTenantRequest).Assembly); });
