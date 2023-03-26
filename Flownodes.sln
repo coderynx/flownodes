@@ -14,8 +14,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Components", "Components", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Tests", "tests\Flownodes.Tests\Flownodes.Tests.csproj", "{E29D2462-E962-4532-A138-FC978E4603C9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Ctl", "src\Flownodes.Ctl\Flownodes.Ctl.csproj", "{75FDDB51-FE09-404E-ADEB-575B310810BA}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Components.FritzBox", "src\Flownodes.Components.FritzBox\Flownodes.Components.FritzBox.csproj", "{FE792971-04CE-42E9-BDB5-7E7AA0608400}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flownodes.Components.OpenWeatherMap", "src\Flownodes.Components.OpenWeatherMap\Flownodes.Components.OpenWeatherMap.csproj", "{02F18657-D1CF-4299-BF0A-8D9C9CD61F6D}"
@@ -52,10 +50,6 @@ Global
 		{E29D2462-E962-4532-A138-FC978E4603C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E29D2462-E962-4532-A138-FC978E4603C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E29D2462-E962-4532-A138-FC978E4603C9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{75FDDB51-FE09-404E-ADEB-575B310810BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{75FDDB51-FE09-404E-ADEB-575B310810BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{75FDDB51-FE09-404E-ADEB-575B310810BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{75FDDB51-FE09-404E-ADEB-575B310810BA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FE792971-04CE-42E9-BDB5-7E7AA0608400}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FE792971-04CE-42E9-BDB5-7E7AA0608400}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE792971-04CE-42E9-BDB5-7E7AA0608400}.Release|Any CPU.ActiveCfg = Release|Any CPU
