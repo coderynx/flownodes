@@ -1,9 +1,12 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Carter;
 using Flownodes.Shared.Authentication.Models;
 using Flownodes.Worker.Authentication.Stores;
 using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Mediator.Requests;
 using Flownodes.Worker.Services;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using Orleans.Configuration;
@@ -67,6 +70,11 @@ internal static class Bootstrap
             options.SignIn.RequireConfirmedPhoneNumber = false;
         });
 
+        services.Configure<JsonOptions>(options =>
+        {
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+        });
+        
         services.AddAuthentication();
         services.AddAuthorization();
         services.AddMediatR(config => { config.RegisterServicesFromAssembly(typeof(GetTenantRequest).Assembly); });

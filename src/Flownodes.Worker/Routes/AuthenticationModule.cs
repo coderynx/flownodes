@@ -2,7 +2,6 @@ using Carter;
 using Flownodes.Shared.Authentication.Models;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Mediator.Requests;
-using Flownodes.Worker.Mediator.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
