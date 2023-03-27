@@ -12,6 +12,7 @@ public static class ResponseExtensions
             ResponseKind.NotFound => Results.NotFound(response),
             ResponseKind.InternalError => Results.BadRequest(response),
             ResponseKind.BadRequest => Results.BadRequest(response),
+            ResponseKind.Unauthorized => Results.Unauthorized(),
             _ => Results.NoContent()
         };
     }

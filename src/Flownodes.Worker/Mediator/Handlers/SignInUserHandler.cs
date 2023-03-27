@@ -20,9 +20,11 @@ public class SignInUserHandler : IRequestHandler<SignInUserRequest, SignInUserRe
     public async Task<SignInUserResponse> Handle(SignInUserRequest request, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByNameAsync(request.Username);
-        if(user is null) return new SignInUserResponse("Could not login", ResponseKind.BadRequest);
+        if(user is null) return new SignInUserResponse("Could not login", ResponseKind.Unauthorized);
 
         var result = await _signInManager.PasswordSignInAsync(user, request.Password, false, false);
-        return new SignInUserResponse(result);
+        return result.Succeeded
+            ? new SignInUserResponse()
+            : new SignInUserResponse("Could not login", ResponseKind.Unauthorized);
     }
 }

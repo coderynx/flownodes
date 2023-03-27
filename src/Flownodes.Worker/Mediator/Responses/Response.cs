@@ -7,7 +7,8 @@ public enum ResponseKind
     Ok,
     NotFound,
     InternalError,
-    BadRequest
+    BadRequest,
+    Unauthorized
 }
 
 public abstract record Response

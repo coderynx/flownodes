@@ -23,7 +23,7 @@ public class AuthenticationModule : ICarterModule
             async (IMediator mediator, SignInUserRequest request) =>
             {
                 var response = await mediator.Send(request);
-                return !response.IsSuccess ? Results.Unauthorized() : Results.Ok();
+                return response.GetResult();
             });
 
         app.MapPost("/api/authentication/signout",
