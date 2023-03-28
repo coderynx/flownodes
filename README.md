@@ -18,7 +18,7 @@
 
 <div align="left">
 
-Flownodes is an experimental automation distributed platform designed to integrate devices and different kinds of data sources. The main focus of the application is to provide easy extendability with a user friendly SDK.
+Flownodes is a distributed experimental automation platform that facilitates the integration of various devices and data sources. The primary goal of the application is to provide users with an easy-to-use SDK that allows them to expand the platform's capabilities. The platform prioritizes adaptability, making it simple for users to connect and manage different data sources to create customized automation scripts that meet their specific needs.
 
 ## Architecture
 
@@ -33,4 +33,4 @@ graph TD
 
 ## Additional notes
 
-This project is still in its early stages and not ready for production. You may encounter bugs and other kinds of issues.
+This project is still in its early stages and may not be suitable for production use. You may encounter bugs and other issues while using it.
