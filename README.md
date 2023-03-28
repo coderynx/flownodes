@@ -20,17 +20,6 @@
 
 Flownodes is a distributed experimental automation platform that facilitates the integration of various devices and data sources. The primary goal of the application is to provide users with an easy-to-use SDK that allows them to expand the platform's capabilities. The platform prioritizes adaptability, making it simple for users to connect and manage different data sources to create customized automation scripts that meet their specific needs.
 
-## Architecture
-
-```mermaid
-graph TD
-    Devices(Devices) --- Flownodes
-    DataSources(Data sources) --- Flownodes
-    Flownodes --- ClusteringDb("Clustering database (Redis)")
-    Flownodes --- StorageDb("Storage database (MongoDB)")
-    Flownodes --- ApiGateway(Api gateway)
-```
-
 ## Additional notes
 
 This project is still in its early stages and may not be suitable for production use. You may encounter bugs and other issues while using it.
