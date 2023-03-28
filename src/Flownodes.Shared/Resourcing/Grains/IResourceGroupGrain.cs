@@ -8,6 +8,7 @@ public interface IResourceGroupGrain : IResourceGrain
     Task UnregisterResourceAsync(string name);
     ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string name) where TResourceGrain : IResourceGrain;
     ValueTask<IResourceGrain?> GetResourceAsync(string name);
+    ValueTask<bool> IsResourceRegistered(string name);
     ValueTask<HashSet<FlownodesId>> GetRegistrations();
     Task ClearRegistrationsAsync();
 }
