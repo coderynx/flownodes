@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Orleans.Hosting;
 using Orleans.TestingHost;
+using StackExchange.Redis;
 using Testcontainers.MongoDb;
 using Testcontainers.Redis;
 using Xunit;
@@ -66,10 +67,7 @@ public class ClusterFixture : IAsyncLifetime
             siloBuilder
                 .AddLogStorageBasedLogConsistencyProviderAsDefault()
                 .UseRedisClustering(options =>
-                {
-                    options.ConnectionString = TestGlobals.RedisConnectionString;
-                    options.Database = 0;
-                })
+                    options.ConfigurationOptions = ConfigurationOptions.Parse(TestGlobals.RedisConnectionString!))
                 .UseMongoDBClient(TestGlobals.MongoConnectionString)
                 .AddMongoDBGrainStorageAsDefault(options => { options.DatabaseName = "flownodes-storage"; });
         }

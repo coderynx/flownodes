@@ -22,16 +22,8 @@ public class TestWorker : BackgroundService
         _hostEnvironment = hostEnvironment;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Starting Flownodes node");
-
-        _componentProvider.BuildContainer();
-        if (_hostEnvironment.IsDevelopment() || _hostEnvironment.IsStaging()) await SeedDefaultUserAndApiKey();
-
-        var tenantManager = _environmentService.GetTenantManager();
-        if (await tenantManager.IsTenantRegistered("default")) return;
-
         /*var tenant = await tenantManager.CreateTenantAsync("default");
         var resourceManager = await tenant.GetResourceManager();
         var alertManager = await tenant.GetAlertManager();
@@ -107,24 +99,6 @@ public class TestScript : IScript
         await script.ExecuteAsync();
 
         _logger.LogInformation("Executed script");*/
-    }
-
-    private async Task<string> SeedDefaultUserAndApiKey()
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var apiKeyManager = _environmentService.GetApiKeyManager();
-
-        var user = new ApplicationUser
-        {
-            Email = "admin@flownodes.com",
-            UserName = "admin"
-        };
-        await userManager.CreateAsync(user, "P@ssw0rd1");
-
-        var apiKey = await apiKeyManager.GenerateApiKeyAsync("default", user.UserName);
-        _logger.LogInformation("Seeded default user and default ApiKey");
-
-        return apiKey;
+        return Task.CompletedTask;
     }
 }

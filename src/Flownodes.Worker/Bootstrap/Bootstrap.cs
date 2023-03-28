@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using Orleans.Configuration;
 using Serilog;
+using StackExchange.Redis;
 
 namespace Flownodes.Worker.Bootstrap;
 
@@ -106,11 +107,7 @@ internal static class Bootstrap
                                     ?? "mongodb://locahost:27017";
 
         builder
-            .UseRedisClustering(options =>
-            {
-                options.ConnectionString = redisConnectionString;
-                options.Database = 0;
-            })
+            .UseRedisClustering(options => { options.ConfigurationOptions = ConfigurationOptions.Parse(redisConnectionString); })
             .UseMongoDBClient(mongoConnectionString)
             .AddMongoDBGrainStorageAsDefault(options => { options.DatabaseName = "flownodes-storage"; });
     }
@@ -133,7 +130,8 @@ internal static class Bootstrap
             });
 
             siloBuilder.AddLogStorageBasedLogConsistencyProviderAsDefault();
-
+            siloBuilder.AddStartupTask<SiloStartup>();
+            
             if (context.HostingEnvironment.IsDevelopment())
                 siloBuilder.ConfigureDevelopment();
 
