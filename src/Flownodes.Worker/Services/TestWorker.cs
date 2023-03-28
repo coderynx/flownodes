@@ -1,6 +1,4 @@
 using Flownodes.Shared.Resourcing.Grains;
-using Flownodes.Worker.Extendability;
-
 
 namespace Flownodes.Worker.Services;
 
@@ -30,18 +28,14 @@ public class TestWorker : BackgroundService
         var resourceManager = await tenant.GetResourceManager();
         var alertManager = await tenant.GetAlertManager();
 
-        var hueLightConfiguration = new Dictionary<string, object?>
+        if (!await resourceManager.IsResourceRegistered("hue_light"))
         {
-            { "lightId", 1 }, { "behaviourId", "hue_light" }, { "updateStateTimeSpan", 5 }
-        };
-
-        var hueLight = await resourceManager.GetResourceAsync<IDeviceGrain>("hue_light")
-                       ?? await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light", hueLightConfiguration);
-
-        var room = await resourceManager.GetResourceAsync<IResourceGroupGrain>("room")
-                   ?? await resourceManager.DeployResourceAsync<IResourceGroupGrain>("room");
-
-        if (!await room.IsResourceRegistered("hue_light")) await room.RegisterResourceAsync("hue_light");
+            var hueLightConfiguration = new Dictionary<string, object?>
+            {
+                { "lightId", 1 }, { "behaviourId", "hue_light" }, { "updateStateTimeSpan", 5 }
+            };
+            var hueLight = await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light", hueLightConfiguration);
+        }
 /*
         var routerConfiguration = new Dictionary<string, object?>
         {

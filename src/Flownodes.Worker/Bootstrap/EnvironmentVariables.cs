@@ -5,7 +5,6 @@ namespace Flownodes.Worker.Bootstrap;
 internal static class EnvironmentVariables
 {
     public static string? RedisConnectionString => Environment.GetEnvironmentVariable("REDIS");
-    public static string? MongoConnectionString => Environment.GetEnvironmentVariable("MONGO");
     public static string? OrleansServiceId => Environment.GetEnvironmentVariable("ORLEANS_SERVICE_ID");
     public static string? OrleansClusterId => Environment.GetEnvironmentVariable("ORLEANS_CLUSTER_ID");
     public static int? OrleansGatewayPort => Environment.GetEnvironmentVariable("ORLEANS_GATEWAY_PORT").ToNullableInt();

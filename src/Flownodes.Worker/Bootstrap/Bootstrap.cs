@@ -53,12 +53,6 @@ internal static class Bootstrap
             options.AddSecurityRequirement(requirement);
         });
 
-        /*services.AddIdentityCore<ApplicationUser>(config => { config.SignIn.RequireConfirmedEmail = false; })
-            .AddUserStore<GrainUserStore>()
-            .AddUserManager<UserManager<ApplicationUser>>()
-            .AddSignInManager<SignInManager<ApplicationUser>>()
-            .AddDefaultTokenProviders();*/
-
         services.AddIdentity<ApplicationUser, ApplicationRole>()
             .AddUserStore<GrainUserStore>()
             .AddRoleStore<GrainRoleClaimStore>()
@@ -102,14 +96,17 @@ internal static class Bootstrap
         var redisConnectionString = EnvironmentVariables.RedisConnectionString
                                     ?? context.Configuration.GetConnectionString("redis")
                                     ?? "localhost:6379";
-        var mongoConnectionString = EnvironmentVariables.MongoConnectionString
-                                    ?? context.Configuration.GetConnectionString("mongo")
-                                    ?? "mongodb://locahost:27017";
 
         builder
-            .UseRedisClustering(options => { options.ConfigurationOptions = ConfigurationOptions.Parse(redisConnectionString); })
-            .UseMongoDBClient(mongoConnectionString)
-            .AddMongoDBGrainStorageAsDefault(options => { options.DatabaseName = "flownodes-storage"; });
+            .UseRedisClustering(options =>
+            {
+                options.ConfigurationOptions = ConfigurationOptions.Parse(redisConnectionString);
+            })
+            .AddRedisGrainStorageAsDefault(options =>
+            {
+                options.ConfigurationOptions = ConfigurationOptions.Parse(redisConnectionString);
+                options.DeleteStateOnClear = true;
+            });
     }
 
     public static void ConfigureOrleans(this IHostBuilder hostBuilder)

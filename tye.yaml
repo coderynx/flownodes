@@ -1,17 +1,6 @@
 name: flownodes-staging
 services:
 
-  - name: mongo
-    image: mongo
-    env:
-      - name: MONGO_INITDB_ROOT_USERNAME
-        value: mongo
-      - name: MONGO_INITDB_ROOT_PASSWORD
-        value: mongo
-    bindings:
-      - port: 27017
-        connectionString: "mongodb://mongo:mongo@${host}:${port}"
-
   - name: redis
     image: redis
     bindings:

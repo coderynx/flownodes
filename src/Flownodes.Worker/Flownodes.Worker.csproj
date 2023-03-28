@@ -17,6 +17,7 @@
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
         <PackageReference Include="Microsoft.Orleans.Clustering.Redis" Version="7.1.1-beta1" />
         <PackageReference Include="Microsoft.Orleans.EventSourcing" Version="7.1.1" />
+        <PackageReference Include="Microsoft.Orleans.Persistence.Redis" Version="7.1.1-beta1" />
         <PackageReference Include="Microsoft.Orleans.Server" Version="7.1.1" />
         <PackageReference Include="Microsoft.Orleans.CodeGenerator" Version="7.1.1">
             <PrivateAssets>all</PrivateAssets>
@@ -24,7 +25,6 @@
         </PackageReference>
         <PackageReference Include="Microsoft.Orleans.Persistence.Memory" Version="7.1.1" />
         <PackageReference Include="Microsoft.Tye.Extensions.Configuration" Version="0.10.0-alpha.21420.1" />
-        <PackageReference Include="Orleans.Providers.MongoDB" Version="7.5.0" />
         <PackageReference Include="OrleansDashboard" Version="7.2.0" />
         <PackageReference Include="Serilog.Extensions.Autofac.DependencyInjection" Version="5.0.0" />
         <PackageReference Include="Serilog.Extensions.Hosting" Version="5.0.1" />

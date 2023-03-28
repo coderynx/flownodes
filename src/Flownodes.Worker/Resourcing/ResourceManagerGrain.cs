@@ -53,6 +53,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return summaries.AsReadOnly();
     }
 
+    public ValueTask<bool> IsResourceRegistered(string name)
+    {
+        return ValueTask.FromResult(_persistence.State.IsResourceRegistered(name));
+    }
+
     public ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string name)
         where TResourceGrain : IResourceGrain
     {

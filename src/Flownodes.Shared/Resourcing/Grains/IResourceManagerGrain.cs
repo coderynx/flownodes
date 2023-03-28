@@ -5,6 +5,8 @@ namespace Flownodes.Shared.Resourcing.Grains;
 
 public interface IResourceManagerGrain : IEntityGrain
 {
+    ValueTask<bool> IsResourceRegistered(string name);
+
     ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string name)
         where TResourceGrain : IResourceGrain;
 

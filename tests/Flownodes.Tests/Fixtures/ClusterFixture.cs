@@ -6,7 +6,6 @@ using Microsoft.Extensions.Hosting;
 using Orleans.Hosting;
 using Orleans.TestingHost;
 using StackExchange.Redis;
-using Testcontainers.MongoDb;
 using Testcontainers.Redis;
 using Xunit;
 
@@ -15,16 +14,10 @@ namespace Flownodes.Tests.Fixtures;
 internal static class TestGlobals
 {
     public static string? RedisConnectionString { get; set; }
-    public static string? MongoConnectionString { get; set; }
 }
 
 public class ClusterFixture : IAsyncLifetime
 {
-    private readonly MongoDbContainer _mongoContainer = new MongoDbBuilder()
-        .WithImage("mongo:latest")
-        .WithCleanUp(true)
-        .Build();
-
     private readonly RedisContainer _redisContainer = new RedisBuilder()
         .WithImage("redis:latest")
         .WithCleanUp(true)
@@ -37,9 +30,6 @@ public class ClusterFixture : IAsyncLifetime
         await _redisContainer.StartAsync();
         TestGlobals.RedisConnectionString = _redisContainer.GetConnectionString();
 
-        await _mongoContainer.StartAsync();
-        TestGlobals.MongoConnectionString = _mongoContainer.GetConnectionString();
-
         var builder = new TestClusterBuilder();
         builder.AddSiloBuilderConfigurator<SiloConfigurator>();
 
@@ -51,7 +41,6 @@ public class ClusterFixture : IAsyncLifetime
     {
         await Cluster!.KillSiloAsync(Cluster.Primary);
         await _redisContainer.StopAsync();
-        await _mongoContainer.StopAsync();
     }
 
     private class SiloConfigurator : ISiloConfigurator
@@ -67,9 +56,13 @@ public class ClusterFixture : IAsyncLifetime
             siloBuilder
                 .AddLogStorageBasedLogConsistencyProviderAsDefault()
                 .UseRedisClustering(options =>
-                    options.ConfigurationOptions = ConfigurationOptions.Parse(TestGlobals.RedisConnectionString!))
-                .UseMongoDBClient(TestGlobals.MongoConnectionString)
-                .AddMongoDBGrainStorageAsDefault(options => { options.DatabaseName = "flownodes-storage"; });
+                {
+                    options.ConfigurationOptions = ConfigurationOptions.Parse(TestGlobals.RedisConnectionString!);
+                })
+                .AddRedisGrainStorageAsDefault(options =>
+                {
+                    options.ConfigurationOptions = ConfigurationOptions.Parse(TestGlobals.RedisConnectionString!);
+                });
         }
     }
 }
