@@ -2,6 +2,7 @@ using Flownodes.Sdk.Entities;
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Shared.Alerting.Grains;
+using Flownodes.Shared.Eventing;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
@@ -32,17 +33,17 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
         _componentProvider = componentProvider;
     }
 
-    protected string Kind => this.GetGrainId().Type.ToString()!;
     protected FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
     protected string TenantName => Id.FirstName;
-    protected string ResourceName => Id.SecondName!;
-    protected bool IsConfigurable => GetType().IsAssignableTo(typeof(IConfigurableResourceGrain));
-    protected bool IsStateful => GetType().IsAssignableTo(typeof(IStatefulResourceGrain));
-    protected string? BehaviourId => State.Configuration?.GetValueOrDefault("behaviourId") as string;
+    private bool IsConfigurable => GetType().IsAssignableTo(typeof(IConfigurableResourceGrain));
+    private bool IsStateful => GetType().IsAssignableTo(typeof(IStatefulResourceGrain));
+    private string? BehaviourId => State.Configuration?.GetValueOrDefault("behaviourId") as string;
     private FlownodesId ResourceManagerId => new(FlownodesEntity.ResourceManager, TenantName);
     protected IResourceManagerGrain ResourceManager => GrainFactory.GetGrain<IResourceManagerGrain>(ResourceManagerId);
     private FlownodesId AlertManagerId => new(FlownodesEntity.AlertManager, TenantName);
     protected IAlertManagerGrain AlertManager => GrainFactory.GetGrain<IAlertManagerGrain>(AlertManagerId);
+    private FlownodesId EventBookId => new(FlownodesEntity.EventBook, TenantName);
+    protected IEventBookGrain EventBook => GrainFactory.GetGrain<IEventBookGrain>(EventBookId);
 
     public ValueTask<ResourceSummary> GetSummary()
     {
@@ -115,7 +116,8 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
         var @event = new UpdateResourceConfigurationEvent(properties);
         await RaiseConditionalEvent(@event);
         await GetRequiredBehaviour();
-
+        
+        await EventBook.RegisterEventAsync(EventKind.UpdateResourceConfiguration, Id);
         _logger.LogInformation("Updated configuration of resource {@ResourceId}", Id);
     }
 
@@ -157,6 +159,8 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
         await RaiseConditionalEvent(@event);
 
         await OnUpdateStateAsync(state);
+        
+        await EventBook.RegisterEventAsync(EventKind.UpdateResourceState, Id);
         _logger.LogInformation("Updated state of resource {@ResourceId}", Id);
     }
 
@@ -173,6 +177,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
         var @event = new UpdateResourceMetadataEvent(metadata);
         await RaiseConditionalEvent(@event);
 
+        await EventBook.RegisterEventAsync(EventKind.UpdateResourceMetadata, Id);
         _logger.LogInformation("Updated metadata of resource {@ResourceId}", Id);
     }
 

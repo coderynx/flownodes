@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Eventing;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
@@ -27,6 +28,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
     private string TenantName => Id.FirstName;
+    private FlownodesId EventBookId => new(FlownodesEntity.EventBook, TenantName);
+    private IEventBookGrain EventBook => GrainFactory.GetGrain<IEventBookGrain>(EventBookId);
 
     public async ValueTask<ResourceSummary?> GetResourceSummary(string resourceName)
     {
@@ -145,6 +148,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _persistence.State.AddRegistration(resourceName, grain.GetGrainId(), kind, tags);
         await _persistence.WriteStateAsync();
 
+        await EventBook.RegisterEventAsync(EventKind.DeployedResource, Id);
         _logger.LogInformation("Deployed resource {@ResourceId}", id);
         return grain;
     }
@@ -163,6 +167,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _persistence.State.Registrations.Remove(registration);
         await _persistence.WriteStateAsync();
 
+        await EventBook.RegisterEventAsync(EventKind.RemovedResource, Id);
         _logger.LogInformation("Removed resource {@ResourceId}", id);
     }
 

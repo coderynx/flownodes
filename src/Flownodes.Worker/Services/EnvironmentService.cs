@@ -1,6 +1,7 @@
 using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Shared.Authentication;
+using Flownodes.Shared.Eventing;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Shared.Tenanting.Grains;
 using Microsoft.Extensions.Options;
@@ -18,6 +19,7 @@ public interface IEnvironmentService
     ITenantManagerGrain GetTenantManager();
     Task<IResourceManagerGrain?> GetResourceManager(string tenantName);
     Task<IAlertManagerGrain?> GetAlertManager(string tenantName);
+    Task<IEventBookGrain?> GetEventBook(string tenantName);
     IUserManagerGrain GetUserManager();
     IApiKeyManagerGrain GetApiKeyManager();
     IRoleClaimManagerGrain GetRoleClaimManager();
@@ -76,6 +78,14 @@ public class EnvironmentService : IEnvironmentService
         return _tenantManager;
     }
 
+    public async Task<IEventBookGrain?> GetEventBook(string tenantName)
+    {
+        var tenant = await _tenantManager.GetTenantAsync(tenantName);
+        if (tenant is null) return null;
+
+        return await tenant.GetEventBook();
+    }
+    
     public async Task<IResourceManagerGrain?> GetResourceManager(string tenantName)
     {
         var tenant = await _tenantManager.GetTenantAsync(tenantName);

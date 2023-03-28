@@ -20,8 +20,7 @@ internal struct FlownodesIdSurrogate
 }
 
 [RegisterConverter]
-internal sealed class FlownodesIdSurrogateConverter :
-    IConverter<FlownodesId, FlownodesIdSurrogate>
+internal sealed class FlownodesIdSurrogateConverter : IConverter<FlownodesId, FlownodesIdSurrogate>
 {
     public FlownodesId ConvertFromSurrogate(in FlownodesIdSurrogate surrogate)
     {

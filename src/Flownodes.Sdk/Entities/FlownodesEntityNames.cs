@@ -9,6 +9,7 @@ public static class FlownodesEntityNames
     public const string Tenant = "tenant";
     public const string AlertManager = "alert_manager";
     public const string Alert = "alert";
+    public const string EventBook = "event_book";
     public const string ResourceManager = "resource_manager";
     public const string ResourceGroup = "resource_group";
     public const string Device = "device";

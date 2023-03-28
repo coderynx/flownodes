@@ -12,6 +12,7 @@ public enum FlownodesEntity
     Tenant,
     AlertManager,
     Alert,
+    EventBook,
     ResourceManager,
     ResourceGroup,
     Device,
@@ -35,6 +36,7 @@ public record FlownodesId
         { FlownodesEntityNames.Tenant, FlownodesEntity.Tenant },
         { FlownodesEntityNames.AlertManager, FlownodesEntity.AlertManager },
         { FlownodesEntityNames.Alert, FlownodesEntity.Alert },
+        { FlownodesEntityNames.EventBook, FlownodesEntity.EventBook },
         { FlownodesEntityNames.ResourceManager, FlownodesEntity.ResourceManager },
         { FlownodesEntityNames.ResourceGroup, FlownodesEntity.ResourceGroup },
         { FlownodesEntityNames.Device, FlownodesEntity.Device },
@@ -53,6 +55,7 @@ public record FlownodesId
         { FlownodesEntity.Tenant, FlownodesEntityNames.Tenant },
         { FlownodesEntity.AlertManager, FlownodesEntityNames.AlertManager },
         { FlownodesEntity.Alert, FlownodesEntityNames.Alert },
+        { FlownodesEntity.EventBook, FlownodesEntityNames.EventBook },
         { FlownodesEntity.ResourceManager, FlownodesEntityNames.ResourceManager },
         { FlownodesEntity.ResourceGroup, FlownodesEntityNames.ResourceGroup },
         { FlownodesEntity.Device, FlownodesEntityNames.Device },
@@ -136,9 +139,12 @@ public record FlownodesId
     /// <summary>
     ///     If the Flownodes ID refers to a manager.
     /// </summary>
-    public bool IsManager => EntityKind is FlownodesEntity.TenantManager
+    // TODO: Review naming.
+    public bool IsManager => EntityKind
+        is FlownodesEntity.TenantManager
         or FlownodesEntity.AlertManager
-        or FlownodesEntity.ResourceManager;
+        or FlownodesEntity.ResourceManager
+        or FlownodesEntity.EventBook;
 
     private bool IsShort => IsManager || EntityKind == FlownodesEntity.Tenant;
 

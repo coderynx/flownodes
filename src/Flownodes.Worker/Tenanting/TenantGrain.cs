@@ -1,5 +1,6 @@
 using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Alerting.Grains;
+using Flownodes.Shared.Eventing;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Shared.Tenanting.Grains;
 using Orleans.Runtime;
@@ -58,6 +59,12 @@ public class TenantGrain : Grain, ITenantGrain
     {
         var id = new FlownodesId(FlownodesEntity.AlertManager, Id.FirstName);
         return ValueTask.FromResult(GrainFactory.GetGrain<IAlertManagerGrain>(id));
+    }
+
+    public ValueTask<IEventBookGrain> GetEventBook()
+    {
+        var id = new FlownodesId(FlownodesEntity.EventBook, Id.FirstName);
+        return ValueTask.FromResult(GrainFactory.GetGrain<IEventBookGrain>(id));
     }
 
     public ValueTask<FlownodesId> GetId()

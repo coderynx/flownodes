@@ -1,6 +1,7 @@
 using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Shared.Authentication;
+using Flownodes.Shared.Eventing;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Shared.Tenanting.Grains;
 
@@ -16,6 +17,7 @@ public static class FlownodesIdBuilder
         { typeof(ITenantGrain), FlownodesEntity.Tenant },
         { typeof(IAlertManagerGrain), FlownodesEntity.AlertManager },
         { typeof(IAlertGrain), FlownodesEntity.Alert },
+        { typeof(IEventBookGrain), FlownodesEntity.EventBook },
         { typeof(IResourceManagerGrain), FlownodesEntity.ResourceManager },
         { typeof(IResourceGroupGrain), FlownodesEntity.ResourceGroup },
         { typeof(IDeviceGrain), FlownodesEntity.Device },
