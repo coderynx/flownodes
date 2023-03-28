@@ -11,6 +11,7 @@
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/coderynx/flownodes/dotnet.yml?style=for-the-badge)
 ![GitHub license](https://img.shields.io/github/license/coderynx/flownodes?style=for-the-badge)
+![Lines of code](https://img.shields.io/tokei/lines/github/coderynx/flownodes?style=for-the-badge)
 ![GitHub top language](https://img.shields.io/github/languages/top/coderynx/flownodes?style=for-the-badge)
 
 <br />
