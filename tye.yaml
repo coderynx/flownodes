@@ -15,10 +15,9 @@ services:
     project: src/Flownodes.Worker/Flownodes.Worker.csproj
     bindings:
       - protocol: https
+    env_file:
+      - ./tye.env
     env:
-      - DOTNET_ENVIRONMENT=Staging
-      - ORLEANS_CLUSTER_ID=dev
-      - ORLEANS_SERVICE_ID=flownodes
       - ORLEANS_GATEWAY_PORT=30000
       - ORLEANS_SILO_PORT=11111
         
@@ -26,9 +25,8 @@ services:
     project: src/Flownodes.Worker/Flownodes.Worker.csproj
     bindings:
       - protocol: https
+    env_file:
+      - ./tye.env
     env:
-      - DOTNET_ENVIRONMENT=Staging
-      - ORLEANS_CLUSTER_ID=dev
-      - ORLEANS_SERVICE_ID=flownodes
       - ORLEANS_GATEWAY_PORT=30001
       - ORLEANS_SILO_PORT=11112

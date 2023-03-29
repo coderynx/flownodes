@@ -1,4 +1,3 @@
-using Flownodes.Shared.Authentication;
 using Flownodes.Shared.Authentication.Models;
 using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Services;
@@ -34,16 +33,15 @@ public class SiloStartup : IStartupTask
         var userManager = _environmentService.GetUserManager();
         var seedDefaultUser = (_hostEnvironment.IsDevelopment() || _hostEnvironment.IsStaging()) &&
                               !await userManager.HasUsers();
-        if (seedDefaultUser) await SeedDefaultUserAndApiKey();
+        if (seedDefaultUser) await SeedDefaultUsers();
 
         _logger.LogInformation("Flownodes node successfully started");
     }
 
-    private async Task<string> SeedDefaultUserAndApiKey()
+    private async Task SeedDefaultUsers()
     {
         using var scope = _serviceProvider.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var apiKeyManager = _environmentService.GetApiKeyManager();
 
         var user = new ApplicationUser
         {
@@ -51,10 +49,5 @@ public class SiloStartup : IStartupTask
             UserName = "admin"
         };
         await userManager.CreateAsync(user, "P@ssw0rd1");
-
-        var apiKey = await apiKeyManager.GenerateApiKeyAsync("default", user.UserName);
-        _logger.LogInformation("Seeded default user and default ApiKey");
-
-        return apiKey;
     }
 }

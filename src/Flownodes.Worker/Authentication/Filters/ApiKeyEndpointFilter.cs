@@ -1,15 +1,18 @@
 using Flownodes.Shared.Authentication;
 using Flownodes.Worker.Services;
+using Microsoft.Extensions.Options;
 
-namespace Flownodes.Worker.Routes;
+namespace Flownodes.Worker.Authentication.Filters;
 
 public class ApiKeyEndpointFilter : IEndpointFilter
 {
     private readonly IApiKeyManagerGrain _apiKeyManager;
+    private readonly AdminSecret _adminSecret;
 
-    public ApiKeyEndpointFilter(IEnvironmentService environmentService)
+    public ApiKeyEndpointFilter(IEnvironmentService environmentService, IOptions<AdminSecret> adminSecret)
     {
         _apiKeyManager = environmentService.GetApiKeyManager();
+        _adminSecret = adminSecret.Value;
     }
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
@@ -19,6 +22,8 @@ public class ApiKeyEndpointFilter : IEndpointFilter
         if (!context.HttpContext.Request.Headers.TryGetValue(apiKeyHeaderName, out var receivedApiKey))
             return TypedResults.Unauthorized();
 
+        if (_adminSecret.Secret.Equals(receivedApiKey.ToString())) return await next(context);
+        
         if (!await _apiKeyManager.IsApiKeyValid(receivedApiKey.ToString())) return TypedResults.Unauthorized();
 
         return await next(context);

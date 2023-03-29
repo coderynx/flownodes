@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Carter;
 using Flownodes.Shared.Authentication.Models;
+using Flownodes.Worker.Authentication;
 using Flownodes.Worker.Authentication.Stores;
 using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Mediator.Requests;
@@ -69,7 +70,7 @@ internal static class Bootstrap
         {
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         });
-        
+
         services.AddAuthentication();
         services.AddAuthorization();
         services.AddMediatR(config => { config.RegisterServicesFromAssembly(typeof(GetTenantRequest).Assembly); });
@@ -128,12 +129,21 @@ internal static class Bootstrap
 
             siloBuilder.AddLogStorageBasedLogConsistencyProviderAsDefault();
             siloBuilder.AddStartupTask<SiloStartup>();
-            
-            if (context.HostingEnvironment.IsDevelopment())
-                siloBuilder.ConfigureDevelopment();
 
-            if (context.HostingEnvironment.IsStaging() || context.HostingEnvironment.IsProduction())
-                siloBuilder.ConfigureProduction(context);
+            if (context.HostingEnvironment.IsDevelopment())
+            {
+                siloBuilder.Configure<AdminSecret>(_ => { });
+                siloBuilder.ConfigureDevelopment();
+            }
+
+            if (!context.HostingEnvironment.IsStaging() && !context.HostingEnvironment.IsProduction()) return;
+            
+            siloBuilder.Configure<AdminSecret>(config =>
+            {
+                config.Secret = EnvironmentVariables.AdminSecret ??
+                                throw new InvalidOperationException("Admin secret not provided");
+            });
+            siloBuilder.ConfigureProduction(context);
         });
     }
 

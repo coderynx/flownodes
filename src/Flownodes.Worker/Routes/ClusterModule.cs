@@ -1,4 +1,5 @@
 using Carter;
+using Flownodes.Worker.Authentication.Filters;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Mediator.Requests;
 using MediatR;
@@ -16,6 +17,8 @@ public class ClusterModule : ICarterModule
                 var response = await mediator.Send(new GetClusterInfoRequest());
                 return response.GetResult();
             })
+            .AddEndpointFilter<ApiKeyAdminEndpointFilter>()
+            .AddEndpointFilter<ApiKeyEndpointFilter>()
             .WithName("GetClusterInfo")
             .WithDisplayName("Get cluster information");
 
