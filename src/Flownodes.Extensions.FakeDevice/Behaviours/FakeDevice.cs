@@ -3,7 +3,7 @@ using Flownodes.Sdk.Resourcing.Attributes;
 using Flownodes.Sdk.Resourcing.Behaviours;
 using Microsoft.Extensions.Logging;
 
-namespace Flownodes.Components.FakeDevice;
+namespace Flownodes.Extensions.FakeDevice.Behaviours;
 
 [BehaviourId("fake_device")]
 [BehaviourDescription("Fake device behaviour for testing Flownodes")]

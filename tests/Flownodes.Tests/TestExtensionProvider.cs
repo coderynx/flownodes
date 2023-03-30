@@ -6,11 +6,11 @@ using NSubstitute;
 
 namespace Flownodes.Tests;
 
-public class TestComponentProvider : IComponentProvider
+public class TestExtensionProvider : IExtensionProvider
 {
     private IContainer _container = null!;
 
-    public TestComponentProvider()
+    public TestExtensionProvider()
     {
         BuildContainer();
     }

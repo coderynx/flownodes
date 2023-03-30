@@ -9,7 +9,7 @@ namespace Flownodes.Tests.Grains;
 internal sealed class TestResourceGrain : ResourceGrain, ITestResourceGrain
 {
     public TestResourceGrain(ILogger<TestResourceGrain> logger, IEnvironmentService environmentService,
-        IComponentProvider componentProvider) : base(logger, environmentService, componentProvider)
+        IExtensionProvider extensionProvider) : base(logger, environmentService, extensionProvider)
     {
     }
 }

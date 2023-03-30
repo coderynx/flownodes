@@ -9,7 +9,7 @@ using Flownodes.Sdk.Resourcing.Behaviours;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Flownodes.Components.FritzBox;
+namespace Flownodes.Extensions.FritzBox.Behaviours;
 
 [BehaviourId("fritz_box")]
 [BehaviourDescription("FritzBox behaviour for Flownodes.")]

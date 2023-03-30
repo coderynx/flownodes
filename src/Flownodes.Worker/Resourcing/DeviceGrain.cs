@@ -14,9 +14,9 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
     private readonly ILogger<DeviceGrain> _logger;
 
-    public DeviceGrain(IComponentProvider componentProvider, ILogger<DeviceGrain> logger,
+    public DeviceGrain(IExtensionProvider extensionProvider, ILogger<DeviceGrain> logger,
         IEnvironmentService environmentService) :
-        base(logger, environmentService, componentProvider)
+        base(logger, environmentService, extensionProvider)
     {
         _logger = logger;
     }

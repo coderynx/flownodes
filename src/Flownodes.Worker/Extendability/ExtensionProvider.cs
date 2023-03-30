@@ -7,12 +7,12 @@ using Flownodes.Worker.Extendability.Modules;
 
 namespace Flownodes.Worker.Extendability;
 
-public class ComponentProvider : IComponentProvider
+public class ExtensionProvider : IExtensionProvider
 {
-    private readonly ILogger<ComponentProvider> _logger;
+    private readonly ILogger<ExtensionProvider> _logger;
     private IContainer? _container;
 
-    public ComponentProvider(ILogger<ComponentProvider> logger)
+    public ExtensionProvider(ILogger<ExtensionProvider> logger)
     {
         _logger = logger;
     }
@@ -21,7 +21,7 @@ public class ComponentProvider : IComponentProvider
     {
         if (_container is null) throw new InvalidOperationException("The container is not built yet");
 
-        _logger.LogDebug("Retrieving behavior {@DeviceBehaviourId}", id);
+        _logger.LogDebug("Retrieving behaviour {@DeviceBehaviourId}", id);
         return _container.ResolveOptionalKeyed<IBehaviour>(id);
     }
 
@@ -37,19 +37,19 @@ public class ComponentProvider : IComponentProvider
     {
         var containerBuilder = new ContainerBuilder();
 
-        containerBuilder.RegisterModule<ComponentsModule>();
-        containerBuilder.RegisterModule<ComponentsContainerModule>();
+        containerBuilder.RegisterModule<ExtensionsModule>();
+        containerBuilder.RegisterModule<ExtensionsContainerModule>();
 
         _container = containerBuilder.Build();
 
         var behaviours = _container.ResolveOptional<IEnumerable<IBehaviour>>();
         if (behaviours is not null)
-            foreach (var component in behaviours)
+            foreach (var behaviour in behaviours)
             {
-                var behaviourId = component.GetType().GetCustomAttribute<BehaviourIdAttribute>();
-                _logger.LogInformation("Registered component {@BehaviourId}", behaviourId?.Id);
+                var behaviourId = behaviour.GetType().GetCustomAttribute<BehaviourIdAttribute>();
+                _logger.LogInformation("Registered behaviour {@BehaviourId}", behaviourId?.Id);
             }
 
-        _logger.LogInformation("Built components container");
+        _logger.LogInformation("Built extensions container");
     }
 }

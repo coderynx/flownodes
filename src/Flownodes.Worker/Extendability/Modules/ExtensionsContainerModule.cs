@@ -6,7 +6,7 @@ using Module = Autofac.Module;
 
 namespace Flownodes.Worker.Extendability.Modules;
 
-public class ComponentsContainerModule : Module
+public class ExtensionsContainerModule : Module
 {
     protected override void Load(ContainerBuilder builder)
     {
@@ -15,7 +15,7 @@ public class ComponentsContainerModule : Module
 
         var configuration = new ConfigurationBuilder()
             .SetBasePath(appPath)
-            .AddJsonFile("pluginsConfiguration.json", true)
+            .AddJsonFile("extensionsConfiguration.json", true)
             .Build();
 
         var pluginServices = new ServiceCollection();
@@ -30,6 +30,6 @@ public class ComponentsContainerModule : Module
         pluginServices.AddHttpClient();
 
         builder.Populate(pluginServices);
-        builder.RegisterInstance<IConfiguration>(configuration.GetSection("Plugins"));
+        builder.RegisterInstance<IConfiguration>(configuration.GetSection("Extensions"));
     }
 }

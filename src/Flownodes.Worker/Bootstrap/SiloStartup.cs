@@ -11,15 +11,15 @@ public class SiloStartup : IStartupTask
     private readonly IEnvironmentService _environmentService;
     private readonly IHostEnvironment _hostEnvironment;
     private readonly ILogger<SiloStartup> _logger;
-    private readonly IComponentProvider _componentProvider;
+    private readonly IExtensionProvider _extensionProvider;
     private readonly IServiceProvider _serviceProvider;
 
     public SiloStartup(IEnvironmentService environmentService, ILogger<SiloStartup> logger,
-        IComponentProvider componentProvider, IHostEnvironment hostEnvironment, IServiceProvider serviceProvider)
+        IExtensionProvider extensionProvider, IHostEnvironment hostEnvironment, IServiceProvider serviceProvider)
     {
         _environmentService = environmentService;
         _logger = logger;
-        _componentProvider = componentProvider;
+        _extensionProvider = extensionProvider;
         _hostEnvironment = hostEnvironment;
         _serviceProvider = serviceProvider;
     }
@@ -28,7 +28,7 @@ public class SiloStartup : IStartupTask
     {
         _logger.LogInformation("Starting Flownodes node");
 
-        _componentProvider.BuildContainer();
+        _extensionProvider.BuildContainer();
 
         var userManager = _environmentService.GetUserManager();
         var seedDefaultUser = (_hostEnvironment.IsDevelopment() || _hostEnvironment.IsStaging()) &&

@@ -80,7 +80,7 @@ internal static class Bootstrap
     private static void ConfigureOrleansServices(this IServiceCollection services)
     {
         services.AddOptions();
-        services.AddSingleton<IComponentProvider, ComponentProvider>();
+        services.AddSingleton<IExtensionProvider, ExtensionProvider>();
         services.AddSingleton<IEnvironmentService, EnvironmentService>();
         services.AddHostedService<TestWorker>();
     }

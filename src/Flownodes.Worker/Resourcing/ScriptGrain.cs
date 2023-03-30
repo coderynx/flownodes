@@ -15,8 +15,8 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
     private IScript? _script;
 
     public ScriptGrain(ILogger<ScriptGrain> logger, IEnvironmentService environmentService,
-        IComponentProvider componentProvider, ILoggerFactory loggerFactory) :
-        base(logger, environmentService, componentProvider)
+        IExtensionProvider extensionProvider, ILoggerFactory loggerFactory) :
+        base(logger, environmentService, extensionProvider)
     {
         _logger = logger;
         _loggerFactory = loggerFactory;

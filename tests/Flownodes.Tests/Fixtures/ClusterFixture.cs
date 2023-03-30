@@ -49,7 +49,7 @@ public class ClusterFixture : IAsyncLifetime
         {
             siloBuilder.ConfigureServices(services =>
             {
-                services.AddSingleton<IComponentProvider, TestComponentProvider>();
+                services.AddSingleton<IExtensionProvider, TestExtensionProvider>();
                 services.AddSingleton<IEnvironmentService, EnvironmentService>();
             });
 

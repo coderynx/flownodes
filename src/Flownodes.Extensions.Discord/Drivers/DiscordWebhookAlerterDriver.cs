@@ -2,7 +2,7 @@
 using Flownodes.Sdk.Alerting;
 using Microsoft.Extensions.Configuration;
 
-namespace Flownodes.Components.Discord;
+namespace Flownodes.Extensions.Discord.Drivers;
 
 public class DiscordWebhookAlerterDriver : IAlerterDriver
 {
@@ -16,6 +16,9 @@ public class DiscordWebhookAlerterDriver : IAlerterDriver
                throw new InvalidOperationException("Discord URL not configured");
     }
 
+    private record DiscordWebhookMessage(string Content, DiscordWebhookEmbed[]? Embeds = null, string[]? Attachments = null);
+    private record DiscordWebhookEmbed(string Title, string Description);
+    
     public Task SendAlertAsync(AlertToFire alert)
     {
         // TODO: Format the message.

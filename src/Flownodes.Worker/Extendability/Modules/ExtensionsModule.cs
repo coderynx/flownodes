@@ -8,7 +8,7 @@ using Module = Autofac.Module;
 
 namespace Flownodes.Worker.Extendability.Modules;
 
-public class ComponentsModule : Module
+public class ExtensionsModule : Module
 {
     private static string GetBehaviourName(MemberInfo type)
     {
@@ -29,13 +29,13 @@ public class ComponentsModule : Module
     protected override void Load(ContainerBuilder builder)
     {
         Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-        var scannerPattern = new[] { "Flownodes.Components.*.dll" };
-        var componentsPath = Path.Combine(Directory.GetCurrentDirectory(), "components");
+        var scannerPattern = new[] { "Flownodes.Extensions.*.dll" };
+        var extensionsPath = Path.Combine(Directory.GetCurrentDirectory(), "extensions");
 
-        if (!Directory.Exists(componentsPath)) Directory.CreateDirectory(componentsPath);
+        if (!Directory.Exists(extensionsPath)) Directory.CreateDirectory(extensionsPath);
 
         var assemblies = Directory
-            .EnumerateFiles(componentsPath, "*.dll", SearchOption.AllDirectories)
+            .EnumerateFiles(extensionsPath, "*.dll", SearchOption.AllDirectories)
             .Where(filename => scannerPattern.Any(pattern => Regex.IsMatch(filename, pattern)))
             .Select(Assembly.LoadFrom)
             .ToArray();

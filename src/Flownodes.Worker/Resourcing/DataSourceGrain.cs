@@ -10,8 +10,8 @@ namespace Flownodes.Worker.Resourcing;
 internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
     public DataSourceGrain(ILogger<DataSourceGrain> logger, IEnvironmentService environmentService,
-        IComponentProvider componentProvider)
-        : base(logger, environmentService, componentProvider)
+        IExtensionProvider extensionProvider)
+        : base(logger, environmentService, extensionProvider)
     {
     }
 

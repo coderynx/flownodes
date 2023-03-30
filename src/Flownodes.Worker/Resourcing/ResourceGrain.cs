@@ -20,17 +20,17 @@ namespace Flownodes.Worker.Resourcing;
 [LogConsistencyProvider]
 internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence, IResourceGrainPersistenceEvent>
 {
-    private readonly IComponentProvider? _componentProvider;
+    private readonly IExtensionProvider? _extensionProvider;
     private readonly IEnvironmentService _environmentService;
     private readonly ILogger<ResourceGrain> _logger;
     protected IBehaviour? Behaviour;
 
     protected ResourceGrain(ILogger<ResourceGrain> logger, IEnvironmentService environmentService,
-        IComponentProvider? componentProvider)
+        IExtensionProvider? extensionProvider)
     {
         _logger = logger;
         _environmentService = environmentService;
-        _componentProvider = componentProvider;
+        _extensionProvider = extensionProvider;
     }
 
     protected FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
@@ -131,9 +131,9 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
 
     private async Task GetRequiredBehaviour()
     {
-        if (_componentProvider is null || BehaviourId is null) return;
+        if (_extensionProvider is null || BehaviourId is null) return;
 
-        Behaviour = _componentProvider.GetBehaviour(BehaviourId);
+        Behaviour = _extensionProvider.GetBehaviour(BehaviourId);
 
         if (Behaviour is null) throw new ResourceBehaviourNotRegisteredException(BehaviourId);
 

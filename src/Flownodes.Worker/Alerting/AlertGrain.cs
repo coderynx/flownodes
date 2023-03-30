@@ -11,18 +11,18 @@ namespace Flownodes.Worker.Alerting;
 [GrainType(FlownodesEntityNames.Alert)]
 internal class AlertGrain : Grain, IAlertGrain
 {
-    private readonly IComponentProvider _componentProvider;
+    private readonly IExtensionProvider _extensionProvider;
     private readonly IList<IAlerterDriver> _drivers = new List<IAlerterDriver>();
     private readonly ILogger<AlertGrain> _logger;
     private readonly IPersistentState<AlertPersistence> _persistence;
 
     public AlertGrain(ILogger<AlertGrain> logger,
-        IComponentProvider componentProvider,
+        IExtensionProvider extensionProvider,
         [PersistentState("alertPersistence")] IPersistentState<AlertPersistence> persistence)
     {
         _logger = logger;
         _persistence = persistence;
-        _componentProvider = componentProvider;
+        _extensionProvider = extensionProvider;
     }
 
     private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
@@ -90,7 +90,7 @@ internal class AlertGrain : Grain, IAlertGrain
     {
         foreach (var alertDriverId in _persistence.State.DriverIds)
         {
-            var alertDriver = _componentProvider.GetAlerterDriver(alertDriverId);
+            var alertDriver = _extensionProvider.GetAlerterDriver(alertDriverId);
             if (alertDriver is null)
             {
                 _logger.LogError("Alerter driver {@AlerterDriverId} not found, skipped", alertDriverId);

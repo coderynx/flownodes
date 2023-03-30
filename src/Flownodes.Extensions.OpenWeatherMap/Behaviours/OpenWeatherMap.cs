@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OpenWeatherMap.Standard;
 
-namespace Flownodes.Components.OpenWeatherMap;
+namespace Flownodes.Extensions.OpenWeatherMap.Behaviours;
 
 [BehaviourId("open_weather_map")]
 [BehaviourDescription("OpenWeatherMap data source behaviour for Flownodes")]

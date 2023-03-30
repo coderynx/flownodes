@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 
-namespace Flownodes.Components.Telegram;
+namespace Flownodes.Extensions.Telegram.Drivers;
 
 [AlerterDriverId("telegram")]
 public class TelegramAlerterDriver : IAlerterDriver

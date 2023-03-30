@@ -3,7 +3,7 @@ using Flownodes.Sdk.Resourcing.Behaviours;
 
 namespace Flownodes.Worker.Extendability;
 
-public interface IComponentProvider
+public interface IExtensionProvider
 {
     IBehaviour? GetBehaviour(string id);
     IAlerterDriver? GetAlerterDriver(string id);

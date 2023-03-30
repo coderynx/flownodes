@@ -6,7 +6,7 @@ using Flownodes.Sdk.Resourcing.Behaviours;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Flownodes.Components.PhilipsHue.Behaviours;
+namespace Flownodes.Extensions.PhilipsHue.Behaviours;
 
 [BehaviourId("hue_light")]
 [BehaviourDescription("Device behaviour for the Philips Hue Light")]
