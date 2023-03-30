@@ -1,5 +1,7 @@
+using System.Reflection;
 using Autofac;
 using Flownodes.Sdk.Alerting;
+using Flownodes.Sdk.Resourcing.Attributes;
 using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Worker.Extendability.Modules;
 
@@ -39,6 +41,15 @@ public class ComponentProvider : IComponentProvider
         containerBuilder.RegisterModule<ComponentsContainerModule>();
 
         _container = containerBuilder.Build();
+
+        var behaviours = _container.ResolveOptional<IEnumerable<IBehaviour>>();
+        if (behaviours is not null)
+            foreach (var component in behaviours)
+            {
+                var behaviourId = component.GetType().GetCustomAttribute<BehaviourIdAttribute>();
+                _logger.LogInformation("Registered component {@BehaviourId}", behaviourId?.Id);
+            }
+
         _logger.LogInformation("Built components container");
     }
 }

@@ -3,6 +3,7 @@ using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Shared.Eventing;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
+using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Resourcing.Persistence;
 using Flownodes.Worker.Services;
 
@@ -27,10 +28,12 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         var deviceBehaviour = (IReadableDeviceBehaviour)Behaviour!;
         await deviceBehaviour.OnPullStateAsync(context);
 
-        // TODO: Update only if state has changed.
-        var @event = new UpdateResourceStateEvent(context.State);
-        await RaiseConditionalEvent(@event);
-        await EventBook.RegisterEventAsync(EventKind.UpdateResourceState, Id);
+        if (State.State!.HasChanged(context.State))
+        {
+            var @event = new UpdateResourceStateEvent(context.State);
+            await RaiseConditionalEvent(@event);
+            await EventBook.RegisterEventAsync(EventKind.UpdateResourceState, Id);   
+        }
     }
 
     protected override Task OnBehaviourChangedAsync()

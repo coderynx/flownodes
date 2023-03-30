@@ -9,4 +9,10 @@ public static class DictionaryExtensions
             if (!left.ContainsKey(key)) left.Add(key, value);
             else left[key] = value;
     }
+
+    public static bool HasChanged<TKey, TValue>(this Dictionary<TKey, TValue?> oldState,
+        Dictionary<TKey, TValue?> newState) where TKey : notnull
+    {
+        return oldState.Any(pair => !newState.Contains(pair));
+    }
 }

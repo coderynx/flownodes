@@ -28,14 +28,24 @@ public class TestWorker : BackgroundService
         var resourceManager = await tenant.GetResourceManager();
         var alertManager = await tenant.GetAlertManager();
 
-        if (!await resourceManager.IsResourceRegistered("hue_light"))
+        /*if (!await resourceManager.IsResourceRegistered("hue_light"))
         {
             var hueLightConfiguration = new Dictionary<string, object?>
             {
                 { "lightId", 1 }, { "behaviourId", "hue_light" }, { "updateStateTimeSpan", 5 }
             };
             var hueLight = await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light", hueLightConfiguration);
+        }*/
+
+        if (!await resourceManager.IsResourceRegistered("fake_device"))
+        {
+            var fakeConfiguration = new Dictionary<string, object?>
+            {
+                { "behaviourId", "fake_device" }, { "updateStateTimeSpan", 5 }
+            };
+            var fakeDevice = await resourceManager.DeployResourceAsync<IDeviceGrain>("fake_device", fakeConfiguration);
         }
+
 /*
         var routerConfiguration = new Dictionary<string, object?>
         {
