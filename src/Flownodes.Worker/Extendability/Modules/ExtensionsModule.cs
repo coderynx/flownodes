@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Autofac;
 using Flownodes.Sdk.Alerting;
+using Flownodes.Sdk.Extendability;
 using Flownodes.Sdk.Resourcing.Attributes;
 using Flownodes.Sdk.Resourcing.Behaviours;
 using Module = Autofac.Module;
@@ -28,6 +29,10 @@ public class ExtensionsModule : Module
 
     protected override void Load(ContainerBuilder builder)
     {
+        const string extensionIdName = "extension_id";
+        const string extensionDescriptionName = "extension_description";
+        const string extensionAuthorName = "extension_author";
+        
         Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
         var scannerPattern = new[] { "Flownodes.Extensions.*.dll" };
         var extensionsPath = Path.Combine(Directory.GetCurrentDirectory(), "extensions");
@@ -40,14 +45,29 @@ public class ExtensionsModule : Module
             .Select(Assembly.LoadFrom)
             .ToArray();
 
-        builder.RegisterAssemblyTypes(assemblies)
-            .Where(x => typeof(IBehaviour).IsAssignableFrom(x))
-            .As<IBehaviour>()
-            .Keyed<IBehaviour>(x => GetBehaviourName(x));
+        foreach (var assembly in assemblies)
+        {
+            var id = assembly.GetCustomAttribute<ExtensionIdAttribute>();
+            var description = assembly.GetCustomAttribute<ExtensionDescriptionAttribute>();
+            var author = assembly.GetCustomAttribute<ExtensionAuthorAttribute>();
 
-        builder.RegisterAssemblyTypes(assemblies)
-            .Where(x => typeof(IAlerterDriver).IsAssignableFrom(x))
-            .As<IAlerterDriver>()
-            .Keyed<IAlerterDriver>(x => GetAlerterDriverName(x));
+            builder.RegisterAssemblyTypes(assembly)
+                .Where(x => typeof(IBehaviour).IsAssignableFrom(x))
+                .As<IBehaviour>()
+                .Keyed<IBehaviour>(x => GetBehaviourName(x))
+                .WithMetadata(extensionIdName, id)
+                .WithMetadata(extensionDescriptionName, description)
+                .WithMetadata(extensionAuthorName, author);
+
+            builder.RegisterAssemblyTypes(assembly)
+                .Where(x => typeof(IAlerterDriver).IsAssignableFrom(x))
+                .As<IAlerterDriver>()
+                .Keyed<IAlerterDriver>(x => GetAlerterDriverName(x))
+                .WithMetadata(extensionIdName, id)
+                .WithMetadata(extensionDescriptionName, description)
+                .WithMetadata(extensionAuthorName, author);
+        }
+        
+
     }
 }

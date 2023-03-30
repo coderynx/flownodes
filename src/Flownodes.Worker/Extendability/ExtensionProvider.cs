@@ -44,11 +44,13 @@ public class ExtensionProvider : IExtensionProvider
 
         var behaviours = _container.ResolveOptional<IEnumerable<IBehaviour>>();
         if (behaviours is not null)
+        {
             foreach (var behaviour in behaviours)
             {
                 var behaviourId = behaviour.GetType().GetCustomAttribute<BehaviourIdAttribute>();
                 _logger.LogInformation("Registered behaviour {@BehaviourId}", behaviourId?.Id);
             }
+        }
 
         _logger.LogInformation("Built extensions container");
     }
