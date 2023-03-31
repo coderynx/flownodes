@@ -35,7 +35,8 @@ internal sealed class AlertManagerGrain : Grain, IAlertManagerGrain
         return await CreateAlertAsync(alertName, targetObjectName, severity, description, driverIds);
     }
 
-    public async ValueTask<IAlertGrain> CreateAlertAsync(string alertName, string targetObjectName, AlertSeverity severity,
+    public async ValueTask<IAlertGrain> CreateAlertAsync(string alertName, string targetObjectName,
+        AlertSeverity severity,
         string description, ISet<string> driverIds)
     {
         ArgumentException.ThrowIfNullOrEmpty(alertName);

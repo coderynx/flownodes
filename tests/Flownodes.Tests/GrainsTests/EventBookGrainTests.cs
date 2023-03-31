@@ -45,7 +45,7 @@ public class EventBookGrainTests
         var grain = NewEventBookGrain;
         var id = new FlownodesId(FlownodesEntity.ResourceManager, FlownodesEntityNames.ResourceManager);
         await grain.RegisterEventAsync(EventKind.DeployedResource, id);
-        
+
         // Act.
         var events = await grain.GetEvents();
 

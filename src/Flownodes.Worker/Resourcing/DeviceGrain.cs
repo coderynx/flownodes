@@ -23,16 +23,28 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 
     private async Task ExecuteTimerBehaviourAsync(object arg)
     {
-        var context = GetResourceContext();
-
         var deviceBehaviour = (IReadableDeviceBehaviour)Behaviour!;
-        await deviceBehaviour.OnPullStateAsync(context);
+        var bag = await deviceBehaviour.OnPullStateAsync();
 
-        if (State.State!.HasChanged(context.State))
+        if (!State.Metadata.ContainsAll(bag.Metadata))
         {
-            var @event = new UpdateResourceStateEvent(context.State);
+            var @event = new UpdateResourceMetadataEvent(bag.Metadata);
             await RaiseConditionalEvent(@event);
-            await EventBook.RegisterEventAsync(EventKind.UpdateResourceState, Id);   
+            await EventBook.RegisterEventAsync(EventKind.UpdateResourceMetadata, Id);
+        }
+
+        if (!State.Configuration!.ContainsAll(bag.Configuration))
+        {
+            var @event = new UpdateResourceConfigurationEvent(bag.Configuration);
+            await RaiseConditionalEvent(@event);
+            await EventBook.RegisterEventAsync(EventKind.UpdateResourceConfiguration, Id);
+        }
+
+        if (!State.State!.ContainsAll(bag.State))
+        {
+            var @event = new UpdateResourceStateEvent(bag.State);
+            await RaiseConditionalEvent(@event);
+            await EventBook.RegisterEventAsync(EventKind.UpdateResourceState, Id);
         }
     }
 
@@ -58,7 +70,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         if (Behaviour is null) throw new InvalidOperationException("Behavior cannot be null");
 
         var deviceBehaviour = (IWritableDeviceBehaviour)Behaviour;
-        await deviceBehaviour.OnPushStateAsync(newState, GetResourceContext());
+        await deviceBehaviour.OnPushStateAsync(newState);
 
         _logger.LogInformation("Applied new state for device {@DeviceId}", Id);
     }

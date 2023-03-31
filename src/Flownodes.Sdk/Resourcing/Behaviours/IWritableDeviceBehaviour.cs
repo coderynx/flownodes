@@ -11,5 +11,5 @@ public interface IWritableDeviceBehaviour : IBehaviour
     /// <param name="newState">New state to push to device.</param>
     /// <param name="context">The current context of the device.</param>
     /// <returns></returns>
-    Task OnPushStateAsync(Dictionary<string, object?> newState, ResourceContext context);
+    Task OnPushStateAsync(Dictionary<string, object?> newState);
 }

@@ -137,7 +137,7 @@ internal static class Bootstrap
             }
 
             if (!context.HostingEnvironment.IsStaging() && !context.HostingEnvironment.IsProduction()) return;
-            
+
             siloBuilder.Configure<AdminSecret>(config =>
             {
                 config.Secret = EnvironmentVariables.AdminSecret ??

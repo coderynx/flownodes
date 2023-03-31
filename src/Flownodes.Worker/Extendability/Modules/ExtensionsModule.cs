@@ -32,7 +32,7 @@ public class ExtensionsModule : Module
         const string extensionIdName = "extension_id";
         const string extensionDescriptionName = "extension_description";
         const string extensionAuthorName = "extension_author";
-        
+
         Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
         var scannerPattern = new[] { "Flownodes.Extensions.*.dll" };
         var extensionsPath = Path.Combine(Directory.GetCurrentDirectory(), "extensions");
@@ -67,7 +67,5 @@ public class ExtensionsModule : Module
                 .WithMetadata(extensionDescriptionName, description)
                 .WithMetadata(extensionAuthorName, author);
         }
-        
-
     }
 }

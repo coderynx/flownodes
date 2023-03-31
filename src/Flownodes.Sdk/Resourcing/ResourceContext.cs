@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Flownodes.Sdk.Entities;
 
 namespace Flownodes.Sdk.Resourcing;
@@ -7,8 +8,8 @@ namespace Flownodes.Sdk.Resourcing;
 /// </summary>
 public sealed class ResourceContext
 {
-    private readonly Dictionary<string, object?>? _configuration;
-    private readonly Dictionary<string, object?>? _state;
+    private readonly ImmutableDictionary<string, object?>? _configuration;
+    private readonly ImmutableDictionary<string, object?>? _state;
 
     public ResourceContext(string serviceId, string clusterId, FlownodesId id, DateTime createdAt, string? behaviourId,
         bool isConfigurable, Dictionary<string, object?>? configuration, DateTime? configurationLastUpdateDate,
@@ -25,12 +26,12 @@ public sealed class ResourceContext
         CreatedAt = createdAt;
         BehaviourId = behaviourId;
         IsConfigurable = isConfigurable;
-        _configuration = configuration;
+        _configuration = configuration?.ToImmutableDictionary();
         ConfigurationLastUpdateDate = configurationLastUpdateDate;
-        Metadata = metadata;
+        Metadata = metadata.ToImmutableDictionary();
         MetadataLastUpdateDate = metadataLastUpdateDate;
         IsStateful = isStateful;
-        _state = state;
+        _state = state?.ToImmutableDictionary();
         StateLastUpdateDate = stateLastUpdateDate;
     }
 
@@ -45,7 +46,7 @@ public sealed class ResourceContext
 
     public bool IsConfigurable { get; }
 
-    public Dictionary<string, object?>? Configuration
+    public ImmutableDictionary<string, object?>? Configuration
     {
         get
         {
@@ -56,12 +57,12 @@ public sealed class ResourceContext
 
     public DateTime? ConfigurationLastUpdateDate { get; }
 
-    public Dictionary<string, string?> Metadata { get; }
+    public ImmutableDictionary<string, string?> Metadata { get; }
     public DateTime? MetadataLastUpdateDate { get; }
 
     public bool IsStateful { get; }
 
-    public Dictionary<string, object?> State
+    public ImmutableDictionary<string, object?> State
     {
         get
         {

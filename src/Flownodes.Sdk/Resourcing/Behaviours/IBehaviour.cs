@@ -2,8 +2,8 @@ namespace Flownodes.Sdk.Resourcing.Behaviours;
 
 public interface IBehaviour
 {
-    Task OnSetupAsync(ResourceContext context)
+    Task<UpdateResourceBag> OnSetupAsync()
     {
-        return Task.CompletedTask;
+        return Task.FromResult(new UpdateResourceBag());
     }
 }

@@ -16,6 +16,8 @@ namespace Flownodes.Extensions.FritzBox.Behaviours;
 public class FritzBox : IReadableDeviceBehaviour
 {
     private readonly string? _address;
+
+    private readonly ResourceContext _context;
     private readonly HttpClient _httpClient;
 
     private readonly ILogger<FritzBox> _logger;
@@ -23,9 +25,11 @@ public class FritzBox : IReadableDeviceBehaviour
     private readonly string _username;
     private string? _sid;
 
-    public FritzBox(ILogger<FritzBox> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public FritzBox(ILogger<FritzBox> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration,
+        ResourceContext context)
     {
         _logger = logger;
+        _context = context;
         _httpClient = httpClientFactory.CreateClient();
 
         _address = configuration["FritzBox:Address"]
@@ -39,25 +43,39 @@ public class FritzBox : IReadableDeviceBehaviour
         _httpClient.BaseAddress = new Uri(url);
     }
 
-    public async Task OnSetupAsync(ResourceContext context)
+    public async Task<UpdateResourceBag> OnSetupAsync()
     {
         _sid = GetSessionId(_username, _password);
         _logger.LogInformation("Successfully logged-in FritzBox at {Address}", _address);
 
         var json = await GetData();
-        context.State["internet_connected"] =
-            json?["data"]?["internet"]?["connections"]?[0]?["connected"]?.GetValue<bool>();
+        var bag = new UpdateResourceBag
+        {
+            State =
+            {
+                ["internet_connected"] = json?["data"]?["internet"]?["connections"]?[0]?["connected"]?.GetValue<bool>()
+            }
+        };
 
-        _logger.LogInformation("Setup device FritzBox {@DeviceId}", context.Id);
+        _logger.LogInformation("Setup device FritzBox {@DeviceId}", _context.Id);
+
+        return bag;
     }
 
-    public async Task OnPullStateAsync(ResourceContext context)
+    public async Task<UpdateResourceBag> OnPullStateAsync()
     {
         var json = await GetData();
-        context.State["internet_connected"] =
-            json?["data"]?["internet"]?["connections"]?[0]?["connected"]?.GetValue<bool>();
 
-        _logger.LogInformation("Pulled state from FritzBox device {@DeviceId}", context.Id);
+        var bag = new UpdateResourceBag
+        {
+            State =
+            {
+                ["internet_connected"] = json?["data"]?["internet"]?["connections"]?[0]?["connected"]?.GetValue<bool>()
+            }
+        };
+
+        _logger.LogInformation("Pulled state from FritzBox device {@DeviceId}", _context.Id);
+        return bag;
     }
 
     // TODO: Refactor code.

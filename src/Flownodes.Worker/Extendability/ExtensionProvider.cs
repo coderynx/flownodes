@@ -1,7 +1,6 @@
-using System.Reflection;
 using Autofac;
 using Flownodes.Sdk.Alerting;
-using Flownodes.Sdk.Resourcing.Attributes;
+using Flownodes.Sdk.Resourcing;
 using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Worker.Extendability.Modules;
 
@@ -17,12 +16,14 @@ public class ExtensionProvider : IExtensionProvider
         _logger = logger;
     }
 
-    public IBehaviour? GetBehaviour(string id)
+    public IBehaviour? GetBehaviour(string id, ResourceContext context)
     {
         if (_container is null) throw new InvalidOperationException("The container is not built yet");
 
         _logger.LogDebug("Retrieving behaviour {@DeviceBehaviourId}", id);
-        return _container.ResolveOptionalKeyed<IBehaviour>(id);
+
+        var contextParameter = new TypedParameter(typeof(ResourceContext), context);
+        return _container.ResolveOptionalKeyed<IBehaviour>(id, contextParameter);
     }
 
     public IAlerterDriver? GetAlerterDriver(string id)
@@ -41,16 +42,6 @@ public class ExtensionProvider : IExtensionProvider
         containerBuilder.RegisterModule<ExtensionsContainerModule>();
 
         _container = containerBuilder.Build();
-
-        var behaviours = _container.ResolveOptional<IEnumerable<IBehaviour>>();
-        if (behaviours is not null)
-        {
-            foreach (var behaviour in behaviours)
-            {
-                var behaviourId = behaviour.GetType().GetCustomAttribute<BehaviourIdAttribute>();
-                _logger.LogInformation("Registered behaviour {@BehaviourId}", behaviourId?.Id);
-            }
-        }
 
         _logger.LogInformation("Built extensions container");
     }

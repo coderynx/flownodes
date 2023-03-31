@@ -6,8 +6,8 @@ namespace Flownodes.Worker.Authentication.Filters;
 
 public class ApiKeyEndpointFilter : IEndpointFilter
 {
-    private readonly IApiKeyManagerGrain _apiKeyManager;
     private readonly AdminSecret _adminSecret;
+    private readonly IApiKeyManagerGrain _apiKeyManager;
 
     public ApiKeyEndpointFilter(IEnvironmentService environmentService, IOptions<AdminSecret> adminSecret)
     {
@@ -23,7 +23,7 @@ public class ApiKeyEndpointFilter : IEndpointFilter
             return TypedResults.Unauthorized();
 
         if (_adminSecret.Secret.Equals(receivedApiKey.ToString())) return await next(context);
-        
+
         if (!await _apiKeyManager.IsApiKeyValid(receivedApiKey.ToString())) return TypedResults.Unauthorized();
 
         return await next(context);

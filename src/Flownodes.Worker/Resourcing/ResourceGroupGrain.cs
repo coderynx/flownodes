@@ -71,7 +71,7 @@ internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
 
     public ValueTask<HashSet<FlownodesId>> GetRegistrations()
     {
-        return ValueTask.FromResult(_store.State.Select(x => (FlownodesId) x).ToHashSet());
+        return ValueTask.FromResult(_store.State.Select(x => (FlownodesId)x).ToHashSet());
     }
 
     public async Task ClearRegistrationsAsync()

@@ -28,15 +28,6 @@ public class TestWorker : BackgroundService
         var resourceManager = await tenant.GetResourceManager();
         var alertManager = await tenant.GetAlertManager();
 
-        /*if (!await resourceManager.IsResourceRegistered("hue_light"))
-        {
-            var hueLightConfiguration = new Dictionary<string, object?>
-            {
-                { "lightId", 1 }, { "behaviourId", "hue_light" }, { "updateStateTimeSpan", 5 }
-            };
-            var hueLight = await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light", hueLightConfiguration);
-        }*/
-
         if (!await resourceManager.IsResourceRegistered("fake_device"))
         {
             var fakeConfiguration = new Dictionary<string, object?>
@@ -46,7 +37,16 @@ public class TestWorker : BackgroundService
             var fakeDevice = await resourceManager.DeployResourceAsync<IDeviceGrain>("fake_device", fakeConfiguration);
         }
 
-/*
+        if (!await resourceManager.IsResourceRegistered("hue_light"))
+        {
+            var hueLightConfiguration = new Dictionary<string, object?>
+            {
+                { "lightId", 1 }, { "behaviourId", "hue_light" }, { "updateStateTimeSpan", 5 }
+            };
+            var hueLight = await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light", hueLightConfiguration);
+        }
+
+        /*
         var routerConfiguration = new Dictionary<string, object?>
         {
             { "behaviourId", "fritz_box" }, { "updateStateTimeSpan", 5 }

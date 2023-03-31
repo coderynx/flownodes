@@ -85,7 +85,7 @@ public class EnvironmentService : IEnvironmentService
 
         return await tenant.GetEventBook();
     }
-    
+
     public async Task<IResourceManagerGrain?> GetResourceManager(string tenantName)
     {
         var tenant = await _tenantManager.GetTenantAsync(tenantName);

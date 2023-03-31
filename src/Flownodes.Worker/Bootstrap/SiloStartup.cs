@@ -9,9 +9,9 @@ namespace Flownodes.Worker.Bootstrap;
 public class SiloStartup : IStartupTask
 {
     private readonly IEnvironmentService _environmentService;
+    private readonly IExtensionProvider _extensionProvider;
     private readonly IHostEnvironment _hostEnvironment;
     private readonly ILogger<SiloStartup> _logger;
-    private readonly IExtensionProvider _extensionProvider;
     private readonly IServiceProvider _serviceProvider;
 
     public SiloStartup(IEnvironmentService environmentService, ILogger<SiloStartup> logger,

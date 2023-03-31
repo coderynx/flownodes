@@ -1,18 +1,11 @@
-using System.Text.Json.Serialization;
+using System.Text.Json;
 using Carter;
 using Flownodes.Worker.Extensions;
-using Flownodes.Worker.JsonConverters;
 using Flownodes.Worker.Mediator.Requests;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Flownodes.Worker.Routes;
-
-internal record DictionaryStringObject
-{
-    [JsonConverter(typeof(DictionaryStringObjectJsonConverter))]
-    public Dictionary<string, object?> Properties { get; } = new();
-}
 
 internal class TagsQuery
 {
@@ -56,9 +49,41 @@ public class ResourceModule : ICarterModule
 
         app.MapPut("api/tenants/{tenantName}/resources/{resourceName}/state",
                 async ([FromServices] IMediator mediator, string tenantName, string resourceName,
-                    DictionaryStringObject state) =>
+                    JsonElement state) =>
                 {
-                    var request = new UpdateResourceStateRequest(tenantName, resourceName, state.Properties);
+                    var dictionary = new Dictionary<string, object?>();
+
+                    foreach (var property in state.EnumerateObject())
+                    {
+                        switch (property.Value.ValueKind)
+                        {
+                            case JsonValueKind.String:
+                                dictionary.Add(property.Name, property.Value.GetString());
+                                break;
+                            case JsonValueKind.Number:
+                                dictionary.Add(property.Name, property.Value.GetDouble());
+                                break;
+                            case JsonValueKind.True:
+                                dictionary.Add(property.Name, true);
+                                break;
+                            case JsonValueKind.False:
+                                dictionary.Add(property.Name, false);
+                                break;
+                            case JsonValueKind.Array:
+                                dictionary.Add(property.Name, property.Value.EnumerateArray().Select(x => x.ToString()).ToArray());
+                                break;
+                            case JsonValueKind.Undefined:
+                                break;
+                            case JsonValueKind.Object:
+                                break;
+                            case JsonValueKind.Null:
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                    
+                    var request = new UpdateResourceStateRequest(tenantName, resourceName, dictionary);
                     var response = await mediator.Send(request);
 
                     return response.GetResult();

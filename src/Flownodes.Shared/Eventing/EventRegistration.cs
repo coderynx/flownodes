@@ -9,8 +9,9 @@ public enum EventKind
     RemovedResource,
     UpdateResourceMetadata,
     UpdateResourceConfiguration,
-    UpdateResourceState,
+    UpdateResourceState
 }
 
 [GenerateSerializer]
-public sealed record EventRegistration([property: Id(0)] DateTime RegisteredAt, [property: Id(1)] EventKind Kind, [property: Id(2)] FlownodesId TargetEntity);
+public sealed record EventRegistration([property: Id(0)] DateTime RegisteredAt, [property: Id(1)] EventKind Kind,
+    [property: Id(2)] FlownodesId TargetEntity);

@@ -11,8 +11,8 @@ namespace Flownodes.Worker.Alerting;
 [GrainType(FlownodesEntityNames.Alert)]
 internal class AlertGrain : Grain, IAlertGrain
 {
-    private readonly IExtensionProvider _extensionProvider;
     private readonly IList<IAlerterDriver> _drivers = new List<IAlerterDriver>();
+    private readonly IExtensionProvider _extensionProvider;
     private readonly ILogger<AlertGrain> _logger;
     private readonly IPersistentState<AlertPersistence> _persistence;
 

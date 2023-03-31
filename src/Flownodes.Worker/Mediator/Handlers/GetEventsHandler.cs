@@ -7,19 +7,19 @@ namespace Flownodes.Worker.Mediator.Handlers;
 
 public class GetEventsHandler : IRequestHandler<GetEventsRequest, GetEventsResponse>
 {
+    private readonly IEnvironmentService _environmentService;
+
     public GetEventsHandler(IEnvironmentService environmentService)
     {
         _environmentService = environmentService;
     }
 
-    private readonly IEnvironmentService _environmentService;
-    
     public async Task<GetEventsResponse> Handle(GetEventsRequest request, CancellationToken cancellationToken)
     {
         var eventBook = await _environmentService.GetEventBook(request.TenantName);
         if (eventBook is null)
             return new GetEventsResponse(request.TenantName, "Tenant not found", ResponseKind.NotFound);
-        
+
         try
         {
             var events = await eventBook.GetEvents();
@@ -30,6 +30,5 @@ public class GetEventsHandler : IRequestHandler<GetEventsRequest, GetEventsRespo
             return new GetEventsResponse(request.TenantName, "Could not retrieve events",
                 ResponseKind.InternalError);
         }
-
     }
 }

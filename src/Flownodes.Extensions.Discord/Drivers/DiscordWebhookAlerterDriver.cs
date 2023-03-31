@@ -16,9 +16,6 @@ public class DiscordWebhookAlerterDriver : IAlerterDriver
                throw new InvalidOperationException("Discord URL not configured");
     }
 
-    private record DiscordWebhookMessage(string Content, DiscordWebhookEmbed[]? Embeds = null, string[]? Attachments = null);
-    private record DiscordWebhookEmbed(string Title, string Description);
-    
     public Task SendAlertAsync(AlertToFire alert)
     {
         // TODO: Format the message.
@@ -28,4 +25,9 @@ public class DiscordWebhookAlerterDriver : IAlerterDriver
 
         return Task.CompletedTask;
     }
+
+    private record DiscordWebhookMessage(string Content, DiscordWebhookEmbed[]? Embeds = null,
+        string[]? Attachments = null);
+
+    private record DiscordWebhookEmbed(string Title, string Description);
 }

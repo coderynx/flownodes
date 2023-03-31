@@ -1,5 +1,6 @@
 using Autofac;
 using Flownodes.Sdk.Alerting;
+using Flownodes.Sdk.Resourcing;
 using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Worker.Extendability;
 using NSubstitute;
@@ -15,7 +16,7 @@ public class TestExtensionProvider : IExtensionProvider
         BuildContainer();
     }
 
-    public IBehaviour? GetBehaviour(string id)
+    public IBehaviour? GetBehaviour(string id, ResourceContext context)
     {
         return _container.ResolveOptionalKeyed<IBehaviour>(id);
     }
