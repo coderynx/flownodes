@@ -7,31 +7,12 @@ using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
+using Flownodes.Worker.Resourcing.Persistence;
 using Flownodes.Worker.Services;
 using Orleans.Concurrency;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
-
-[GenerateSerializer]
-internal sealed record ResourceMetadata
-{
-    [Id(0)] public Dictionary<string, string?> Properties { get; set; } = new();
-    [Id(1)] public DateTime CreatedAt { get; } = DateTime.Now;
-}
-
-[GenerateSerializer]
-internal sealed record BehaviourId
-{
-    public BehaviourId(string value)
-    {
-        Value = value;
-    }
-
-    public BehaviourId() { }
-
-    [Id(0)] public string? Value { get; set; }
-}
 
 [Reentrant]
 internal abstract class ResourceGrain : Grain
