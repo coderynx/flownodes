@@ -78,10 +78,10 @@ public class ResourceGrainTests
         // Arrange.
         var grain = NewTestResourceGrain;
         var configuration = _fixture.Create<Dictionary<string, object?>>();
-        configuration.Add("behaviourId", "unknown");
-
+        await grain.UpdateConfigurationAsync(configuration);
+        
         // Act & Assert.
-        var act = async () => { await grain.UpdateConfigurationAsync(configuration); };
+        var act = async () => { await grain.UpdateBehaviourId("unknown"); };
         await act.Should().ThrowAsync<ResourceBehaviourNotRegisteredException>();
     }
 
@@ -101,20 +101,6 @@ public class ResourceGrainTests
         configurationTuple.Configuration.Should().NotBeEquivalentTo(configuration);
         configurationTuple.Configuration.Should().BeEmpty();
         configurationTuple.LastUpdateDate.Should().NotBeNull();
-    }
-
-    [Fact]
-    public async Task GetMetadata_ShouldReturnNullDateTime_WhenNotUpdated()
-    {
-        // Arrange.
-        var grain = NewTestResourceGrain;
-
-        // Act.
-        var configurationTuple = await grain.GetMetadata();
-
-        // Assert.
-        configurationTuple.Metadata.Should().BeEmpty();
-        configurationTuple.LastUpdateDate.Should().BeNull();
     }
 
     [Fact]
@@ -147,7 +133,6 @@ public class ResourceGrainTests
         var metadataTuple = await grain.GetMetadata();
         metadataTuple.Metadata.Should().NotBeEquivalentTo(metadata);
         metadataTuple.Metadata.Should().BeEmpty();
-        metadataTuple.LastUpdateDate.Should().NotBeNull();
     }
 
     [Fact]

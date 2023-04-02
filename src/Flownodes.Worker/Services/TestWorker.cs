@@ -32,18 +32,20 @@ public class TestWorker : BackgroundService
         {
             var fakeConfiguration = new Dictionary<string, object?>
             {
-                { "behaviourId", "fake_device" }, { "updateStateTimeSpan", 5 }
+                { "updateStateTimeSpan", 5 }
             };
             var fakeDevice = await resourceManager.DeployResourceAsync<IDeviceGrain>("fake_device", fakeConfiguration);
+            await fakeDevice.UpdateBehaviourId("fake_device");
         }
 
         if (!await resourceManager.IsResourceRegistered("hue_light"))
         {
             var hueLightConfiguration = new Dictionary<string, object?>
             {
-                { "lightId", 1 }, { "behaviourId", "hue_light" }, { "updateStateTimeSpan", 5 }
+                { "lightId", 1 }, { "updateStateTimeSpan", 5 }
             };
             var hueLight = await resourceManager.DeployResourceAsync<IDeviceGrain>("hue_light", hueLightConfiguration);
+            await hueLight.UpdateBehaviourId("hue_light");
         }
 
         /*

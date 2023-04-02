@@ -3,6 +3,7 @@ using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Services;
+using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
 
@@ -10,8 +11,8 @@ namespace Flownodes.Worker.Resourcing;
 internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
     public DataSourceGrain(ILogger<DataSourceGrain> logger, IEnvironmentService environmentService,
-        IExtensionProvider extensionProvider)
-        : base(logger, environmentService, extensionProvider)
+        IPersistentStateFactory stateFactory, IGrainContext grainContext)
+        : base(logger, environmentService, null, stateFactory, grainContext)
     {
     }
 

@@ -7,70 +7,98 @@ using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
-using Flownodes.Worker.Resourcing.Persistence;
 using Flownodes.Worker.Services;
 using Orleans.Concurrency;
-using Orleans.EventSourcing;
-using Orleans.Providers;
+using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
 
+[GenerateSerializer]
+internal sealed record ResourceMetadata
+{
+    [Id(0)] public Dictionary<string, string?> Properties { get; set; } = new();
+    [Id(1)] public DateTime CreatedAt { get; } = DateTime.Now;
+}
+
+[GenerateSerializer]
+internal sealed record BehaviourId
+{
+    public BehaviourId(string value)
+    {
+        Value = value;
+    }
+
+    public BehaviourId() { }
+
+    [Id(0)] public string? Value { get; set; }
+}
+
 [Reentrant]
-[StorageProvider]
-[LogConsistencyProvider]
-internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence, IResourceGrainPersistenceEvent>
+internal abstract class ResourceGrain : Grain
 {
     private readonly IEnvironmentService _environmentService;
     private readonly IExtensionProvider? _extensionProvider;
+    private readonly IPersistentState<BehaviourId> _behaviourId;
+    private readonly IPersistentState<ResourceMetadata> _metadata;
+    private IJournaledStoreGrain<Dictionary<string, object?>> _configuration = null!;
+    private IJournaledStoreGrain<Dictionary<string, object?>> _state = null!;
     private readonly ILogger<ResourceGrain> _logger;
     protected IBehaviour? Behaviour;
 
     protected ResourceGrain(ILogger<ResourceGrain> logger, IEnvironmentService environmentService,
-        IExtensionProvider? extensionProvider)
+        IExtensionProvider? extensionProvider, IPersistentStateFactory stateFactory, IGrainContext grainContext)
     {
         _logger = logger;
         _environmentService = environmentService;
         _extensionProvider = extensionProvider;
+        _metadata = stateFactory.Create<ResourceMetadata>(grainContext,
+            new PersistentStateAttribute("resourceMetadataStore"));
+        _behaviourId = stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourIdStore"));
     }
 
     protected FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
     protected string TenantName => Id.FirstName;
     private bool IsConfigurable => GetType().IsAssignableTo(typeof(IConfigurableResourceGrain));
     private bool IsStateful => GetType().IsAssignableTo(typeof(IStatefulResourceGrain));
-    private string? BehaviourId => State.Configuration?.GetValueOrDefault("behaviourId") as string;
+    private string? BehaviourId => _behaviourId.State.Value;
     private FlownodesId ResourceManagerId => new(FlownodesEntity.ResourceManager, TenantName);
     protected IResourceManagerGrain ResourceManager => GrainFactory.GetGrain<IResourceManagerGrain>(ResourceManagerId);
     private FlownodesId AlertManagerId => new(FlownodesEntity.AlertManager, TenantName);
     protected IAlertManagerGrain AlertManager => GrainFactory.GetGrain<IAlertManagerGrain>(AlertManagerId);
     private FlownodesId EventBookId => new(FlownodesEntity.EventBook, TenantName);
-    protected IEventBookGrain EventBook => GrainFactory.GetGrain<IEventBookGrain>(EventBookId);
+    private IEventBookGrain EventBook => GrainFactory.GetGrain<IEventBookGrain>(EventBookId);
 
-
-    public ValueTask<ResourceSummary> GetSummary()
+    public async ValueTask<ResourceSummary> GetSummary()
     {
         _logger.LogDebug("Retrieved summary of resource {@ResourceId}", Id);
 
-        var summary = new ResourceSummary(Id, BehaviourId, State.CreatedAtDate, State.Configuration, State.Metadata,
-            State.State,
-            State.LastStateUpdateDate);
-        return ValueTask.FromResult(summary);
+        var configuration = await _configuration.Get();
+        var state = await _state.Get();
+        var stateLastUpdate = await _state.GetUpdatedAt();
+
+        var summary = new ResourceSummary(Id, BehaviourId, _metadata.State.CreatedAt, configuration,
+            _metadata.State.Properties,
+            state,
+            stateLastUpdate);
+        return summary;
     }
 
-    public override async Task OnActivateAsync(CancellationToken cancellationToken)
+    public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
-        if (IsConfigurable && State.Configuration is null)
+        if (IsConfigurable)
         {
-            var @event = new InitializeResourceConfigurationEvent();
-            await RaiseConditionalEvent(@event);
+            _configuration =
+                GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_configuration");
         }
 
-        if (IsStateful && State.State is null)
+        if (IsStateful)
         {
-            var @event = new InitializeResourceStateEvent();
-            await RaiseConditionalEvent(@event);
+            _state =
+                GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_state");
         }
 
         _logger.LogInformation("Activated resource grain {@ResourceId}", Id);
+        return Task.CompletedTask;
     }
 
     public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
@@ -84,56 +112,49 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
         return ValueTask.FromResult(Id);
     }
 
-    public ValueTask<(Dictionary<string, string?> Metadata, DateTime? LastUpdateDate, DateTime CreatedAtDate)>
-        GetMetadata()
+    public ValueTask<(Dictionary<string, string?> Metadata, DateTime CreatedAtDate)> GetMetadata()
     {
         _logger.LogDebug("Retrieved metadata of resource {@ResourceId}", Id);
-        return ValueTask.FromResult((State.Metadata, State.LastMetadataUpdateDate, State.CreatedAtDate));
+        return ValueTask.FromResult((_metadata.State.Properties, _metadata.State.CreatedAt));
     }
 
-    public ValueTask<(Dictionary<string, object?> Configuration, DateTime? LastUpdateDate)> GetConfiguration()
+    public async ValueTask<(Dictionary<string, object?> Configuration, DateTime? LastUpdateDate)> GetConfiguration()
     {
         _logger.LogDebug("Retrieved configuration of resource {@ResourceId}", Id);
-        return ValueTask.FromResult((State.Configuration, State.LastConfigurationUpdateDate))!;
+        return (await _configuration.Get(), await _configuration.GetUpdatedAt());
     }
 
-    public ValueTask<(Dictionary<string, object?> State, DateTime? LastUpdateDate)> GetState()
+    public async ValueTask<(Dictionary<string, object?> State, DateTime? LastUpdateDate)> GetState()
     {
         _logger.LogDebug("Retrieved state of resource {@ResourceId}", Id);
-        return ValueTask.FromResult((State.State, State.LastStateUpdateDate))!;
+        return (await _state.Get(), await _state.GetUpdatedAt());
     }
 
-    protected ResourceContext GetResourceContext()
+    private async ValueTask<ResourceContext> GetResourceContextAsync()
     {
         return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id,
-            State.CreatedAtDate,
-            BehaviourId,
-            IsConfigurable, State.Configuration, State.LastConfigurationUpdateDate, State.Metadata,
-            State.LastMetadataUpdateDate, IsStateful, State.State, State.LastStateUpdateDate);
+            _metadata.State.CreatedAt,
+            BehaviourId, IsConfigurable, await _configuration.Get(), await _configuration.GetUpdatedAt(),
+            _metadata.State.Properties, await _state.GetUpdatedAt(), IsStateful, await _state.Get(),
+            await _state.GetUpdatedAt());
     }
 
     public async Task UpdateConfigurationAsync(Dictionary<string, object?> properties)
     {
         await WriteConfigurationAsync(properties);
-        await GetRequiredBehaviour();
         await OnWriteConfigurationAsync(properties);
     }
 
-    private async Task WriteConfigurationAsync(Dictionary<string, object?> properties)
+    protected async Task WriteConfigurationAsync(Dictionary<string, object?> properties)
     {
-        var @event = new UpdateResourceConfigurationEvent(properties);
-        await RaiseConditionalEvent(@event);
-        await GetRequiredBehaviour();
-
+        await _configuration.UpdateAsync(properties);
         await EventBook.RegisterEventAsync(EventKind.WroteResourceConfiguration, Id);
         _logger.LogInformation("Wrote configuration to resource store {@ResourceId}", Id);
     }
-    
+
     public async Task ClearConfigurationAsync()
     {
-        var @event = new ClearResourceConfigurationEvent();
-        await RaiseConditionalEvent(@event);
-
+        await _configuration.ClearAsync();
         _logger.LogInformation("Cleared configuration store of resource {@ResourceId}", Id);
     }
 
@@ -141,7 +162,8 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
     {
         if (_extensionProvider is null || BehaviourId is null) return;
 
-        Behaviour = _extensionProvider.GetBehaviour(BehaviourId, GetResourceContext());
+        var context = await GetResourceContextAsync();
+        Behaviour = _extensionProvider.GetBehaviour(BehaviourId, context);
 
         if (Behaviour is null) throw new ResourceBehaviourNotRegisteredException(BehaviourId);
 
@@ -150,16 +172,23 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
         await OnBehaviourChangedAsync();
     }
 
+    public async Task UpdateBehaviourId(string behaviourId)
+    {
+        _behaviourId.State = new BehaviourId(behaviourId);
+        await _behaviourId.WriteStateAsync();
+        await GetRequiredBehaviour();
+    }
+    
     protected virtual Task OnWriteMetadataAsync(Dictionary<string, string?> metadata)
     {
         return Task.CompletedTask;
     }
-    
+
     protected virtual Task OnWriteConfigurationAsync(Dictionary<string, object?> configuration)
     {
         return Task.CompletedTask;
     }
-    
+
     protected virtual Task OnWriteStateAsync(Dictionary<string, object?> state)
     {
         return Task.CompletedTask;
@@ -178,18 +207,15 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
 
     protected async Task WriteStateAsync(Dictionary<string, object?> state)
     {
-        var @event = new UpdateResourceStateEvent(state);
-        await RaiseConditionalEvent(@event);
+        await _state.UpdateAsync(state);
         await EventBook.RegisterEventAsync(EventKind.UpdateResourceState, Id);
-        
+
         _logger.LogInformation("Wrote state for device {@DeviceId}", Id);
     }
-    
+
     public async Task ClearStateAsync()
     {
-        var @event = new ClearResourceStateEvent();
-        await RaiseConditionalEvent(@event);
-
+        await _state.ClearAsync();
         _logger.LogInformation("Cleared state of resource {@ResourceId}", Id);
     }
 
@@ -198,11 +224,11 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
         await WriteMetadataAsync(metadata);
         await OnWriteMetadataAsync(metadata);
     }
-    
+
     protected async Task WriteMetadataAsync(Dictionary<string, string?> metadata)
     {
-        var @event = new UpdateResourceMetadataEvent(metadata);
-        await RaiseConditionalEvent(@event);
+        _metadata.State.Properties = metadata;
+        await _metadata.WriteStateAsync();
 
         await EventBook.RegisterEventAsync(EventKind.UpdateResourceMetadata, Id);
         _logger.LogInformation("Wrote metadata to resource store {@ResourceId}", Id);
@@ -210,9 +236,7 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
 
     public async Task ClearMetadataAsync()
     {
-        var @event = new ClearResourceMetadataEvent();
-        await RaiseConditionalEvent(@event);
-
+        await _metadata.ClearStateAsync();
         _logger.LogInformation("Cleared metadata of Resource {@ResourceId}", Id);
     }
 
@@ -231,40 +255,5 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
     public ValueTask<bool> GetIsStateful()
     {
         return ValueTask.FromResult(IsStateful);
-    }
-
-    protected override void TransitionState(ResourceGrainPersistence state, IResourceGrainPersistenceEvent @event)
-    {
-        switch (@event)
-        {
-            case InitializeResourceConfigurationEvent:
-                State.InitializeConfiguration();
-                break;
-            case UpdateResourceConfigurationEvent updateConfiguration:
-                State.UpdateConfiguration(updateConfiguration.Configuration);
-                break;
-            case ClearResourceConfigurationEvent:
-                State.ClearConfiguration();
-                break;
-            case UpdateResourceMetadataEvent updateMetadata:
-                State.UpdateMetadata(updateMetadata.Metadata);
-                break;
-            case ClearResourceMetadataEvent:
-                State.ClearMetadata();
-                break;
-            case InitializeResourceStateEvent:
-                State.InitializeState();
-                break;
-            case UpdateResourceStateEvent updateState:
-                State.UpdateState(updateState.State);
-                break;
-            case ClearResourceStateEvent:
-                State.ClearState();
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(@event));
-        }
-
-        _logger.LogInformation("Raised event on {@ResourceId}", Id);
     }
 }

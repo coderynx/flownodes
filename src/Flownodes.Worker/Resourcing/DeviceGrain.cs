@@ -4,6 +4,7 @@ using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Services;
+using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
 
@@ -13,8 +14,8 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     private readonly ILogger<DeviceGrain> _logger;
 
     public DeviceGrain(IExtensionProvider extensionProvider, ILogger<DeviceGrain> logger,
-        IEnvironmentService environmentService) :
-        base(logger, environmentService, extensionProvider)
+        IEnvironmentService environmentService, IPersistentStateFactory stateFactory, IGrainContext grainContext) :
+        base(logger, environmentService, extensionProvider, stateFactory, grainContext)
     {
         _logger = logger;
     }
@@ -24,26 +25,37 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         var deviceBehaviour = (IReadableDeviceBehaviour)Behaviour!;
         var bag = await deviceBehaviour.OnPullStateAsync();
 
-        if (!State.Metadata.ContainsAll(bag.Metadata)) await WriteMetadataAsync(bag.Metadata);
-        if (!State.Configuration!.ContainsAll(bag.Configuration)) await UpdateConfigurationAsync(bag.Configuration);
-        if (!State.State!.ContainsAll(bag.State)) await WriteStateAsync(bag.State);
+        var metadata = await GetMetadata();
+        var configuration = await GetConfiguration();
+        var state = await GetState();
+
+        if (!metadata.Metadata.ContainsAll(bag.Metadata))
+        {
+            await WriteMetadataAsync(bag.Metadata);
+        }
+        if (!configuration.Configuration.ContainsAll(bag.Configuration))
+        {
+            await WriteConfigurationAsync(bag.Configuration);
+        }
+        if (!state.State.ContainsAll(bag.State))
+        {
+            await WriteStateAsync(bag.State);
+        }
     }
 
-    protected override Task OnBehaviourChangedAsync()
+    protected override async Task OnBehaviourChangedAsync()
     {
         var isReadable = Behaviour!
             .GetType()
             .IsAssignableTo(typeof(IReadableDeviceBehaviour));
 
-        if (!isReadable)
-            return Task.CompletedTask;
+        if (!isReadable) return;
 
-        if (State.Configuration?.GetValueOrDefault("updateStateTimeSpan") is not int updateState)
-            return Task.CompletedTask;
+        var configuration = await GetConfiguration();
+        if (configuration.Configuration.GetValueOrDefault("updateStateTimeSpan") is not int updateState) return;
 
         var timeSpan = TimeSpan.FromSeconds(updateState);
         RegisterTimer(ExecuteTimerBehaviourAsync, null, timeSpan, timeSpan);
-        return Task.CompletedTask;
     }
 
     protected override async Task OnWriteStateAsync(Dictionary<string, object?> state)

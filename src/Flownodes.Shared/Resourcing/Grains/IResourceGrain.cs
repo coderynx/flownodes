@@ -22,7 +22,7 @@ public interface IResourceGrain : IEntityGrain
     ///     Gets the stored resource metadata.
     /// </summary>
     /// <returns>The stored metadata.</returns>
-    ValueTask<(Dictionary<string, string?> Metadata, DateTime? LastUpdateDate, DateTime CreatedAtDate)> GetMetadata();
+    ValueTask<(Dictionary<string, string?> Metadata, DateTime CreatedAtDate)> GetMetadata();
 
     /// <summary>
     ///     Clears the resource metadata.

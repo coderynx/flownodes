@@ -4,6 +4,7 @@ using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Shared.Resourcing.Scripts;
 using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Services;
+using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
 
@@ -15,8 +16,8 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
     private IScript? _script;
 
     public ScriptGrain(ILogger<ScriptGrain> logger, IEnvironmentService environmentService,
-        IExtensionProvider extensionProvider, ILoggerFactory loggerFactory) :
-        base(logger, environmentService, extensionProvider)
+        IExtensionProvider extensionProvider, ILoggerFactory loggerFactory, IPersistentStateFactory stateFactory, IGrainContext grainContext) :
+        base(logger, environmentService, extensionProvider, stateFactory, grainContext)
     {
         _logger = logger;
         _loggerFactory = loggerFactory;
@@ -24,7 +25,8 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
 
     public async Task ExecuteAsync(Dictionary<string, object?>? parameters = null)
     {
-        if (State.Configuration!["code"] is not string code)
+        var configuration = await GetConfiguration();
+        if (configuration.Configuration["code"] is not string code)
         {
             _logger.LogError("Could not load code from resource configuration");
             return;

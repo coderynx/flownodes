@@ -18,6 +18,12 @@ public interface IConfigurableResourceGrain : IResourceGrain
     Task UpdateConfigurationAsync(Dictionary<string, object?> configuration);
 
     /// <summary>
+    /// Updates the BehaviourId.
+    /// </summary>
+    /// <param name="behaviourId">The BehaviourId to set.</param>
+    Task UpdateBehaviourId(string behaviourId);
+    
+    /// <summary>
     ///     Clears the resource configuration.
     /// </summary>
     Task ClearConfigurationAsync();
