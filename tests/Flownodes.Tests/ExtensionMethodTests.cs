@@ -10,8 +10,8 @@ public class ExtensionMethodTests
     [Fact]
     public void ContainsAll_ShouldReturnTrue_WhenSubDictIsContainedInMainDict()
     {
-        // Arrange
-        var mainDict = new Dictionary<string, object?>
+        // Arrange.
+        var main = new Dictionary<string, object?>
         {
             { "a", 1 },
             { "b", "hello" },
@@ -25,7 +25,7 @@ public class ExtensionMethodTests
             }
         };
 
-        var subDict = new Dictionary<string, object?>
+        var secondary = new Dictionary<string, object?>
         {
             { "a", 1 },
             { "b", "hello" },
@@ -39,65 +39,65 @@ public class ExtensionMethodTests
             }
         };
 
-        // Act
-        var result = mainDict.ContainsAll(subDict);
+        // Act.
+        var result = main.ContainsAll(secondary);
 
-        // Assert
+        // Assert.
         result.Should().BeTrue();
     }
 
     [Fact]
     public void ContainsAll_ShouldReturnFalse_WhenSubDictContainsExtraKey()
     {
-        // Arrange
-        var mainDict = new Dictionary<string, object?>
+        // Arrange.
+        var main = new Dictionary<string, object?>
         {
             { "a", 1 },
             { "b", "hello" }
         };
 
-        var subDict = new Dictionary<string, object?>
+        var secondary = new Dictionary<string, object?>
         {
             { "a", 1 },
             { "b", "hello" },
             { "c", "world" }
         };
 
-        // Act
-        var result = mainDict.ContainsAll(subDict);
+        // Act.
+        var result = main.ContainsAll(secondary);
 
-        // Assert
+        // Assert.
         result.Should().BeFalse();
     }
 
     [Fact]
     public void ContainsAll_ShouldReturnFalse_WhenSubDictHasKeyWithDifferentValue()
     {
-        // Arrange
-        var mainDict = new Dictionary<string, object?>
+        // Arrange.
+        var main = new Dictionary<string, object?>
         {
             { "a", 1 },
             { "b", "hello" }
         };
 
-        var subDict = new Dictionary<string, object?>
+        var secondary = new Dictionary<string, object?>
         {
             { "a", 1 },
             { "b", "world" }
         };
 
-        // Act
-        var result = mainDict.ContainsAll(subDict);
+        // Act.
+        var result = main.ContainsAll(secondary);
 
-        // Assert
+        // Assert.
         result.Should().BeFalse();
     }
 
     [Fact]
     public void ContainsAll_ShouldReturnFalse_WhenSubDictHasNestedDictWithDifferentValue()
     {
-        // Arrange
-        var mainDict = new Dictionary<string, object?>
+        // Arrange.
+        var main = new Dictionary<string, object?>
         {
             {
                 "a", new Dictionary<string, object?>
@@ -107,7 +107,7 @@ public class ExtensionMethodTests
             }
         };
 
-        var subDict = new Dictionary<string, object?>
+        var secondary = new Dictionary<string, object?>
         {
             {
                 "a", new Dictionary<string, object?>
@@ -117,18 +117,18 @@ public class ExtensionMethodTests
             }
         };
 
-        // Act
-        var result = mainDict.ContainsAll(subDict);
+        // Act.
+        var result = main.ContainsAll(secondary);
 
-        // Assert
+        // Assert.
         result.Should().BeFalse();
     }
 
     [Fact]
     public void ContainsAll_ShouldReturnTrue_WhenSubDictHasNestedDictWithNullValue()
     {
-        // Arrange
-        var mainDict = new Dictionary<string, object?>
+        // Arrange.
+        var main = new Dictionary<string, object?>
         {
             {
                 "a", new Dictionary<string, object?>
@@ -138,7 +138,7 @@ public class ExtensionMethodTests
             }
         };
 
-        var subDict = new Dictionary<string, object?>
+        var secondary = new Dictionary<string, object?>
         {
             {
                 "a", new Dictionary<string, object?>
@@ -148,10 +148,10 @@ public class ExtensionMethodTests
             }
         };
 
-        // Act
-        var result = mainDict.ContainsAll(subDict);
+        // Act.
+        var result = main.ContainsAll(secondary);
 
-        // Assert
+        // Assert.
         result.Should().BeTrue();
     }
 }

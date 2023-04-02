@@ -8,7 +8,7 @@ public enum EventKind
     DeployedResource,
     RemovedResource,
     UpdateResourceMetadata,
-    UpdateResourceConfiguration,
+    WroteResourceConfiguration,
     UpdateResourceState
 }
 

@@ -1,10 +1,8 @@
 using Flownodes.Sdk.Entities;
 using Flownodes.Sdk.Resourcing.Behaviours;
-using Flownodes.Shared.Eventing;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Extensions;
-using Flownodes.Worker.Resourcing.Persistence;
 using Flownodes.Worker.Services;
 
 namespace Flownodes.Worker.Resourcing;
@@ -26,26 +24,9 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         var deviceBehaviour = (IReadableDeviceBehaviour)Behaviour!;
         var bag = await deviceBehaviour.OnPullStateAsync();
 
-        if (!State.Metadata.ContainsAll(bag.Metadata))
-        {
-            var @event = new UpdateResourceMetadataEvent(bag.Metadata);
-            await RaiseConditionalEvent(@event);
-            await EventBook.RegisterEventAsync(EventKind.UpdateResourceMetadata, Id);
-        }
-
-        if (!State.Configuration!.ContainsAll(bag.Configuration))
-        {
-            var @event = new UpdateResourceConfigurationEvent(bag.Configuration);
-            await RaiseConditionalEvent(@event);
-            await EventBook.RegisterEventAsync(EventKind.UpdateResourceConfiguration, Id);
-        }
-
-        if (!State.State!.ContainsAll(bag.State))
-        {
-            var @event = new UpdateResourceStateEvent(bag.State);
-            await RaiseConditionalEvent(@event);
-            await EventBook.RegisterEventAsync(EventKind.UpdateResourceState, Id);
-        }
+        if (!State.Metadata.ContainsAll(bag.Metadata)) await WriteMetadataAsync(bag.Metadata);
+        if (!State.Configuration!.ContainsAll(bag.Configuration)) await UpdateConfigurationAsync(bag.Configuration);
+        if (!State.State!.ContainsAll(bag.State)) await WriteStateAsync(bag.State);
     }
 
     protected override Task OnBehaviourChangedAsync()
@@ -65,12 +46,12 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         return Task.CompletedTask;
     }
 
-    protected override async Task OnUpdateStateAsync(Dictionary<string, object?> newState)
+    protected override async Task OnWriteStateAsync(Dictionary<string, object?> state)
     {
         if (Behaviour is null) throw new InvalidOperationException("Behavior cannot be null");
 
         var deviceBehaviour = (IWritableDeviceBehaviour)Behaviour;
-        await deviceBehaviour.OnPushStateAsync(newState);
+        await deviceBehaviour.OnPushStateAsync(state);
 
         _logger.LogInformation("Applied new state for device {@DeviceId}", Id);
     }

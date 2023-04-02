@@ -114,20 +114,27 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
 
     public async Task UpdateConfigurationAsync(Dictionary<string, object?> properties)
     {
+        await WriteConfigurationAsync(properties);
+        await GetRequiredBehaviour();
+        await OnWriteConfigurationAsync(properties);
+    }
+
+    private async Task WriteConfigurationAsync(Dictionary<string, object?> properties)
+    {
         var @event = new UpdateResourceConfigurationEvent(properties);
         await RaiseConditionalEvent(@event);
         await GetRequiredBehaviour();
 
-        await EventBook.RegisterEventAsync(EventKind.UpdateResourceConfiguration, Id);
-        _logger.LogInformation("Updated configuration of resource {@ResourceId}", Id);
+        await EventBook.RegisterEventAsync(EventKind.WroteResourceConfiguration, Id);
+        _logger.LogInformation("Wrote configuration to resource store {@ResourceId}", Id);
     }
-
+    
     public async Task ClearConfigurationAsync()
     {
         var @event = new ClearResourceConfigurationEvent();
         await RaiseConditionalEvent(@event);
 
-        _logger.LogInformation("Cleared configuration of resource {@ResourceId}", Id);
+        _logger.LogInformation("Cleared configuration store of resource {@ResourceId}", Id);
     }
 
     private async Task GetRequiredBehaviour()
@@ -143,7 +150,17 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
         await OnBehaviourChangedAsync();
     }
 
-    protected virtual Task OnUpdateStateAsync(Dictionary<string, object?> newState)
+    protected virtual Task OnWriteMetadataAsync(Dictionary<string, string?> metadata)
+    {
+        return Task.CompletedTask;
+    }
+    
+    protected virtual Task OnWriteConfigurationAsync(Dictionary<string, object?> configuration)
+    {
+        return Task.CompletedTask;
+    }
+    
+    protected virtual Task OnWriteStateAsync(Dictionary<string, object?> state)
     {
         return Task.CompletedTask;
     }
@@ -155,15 +172,19 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
 
     public async Task UpdateStateAsync(Dictionary<string, object?> state)
     {
-        var @event = new UpdateResourceStateEvent(state);
-        await RaiseConditionalEvent(@event);
-
-        await OnUpdateStateAsync(state);
-
-        await EventBook.RegisterEventAsync(EventKind.UpdateResourceState, Id);
-        _logger.LogInformation("Updated state of resource {@ResourceId}", Id);
+        await WriteStateAsync(state);
+        await OnWriteStateAsync(state);
     }
 
+    protected async Task WriteStateAsync(Dictionary<string, object?> state)
+    {
+        var @event = new UpdateResourceStateEvent(state);
+        await RaiseConditionalEvent(@event);
+        await EventBook.RegisterEventAsync(EventKind.UpdateResourceState, Id);
+        
+        _logger.LogInformation("Wrote state for device {@DeviceId}", Id);
+    }
+    
     public async Task ClearStateAsync()
     {
         var @event = new ClearResourceStateEvent();
@@ -172,13 +193,19 @@ internal abstract class ResourceGrain : JournaledGrain<ResourceGrainPersistence,
         _logger.LogInformation("Cleared state of resource {@ResourceId}", Id);
     }
 
-    public virtual async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
+    public async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
+    {
+        await WriteMetadataAsync(metadata);
+        await OnWriteMetadataAsync(metadata);
+    }
+    
+    protected async Task WriteMetadataAsync(Dictionary<string, string?> metadata)
     {
         var @event = new UpdateResourceMetadataEvent(metadata);
         await RaiseConditionalEvent(@event);
 
         await EventBook.RegisterEventAsync(EventKind.UpdateResourceMetadata, Id);
-        _logger.LogInformation("Updated metadata of resource {@ResourceId}", Id);
+        _logger.LogInformation("Wrote metadata to resource store {@ResourceId}", Id);
     }
 
     public async Task ClearMetadataAsync()

@@ -6,13 +6,13 @@ namespace Flownodes.Shared.Resourcing.Grains;
 public interface IConfigurableResourceGrain : IResourceGrain
 {
     /// <summary>
-    ///     Gets the stored configuration of the resource.
+    ///     Gets the currently stored configuration of the resource.
     /// </summary>
     /// <returns>The current resource configuration.</returns>
     ValueTask<(Dictionary<string, object?> Configuration, DateTime? LastUpdateDate)> GetConfiguration();
 
     /// <summary>
-    ///     Configures the resource.
+    ///     Updates the resource configuration.
     /// </summary>
     /// <param name="configuration">The resource configuration to store.</param>
     Task UpdateConfigurationAsync(Dictionary<string, object?> configuration);
@@ -20,6 +20,5 @@ public interface IConfigurableResourceGrain : IResourceGrain
     /// <summary>
     ///     Clears the resource configuration.
     /// </summary>
-    /// <returns></returns>
     Task ClearConfigurationAsync();
 }

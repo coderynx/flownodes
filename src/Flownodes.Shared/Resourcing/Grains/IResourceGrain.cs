@@ -14,9 +14,8 @@ public interface IResourceGrain : IEntityGrain
     public ValueTask<ResourceSummary> GetSummary();
 
     /// <summary>
-    ///     Updates the state of the resource by storing the new state and applying it.
+    ///     Updates the resource metadata.
     /// </summary>
-    /// <param name="metadata">The new state of the resource to store.</param>
     Task UpdateMetadataAsync(Dictionary<string, string?> metadata);
 
     /// <summary>
@@ -28,7 +27,6 @@ public interface IResourceGrain : IEntityGrain
     /// <summary>
     ///     Clears the resource metadata.
     /// </summary>
-    /// <returns></returns>
     Task ClearMetadataAsync();
 
     /// <summary>
