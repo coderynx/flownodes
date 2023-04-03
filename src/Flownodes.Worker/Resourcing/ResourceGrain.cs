@@ -35,6 +35,17 @@ internal abstract class ResourceGrain : Grain
         _metadata = stateFactory.Create<ResourceMetadata>(grainContext,
             new PersistentStateAttribute("resourceMetadataStore"));
         _behaviourId = stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourIdStore"));
+        
+        if (IsConfigurable)
+        {
+            _configuration =
+                GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_configuration");
+        }
+        if (IsStateful)
+        {
+            _state =
+                GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_state");
+        }
     }
 
     protected FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
@@ -66,18 +77,6 @@ internal abstract class ResourceGrain : Grain
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
-        if (IsConfigurable)
-        {
-            _configuration =
-                GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_configuration");
-        }
-
-        if (IsStateful)
-        {
-            _state =
-                GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_state");
-        }
-
         _logger.LogInformation("Activated resource grain {@ResourceId}", Id);
         return Task.CompletedTask;
     }
