@@ -43,7 +43,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         }
     }
 
-    protected override async Task OnBehaviourChangedAsync()
+    protected override async Task OnBehaviourChangeAsync()
     {
         var isReadable = Behaviour!
             .GetType()
@@ -58,7 +58,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         RegisterTimer(ExecuteTimerBehaviourAsync, null, timeSpan, timeSpan);
     }
 
-    protected override async Task OnWriteStateAsync(Dictionary<string, object?> state)
+    protected override async Task OnUpdateStateAsync(Dictionary<string, object?> state)
     {
         if (Behaviour is null) throw new InvalidOperationException("Behavior cannot be null");
 

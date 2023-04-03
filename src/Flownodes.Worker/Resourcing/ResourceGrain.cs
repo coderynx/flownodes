@@ -123,7 +123,7 @@ internal abstract class ResourceGrain : Grain
     public async Task UpdateConfigurationAsync(Dictionary<string, object?> properties)
     {
         await WriteConfigurationAsync(properties);
-        await OnWriteConfigurationAsync(properties);
+        await OnUpdateConfigurationAsync(properties);
     }
 
     protected async Task WriteConfigurationAsync(Dictionary<string, object?> properties)
@@ -149,8 +149,7 @@ internal abstract class ResourceGrain : Grain
         if (Behaviour is null) throw new ResourceBehaviourNotRegisteredException(BehaviourId);
 
         await Behaviour.OnSetupAsync();
-
-        await OnBehaviourChangedAsync();
+        await OnBehaviourChangeAsync();
     }
 
     public async Task UpdateBehaviourId(string behaviourId)
@@ -160,22 +159,22 @@ internal abstract class ResourceGrain : Grain
         await GetRequiredBehaviour();
     }
     
-    protected virtual Task OnWriteMetadataAsync(Dictionary<string, string?> metadata)
+    protected virtual Task OnUpdateMetadataAsync(Dictionary<string, string?> metadata)
     {
         return Task.CompletedTask;
     }
 
-    protected virtual Task OnWriteConfigurationAsync(Dictionary<string, object?> configuration)
+    protected virtual Task OnUpdateConfigurationAsync(Dictionary<string, object?> configuration)
     {
         return Task.CompletedTask;
     }
 
-    protected virtual Task OnWriteStateAsync(Dictionary<string, object?> state)
+    protected virtual Task OnUpdateStateAsync(Dictionary<string, object?> state)
     {
         return Task.CompletedTask;
     }
 
-    protected virtual Task OnBehaviourChangedAsync()
+    protected virtual Task OnBehaviourChangeAsync()
     {
         return Task.CompletedTask;
     }
@@ -183,7 +182,7 @@ internal abstract class ResourceGrain : Grain
     public async Task UpdateStateAsync(Dictionary<string, object?> state)
     {
         await WriteStateAsync(state);
-        await OnWriteStateAsync(state);
+        await OnUpdateStateAsync(state);
     }
 
     protected async Task WriteStateAsync(Dictionary<string, object?> state)
@@ -203,7 +202,7 @@ internal abstract class ResourceGrain : Grain
     public async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
     {
         await WriteMetadataAsync(metadata);
-        await OnWriteMetadataAsync(metadata);
+        await OnUpdateMetadataAsync(metadata);
     }
 
     protected async Task WriteMetadataAsync(Dictionary<string, string?> metadata)
