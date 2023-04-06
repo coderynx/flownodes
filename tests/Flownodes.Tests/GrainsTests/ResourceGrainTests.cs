@@ -58,7 +58,8 @@ public class ResourceGrainTests
     }
 
     [Fact]
-    public async Task UpdateConfiguration_ShouldThrowResourceBehaviourNotRegisteredException_WhenBehaviourIsNotRegistered()
+    public async Task
+        UpdateConfiguration_ShouldThrowResourceBehaviourNotRegisteredException_WhenBehaviourIsNotRegistered()
     {
         // Arrange.
         var grain = NewTestResourceGrain;

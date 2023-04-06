@@ -31,8 +31,7 @@ public class SearchResourcesByTagsHandler : IRequestHandler<SearchResourcesByTag
             {
                 var poco = await resource.GetSummary();
                 var result = new ResourceSearchResult(poco.Id, poco.Id.FirstName, poco.Id.SecondName!,
-                    poco.Id.ToEntityKindString(),
-                    poco.BehaviorId);
+                    poco.Id.ToEntityKindString());
                 searchResults.Add(result);
             }
 

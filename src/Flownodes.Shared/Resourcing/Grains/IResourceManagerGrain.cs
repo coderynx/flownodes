@@ -10,7 +10,7 @@ public interface IResourceManagerGrain : IEntityGrain
     ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string name)
         where TResourceGrain : IResourceGrain;
 
-    ValueTask<ReadOnlyCollection<ResourceSummary>> GetAllResourceSummaries();
+    ValueTask<ReadOnlyCollection<BaseResourceSummary>> GetAllResourceSummaries();
 
     ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string resourceName,
         Dictionary<string, object?>? configuration = null,
@@ -19,7 +19,7 @@ public interface IResourceManagerGrain : IEntityGrain
 
     Task RemoveResourceAsync(string resourceName);
     Task RemoveAllResourcesAsync();
-    ValueTask<ResourceSummary?> GetResourceSummary(string resourceName);
+    ValueTask<BaseResourceSummary?> GetResourceSummary(string resourceName);
     ValueTask<IResourceGrain?> GetResourceAsync(string name);
     ValueTask<IReadOnlyList<IResourceGrain>> SearchResourcesByTags(HashSet<string> tags);
 }

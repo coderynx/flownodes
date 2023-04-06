@@ -1,7 +1,7 @@
 using Flownodes.Sdk.Entities;
 using Flownodes.Sdk.Resourcing.Behaviours;
+using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Grains;
-using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
@@ -25,5 +25,10 @@ internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 
         var data = await Behaviour.GetDataAsync(actionId, parameters);
         return new DataSourceResult(data);
+    }
+
+    public async ValueTask<BaseResourceSummary> GetSummary()
+    {
+        return new DataSourceSummary(Id, Metadata, await GetState());
     }
 }

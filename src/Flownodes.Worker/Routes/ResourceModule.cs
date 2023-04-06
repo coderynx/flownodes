@@ -54,7 +54,6 @@ public class ResourceModule : ICarterModule
                     var dictionary = new Dictionary<string, object?>();
 
                     foreach (var property in state.EnumerateObject())
-                    {
                         switch (property.Value.ValueKind)
                         {
                             case JsonValueKind.String:
@@ -70,7 +69,8 @@ public class ResourceModule : ICarterModule
                                 dictionary.Add(property.Name, false);
                                 break;
                             case JsonValueKind.Array:
-                                dictionary.Add(property.Name, property.Value.EnumerateArray().Select(x => x.ToString()).ToArray());
+                                dictionary.Add(property.Name,
+                                    property.Value.EnumerateArray().Select(x => x.ToString()).ToArray());
                                 break;
                             case JsonValueKind.Undefined:
                                 break;
@@ -81,8 +81,7 @@ public class ResourceModule : ICarterModule
                             default:
                                 throw new ArgumentOutOfRangeException();
                         }
-                    }
-                    
+
                     var request = new UpdateResourceStateRequest(tenantName, resourceName, dictionary);
                     var response = await mediator.Send(request);
 

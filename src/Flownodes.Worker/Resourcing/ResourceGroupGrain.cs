@@ -1,4 +1,5 @@
 using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Builders;
@@ -79,6 +80,11 @@ internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
     {
         await _store.ClearStateAsync();
         _logger.LogInformation("Cleared registrations of resource group {@ResourceGroupId}", Id);
+    }
+
+    public ValueTask<BaseResourceSummary> GetSummary()
+    {
+        return ValueTask.FromResult<BaseResourceSummary>(new ResourceGroupSummary(Id, Metadata, _store.State));
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)

@@ -1,5 +1,6 @@
 using CSScriptLib;
 using Flownodes.Sdk.Entities;
+using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Shared.Resourcing.Scripts;
 using Flownodes.Worker.Extendability;
@@ -16,7 +17,8 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
     private IScript? _script;
 
     public ScriptGrain(ILogger<ScriptGrain> logger, IEnvironmentService environmentService,
-        IExtensionProvider extensionProvider, ILoggerFactory loggerFactory, IPersistentStateFactory stateFactory, IGrainContext grainContext) :
+        IExtensionProvider extensionProvider, ILoggerFactory loggerFactory, IPersistentStateFactory stateFactory,
+        IGrainContext grainContext) :
         base(logger, environmentService, extensionProvider, stateFactory, grainContext)
     {
         _logger = logger;
@@ -42,5 +44,11 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
         await _script.ExecuteAsync(parameters);
 
         _logger.LogInformation("Executed script {@ScriptId}", Id);
+    }
+
+    public async ValueTask<BaseResourceSummary> GetSummary()
+    {
+        var configuration = await GetConfiguration();
+        return new ScriptSummary(Id, Metadata, configuration["code"] as string);
     }
 }

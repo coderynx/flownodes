@@ -1,5 +1,6 @@
 using Flownodes.Sdk.Entities;
 using Flownodes.Sdk.Resourcing.Behaviours;
+using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Services;
@@ -17,6 +18,11 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         base(logger, environmentService, extensionProvider, stateFactory, grainContext)
     {
         _logger = logger;
+    }
+
+    public async ValueTask<BaseResourceSummary> GetSummary()
+    {
+        return new DeviceSummary(Id, Metadata, BehaviourId, await GetConfiguration(), await GetState());
     }
 
     private async Task ExecuteTimerBehaviourAsync(object arg)

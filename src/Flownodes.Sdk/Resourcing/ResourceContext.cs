@@ -22,7 +22,7 @@ public sealed class ResourceContext
 
         Id = id;
         if (Id.IsManager) throw new ArgumentException($"Provided invalid {nameof(FlownodesId)}", nameof(id));
-        
+
         BehaviourId = behaviourId;
         IsConfigurable = isConfigurable;
         _configuration = configuration?.ToImmutableDictionary();

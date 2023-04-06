@@ -25,31 +25,18 @@ internal sealed class JournaledStoreGrainState<TState> where TState : class, new
 
 [LogConsistencyProvider]
 [StorageProvider]
-internal sealed class JournaledStoreGrain<TState> : JournaledGrain<JournaledStoreGrainState<TState>, IJournaledStoreGrainEvent>,
-        IJournaledStoreGrain<TState> where TState : class, new()
+internal sealed class JournaledStoreGrain<TState> :
+    JournaledGrain<JournaledStoreGrainState<TState>, IJournaledStoreGrainEvent>,
+    IJournaledStoreGrain<TState> where TState : class, new()
 {
+    private readonly ILogger<JournaledStoreGrain<TState>> _logger;
+
     public JournaledStoreGrain(ILogger<JournaledStoreGrain<TState>> logger)
     {
         _logger = logger;
     }
 
     private string Id => this.GetPrimaryKeyString();
-    private readonly ILogger<JournaledStoreGrain<TState>> _logger;
-
-    public override Task OnActivateAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Activated JournaledStoreGrain {@JournaledStoreGrainId}", Id);
-        return Task.CompletedTask;
-    }
-
-    public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
-    {
-        _logger.LogInformation(
-            "Deactivated JournaledStoreGrain {@JournaledStoreGrainId} for reason {@DeactivationReason}",
-            Id,
-            reason.Description);
-        return Task.CompletedTask;
-    }
 
     public async Task UpdateAsync(TState state)
     {
@@ -75,6 +62,21 @@ internal sealed class JournaledStoreGrain<TState> : JournaledGrain<JournaledStor
         await RaiseConditionalEvent(@event);
 
         _logger.LogInformation("Cleared state of JournaledStateGrain {@JournaledStateGrainId}", Id);
+    }
+
+    public override Task OnActivateAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Activated JournaledStoreGrain {@JournaledStoreGrainId}", Id);
+        return Task.CompletedTask;
+    }
+
+    public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation(
+            "Deactivated JournaledStoreGrain {@JournaledStoreGrainId} for reason {@DeactivationReason}",
+            Id,
+            reason.Description);
+        return Task.CompletedTask;
     }
 
     protected override void TransitionState(JournaledStoreGrainState<TState> state, IJournaledStoreGrainEvent @event)

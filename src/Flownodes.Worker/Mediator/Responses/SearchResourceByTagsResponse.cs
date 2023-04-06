@@ -1,7 +1,6 @@
 namespace Flownodes.Worker.Mediator.Responses;
 
-public sealed record ResourceSearchResult(string ResourceId, string TenantName, string ResourceName, string Kind,
-    string? BehaviorId);
+public sealed record ResourceSearchResult(string ResourceId, string TenantName, string ResourceName, string Kind);
 
 public sealed record SearchResourceByTagsResponse : Response
 {

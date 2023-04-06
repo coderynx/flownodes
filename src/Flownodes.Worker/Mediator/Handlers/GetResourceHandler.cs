@@ -42,12 +42,9 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
 
             Dictionary<string, object?>? state = null;
             if (!await resource.GetIsStateful())
-            {
                 return new GetResourceResponse(id, request.TenantName, request.ResourceName, id.ToEntityKindString(),
                     metadata, configuration, state);
-                
-            }
-            
+
             var statefulResource = resource.AsReference<IStatefulResourceGrain>();
             state = await statefulResource.GetState();
 
