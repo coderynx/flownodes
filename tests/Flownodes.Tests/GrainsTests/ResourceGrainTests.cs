@@ -108,14 +108,14 @@ public class ResourceGrainTests
     {
         // Arrange.
         var grain = NewTestResourceGrain;
-        var metadata = _fixture.Create<Dictionary<string, string?>>();
+        var metadata = _fixture.Create<Dictionary<string, object?>>();
 
         // Act.
         await grain.UpdateMetadataAsync(metadata);
 
         // Assert.
         var newMetadata = await grain.GetMetadata();
-        newMetadata.Metadata.Should().BeEquivalentTo(metadata);
+        newMetadata.Should().BeEquivalentTo(metadata);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class ResourceGrainTests
     {
         // Arrange.
         var grain = NewTestResourceGrain;
-        var metadata = _fixture.Create<Dictionary<string, string?>>();
+        var metadata = _fixture.Create<Dictionary<string, object?>>();
         await grain.UpdateMetadataAsync(metadata);
 
         // Act.
@@ -131,8 +131,8 @@ public class ResourceGrainTests
 
         // Assert.
         var metadataTuple = await grain.GetMetadata();
-        metadataTuple.Metadata.Should().NotBeEquivalentTo(metadata);
-        metadataTuple.Metadata.Should().BeEmpty();
+        metadataTuple.Should().NotBeEquivalentTo(metadata);
+        metadataTuple.Should().BeEmpty();
     }
 
     [Fact]

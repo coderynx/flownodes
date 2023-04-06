@@ -29,7 +29,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         var configuration = await GetConfiguration();
         var state = await GetState();
 
-        if (!metadata.Metadata.ContainsAll(bag.Metadata))
+        if (!metadata.ContainsAll(bag.Metadata))
         {
             await WriteMetadataAsync(bag.Metadata);
         }

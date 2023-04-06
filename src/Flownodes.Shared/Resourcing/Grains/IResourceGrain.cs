@@ -16,13 +16,13 @@ public interface IResourceGrain : IEntityGrain
     /// <summary>
     ///     Updates the resource metadata.
     /// </summary>
-    Task UpdateMetadataAsync(Dictionary<string, string?> metadata);
+    Task UpdateMetadataAsync(Dictionary<string, object?> metadata);
 
     /// <summary>
     ///     Gets the stored resource metadata.
     /// </summary>
     /// <returns>The stored metadata.</returns>
-    ValueTask<(Dictionary<string, string?> Metadata, DateTime CreatedAtDate)> GetMetadata();
+    ValueTask<Dictionary<string, object?>> GetMetadata();
 
     /// <summary>
     ///     Clears the resource metadata.

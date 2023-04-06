@@ -2,7 +2,7 @@ namespace Flownodes.Sdk.Resourcing.Behaviours;
 
 public sealed record UpdateResourceBag
 {
-    public UpdateResourceBag(Dictionary<string, string?> metadata, Dictionary<string, object?> configuration,
+    public UpdateResourceBag(Dictionary<string, object?> metadata, Dictionary<string, object?> configuration,
         Dictionary<string, object?> state)
     {
         Metadata = metadata;
@@ -14,7 +14,7 @@ public sealed record UpdateResourceBag
     {
     }
 
-    public Dictionary<string, string?> Metadata { get; set; } = new();
+    public Dictionary<string, object?> Metadata { get; set; } = new();
     public Dictionary<string, object?> Configuration { get; set; } = new();
     public Dictionary<string, object?> State { get; set; } = new();
 }

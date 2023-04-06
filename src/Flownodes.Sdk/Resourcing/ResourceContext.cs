@@ -11,9 +11,9 @@ public sealed class ResourceContext
     private readonly ImmutableDictionary<string, object?>? _configuration;
     private readonly ImmutableDictionary<string, object?>? _state;
 
-    public ResourceContext(string serviceId, string clusterId, FlownodesId id, DateTime createdAt, string? behaviourId,
+    public ResourceContext(string serviceId, string clusterId, FlownodesId id, string? behaviourId,
         bool isConfigurable, Dictionary<string, object?>? configuration, DateTime? configurationLastUpdateDate,
-        Dictionary<string, string?> metadata, DateTime? metadataLastUpdateDate, bool isStateful,
+        Dictionary<string, object?> metadata, DateTime? metadataLastUpdateDate, bool isStateful,
         Dictionary<string, object?>? state,
         DateTime? stateLastUpdateDate)
     {
@@ -22,8 +22,7 @@ public sealed class ResourceContext
 
         Id = id;
         if (Id.IsManager) throw new ArgumentException($"Provided invalid {nameof(FlownodesId)}", nameof(id));
-
-        CreatedAt = createdAt;
+        
         BehaviourId = behaviourId;
         IsConfigurable = isConfigurable;
         _configuration = configuration?.ToImmutableDictionary();
@@ -41,7 +40,6 @@ public sealed class ResourceContext
     public FlownodesEntity EntityKind => Id.EntityKind;
     public string TenantName => Id.FirstName;
     public string ResourceName => Id.SecondName ?? throw new InvalidOperationException("Provided invalid FlownodesId");
-    public DateTime CreatedAt { get; }
     public string? BehaviourId { get; }
 
     public bool IsConfigurable { get; }
@@ -57,7 +55,7 @@ public sealed class ResourceContext
 
     public DateTime? ConfigurationLastUpdateDate { get; }
 
-    public ImmutableDictionary<string, string?> Metadata { get; }
+    public ImmutableDictionary<string, object?> Metadata { get; }
     public DateTime? MetadataLastUpdateDate { get; }
 
     public bool IsStateful { get; }

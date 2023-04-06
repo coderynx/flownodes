@@ -20,7 +20,7 @@ internal abstract class ResourceGrain : Grain
     private readonly IEnvironmentService _environmentService;
     private readonly IExtensionProvider? _extensionProvider;
     private readonly IPersistentState<BehaviourId> _behaviourId;
-    private readonly IPersistentState<ResourceMetadata> _metadata;
+    private readonly IPersistentState<Dictionary<string, object?>> _metadata;
     private IJournaledStoreGrain<Dictionary<string, object?>> _configuration = null!;
     private IJournaledStoreGrain<Dictionary<string, object?>> _state = null!;
     private readonly ILogger<ResourceGrain> _logger;
@@ -32,15 +32,17 @@ internal abstract class ResourceGrain : Grain
         _logger = logger;
         _environmentService = environmentService;
         _extensionProvider = extensionProvider;
-        _metadata = stateFactory.Create<ResourceMetadata>(grainContext,
+        _metadata = stateFactory.Create<Dictionary<string, object?>>(grainContext,
             new PersistentStateAttribute("resourceMetadataStore"));
-        _behaviourId = stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourIdStore"));
-        
+        _behaviourId =
+            stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourIdStore"));
+
         if (IsConfigurable)
         {
             _configuration =
                 GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_configuration");
         }
+
         if (IsStateful)
         {
             _state =
@@ -68,15 +70,14 @@ internal abstract class ResourceGrain : Grain
         var state = await _state.Get();
         var stateLastUpdate = await _state.GetUpdatedAt();
 
-        var summary = new ResourceSummary(Id, BehaviourId, _metadata.State.CreatedAt, configuration,
-            _metadata.State.Properties,
-            state,
-            stateLastUpdate);
+        var summary = new ResourceSummary(Id, BehaviourId, configuration, _metadata.State, state, stateLastUpdate);
         return summary;
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
+        if (!_metadata.RecordExists) _metadata.State["created_at"] = DateTime.Now;
+        
         _logger.LogInformation("Activated resource grain {@ResourceId}", Id);
         return Task.CompletedTask;
     }
@@ -92,10 +93,10 @@ internal abstract class ResourceGrain : Grain
         return ValueTask.FromResult(Id);
     }
 
-    public ValueTask<(Dictionary<string, string?> Metadata, DateTime CreatedAtDate)> GetMetadata()
+    public ValueTask<Dictionary<string, object?>> GetMetadata()
     {
         _logger.LogDebug("Retrieved metadata of resource {@ResourceId}", Id);
-        return ValueTask.FromResult((_metadata.State.Properties, _metadata.State.CreatedAt));
+        return ValueTask.FromResult(_metadata.State);
     }
 
     public async ValueTask<(Dictionary<string, object?> Configuration, DateTime? LastUpdateDate)> GetConfiguration()
@@ -113,9 +114,8 @@ internal abstract class ResourceGrain : Grain
     private async ValueTask<ResourceContext> GetResourceContextAsync()
     {
         return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id,
-            _metadata.State.CreatedAt,
             BehaviourId, IsConfigurable, await _configuration.Get(), await _configuration.GetUpdatedAt(),
-            _metadata.State.Properties, await _state.GetUpdatedAt(), IsStateful, await _state.Get(),
+            _metadata.State, await _state.GetUpdatedAt(), IsStateful, await _state.Get(),
             await _state.GetUpdatedAt());
     }
 
@@ -157,8 +157,8 @@ internal abstract class ResourceGrain : Grain
         await _behaviourId.WriteStateAsync();
         await GetRequiredBehaviour();
     }
-    
-    protected virtual Task OnUpdateMetadataAsync(Dictionary<string, string?> metadata)
+
+    protected virtual Task OnUpdateMetadataAsync(Dictionary<string, object?> metadata)
     {
         return Task.CompletedTask;
     }
@@ -198,15 +198,15 @@ internal abstract class ResourceGrain : Grain
         _logger.LogInformation("Cleared state of resource {@ResourceId}", Id);
     }
 
-    public async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
+    public async Task UpdateMetadataAsync(Dictionary<string, object?> metadata)
     {
         await WriteMetadataAsync(metadata);
         await OnUpdateMetadataAsync(metadata);
     }
 
-    protected async Task WriteMetadataAsync(Dictionary<string, string?> metadata)
+    protected async Task WriteMetadataAsync(Dictionary<string, object?> metadata)
     {
-        _metadata.State.Properties = metadata;
+        _metadata.State = metadata;
         await _metadata.WriteStateAsync();
 
         await EventBook.RegisterEventAsync(EventKind.UpdateResourceMetadata, Id);

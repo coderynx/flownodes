@@ -33,7 +33,7 @@ public class GetResourceGroupHandler : IRequestHandler<GetResourceGroupRequest, 
         {
             var registrations = await resource.GetRegistrations();
             var metadata = await resource.GetMetadata();
-            return new GetResourceGroupResponse(id, metadata.Metadata, registrations);
+            return new GetResourceGroupResponse(id, metadata, registrations);
         }
         catch
         {

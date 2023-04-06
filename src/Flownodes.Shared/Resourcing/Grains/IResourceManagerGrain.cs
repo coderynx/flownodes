@@ -14,7 +14,7 @@ public interface IResourceManagerGrain : IEntityGrain
 
     ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string resourceName,
         Dictionary<string, object?>? configuration = null,
-        Dictionary<string, string?>? metadata = null)
+        Dictionary<string, object?>? metadata = null)
         where TResourceGrain : IResourceGrain;
 
     Task RemoveResourceAsync(string resourceName);

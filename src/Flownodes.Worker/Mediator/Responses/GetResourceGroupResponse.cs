@@ -4,7 +4,7 @@ namespace Flownodes.Worker.Mediator.Responses;
 
 public sealed record GetResourceGroupResponse : Response
 {
-    public GetResourceGroupResponse(FlownodesId id, Dictionary<string, string?> metadata,
+    public GetResourceGroupResponse(FlownodesId id, Dictionary<string, object?> metadata,
         HashSet<FlownodesId> registrations)
     {
         Id = id;
@@ -19,6 +19,6 @@ public sealed record GetResourceGroupResponse : Response
     }
 
     public FlownodesId Id { get; }
-    public Dictionary<string, string?> Metadata { get; } = new();
+    public Dictionary<string, object?> Metadata { get; } = new();
     public HashSet<FlownodesId> Registrations { get; } = new();
 }

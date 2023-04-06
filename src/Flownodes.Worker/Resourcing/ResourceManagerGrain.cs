@@ -116,7 +116,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     }
 
     public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string resourceName,
-        Dictionary<string, object?>? configuration = null, Dictionary<string, string?>? metadata = null)
+        Dictionary<string, object?>? configuration = null, Dictionary<string, object?>? metadata = null)
         where TResourceGrain : IResourceGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(resourceName);

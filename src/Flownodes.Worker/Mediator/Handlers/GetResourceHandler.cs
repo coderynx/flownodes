@@ -49,8 +49,7 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
             }
 
             return new GetResourceResponse(id, request.TenantName, request.ResourceName, id.ToEntityKindString(),
-                metadata.CreatedAtDate,
-                metadata.Metadata, configuration, state.Properties, state.LastUpdate);
+                metadata, configuration, state.Properties, state.LastUpdate);
         }
         catch
         {
