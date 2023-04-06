@@ -7,6 +7,7 @@ using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
+using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Resourcing.Persistence;
 using Flownodes.Worker.Services;
 using Orleans.Concurrency;
@@ -136,6 +137,14 @@ internal abstract class ResourceGrain : Grain
         _logger.LogInformation("Wrote configuration to resource store {@ResourceId}", Id);
     }
 
+    protected async Task WriteConfigurationConditionalAsync(Dictionary<string, object?> configuration)
+    {
+        var storedConfiguration = await _configuration.Get();
+        if (storedConfiguration.ContainsAll(configuration)) return;
+
+        await _configuration.UpdateAsync(configuration);
+    }
+    
     public async Task ClearConfigurationAsync()
     {
         await _configuration.ClearAsync();
@@ -202,6 +211,14 @@ internal abstract class ResourceGrain : Grain
         _logger.LogInformation("Wrote state for device {@DeviceId}", Id);
     }
 
+    protected async Task WriteStateConditionalAsync(Dictionary<string, object?> state)
+    {
+        var storedState = await _state.Get();
+        if (storedState.ContainsAll(state)) return;
+
+        await WriteStateAsync(state);
+    }
+
     public async Task ClearStateAsync()
     {
         await _state.ClearAsync();
@@ -221,6 +238,12 @@ internal abstract class ResourceGrain : Grain
 
         await EventBook.RegisterEventAsync(EventKind.UpdateResourceMetadata, Id);
         _logger.LogInformation("Wrote metadata to resource store {@ResourceId}", Id);
+    }
+
+    protected async Task WriteMetadataConditionalAsync(Dictionary<string, object?> metadata)
+    {
+        if (_metadata.State.ContainsAll(metadata)) return;
+        await WriteMetadataAsync(metadata);
     }
 
     public async Task ClearMetadataAsync()

@@ -2,7 +2,6 @@ using Flownodes.Sdk.Entities;
 using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
-using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
@@ -25,22 +24,9 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         var deviceBehaviour = (IReadableDeviceBehaviour)Behaviour!;
         var bag = await deviceBehaviour.OnPullStateAsync();
 
-        var metadata = await GetMetadata();
-        var configuration = await GetConfiguration();
-        var state = await GetState();
-
-        if (!metadata.ContainsAll(bag.Metadata))
-        {
-            await WriteMetadataAsync(bag.Metadata);
-        }
-        if (!configuration.ContainsAll(bag.Configuration))
-        {
-            await WriteConfigurationAsync(bag.Configuration);
-        }
-        if (!state.ContainsAll(bag.State))
-        {
-            await WriteStateAsync(bag.State);
-        }
+        await WriteMetadataConditionalAsync(bag.Metadata);
+        await WriteConfigurationConditionalAsync(bag.Configuration);
+        await WriteStateConditionalAsync(bag.State);
     }
 
     protected override async Task OnBehaviourChangeAsync()
