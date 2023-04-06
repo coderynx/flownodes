@@ -26,7 +26,7 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
     public async Task ExecuteAsync(Dictionary<string, object?>? parameters = null)
     {
         var configuration = await GetConfiguration();
-        if (configuration.Configuration["code"] is not string code)
+        if (configuration["code"] is not string code)
         {
             _logger.LogError("Could not load code from resource configuration");
             return;

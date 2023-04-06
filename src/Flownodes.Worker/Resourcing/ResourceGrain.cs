@@ -99,16 +99,16 @@ internal abstract class ResourceGrain : Grain
         return ValueTask.FromResult(_metadata.State);
     }
 
-    public async ValueTask<(Dictionary<string, object?> Configuration, DateTime? LastUpdateDate)> GetConfiguration()
+    public async ValueTask<Dictionary<string, object?>> GetConfiguration()
     {
         _logger.LogDebug("Retrieved configuration of resource {@ResourceId}", Id);
-        return (await _configuration.Get(), await _configuration.GetUpdatedAt());
+        return await _configuration.Get();
     }
 
-    public async ValueTask<(Dictionary<string, object?> State, DateTime? LastUpdateDate)> GetState()
+    public async ValueTask<Dictionary<string, object?>> GetState()
     {
         _logger.LogDebug("Retrieved state of resource {@ResourceId}", Id);
-        return (await _state.Get(), await _state.GetUpdatedAt());
+        return await _state.Get();
     }
 
     private async ValueTask<ResourceContext> GetResourceContextAsync()
@@ -128,6 +128,10 @@ internal abstract class ResourceGrain : Grain
     protected async Task WriteConfigurationAsync(Dictionary<string, object?> properties)
     {
         await _configuration.UpdateAsync(properties);
+        
+        _metadata.State["configuration_updated_at"] = DateTime.Now;
+        await _metadata.WriteStateAsync();
+        
         await EventBook.RegisterEventAsync(EventKind.WroteResourceConfiguration, Id);
         _logger.LogInformation("Wrote configuration to resource store {@ResourceId}", Id);
     }
@@ -153,9 +157,11 @@ internal abstract class ResourceGrain : Grain
 
     public async Task UpdateBehaviourId(string behaviourId)
     {
-        _behaviourId.State = new BehaviourId(behaviourId);
+        _behaviourId.State.Value = behaviourId;
         await _behaviourId.WriteStateAsync();
         await GetRequiredBehaviour();
+        
+        _logger.LogInformation("Updated BehaviourId of ResourceGrain {@ResourceId}", Id);
     }
 
     protected virtual Task OnUpdateMetadataAsync(Dictionary<string, object?> metadata)
@@ -187,6 +193,10 @@ internal abstract class ResourceGrain : Grain
     protected async Task WriteStateAsync(Dictionary<string, object?> state)
     {
         await _state.UpdateAsync(state);
+        
+        _metadata.State["state_updated_at"] = DateTime.Now;
+        await _metadata.WriteStateAsync();
+        
         await EventBook.RegisterEventAsync(EventKind.UpdateResourceState, Id);
 
         _logger.LogInformation("Wrote state for device {@DeviceId}", Id);

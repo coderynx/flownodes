@@ -33,11 +33,11 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         {
             await WriteMetadataAsync(bag.Metadata);
         }
-        if (!configuration.Configuration.ContainsAll(bag.Configuration))
+        if (!configuration.ContainsAll(bag.Configuration))
         {
             await WriteConfigurationAsync(bag.Configuration);
         }
-        if (!state.State.ContainsAll(bag.State))
+        if (!state.ContainsAll(bag.State))
         {
             await WriteStateAsync(bag.State);
         }
@@ -52,7 +52,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         if (!isReadable) return;
 
         var configuration = await GetConfiguration();
-        if (configuration.Configuration.GetValueOrDefault("updateStateTimeSpan") is not int updateState) return;
+        if (configuration.GetValueOrDefault("updateStateTimeSpan") is not int updateState) return;
 
         var timeSpan = TimeSpan.FromSeconds(updateState);
         RegisterTimer(ExecuteTimerBehaviourAsync, null, timeSpan, timeSpan);

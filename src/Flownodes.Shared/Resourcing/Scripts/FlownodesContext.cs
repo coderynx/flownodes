@@ -45,7 +45,7 @@ public class FlownodesContext
             TenantName, message);
     }
 
-    public async Task<(Dictionary<string, object?> State, DateTime? LastUpdateDate)> GetResourceState(
+    public async Task<Dictionary<string, object?>> GetResourceState(
         string resourceName)
     {
         var resource = await _resourceManager.GetResourceAsync(resourceName);

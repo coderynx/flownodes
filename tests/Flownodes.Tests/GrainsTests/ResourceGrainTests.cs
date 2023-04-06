@@ -30,20 +30,6 @@ public class ResourceGrainTests
         _cluster.GrainFactory.GetGrain<ITestResourceGrain>(NewFlownodesId);
 
     [Fact]
-    public async Task GetConfiguration_ShouldReturnNullDateTime_WhenNotUpdated()
-    {
-        // Arrange.
-        var grain = NewTestResourceGrain;
-
-        // Act.
-        var configurationTuple = await grain.GetConfiguration();
-
-        // Assert.
-        configurationTuple.Configuration.Should().BeEmpty();
-        configurationTuple.LastUpdateDate.Should().BeNull();
-    }
-
-    [Fact]
     public async Task UpdateConfiguration_ShouldUpdateConfigurationAsync()
     {
         // Arrange.
@@ -55,7 +41,7 @@ public class ResourceGrainTests
 
         // Assert.
         var newConfiguration = await grain.GetConfiguration();
-        newConfiguration.Configuration.Should().BeEquivalentTo(configuration);
+        newConfiguration.Should().BeEquivalentTo(configuration);
     }
 
     [Fact]
@@ -72,14 +58,11 @@ public class ResourceGrainTests
     }
 
     [Fact]
-    public async Task
-        UpdateConfiguration_ShouldThrowResourceBehaviourNotRegisteredException_WhenBehaviourIsNotRegistered()
+    public async Task UpdateConfiguration_ShouldThrowResourceBehaviourNotRegisteredException_WhenBehaviourIsNotRegistered()
     {
         // Arrange.
         var grain = NewTestResourceGrain;
-        var configuration = _fixture.Create<Dictionary<string, object?>>();
-        await grain.UpdateConfigurationAsync(configuration);
-        
+
         // Act & Assert.
         var act = async () => { await grain.UpdateBehaviourId("unknown"); };
         await act.Should().ThrowAsync<ResourceBehaviourNotRegisteredException>();
@@ -97,10 +80,9 @@ public class ResourceGrainTests
         await grain.ClearConfigurationAsync();
 
         // Assert.
-        var configurationTuple = await grain.GetConfiguration();
-        configurationTuple.Configuration.Should().NotBeEquivalentTo(configuration);
-        configurationTuple.Configuration.Should().BeEmpty();
-        configurationTuple.LastUpdateDate.Should().NotBeNull();
+        var newConfiguration = await grain.GetConfiguration();
+        newConfiguration.Should().NotBeEquivalentTo(configuration);
+        newConfiguration.Should().BeEmpty();
     }
 
     [Fact]
@@ -149,20 +131,6 @@ public class ResourceGrainTests
     }
 
     [Fact]
-    public async Task GetState_ShouldReturnNullDateTime_WhenNotUpdated()
-    {
-        // Arrange.
-        var grain = NewTestResourceGrain;
-
-        // Act.
-        var stateTuple = await grain.GetState();
-
-        // Assert.
-        stateTuple.State.Should().BeEmpty();
-        stateTuple.LastUpdateDate.Should().BeNull();
-    }
-
-    [Fact]
     public async Task ClearState_ShouldClearState()
     {
         // Arrange.
@@ -174,9 +142,8 @@ public class ResourceGrainTests
         await grain.ClearStateAsync();
 
         // Assert.
-        var stateTuple = await grain.GetState();
-        stateTuple.State.Should().NotBeEquivalentTo(state);
-        stateTuple.State.Should().BeEmpty();
-        stateTuple.LastUpdateDate.Should().NotBeNull();
+        var newState = await grain.GetState();
+        newState.Should().NotBeEquivalentTo(state);
+        newState.Should().BeEmpty();
     }
 }

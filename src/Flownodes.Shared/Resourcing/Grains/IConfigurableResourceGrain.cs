@@ -9,7 +9,7 @@ public interface IConfigurableResourceGrain : IResourceGrain
     ///     Gets the currently stored configuration of the resource.
     /// </summary>
     /// <returns>The current resource configuration.</returns>
-    ValueTask<(Dictionary<string, object?> Configuration, DateTime? LastUpdateDate)> GetConfiguration();
+    ValueTask<Dictionary<string, object?>> GetConfiguration();
 
     /// <summary>
     ///     Updates the resource configuration.

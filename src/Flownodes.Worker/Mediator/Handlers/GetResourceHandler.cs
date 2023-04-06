@@ -37,19 +37,22 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
             if (await resource.GetIsConfigurable())
             {
                 var configurableResource = resource.AsReference<IConfigurableResourceGrain>();
-                var configurationTuple = await configurableResource.GetConfiguration();
-                configuration = configurationTuple.Configuration;
+                configuration = await configurableResource.GetConfiguration();
             }
 
-            (Dictionary<string, object?>? Properties, DateTime? LastUpdate) state = (null, null);
-            if (await resource.GetIsStateful())
+            Dictionary<string, object?>? state = null;
+            if (!await resource.GetIsStateful())
             {
-                var statefulResource = resource.AsReference<IStatefulResourceGrain>();
-                state = await statefulResource.GetState();
+                return new GetResourceResponse(id, request.TenantName, request.ResourceName, id.ToEntityKindString(),
+                    metadata, configuration, state);
+                
             }
+            
+            var statefulResource = resource.AsReference<IStatefulResourceGrain>();
+            state = await statefulResource.GetState();
 
             return new GetResourceResponse(id, request.TenantName, request.ResourceName, id.ToEntityKindString(),
-                metadata, configuration, state.Properties, state.LastUpdate);
+                metadata, configuration, state);
         }
         catch
         {

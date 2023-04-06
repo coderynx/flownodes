@@ -15,7 +15,7 @@ public interface IStatefulResourceGrain : IResourceGrain
     ///     Gets the currently stored state of the resource.
     /// </summary>
     /// <returns>The stored state of the resource.</returns>
-    ValueTask<(Dictionary<string, object?> State, DateTime? LastUpdateDate)> GetState();
+    ValueTask<Dictionary<string, object?>> GetState();
 
     /// <summary>
     ///     Clears the resource state.
