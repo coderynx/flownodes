@@ -3,7 +3,6 @@ using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Builders;
-using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
@@ -14,10 +13,10 @@ internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
     private readonly ILogger<ResourceGroupGrain> _logger;
     private readonly IPersistentState<HashSet<string>> _store;
 
-    public ResourceGroupGrain(ILogger<ResourceGroupGrain> logger, IEnvironmentService environmentService,
+    public ResourceGroupGrain(ILogger<ResourceGroupGrain> logger,
         [PersistentState("resourceGroupStore")]
         IPersistentState<HashSet<string>> store, IPersistentStateFactory stateFactory, IGrainContext grainContext) :
-        base(logger, environmentService, null, stateFactory, grainContext)
+        base(logger, stateFactory, grainContext)
     {
         _logger = logger;
         _store = store;

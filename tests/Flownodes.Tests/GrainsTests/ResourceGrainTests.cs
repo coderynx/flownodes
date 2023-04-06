@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using AutoFixture;
 using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Resourcing.Exceptions;
+using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Tests.Fixtures;
 using Flownodes.Tests.Interfaces;
 using FluentAssertions;
@@ -62,7 +63,8 @@ public class ResourceGrainTests
         UpdateConfiguration_ShouldThrowResourceBehaviourNotRegisteredException_WhenBehaviourIsNotRegistered()
     {
         // Arrange.
-        var grain = NewTestResourceGrain;
+        var id = new FlownodesId(FlownodesEntity.Device, "tenant", "device");
+        var grain = _cluster.GrainFactory.GetGrain<IDeviceGrain>(id);
 
         // Act & Assert.
         var act = async () => { await grain.UpdateBehaviourId("unknown"); };

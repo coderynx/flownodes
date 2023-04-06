@@ -16,9 +16,15 @@ public class TestExtensionProvider : IExtensionProvider
         BuildContainer();
     }
 
-    public IBehaviour? GetBehaviour(string id, ResourceContext context)
+    public IBehaviour? ResolveBehaviour(string id, ResourceContext context)
     {
         return _container.ResolveOptionalKeyed<IBehaviour>(id);
+    }
+
+    public TBehaviour? ResolveBehaviour<TBehaviour, TContext>(string id, TContext context) where TBehaviour : IBehaviour
+        where TContext : ResourceContext
+    {
+        return (TBehaviour?)_container.ResolveOptionalKeyed<IBehaviour>(id);
     }
 
     public IAlerterDriver? GetAlerterDriver(string id)

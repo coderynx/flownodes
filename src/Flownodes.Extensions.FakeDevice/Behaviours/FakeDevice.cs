@@ -10,22 +10,22 @@ namespace Flownodes.Extensions.FakeDevice.Behaviours;
 [BehaviourDescription("Fake device behaviour for testing Flownodes")]
 public class FakeDevice : IReadableDeviceBehaviour, IWritableDeviceBehaviour
 {
-    private readonly ResourceContext _context;
+    private readonly DeviceContext _context;
     private readonly ILogger<FakeDevice> _logger;
     private readonly Dictionary<string, object?> _state = new();
 
     private int _count;
 
-    public FakeDevice(ILogger<FakeDevice> logger, ResourceContext context)
+    public FakeDevice(ILogger<FakeDevice> logger, DeviceContext context)
     {
         _logger = logger;
         _context = context;
     }
 
-    public Task OnSetupAsync()
+    public Task<UpdateResourceBag> OnSetupAsync()
     {
         _logger.LogInformation("Configured FakeDevice {@DeviceId}", _context.Id.ToString());
-        return Task.CompletedTask;
+        return Task.FromResult(new UpdateResourceBag());
     }
 
     public Task<UpdateResourceBag> OnPullStateAsync()

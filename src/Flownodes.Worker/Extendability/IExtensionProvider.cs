@@ -6,7 +6,8 @@ namespace Flownodes.Worker.Extendability;
 
 public interface IExtensionProvider
 {
-    IBehaviour? GetBehaviour(string id, ResourceContext context);
+    TBehaviour? ResolveBehaviour<TBehaviour, TContext>(string id, TContext context) where TBehaviour : IBehaviour
+    where TContext : ResourceContext;
     IAlerterDriver? GetAlerterDriver(string id);
     void BuildContainer();
 }

@@ -16,14 +16,15 @@ public class ExtensionProvider : IExtensionProvider
         _logger = logger;
     }
 
-    public IBehaviour? GetBehaviour(string id, ResourceContext context)
+    public TBehaviour? ResolveBehaviour<TBehaviour, TContext>(string id, TContext context) where TBehaviour : IBehaviour
+        where TContext : ResourceContext
     {
         if (_container is null) throw new InvalidOperationException("The container is not built yet");
 
         _logger.LogDebug("Retrieving behaviour {@DeviceBehaviourId}", id);
 
-        var contextParameter = new TypedParameter(typeof(ResourceContext), context);
-        return _container.ResolveOptionalKeyed<IBehaviour>(id, contextParameter);
+        var contextParameter = new TypedParameter(typeof(TContext), context);
+        return (TBehaviour?)_container.ResolveOptionalKeyed<IBehaviour>(id, contextParameter);
     }
 
     public IAlerterDriver? GetAlerterDriver(string id)

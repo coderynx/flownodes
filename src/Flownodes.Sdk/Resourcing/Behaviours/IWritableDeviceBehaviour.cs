@@ -3,7 +3,7 @@ namespace Flownodes.Sdk.Resourcing.Behaviours;
 /// <summary>
 ///     The interface for implementing custom device behaviours with writable state.
 /// </summary>
-public interface IWritableDeviceBehaviour : IBehaviour
+public interface IWritableDeviceBehaviour : IDeviceBehaviour
 {
     /// <summary>
     ///     Code to execute when state push from device is requested.

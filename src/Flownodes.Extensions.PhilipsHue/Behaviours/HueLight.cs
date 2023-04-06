@@ -12,12 +12,12 @@ namespace Flownodes.Extensions.PhilipsHue.Behaviours;
 [BehaviourDescription("Device behaviour for the Philips Hue Light")]
 public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
 {
-    private readonly ResourceContext _context;
+    private readonly DeviceContext _context;
     private readonly HttpClient _httpClient;
     private readonly ILogger<HueLight> _logger;
 
     public HueLight(IConfiguration configuration, ILogger<HueLight> logger,
-        IHttpClientFactory httpClientFactory, ResourceContext context)
+        IHttpClientFactory httpClientFactory, DeviceContext context)
     {
         _logger = logger;
         _context = context;
@@ -95,6 +95,7 @@ public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
                     _context.Id, lightId);
             else
                 _logger.LogError("Failed to update light power state of {LightId} to on", lightId);
+            
         }
     }
 }

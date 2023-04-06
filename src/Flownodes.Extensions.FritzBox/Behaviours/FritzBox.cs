@@ -17,7 +17,7 @@ public class FritzBox : IReadableDeviceBehaviour
 {
     private readonly string? _address;
 
-    private readonly ResourceContext _context;
+    private readonly DeviceContext _context;
     private readonly HttpClient _httpClient;
 
     private readonly ILogger<FritzBox> _logger;
@@ -26,7 +26,7 @@ public class FritzBox : IReadableDeviceBehaviour
     private string? _sid;
 
     public FritzBox(ILogger<FritzBox> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration,
-        ResourceContext context)
+        DeviceContext context)
     {
         _logger = logger;
         _context = context;

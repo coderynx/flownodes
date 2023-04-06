@@ -1,14 +1,9 @@
 using Flownodes.Sdk.Entities;
-using Flownodes.Sdk.Resourcing;
-using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Shared.Eventing;
-using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
-using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Resourcing.Persistence;
-using Flownodes.Worker.Services;
 using Orleans.Concurrency;
 using Orleans.Runtime;
 
@@ -18,20 +13,14 @@ namespace Flownodes.Worker.Resourcing;
 internal abstract class ResourceGrain : Grain
 {
     private readonly IPersistentState<BehaviourId> _behaviourId;
-    private readonly IEnvironmentService _environmentService;
-    private readonly IExtensionProvider? _extensionProvider;
     private readonly ILogger<ResourceGrain> _logger;
     private readonly IPersistentState<Dictionary<string, object?>> _metadata;
     private readonly IJournaledStoreGrain<Dictionary<string, object?>> _configuration = null!;
     private readonly IJournaledStoreGrain<Dictionary<string, object?>> _state = null!;
-    protected IBehaviour? Behaviour;
 
-    protected ResourceGrain(ILogger<ResourceGrain> logger, IEnvironmentService environmentService,
-        IExtensionProvider? extensionProvider, IPersistentStateFactory stateFactory, IGrainContext grainContext)
+    protected ResourceGrain(ILogger<ResourceGrain> logger, IPersistentStateFactory stateFactory, IGrainContext grainContext)
     {
         _logger = logger;
-        _environmentService = environmentService;
-        _extensionProvider = extensionProvider;
         _metadata = stateFactory.Create<Dictionary<string, object?>>(grainContext,
             new PersistentStateAttribute("resourceMetadataStore"));
         _behaviourId =
@@ -96,14 +85,6 @@ internal abstract class ResourceGrain : Grain
         return await _state.Get();
     }
 
-    private async ValueTask<ResourceContext> GetResourceContextAsync()
-    {
-        return new ResourceContext(_environmentService.ServiceId, _environmentService.ClusterId, Id,
-            BehaviourId, IsConfigurable, await _configuration.Get(), await _configuration.GetUpdatedAt(),
-            _metadata.State, await _state.GetUpdatedAt(), IsStateful, await _state.Get(),
-            await _state.GetUpdatedAt());
-    }
-
     public async Task UpdateConfigurationAsync(Dictionary<string, object?> properties)
     {
         await WriteConfigurationAsync(properties);
@@ -135,24 +116,11 @@ internal abstract class ResourceGrain : Grain
         _logger.LogInformation("Cleared configuration store of resource {@ResourceId}", Id);
     }
 
-    private async Task GetRequiredBehaviour()
-    {
-        if (_extensionProvider is null || BehaviourId is null) return;
-
-        var context = await GetResourceContextAsync();
-        Behaviour = _extensionProvider.GetBehaviour(BehaviourId, context);
-
-        if (Behaviour is null) throw new ResourceBehaviourNotRegisteredException(BehaviourId);
-
-        await Behaviour.OnSetupAsync();
-        await OnBehaviourChangeAsync();
-    }
-
     public async Task UpdateBehaviourId(string behaviourId)
     {
         _behaviourId.State.Value = behaviourId;
         await _behaviourId.WriteStateAsync();
-        await GetRequiredBehaviour();
+        await OnUpdateBehaviourAsync();
 
         _logger.LogInformation("Updated BehaviourId of ResourceGrain {@ResourceId}", Id);
     }
@@ -172,7 +140,7 @@ internal abstract class ResourceGrain : Grain
         return Task.CompletedTask;
     }
 
-    protected virtual Task OnBehaviourChangeAsync()
+    protected virtual Task OnUpdateBehaviourAsync()
     {
         return Task.CompletedTask;
     }
@@ -238,8 +206,6 @@ internal abstract class ResourceGrain : Grain
 
     public virtual Task SelfRemoveAsync()
     {
-        // TODO: Add clear state.
-        _logger.LogInformation("Cleared persistence of resource {@ResourceId}", Id);
         return Task.CompletedTask;
     }
 

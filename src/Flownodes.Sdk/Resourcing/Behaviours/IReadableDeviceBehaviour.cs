@@ -22,7 +22,7 @@ public sealed record UpdateResourceBag
 /// <summary>
 ///     The interface for implementing custom device behaviours with readable state.
 /// </summary>
-public interface IReadableDeviceBehaviour : IBehaviour
+public interface IReadableDeviceBehaviour : IDeviceBehaviour
 {
     /// <summary>
     ///     Code to execute when state state pull from device is requested.

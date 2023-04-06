@@ -1,6 +1,9 @@
+using System.Collections.Immutable;
 using Flownodes.Sdk.Entities;
+using Flownodes.Sdk.Resourcing;
 using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Shared.Resourcing;
+using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Services;
@@ -12,11 +15,14 @@ namespace Flownodes.Worker.Resourcing;
 internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
     private readonly ILogger<DeviceGrain> _logger;
+    private readonly IExtensionProvider _extensionProvider;
+    private IDeviceBehaviour? _behaviour;
 
     public DeviceGrain(IExtensionProvider extensionProvider, ILogger<DeviceGrain> logger,
-        IEnvironmentService environmentService, IPersistentStateFactory stateFactory, IGrainContext grainContext) :
-        base(logger, environmentService, extensionProvider, stateFactory, grainContext)
+        IPersistentStateFactory stateFactory, IGrainContext grainContext) :
+        base(logger, stateFactory, grainContext)
     {
+        _extensionProvider = extensionProvider;
         _logger = logger;
     }
 
@@ -27,7 +33,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 
     private async Task ExecuteTimerBehaviourAsync(object arg)
     {
-        var deviceBehaviour = (IReadableDeviceBehaviour)Behaviour!;
+        var deviceBehaviour = (IReadableDeviceBehaviour)_behaviour!;
         var bag = await deviceBehaviour.OnPullStateAsync();
 
         await WriteMetadataConditionalAsync(bag.Metadata);
@@ -35,15 +41,26 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         await WriteStateConditionalAsync(bag.State);
     }
 
-    protected override async Task OnBehaviourChangeAsync()
+    protected override async Task OnUpdateBehaviourAsync()
     {
-        var isReadable = Behaviour!
+        if (BehaviourId is null) return;
+
+        var configuration = await GetConfiguration();
+        var state = await GetState();
+        var context = new DeviceContext(Id, Metadata.ToImmutableDictionary(), configuration.ToImmutableDictionary(),
+            state.ToImmutableDictionary());
+
+        _behaviour = _extensionProvider.ResolveBehaviour<IDeviceBehaviour, DeviceContext>(BehaviourId, context);
+        if (_behaviour is null) throw new ResourceBehaviourNotRegisteredException(BehaviourId);
+
+        await _behaviour.OnSetupAsync();
+
+        var isReadable = _behaviour!
             .GetType()
             .IsAssignableTo(typeof(IReadableDeviceBehaviour));
 
         if (!isReadable) return;
 
-        var configuration = await GetConfiguration();
         if (configuration.GetValueOrDefault("updateStateTimeSpan") is not int updateState) return;
 
         var timeSpan = TimeSpan.FromSeconds(updateState);
@@ -52,9 +69,9 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 
     protected override async Task OnUpdateStateAsync(Dictionary<string, object?> state)
     {
-        if (Behaviour is null) throw new InvalidOperationException("Behavior cannot be null");
+        if (_behaviour is null) throw new InvalidOperationException("Behavior cannot be null");
 
-        var deviceBehaviour = (IWritableDeviceBehaviour)Behaviour;
+        var deviceBehaviour = (IWritableDeviceBehaviour)_behaviour;
         await deviceBehaviour.OnPushStateAsync(state);
 
         _logger.LogInformation("Applied new state for device {@DeviceId}", Id);
