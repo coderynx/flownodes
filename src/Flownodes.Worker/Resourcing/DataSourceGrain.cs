@@ -28,13 +28,10 @@ internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
         if (BehaviourId is null) return;
 
         var configuration = await GetConfiguration();
-        var state = await GetState();
         var context =
             new DataSourceContext(Id, Metadata.ToImmutableDictionary(), configuration.ToImmutableDictionary());
 
         _behaviour = _extensionProvider.ResolveBehaviour<IDataSourceBehaviour, DataSourceContext>(BehaviourId, context);
-        if (_behaviour is null) throw new ResourceBehaviourNotRegisteredException(BehaviourId);
-
         await _behaviour.OnSetupAsync();
     }
 

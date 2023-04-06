@@ -2,6 +2,7 @@ using Autofac;
 using Flownodes.Sdk.Alerting;
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Sdk.Resourcing.Behaviours;
+using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Worker.Extendability.Modules;
 
 namespace Flownodes.Worker.Extendability;
@@ -16,7 +17,7 @@ public class ExtensionProvider : IExtensionProvider
         _logger = logger;
     }
 
-    public TBehaviour? ResolveBehaviour<TBehaviour, TContext>(string id, TContext context) where TBehaviour : IBehaviour
+    public TBehaviour ResolveBehaviour<TBehaviour, TContext>(string id, TContext context) where TBehaviour : IBehaviour
         where TContext : ResourceContext
     {
         if (_container is null) throw new InvalidOperationException("The container is not built yet");
@@ -24,7 +25,8 @@ public class ExtensionProvider : IExtensionProvider
         _logger.LogDebug("Retrieving behaviour {@DeviceBehaviourId}", id);
 
         var contextParameter = new TypedParameter(typeof(TContext), context);
-        return (TBehaviour?)_container.ResolveOptionalKeyed<IBehaviour>(id, contextParameter);
+        return (TBehaviour?)_container.ResolveOptionalKeyed<IBehaviour>(id, contextParameter)
+               ?? throw new ResourceBehaviourNotRegisteredException(id);
     }
 
     public IAlerterDriver? GetAlerterDriver(string id)

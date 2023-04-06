@@ -51,8 +51,6 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
             state.ToImmutableDictionary());
 
         _behaviour = _extensionProvider.ResolveBehaviour<IDeviceBehaviour, DeviceContext>(BehaviourId, context);
-        if (_behaviour is null) throw new ResourceBehaviourNotRegisteredException(BehaviourId);
-
         await _behaviour.OnSetupAsync();
 
         var isReadable = _behaviour!
