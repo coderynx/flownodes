@@ -1,4 +1,3 @@
-
 using Autofac;
 using Flownodes.Sdk.Alerting;
 using Flownodes.Sdk.Resourcing;
@@ -16,11 +15,6 @@ public class TestExtensionProvider : IExtensionProvider
     public TestExtensionProvider()
     {
         BuildContainer();
-    }
-
-    public IBehaviour? ResolveBehaviour(string id, ResourceContext context)
-    {
-        return _container.ResolveOptionalKeyed<IBehaviour>(id);
     }
 
     public TBehaviour ResolveBehaviour<TBehaviour, TContext>(string id, TContext context) where TBehaviour : IBehaviour
@@ -50,5 +44,10 @@ public class TestExtensionProvider : IExtensionProvider
             .Keyed<IAlerterDriver>("TestAlerterDriver");
 
         _container = containerBuilder.Build();
+    }
+
+    public IBehaviour? ResolveBehaviour(string id, ResourceContext context)
+    {
+        return _container.ResolveOptionalKeyed<IBehaviour>(id);
     }
 }

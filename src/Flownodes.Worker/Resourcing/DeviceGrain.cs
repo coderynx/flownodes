@@ -3,10 +3,8 @@ using Flownodes.Sdk.Entities;
 using Flownodes.Sdk.Resourcing;
 using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Shared.Resourcing;
-using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
-using Flownodes.Worker.Services;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
@@ -14,8 +12,8 @@ namespace Flownodes.Worker.Resourcing;
 [GrainType(FlownodesEntityNames.Device)]
 internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
-    private readonly ILogger<DeviceGrain> _logger;
     private readonly IExtensionProvider _extensionProvider;
+    private readonly ILogger<DeviceGrain> _logger;
     private IDeviceBehaviour? _behaviour;
 
     public DeviceGrain(IExtensionProvider extensionProvider, ILogger<DeviceGrain> logger,

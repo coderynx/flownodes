@@ -13,12 +13,13 @@ namespace Flownodes.Worker.Resourcing;
 internal abstract class ResourceGrain : Grain
 {
     private readonly IPersistentState<BehaviourId> _behaviourId;
+    private readonly IJournaledStoreGrain<Dictionary<string, object?>> _configuration = null!;
     private readonly ILogger<ResourceGrain> _logger;
     private readonly IPersistentState<Dictionary<string, object?>> _metadata;
-    private readonly IJournaledStoreGrain<Dictionary<string, object?>> _configuration = null!;
     private readonly IJournaledStoreGrain<Dictionary<string, object?>> _state = null!;
 
-    protected ResourceGrain(ILogger<ResourceGrain> logger, IPersistentStateFactory stateFactory, IGrainContext grainContext)
+    protected ResourceGrain(ILogger<ResourceGrain> logger, IPersistentStateFactory stateFactory,
+        IGrainContext grainContext)
     {
         _logger = logger;
         _metadata = stateFactory.Create<Dictionary<string, object?>>(grainContext,
@@ -40,7 +41,7 @@ internal abstract class ResourceGrain : Grain
     private bool IsConfigurable => GetType().IsAssignableTo(typeof(IConfigurableResourceGrain));
     private bool IsStateful => GetType().IsAssignableTo(typeof(IStatefulResourceGrain));
     protected string? BehaviourId => _behaviourId.State.Value;
-    public Dictionary<string, object?> Metadata => _metadata.State;
+    protected Dictionary<string, object?> Metadata => _metadata.State;
     private FlownodesId ResourceManagerId => new(FlownodesEntity.ResourceManager, TenantName);
     protected IResourceManagerGrain ResourceManager => GrainFactory.GetGrain<IResourceManagerGrain>(ResourceManagerId);
     private FlownodesId AlertManagerId => new(FlownodesEntity.AlertManager, TenantName);
@@ -204,9 +205,13 @@ internal abstract class ResourceGrain : Grain
         _logger.LogInformation("Cleared metadata of Resource {@ResourceId}", Id);
     }
 
-    public virtual Task SelfRemoveAsync()
+    public virtual async Task SelfRemoveAsync()
     {
-        return Task.CompletedTask;
+        await ClearMetadataAsync();
+        await ClearConfigurationAsync();
+        await ClearStateAsync();
+
+        _logger.LogInformation("Removed ResourceGrain {@ResourceId}", Id);
     }
 
     public ValueTask<bool> GetIsConfigurable()

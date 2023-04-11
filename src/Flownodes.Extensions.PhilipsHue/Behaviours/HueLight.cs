@@ -95,7 +95,6 @@ public class HueLight : IReadableDeviceBehaviour, IWritableDeviceBehaviour
                     _context.Id, lightId);
             else
                 _logger.LogError("Failed to update light power state of {LightId} to on", lightId);
-            
         }
     }
 }
