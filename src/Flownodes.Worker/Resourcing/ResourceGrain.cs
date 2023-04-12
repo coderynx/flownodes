@@ -184,6 +184,7 @@ internal abstract class ResourceGrain : Grain
 
     public async Task ClearMetadataAsync()
     {
+        if(!_metadata.RecordExists) return;
         await _metadata.ClearStateAsync();
         _logger.LogInformation("Cleared metadata of Resource {@ResourceId}", Id);
     }

@@ -31,11 +31,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     private FlownodesId EventBookId => new(FlownodesEntity.EventBook, TenantName);
     private IEventBookGrain EventBook => GrainFactory.GetGrain<IEventBookGrain>(EventBookId);
 
-    public async ValueTask<BaseResourceSummary?> GetResourceSummary(string resourceName)
+    public async ValueTask<BaseResourceSummary?> GetResourceSummary(string name)
     {
-        ArgumentException.ThrowIfNullOrEmpty(resourceName);
+        ArgumentException.ThrowIfNullOrEmpty(name);
 
-        var registration = _persistence.State.GetRegistration(resourceName);
+        var registration = _persistence.State.GetRegistration(name);
         if (registration is null) return default;
 
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
@@ -115,50 +115,58 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return ValueTask.FromResult<IReadOnlyList<IResourceGrain>>(resources);
     }
 
-    public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string resourceName,
-        Dictionary<string, object?>? configuration = null, Dictionary<string, object?>? metadata = null)
-        where TResourceGrain : IResourceGrain
+    public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string name) where TResourceGrain : IResourceGrain
     {
-        ArgumentException.ThrowIfNullOrEmpty(resourceName);
-
-        if (_persistence.State.IsResourceRegistered(resourceName))
-            throw new ResourceAlreadyRegisteredException(TenantName, resourceName);
-
-        var id = FlownodesIdBuilder.CreateFromType(typeof(TResourceGrain), TenantName, resourceName);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        
+        if (_persistence.State.IsResourceRegistered(name))
+            throw new ResourceAlreadyRegisteredException(TenantName, name);
+        
+        var id = FlownodesIdBuilder.CreateFromType(typeof(TResourceGrain), TenantName, name);
         var kind = id.ToEntityKindString();
-        var grain = _grainFactory.GetGrain<TResourceGrain>(id);
-        var tags = new HashSet<string> { resourceName, kind };
-
+        
         // TODO: Further investigation for singleton resource is needed.
         if (_persistence.State.IsSingletonResourceRegistered<TResourceGrain>(kind))
-            throw new SingletonResourceAlreadyRegistered(TenantName, resourceName);
+            throw new SingletonResourceAlreadyRegistered(TenantName, name);
+        
+        var grain = _grainFactory.GetGrain<TResourceGrain>(id);
+        var tags = new HashSet<string> { name, kind };
 
+        _persistence.State.AddRegistration(name, grain.GetGrainId(), kind, tags);
+        await _persistence.WriteStateAsync();
+
+        await EventBook.RegisterEventAsync(EventKind.DeployedResource, Id);
+        
+        _logger.LogInformation("Deployed resource {@ResourceId}", id);
+
+        return grain;
+    }
+
+    public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string name,
+        Dictionary<string, object?>? configuration, Dictionary<string, object?>? metadata = null)
+        where TResourceGrain : IResourceGrain
+    {
+        var grain = await DeployResourceAsync<TResourceGrain>(name);
+        
         if (await grain.GetIsConfigurable())
         {
             configuration ??= new Dictionary<string, object?>();
 
             var configurableGrain = (IConfigurableResourceGrain)grain;
             await configurableGrain.UpdateConfigurationAsync(configuration);
-
-            if (configuration.GetValueOrDefault("behaviourId") is string behaviourId) tags.Add(behaviourId);
         }
 
         if (metadata is not null) await grain.UpdateMetadataAsync(metadata);
-
-        _persistence.State.AddRegistration(resourceName, grain.GetGrainId(), kind, tags);
-        await _persistence.WriteStateAsync();
-
-        await EventBook.RegisterEventAsync(EventKind.DeployedResource, Id);
-        _logger.LogInformation("Deployed resource {@ResourceId}", id);
+        
         return grain;
     }
 
-    public async Task RemoveResourceAsync(string resourceName)
+    public async Task RemoveResourceAsync(string name)
     {
-        ArgumentException.ThrowIfNullOrEmpty(resourceName);
+        ArgumentException.ThrowIfNullOrEmpty(name);
 
-        var registration = _persistence.State.GetRegistration(resourceName);
-        if (registration is null) throw new ResourceNotFoundException(TenantName, resourceName);
+        var registration = _persistence.State.GetRegistration(name);
+        if (registration is null) throw new ResourceNotFoundException(TenantName, name);
 
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
         var id = await grain.GetId();
