@@ -35,6 +35,11 @@ internal sealed class EventBookGrain : Grain, IEventBookGrain
         return ValueTask.FromResult(_store.State);
     }
 
+    public ValueTask<FlownodesId> GetId()
+    {
+        return ValueTask.FromResult(Id);
+    }
+
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Activated {@EventBookGrainId}", Id);

@@ -19,7 +19,7 @@ internal abstract class ResourceGrain : Grain
     {
         _logger = logger;
         Metadata = stateFactory.Create<Dictionary<string, object?>>(grainContext,
-            new PersistentStateAttribute("resourceMetadataStore"));
+            new PersistentStateAttribute("resourceMetadata"));
     }
 
     protected FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();

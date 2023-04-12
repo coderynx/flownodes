@@ -27,7 +27,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         base(logger, stateFactory, grainContext)
     {
         _behaviourId =
-            stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourIdStore"));
+            stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourId"));
         _configuration =
             GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_configuration");
         _state = GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_state");

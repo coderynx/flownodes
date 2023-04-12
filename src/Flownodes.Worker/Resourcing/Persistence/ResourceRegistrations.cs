@@ -5,7 +5,7 @@ using Orleans.Runtime;
 namespace Flownodes.Worker.Resourcing.Persistence;
 
 [GenerateSerializer]
-public sealed class ResourceRegistration
+public sealed record ResourceRegistration
 {
     public ResourceRegistration(string resourceName, GrainId grainId, string kind, HashSet<string>? tags = null)
     {
@@ -23,7 +23,7 @@ public sealed class ResourceRegistration
 }
 
 [GenerateSerializer]
-public sealed class ResourceManagerPersistence
+public sealed class ResourceRegistrations
 {
     [Id(0)] public List<ResourceRegistration> Registrations { get; set; } = new();
 

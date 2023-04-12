@@ -27,7 +27,7 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
     {
         _logger = logger;
         _loggerFactory = loggerFactory;
-        _store = stateFactory.Create<ScriptStore>(grainContext, new PersistentStateAttribute("scriptStore"));
+        _store = stateFactory.Create<ScriptStore>(grainContext, new PersistentStateAttribute("script"));
     }
 
     public async Task ExecuteAsync(Dictionary<string, object?>? parameters = null)

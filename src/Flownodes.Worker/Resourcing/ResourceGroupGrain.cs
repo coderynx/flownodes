@@ -14,7 +14,7 @@ internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
     private readonly IPersistentState<HashSet<string>> _store;
 
     public ResourceGroupGrain(ILogger<ResourceGroupGrain> logger,
-        [PersistentState("resourceGroupStore")]
+        [PersistentState("resourceGroupRegistrations")]
         IPersistentState<HashSet<string>> store, IPersistentStateFactory stateFactory, IGrainContext grainContext) :
         base(logger, stateFactory, grainContext)
     {

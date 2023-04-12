@@ -27,7 +27,7 @@ internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
         _configuration =
             GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_configuration");
         _behaviourId =
-            stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourIdStore"));
+            stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourId"));
         _logger = logger;
     }
 

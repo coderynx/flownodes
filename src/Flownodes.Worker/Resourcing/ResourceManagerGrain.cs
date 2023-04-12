@@ -15,11 +15,11 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 {
     private readonly IGrainFactory _grainFactory;
     private readonly ILogger<ResourceManagerGrain> _logger;
-    private readonly IPersistentState<ResourceManagerPersistence> _persistence;
+    private readonly IPersistentState<ResourceRegistrations> _persistence;
 
     public ResourceManagerGrain(ILogger<ResourceManagerGrain> logger,
-        [PersistentState("resourceManagerState")]
-        IPersistentState<ResourceManagerPersistence> persistence, IGrainFactory grainFactory)
+        [PersistentState("resourceRegistrations")]
+        IPersistentState<ResourceRegistrations> persistence, IGrainFactory grainFactory)
     {
         _logger = logger;
         _persistence = persistence;
@@ -187,7 +187,8 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 
     public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Resource manager {@ResourceManagerId} deactivated", Id);
+        _logger.LogInformation("Resource manager {@ResourceManagerId} deactivated for reason {@DeactivationReason}", Id,
+            reason.Description);
         return base.OnDeactivateAsync(reason, cancellationToken);
     }
 }
