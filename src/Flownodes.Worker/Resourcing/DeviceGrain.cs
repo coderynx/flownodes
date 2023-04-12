@@ -5,6 +5,7 @@ using Flownodes.Sdk.Resourcing.Behaviours;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
+using Flownodes.Worker.Resourcing.Persistence;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
@@ -16,17 +17,30 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     private readonly ILogger<DeviceGrain> _logger;
     private IDeviceBehaviour? _behaviour;
 
+    private readonly IPersistentState<BehaviourId> _behaviourId;
+
     public DeviceGrain(IExtensionProvider extensionProvider, ILogger<DeviceGrain> logger,
         IPersistentStateFactory stateFactory, IGrainContext grainContext) :
         base(logger, stateFactory, grainContext)
     {
+        _behaviourId =
+            stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourIdStore"));
         _extensionProvider = extensionProvider;
         _logger = logger;
     }
 
+    public async Task UpdateBehaviourId(string behaviourId)
+    {
+        _behaviourId.State.Value = behaviourId;
+        await _behaviourId.WriteStateAsync();
+        await OnUpdateBehaviourAsync();
+
+        _logger.LogInformation("Updated BehaviourId of ResourceGrain {@ResourceId}", Id);
+    }
+
     public async ValueTask<BaseResourceSummary> GetSummary()
     {
-        return new DeviceSummary(Id, Metadata, BehaviourId, await GetConfiguration(), await GetState());
+        return new DeviceSummary(Id, Metadata, _behaviourId.State.Value, await GetConfiguration(), await GetState());
     }
 
     private async Task ExecuteTimerBehaviourAsync(object arg)
@@ -39,16 +53,17 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         await WriteStateConditionalAsync(bag.State);
     }
 
-    protected override async Task OnUpdateBehaviourAsync()
+    private async Task OnUpdateBehaviourAsync()
     {
-        if (BehaviourId is null) return;
+        if (_behaviourId.State.Value is null) return;
 
         var configuration = await GetConfiguration();
         var state = await GetState();
         var context = new DeviceContext(Id, Metadata.ToImmutableDictionary(), configuration.ToImmutableDictionary(),
             state.ToImmutableDictionary());
 
-        _behaviour = _extensionProvider.ResolveBehaviour<IDeviceBehaviour, DeviceContext>(BehaviourId, context);
+        _behaviour =
+            _extensionProvider.ResolveBehaviour<IDeviceBehaviour, DeviceContext>(_behaviourId.State.Value, context);
         await _behaviour.OnSetupAsync();
 
         var isReadable = _behaviour!

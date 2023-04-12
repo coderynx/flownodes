@@ -26,5 +26,10 @@ public sealed record DataSourceResult
 
 public interface IDataSourceGrain : IConfigurableResourceGrain
 {
+    /// <summary>
+    ///     Updates the BehaviourId.
+    /// </summary>
+    /// <param name="behaviourId">The BehaviourId to set.</param>
+    Task UpdateBehaviourId(string behaviourId);
     ValueTask<DataSourceResult> GetDataAsync(string actionId, Dictionary<string, object?>? parameters = null);
 }

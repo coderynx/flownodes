@@ -12,7 +12,7 @@ namespace Flownodes.Worker.Resourcing;
 [Reentrant]
 internal abstract class ResourceGrain : Grain
 {
-    private readonly IPersistentState<BehaviourId> _behaviourId;
+    
     private readonly IJournaledStoreGrain<Dictionary<string, object?>> _configuration = null!;
     private readonly ILogger<ResourceGrain> _logger;
     private readonly IPersistentState<Dictionary<string, object?>> _metadata;
@@ -24,8 +24,6 @@ internal abstract class ResourceGrain : Grain
         _logger = logger;
         _metadata = stateFactory.Create<Dictionary<string, object?>>(grainContext,
             new PersistentStateAttribute("resourceMetadataStore"));
-        _behaviourId =
-            stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourIdStore"));
 
         if (IsConfigurable)
             _configuration =
@@ -40,7 +38,6 @@ internal abstract class ResourceGrain : Grain
     protected string TenantName => Id.FirstName;
     private bool IsConfigurable => GetType().IsAssignableTo(typeof(IConfigurableResourceGrain));
     private bool IsStateful => GetType().IsAssignableTo(typeof(IStatefulResourceGrain));
-    protected string? BehaviourId => _behaviourId.State.Value;
     protected Dictionary<string, object?> Metadata => _metadata.State;
     private FlownodesId ResourceManagerId => new(FlownodesEntity.ResourceManager, TenantName);
     protected IResourceManagerGrain ResourceManager => GrainFactory.GetGrain<IResourceManagerGrain>(ResourceManagerId);
@@ -117,15 +114,6 @@ internal abstract class ResourceGrain : Grain
         _logger.LogInformation("Cleared configuration store of resource {@ResourceId}", Id);
     }
 
-    public async Task UpdateBehaviourId(string behaviourId)
-    {
-        _behaviourId.State.Value = behaviourId;
-        await _behaviourId.WriteStateAsync();
-        await OnUpdateBehaviourAsync();
-
-        _logger.LogInformation("Updated BehaviourId of ResourceGrain {@ResourceId}", Id);
-    }
-
     protected virtual Task OnUpdateMetadataAsync(Dictionary<string, object?> metadata)
     {
         return Task.CompletedTask;
@@ -137,11 +125,6 @@ internal abstract class ResourceGrain : Grain
     }
 
     protected virtual Task OnUpdateStateAsync(Dictionary<string, object?> state)
-    {
-        return Task.CompletedTask;
-    }
-
-    protected virtual Task OnUpdateBehaviourAsync()
     {
         return Task.CompletedTask;
     }

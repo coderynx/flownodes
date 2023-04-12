@@ -3,6 +3,7 @@ using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Shared.Resourcing.Scripts;
+using Flownodes.Worker.Resourcing.Persistence;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
