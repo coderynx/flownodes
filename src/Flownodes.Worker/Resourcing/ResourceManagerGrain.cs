@@ -142,25 +142,6 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return grain;
     }
 
-    public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string name,
-        Dictionary<string, object?>? configuration, Dictionary<string, object?>? metadata = null)
-        where TResourceGrain : IResourceGrain
-    {
-        var grain = await DeployResourceAsync<TResourceGrain>(name);
-        
-        if (await grain.GetIsConfigurable())
-        {
-            configuration ??= new Dictionary<string, object?>();
-
-            var configurableGrain = (IConfigurableResourceGrain)grain;
-            await configurableGrain.UpdateConfigurationAsync(configuration);
-        }
-
-        if (metadata is not null) await grain.UpdateMetadataAsync(metadata);
-        
-        return grain;
-    }
-
     public async Task RemoveResourceAsync(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
