@@ -106,20 +106,6 @@ public class ResourceManagerGrainTests
     }
 
     [Fact]
-    public async Task DeployResource_ShouldNotThrow_WhenConfigurationIsNull()
-    {
-        // Arrange.
-        var manager = NewResourceManagerGrain;
-
-        // Act & Assert.
-        var act = async () =>
-        {
-            await manager.DeployResourceAsync<ITestResourceGrain>("resource", new Dictionary<string, object?>());
-        };
-        await act.Should().NotThrowAsync();
-    }
-
-    [Fact]
     public async Task DeployResource_ShouldThrowResourceAlreadyRegisteredException_WhenResourceIsAlreadyRegistered()
     {
         // Arrange.

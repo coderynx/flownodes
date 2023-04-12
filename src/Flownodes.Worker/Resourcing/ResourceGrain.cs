@@ -3,7 +3,6 @@ using Flownodes.Shared.Alerting.Grains;
 using Flownodes.Shared.Eventing;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extensions;
-using Flownodes.Worker.Resourcing.Persistence;
 using Orleans.Concurrency;
 using Orleans.Runtime;
 
@@ -12,7 +11,6 @@ namespace Flownodes.Worker.Resourcing;
 [Reentrant]
 internal abstract class ResourceGrain : Grain
 {
-    
     private readonly IJournaledStoreGrain<Dictionary<string, object?>> _configuration = null!;
     private readonly ILogger<ResourceGrain> _logger;
     private readonly IPersistentState<Dictionary<string, object?>> _metadata;
