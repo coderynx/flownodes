@@ -1,20 +1,14 @@
+using Flownodes.Shared.Resourcing;
+
 namespace Flownodes.Worker.Mediator.Responses;
 
 public sealed record GetResourceResponse : Response
 {
-    public GetResourceResponse(string fullId, string tenantName, string resourceName,
-        string resourceKind,
-        IDictionary<string, object?>? metadata = null,
-        IDictionary<string, object?>? configuration = null,
-        IDictionary<string, object?>? state = null)
+    public GetResourceResponse(string tenantName, string resourceName, BaseResourceSummary summary)
     {
         TenantName = tenantName;
         ResourceName = resourceName;
-        FullId = fullId;
-        ResourceKind = resourceKind;
-        Metadata = metadata;
-        Configuration = configuration;
-        State = state;
+        Summary = summary;
     }
 
     public GetResourceResponse(string tenantName, string resourceName, string message, ResponseKind responseKind) :
@@ -27,9 +21,5 @@ public sealed record GetResourceResponse : Response
 
     public string TenantName { get; }
     public string ResourceName { get; }
-    public string? FullId { get; }
-    public string? ResourceKind { get; }
-    public IDictionary<string, object?>? Metadata { get; }
-    public IDictionary<string, object?>? Configuration { get; }
-    public IDictionary<string, object?>? State { get; }
+    public BaseResourceSummary? Summary { get; }
 }

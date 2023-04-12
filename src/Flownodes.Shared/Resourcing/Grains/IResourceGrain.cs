@@ -33,16 +33,4 @@ public interface IResourceGrain : IEntityGrain
     ///     Clears the resource from the persistence store.
     /// </summary>
     Task SelfRemoveAsync();
-
-    /// <summary>
-    ///     Checks if the resource is configurable.
-    /// </summary>
-    /// <returns>True if it's configurable, otherwise false.</returns>
-    ValueTask<bool> GetIsConfigurable();
-
-    /// <summary>
-    ///     Checks if the resource is stateful.
-    /// </summary>
-    /// <returns>True if it's stateful, otherwise false.</returns>
-    ValueTask<bool> GetIsStateful();
 }

@@ -1,4 +1,3 @@
-using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Mediator.Requests;
 using Flownodes.Worker.Mediator.Responses;
 using Flownodes.Worker.Services;
@@ -29,27 +28,8 @@ public class GetResourceHandler : IRequestHandler<GetResourceRequest, GetResourc
 
         try
         {
-            var id = await resource.GetId();
-
-            var metadata = await resource.GetMetadata();
-
-            Dictionary<string, object?>? configuration = null;
-            if (await resource.GetIsConfigurable())
-            {
-                var configurableResource = resource.AsReference<IConfigurableResourceGrain>();
-                configuration = await configurableResource.GetConfiguration();
-            }
-
-            Dictionary<string, object?>? state = null;
-            if (!await resource.GetIsStateful())
-                return new GetResourceResponse(id, request.TenantName, request.ResourceName, id.ToEntityKindString(),
-                    metadata, configuration, state);
-
-            var statefulResource = resource.AsReference<IStatefulResourceGrain>();
-            state = await statefulResource.GetState();
-
-            return new GetResourceResponse(id, request.TenantName, request.ResourceName, id.ToEntityKindString(),
-                metadata, configuration, state);
+            var summary = await resource.GetSummary();
+            return new GetResourceResponse(request.TenantName, request.ResourceName, summary);
         }
         catch
         {

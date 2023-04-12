@@ -47,49 +47,6 @@ public class ResourceModule : ICarterModule
             .WithName("GetResources")
             .WithDisplayName("Get resources");
 
-        app.MapPut("api/tenants/{tenantName}/resources/{resourceName}/state",
-                async ([FromServices] IMediator mediator, string tenantName, string resourceName,
-                    JsonElement state) =>
-                {
-                    var dictionary = new Dictionary<string, object?>();
-
-                    foreach (var property in state.EnumerateObject())
-                        switch (property.Value.ValueKind)
-                        {
-                            case JsonValueKind.String:
-                                dictionary.Add(property.Name, property.Value.GetString());
-                                break;
-                            case JsonValueKind.Number:
-                                dictionary.Add(property.Name, property.Value.GetDouble());
-                                break;
-                            case JsonValueKind.True:
-                                dictionary.Add(property.Name, true);
-                                break;
-                            case JsonValueKind.False:
-                                dictionary.Add(property.Name, false);
-                                break;
-                            case JsonValueKind.Array:
-                                dictionary.Add(property.Name,
-                                    property.Value.EnumerateArray().Select(x => x.ToString()).ToArray());
-                                break;
-                            case JsonValueKind.Undefined:
-                                break;
-                            case JsonValueKind.Object:
-                                break;
-                            case JsonValueKind.Null:
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
-
-                    var request = new UpdateResourceStateRequest(tenantName, resourceName, dictionary);
-                    var response = await mediator.Send(request);
-
-                    return response.GetResult();
-                })
-            .WithName("UpdateResourceState")
-            .WithDisplayName("Update resource state");
-
         app.MapGet("api/tenants/{tenantName}/resources/search/{tags}",
                 async ([FromServices] IMediator mediator, string tenantName, TagsQuery tags) =>
                 {

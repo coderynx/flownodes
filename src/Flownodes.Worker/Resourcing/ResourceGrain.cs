@@ -24,8 +24,6 @@ internal abstract class ResourceGrain : Grain
 
     protected FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
     protected string TenantName => Id.FirstName;
-    private bool IsConfigurable => GetType().IsAssignableTo(typeof(IConfigurableResourceGrain));
-    private bool IsStateful => GetType().IsAssignableTo(typeof(IStatefulResourceGrain));
     private FlownodesId ResourceManagerId => new(FlownodesEntity.ResourceManager, TenantName);
     protected IResourceManagerGrain ResourceManager => GrainFactory.GetGrain<IResourceManagerGrain>(ResourceManagerId);
     private FlownodesId AlertManagerId => new(FlownodesEntity.AlertManager, TenantName);
@@ -95,15 +93,5 @@ internal abstract class ResourceGrain : Grain
     {
         await ClearMetadataAsync();
         _logger.LogInformation("Removed ResourceGrain {@ResourceId}", Id);
-    }
-
-    public ValueTask<bool> GetIsConfigurable()
-    {
-        return ValueTask.FromResult(IsConfigurable);
-    }
-
-    public ValueTask<bool> GetIsStateful()
-    {
-        return ValueTask.FromResult(IsStateful);
     }
 }
