@@ -115,20 +115,21 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return ValueTask.FromResult<IReadOnlyList<IResourceGrain>>(resources);
     }
 
-    public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string name) where TResourceGrain : IResourceGrain
+    public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string name)
+        where TResourceGrain : IResourceGrain
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
-        
+
         if (_persistence.State.IsResourceRegistered(name))
             throw new ResourceAlreadyRegisteredException(TenantName, name);
-        
+
         var id = FlownodesIdBuilder.CreateFromType(typeof(TResourceGrain), TenantName, name);
         var kind = id.ToEntityKindString();
-        
+
         // TODO: Further investigation for singleton resource is needed.
         if (_persistence.State.IsSingletonResourceRegistered<TResourceGrain>(kind))
             throw new SingletonResourceAlreadyRegistered(TenantName, name);
-        
+
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
         var tags = new HashSet<string> { name, kind };
 
@@ -136,7 +137,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         await _persistence.WriteStateAsync();
 
         await EventBook.RegisterEventAsync(EventKind.DeployedResource, Id);
-        
+
         _logger.LogInformation("Deployed resource {@ResourceId}", id);
 
         return grain;

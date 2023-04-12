@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoFixture;
 using Flownodes.Sdk.Entities;
@@ -48,11 +47,7 @@ public class ScriptGrainTests
             }
         }
         """;
-        var configuration = new Dictionary<string, object?>
-        {
-            { "code", code }
-        };
-        await grain.UpdateConfigurationAsync(configuration);
+        await grain.UpdateCodeAsync(code);
 
         // Act & Assert.
         var act = async () => { await grain.ExecuteAsync(); };

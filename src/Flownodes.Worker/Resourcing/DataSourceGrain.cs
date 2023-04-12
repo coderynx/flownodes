@@ -13,16 +13,19 @@ namespace Flownodes.Worker.Resourcing;
 [GrainType(FlownodesEntityNames.DataSource)]
 internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
-    private readonly IExtensionProvider _extensionProvider;
-    private IDataSourceBehaviour? _behaviour;
     private readonly IPersistentState<BehaviourId> _behaviourId;
+    private readonly IJournaledStoreGrain<Dictionary<string, object?>> _configuration;
+    private readonly IExtensionProvider _extensionProvider;
     private readonly ILogger<DataSourceGrain> _logger;
+    private IDataSourceBehaviour? _behaviour;
 
     public DataSourceGrain(ILogger<DataSourceGrain> logger, IPersistentStateFactory stateFactory,
         IGrainContext grainContext, IExtensionProvider extensionProvider)
         : base(logger, stateFactory, grainContext)
     {
         _extensionProvider = extensionProvider;
+        _configuration =
+            GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_configuration");
         _behaviourId =
             stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourIdStore"));
         _logger = logger;
@@ -39,21 +42,7 @@ internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 
     public async ValueTask<BaseResourceSummary> GetSummary()
     {
-        return new DataSourceSummary(Id, Metadata, await GetState());
-    }
-
-    private async Task OnUpdateBehaviourAsync()
-    {
-        if (_behaviourId.State.Value is null) return;
-
-        var configuration = await GetConfiguration();
-        var context =
-            new DataSourceContext(Id, Metadata.ToImmutableDictionary(), configuration.ToImmutableDictionary());
-
-        _behaviour =
-            _extensionProvider.ResolveBehaviour<IDataSourceBehaviour, DataSourceContext>(_behaviourId.State.Value,
-                context);
-        await _behaviour.OnSetupAsync();
+        return new DataSourceSummary(Id, Metadata.State, await _configuration.Get());
     }
 
     public async Task UpdateBehaviourId(string behaviourId)
@@ -63,5 +52,31 @@ internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
         await OnUpdateBehaviourAsync();
 
         _logger.LogInformation("Updated BehaviourId of ResourceGrain {@ResourceId}", Id);
+    }
+
+    public async Task UpdateConfigurationAsync(Dictionary<string, object?> configuration)
+    {
+        await _configuration.UpdateAsync(configuration);
+        _logger.LogInformation("Updated DataSourceGrain {@DataSourceGrainId} configuration", Id);
+    }
+
+    public async Task ClearConfigurationAsync()
+    {
+        await _configuration.ClearAsync();
+        _logger.LogInformation("Cleared DataSourceGrain {@DataSourceGrainId} configuration", Id);
+    }
+
+    private async Task OnUpdateBehaviourAsync()
+    {
+        if (_behaviourId.State.Value is null) return;
+
+        var configuration = await _configuration.Get();
+        var context =
+            new DataSourceContext(Id, Metadata.State.ToImmutableDictionary(), configuration.ToImmutableDictionary());
+
+        _behaviour =
+            _extensionProvider.ResolveBehaviour<IDataSourceBehaviour, DataSourceContext>(_behaviourId.State.Value,
+                context);
+        await _behaviour.OnSetupAsync();
     }
 }

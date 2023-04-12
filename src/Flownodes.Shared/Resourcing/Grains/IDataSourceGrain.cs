@@ -24,12 +24,15 @@ public sealed record DataSourceResult
     }
 }
 
-public interface IDataSourceGrain : IConfigurableResourceGrain
+public interface IDataSourceGrain : IResourceGrain
 {
     /// <summary>
     ///     Updates the BehaviourId.
     /// </summary>
     /// <param name="behaviourId">The BehaviourId to set.</param>
     Task UpdateBehaviourId(string behaviourId);
+
+    Task UpdateConfigurationAsync(Dictionary<string, object?> configuration);
+    Task ClearConfigurationAsync();
     ValueTask<DataSourceResult> GetDataAsync(string actionId, Dictionary<string, object?>? parameters = null);
 }

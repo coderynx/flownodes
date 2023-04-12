@@ -83,7 +83,7 @@ internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
 
     public ValueTask<BaseResourceSummary> GetSummary()
     {
-        return ValueTask.FromResult<BaseResourceSummary>(new ResourceGroupSummary(Id, Metadata, _store.State));
+        return ValueTask.FromResult<BaseResourceSummary>(new ResourceGroupSummary(Id, Metadata.State, _store.State));
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
