@@ -7,7 +7,6 @@ using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Extendability;
 using Flownodes.Worker.Resourcing.Persistence;
 using Orleans.Runtime;
-using OrleansCodeGen.OrleansDashboard.Model;
 
 namespace Flownodes.Worker.Resourcing;
 
@@ -47,7 +46,7 @@ internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
         {
             { "configuration", await _configuration.Get() }
         };
-        
+
         return new ResourceSummary(Id, Metadata.State, properties);
     }
 

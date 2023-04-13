@@ -49,10 +49,10 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     {
         var properties = new Dictionary<string, object?>
         {
-            {"configuration", await _configuration.Get()},
-            {"state", await _state.Get()}
+            { "configuration", await _configuration.Get() },
+            { "state", await _state.Get() }
         };
-        
+
         return new ResourceSummary(Id, Metadata.State, properties);
     }
 

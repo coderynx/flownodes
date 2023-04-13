@@ -45,19 +45,6 @@ public class FlownodesContext
             TenantName, message);
     }
 
-    public async Task<Dictionary<string, object?>> GetResourceState(
-        string resourceName)
-    {
-        var resource = await _resourceManager.GetResourceAsync(resourceName);
-        return await resource.AsReference<IStatefulResourceGrain>().GetState();
-    }
-
-    public async Task UpdateResourceStateAsync(string resourceName, Dictionary<string, object?> state)
-    {
-        var resource = await _resourceManager.GetResourceAsync(resourceName);
-        await resource.AsReference<IStatefulResourceGrain>().UpdateStateAsync(state);
-    }
-
     public async ValueTask<string> GetDataFromDataSourceAsync(string dataSourceName, string actionId,
         Dictionary<string, object?>? parameters = null)
     {

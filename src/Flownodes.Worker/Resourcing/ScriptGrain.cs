@@ -54,9 +54,9 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
     {
         var properties = new Dictionary<string, object?>
         {
-            {"code", _store.State.Code}
+            { "code", _store.State.Code }
         };
-        
+
         return ValueTask.FromResult(new ResourceSummary(Id, Metadata.State, properties));
     }
 

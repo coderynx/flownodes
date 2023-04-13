@@ -85,9 +85,9 @@ internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
     {
         var properties = new Dictionary<string, object?>
         {
-            {"registrations", _store.State}
+            { "registrations", _store.State }
         };
-        
+
         return ValueTask.FromResult(new ResourceSummary(Id, Metadata.State, properties));
     }
 
