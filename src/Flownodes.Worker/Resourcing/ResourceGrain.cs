@@ -56,15 +56,9 @@ internal abstract class ResourceGrain : Grain
         return ValueTask.FromResult(Metadata.State);
     }
 
-    protected virtual Task OnUpdateMetadataAsync(Dictionary<string, object?> metadata)
-    {
-        return Task.CompletedTask;
-    }
-
     public async Task UpdateMetadataAsync(Dictionary<string, object?> metadata)
     {
         await WriteMetadataAsync(metadata);
-        await OnUpdateMetadataAsync(metadata);
     }
 
     protected async Task WriteMetadataAsync(Dictionary<string, object?> metadata)
