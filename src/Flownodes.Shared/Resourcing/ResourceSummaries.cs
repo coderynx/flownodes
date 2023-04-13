@@ -23,6 +23,13 @@ public sealed record DataSourceSummary(
 ) : IResourceSummary;
 
 [GenerateSerializer]
+public sealed record DeviceZoneSummary(
+    [property: Id(0)] FlownodesId Id,
+    [property: Id(1)] Dictionary<string, object?> Metadata,
+    [property: Id(2)] HashSet<string> Registrations
+) : IResourceSummary;
+
+[GenerateSerializer]
 public sealed record DeviceSummary(
     [property: Id(0)] FlownodesId Id,
     [property: Id(1)] Dictionary<string, object?> Metadata,

@@ -15,7 +15,7 @@ namespace Flownodes.Tests.Grains;
 internal sealed record TestResourceSummary(
     [property: Id(0)] FlownodesId Id,
     [property: Id(1)] Dictionary<string, object?> Metadata
-    ) : IResourceSummary;
+) : IResourceSummary;
 
 internal sealed class TestResourceGrain : ResourceGrain, ITestResourceGrain
 {

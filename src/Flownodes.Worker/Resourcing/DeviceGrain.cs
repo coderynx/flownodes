@@ -65,7 +65,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     public async Task UpdateStateAsync(Dictionary<string, object?> state)
     {
         await WriteStateAsync(state);
-        
+
         if (_behaviour is null) throw new InvalidOperationException("Behavior cannot be null");
         var deviceBehaviour = (IWritableDeviceBehaviour)_behaviour;
         await deviceBehaviour.OnPushStateAsync(state);
@@ -78,7 +78,6 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         await _state.ClearAsync();
         _logger.LogInformation("Cleared state of resource {@ResourceId}", Id);
     }
-
 
     public async ValueTask<Dictionary<string, object?>> GetConfiguration()
     {

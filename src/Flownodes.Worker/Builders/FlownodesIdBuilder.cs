@@ -20,6 +20,7 @@ public static class FlownodesIdBuilder
         { typeof(IEventBookGrain), FlownodesEntity.EventBook },
         { typeof(IResourceManagerGrain), FlownodesEntity.ResourceManager },
         { typeof(IResourceGroupGrain), FlownodesEntity.ResourceGroup },
+        { typeof(IDeviceZoneGrain), FlownodesEntity.DeviceZone },
         { typeof(IDeviceGrain), FlownodesEntity.Device },
         { typeof(IDataSourceGrain), FlownodesEntity.DataSource },
         { typeof(IAssetGrain), FlownodesEntity.Asset },
