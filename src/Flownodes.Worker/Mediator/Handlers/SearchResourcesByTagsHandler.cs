@@ -26,16 +26,14 @@ public class SearchResourcesByTagsHandler : IRequestHandler<SearchResourcesByTag
         {
             var resources = await resourceManager.SearchResourcesByTags(request.Tags);
 
-            var searchResults = new HashSet<ResourceSearchResult>();
+            var results = new HashSet<string>();
             foreach (var resource in resources)
             {
                 var poco = await resource.GetSummary();
-                var result = new ResourceSearchResult(poco.Id, poco.Id.FirstName, poco.Id.SecondName!,
-                    poco.Id.ToEntityKindString());
-                searchResults.Add(result);
+                results.Add(poco.Id);
             }
 
-            return new SearchResourceByTagsResponse(request.TenantName, request.Tags, searchResults);
+            return new SearchResourceByTagsResponse(request.TenantName, request.Tags, results);
         }
         catch
         {

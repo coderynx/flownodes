@@ -1,10 +1,8 @@
 namespace Flownodes.Worker.Mediator.Responses;
 
-public sealed record ResourceSearchResult(string ResourceId, string TenantName, string ResourceName, string Kind);
-
 public sealed record SearchResourceByTagsResponse : Response
 {
-    public SearchResourceByTagsResponse(string tenantName, HashSet<string> tags, HashSet<ResourceSearchResult> results)
+    public SearchResourceByTagsResponse(string tenantName, HashSet<string> tags, HashSet<string> results)
     {
         TenantName = tenantName;
         Results = results;
@@ -21,5 +19,5 @@ public sealed record SearchResourceByTagsResponse : Response
 
     public string TenantName { get; }
     public HashSet<string> Tags { get; }
-    public HashSet<ResourceSearchResult> Results { get; } = new();
+    public HashSet<string> Results { get; } = new();
 }
