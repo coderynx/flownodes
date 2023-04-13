@@ -13,13 +13,12 @@ internal sealed class DeviceZoneGrain : ResourceGrain, IDeviceZoneGrain
     private readonly IPersistentState<HashSet<string>> _registrations;
 
     public DeviceZoneGrain(ILogger<DeviceZoneGrain> logger,
-        IPersistentStateFactory stateFactory,
-        IGrainContext context)
-        : base(logger, stateFactory, context)
+        [PersistentState("deviceZoneMetadata")] IPersistentState<Dictionary<string, object?>> metadata,
+        [PersistentState("deviceZoneRegistrations")] IPersistentState<HashSet<string>> registrations)
+        : base(logger, metadata)
     {
         _logger = logger;
-        _registrations =
-            stateFactory.Create<HashSet<string>>(context, new PersistentStateAttribute("deviceZoneRegistrations"));
+        _registrations = registrations;
     }
 
     public async Task RegisterDeviceAsync(FlownodesId id)

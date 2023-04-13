@@ -11,8 +11,9 @@ internal sealed class AssetGrain : ResourceGrain, IAssetGrain
     private readonly ILogger<AssetGrain> _logger;
     private readonly IJournaledStoreGrain<Dictionary<string, object?>> _properties;
 
-    public AssetGrain(ILogger<AssetGrain> logger, IPersistentStateFactory stateFactory, IGrainContext grainContext)
-        : base(logger, stateFactory, grainContext)
+    public AssetGrain(ILogger<AssetGrain> logger,
+        [PersistentState("assetMetadata")] IPersistentState<Dictionary<string, object?>> metadata)
+        : base(logger, metadata)
     {
         _logger = logger;
         _properties = GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_properties");

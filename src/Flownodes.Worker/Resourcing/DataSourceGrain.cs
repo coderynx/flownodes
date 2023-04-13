@@ -19,16 +19,16 @@ internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
     private readonly ILogger<DataSourceGrain> _logger;
     private IDataSourceBehaviour? _behaviour;
 
-    public DataSourceGrain(ILogger<DataSourceGrain> logger, IPersistentStateFactory stateFactory,
-        IGrainContext grainContext, IExtensionProvider extensionProvider)
-        : base(logger, stateFactory, grainContext)
+    public DataSourceGrain(ILogger<DataSourceGrain> logger, IExtensionProvider extensionProvider,
+        [PersistentState("dataSourceMetadata")] IPersistentState<Dictionary<string, object?>> metadata,
+        [PersistentState("behaviourId")] IPersistentState<BehaviourId> behaviourId)
+        : base(logger, metadata)
     {
         _extensionProvider = extensionProvider;
+        _logger = logger;
+        _behaviourId = behaviourId;
         _configuration =
             GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_configuration");
-        _behaviourId =
-            stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourId"));
-        _logger = logger;
     }
 
     public async ValueTask<DataSourceResult> GetDataAsync(string actionId,

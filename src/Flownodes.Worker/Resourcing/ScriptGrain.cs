@@ -21,13 +21,14 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
     private readonly IPersistentState<ScriptStore> _store;
     private IScript? _script;
 
-    public ScriptGrain(ILogger<ScriptGrain> logger, ILoggerFactory loggerFactory, IPersistentStateFactory stateFactory,
-        IGrainContext grainContext) :
-        base(logger, stateFactory, grainContext)
+    public ScriptGrain(ILogger<ScriptGrain> logger, ILoggerFactory loggerFactory,
+        [PersistentState("scriptMetadata")] IPersistentState<Dictionary<string, object?>> metadata,
+        [PersistentState("scriptStore")] IPersistentState<ScriptStore> store) :
+        base(logger, metadata)
     {
         _logger = logger;
         _loggerFactory = loggerFactory;
-        _store = stateFactory.Create<ScriptStore>(grainContext, new PersistentStateAttribute("script"));
+        _store = store;
     }
 
     public async Task ExecuteAsync(Dictionary<string, object?>? parameters = null)

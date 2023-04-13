@@ -23,11 +23,11 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     private IDeviceBehaviour? _behaviour;
 
     public DeviceGrain(IExtensionProvider extensionProvider, ILogger<DeviceGrain> logger,
-        IPersistentStateFactory stateFactory, IGrainContext grainContext) :
-        base(logger, stateFactory, grainContext)
+        [PersistentState("deviceMetadata")] IPersistentState<Dictionary<string, object?>> metadata,
+        [PersistentState("deviceBehaviourId")] IPersistentState<BehaviourId> behaviourId)
+        : base(logger, metadata)
     {
-        _behaviourId =
-            stateFactory.Create<BehaviourId>(grainContext, new PersistentStateAttribute("resourceBehaviourId"));
+        _behaviourId = behaviourId;
         _configuration =
             GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_configuration");
         _state = GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_state");

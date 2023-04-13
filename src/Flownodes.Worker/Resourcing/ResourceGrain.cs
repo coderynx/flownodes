@@ -14,12 +14,10 @@ internal abstract class ResourceGrain : Grain
     private readonly ILogger<ResourceGrain> _logger;
     protected readonly IPersistentState<Dictionary<string, object?>> Metadata;
 
-    protected ResourceGrain(ILogger<ResourceGrain> logger, IPersistentStateFactory stateFactory,
-        IGrainContext grainContext)
+    protected ResourceGrain(ILogger<ResourceGrain> logger, IPersistentState<Dictionary<string, object?>> metadata)
     {
         _logger = logger;
-        Metadata = stateFactory.Create<Dictionary<string, object?>>(grainContext,
-            new PersistentStateAttribute("resourceMetadata"));
+        Metadata = metadata;
     }
 
     protected FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
