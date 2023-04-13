@@ -9,7 +9,6 @@ namespace Flownodes.Worker.Resourcing;
 internal sealed class AssetGrain : ResourceGrain, IAssetGrain
 {
     private readonly ILogger<AssetGrain> _logger;
-
     private readonly IJournaledStoreGrain<Dictionary<string, object?>> _state;
 
     public AssetGrain(ILogger<AssetGrain> logger, IPersistentStateFactory stateFactory, IGrainContext grainContext)
@@ -19,9 +18,9 @@ internal sealed class AssetGrain : ResourceGrain, IAssetGrain
         _state = GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_state");
     }
 
-    public async ValueTask<IResourceSummary> GetSummary()
+    public async ValueTask<ResourceSummary> GetSummary()
     {
-        return new AssetSummary(Id, Metadata.State, await GetState());
+        return new ResourceSummary(Id, Metadata.State, await GetState());
     }
 
     public async ValueTask<Dictionary<string, object?>> GetState()

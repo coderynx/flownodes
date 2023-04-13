@@ -10,13 +10,13 @@ public interface IResourceManagerGrain : IEntityGrain
     ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string name)
         where TResourceGrain : IResourceGrain;
 
-    ValueTask<ReadOnlyCollection<IResourceSummary>> GetAllResourceSummaries();
+    ValueTask<ReadOnlyCollection<ResourceSummary>> GetAllResourceSummaries();
 
     ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string name) where TResourceGrain : IResourceGrain;
 
     Task RemoveResourceAsync(string name);
     Task RemoveAllResourcesAsync();
-    ValueTask<IResourceSummary?> GetResourceSummary(string name);
+    ValueTask<ResourceSummary?> GetResourceSummary(string name);
     ValueTask<IResourceGrain?> GetResourceAsync(string name);
     ValueTask<IReadOnlyList<IResourceGrain>> SearchResourcesByTags(HashSet<string> tags);
 }

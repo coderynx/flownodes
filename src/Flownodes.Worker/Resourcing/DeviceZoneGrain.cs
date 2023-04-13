@@ -10,7 +10,6 @@ namespace Flownodes.Worker.Resourcing;
 internal sealed class DeviceZoneGrain : ResourceGrain, IDeviceZoneGrain
 {
     private readonly ILogger<DeviceZoneGrain> _logger;
-
     private readonly IPersistentState<HashSet<string>> _registrations;
 
     public DeviceZoneGrain(ILogger<DeviceZoneGrain> logger,
@@ -56,9 +55,14 @@ internal sealed class DeviceZoneGrain : ResourceGrain, IDeviceZoneGrain
         return ValueTask.FromResult(_registrations.State);
     }
 
-    public ValueTask<IResourceSummary> GetSummary()
+    public ValueTask<ResourceSummary> GetSummary()
     {
-        return ValueTask.FromResult<IResourceSummary>(new DeviceZoneSummary(Id, Metadata.State, _registrations.State));
+        var properties = new Dictionary<string, object?>
+        {
+            { "registrations", _registrations.State }
+        };
+
+        return ValueTask.FromResult(new ResourceSummary(Id, Metadata.State, properties));
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)

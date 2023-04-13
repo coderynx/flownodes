@@ -50,9 +50,14 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
         _logger.LogInformation("Executed script {@ScriptId}", Id);
     }
 
-    public ValueTask<IResourceSummary> GetSummary()
+    public ValueTask<ResourceSummary> GetSummary()
     {
-        return ValueTask.FromResult<IResourceSummary>(new ScriptSummary(Id, Metadata.State, _store.State.Code));
+        var properties = new Dictionary<string, object?>
+        {
+            {"code", _store.State.Code}
+        };
+        
+        return ValueTask.FromResult(new ResourceSummary(Id, Metadata.State, properties));
     }
 
     public async Task UpdateCodeAsync(string code)

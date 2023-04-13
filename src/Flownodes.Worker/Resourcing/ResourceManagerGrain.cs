@@ -31,7 +31,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     private FlownodesId EventBookId => new(FlownodesEntity.EventBook, TenantName);
     private IEventBookGrain EventBook => GrainFactory.GetGrain<IEventBookGrain>(EventBookId);
 
-    public async ValueTask<IResourceSummary?> GetResourceSummary(string name)
+    public async ValueTask<ResourceSummary?> GetResourceSummary(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 
@@ -45,7 +45,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return summary;
     }
 
-    public async ValueTask<ReadOnlyCollection<IResourceSummary>> GetAllResourceSummaries()
+    public async ValueTask<ReadOnlyCollection<ResourceSummary>> GetAllResourceSummaries()
     {
         var summaries = await _persistence.State.Registrations
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>())

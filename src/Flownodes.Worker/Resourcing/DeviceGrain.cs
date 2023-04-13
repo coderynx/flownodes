@@ -45,10 +45,15 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         _logger.LogInformation("Updated BehaviourId of ResourceGrain {@ResourceId}", Id);
     }
 
-    public async ValueTask<IResourceSummary> GetSummary()
+    public async ValueTask<ResourceSummary> GetSummary()
     {
-        return new DeviceSummary(Id, Metadata.State, _behaviourId.State.Value, await GetConfiguration(),
-            await GetState());
+        var properties = new Dictionary<string, object?>
+        {
+            {"configuration", await _configuration.Get()},
+            {"state", await _state.Get()}
+        };
+        
+        return new ResourceSummary(Id, Metadata.State, properties);
     }
 
     public async Task UpdateConfigurationAsync(Dictionary<string, object?> properties)
