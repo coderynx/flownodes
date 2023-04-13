@@ -41,6 +41,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         _behaviourId.State.Value = behaviourId;
         await _behaviourId.WriteStateAsync();
         await OnUpdateBehaviourAsync();
+        await EventBook.RegisterEventAsync(EventKind.UpdatedResource, Id);
 
         _logger.LogInformation("Updated BehaviourId of ResourceGrain {@ResourceId}", Id);
     }

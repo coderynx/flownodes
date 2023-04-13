@@ -9,35 +9,35 @@ namespace Flownodes.Worker.Resourcing;
 internal sealed class AssetGrain : ResourceGrain, IAssetGrain
 {
     private readonly ILogger<AssetGrain> _logger;
-    private readonly IJournaledStoreGrain<Dictionary<string, object?>> _state;
+    private readonly IJournaledStoreGrain<Dictionary<string, object?>> _properties;
 
     public AssetGrain(ILogger<AssetGrain> logger, IPersistentStateFactory stateFactory, IGrainContext grainContext)
         : base(logger, stateFactory, grainContext)
     {
         _logger = logger;
-        _state = GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_state");
+        _properties = GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_properties");
     }
 
     public async ValueTask<ResourceSummary> GetSummary()
     {
-        return new ResourceSummary(Id, Metadata.State, await GetState());
+        return new ResourceSummary(Id, Metadata.State, await GetProperties());
     }
 
-    public async ValueTask<Dictionary<string, object?>> GetState()
+    public async ValueTask<Dictionary<string, object?>> GetProperties()
     {
-        _logger.LogInformation("Retrieved state of AssetGrain {@AssetGrainId}", Id);
-        return await _state.Get();
+        _logger.LogDebug("Retrieved properties of AssetGrain {@AssetGrainId}", Id);
+        return await _properties.Get();
     }
 
-    public async Task UpdateStateAsync(Dictionary<string, object?> state)
+    public async Task UpdatePropertiesAsync(Dictionary<string, object?> properties)
     {
-        await _state.UpdateAsync(state);
-        _logger.LogInformation("Updated AssetGrain {@AssetGrainId} state", Id);
+        await _properties.UpdateAsync(properties);
+        _logger.LogInformation("Updated AssetGrain {@AssetGrainId} properties", Id);
     }
 
-    public async Task ClearStateAsync()
+    public async Task ClearPropertiesAsync()
     {
-        await _state.ClearAsync();
-        _logger.LogInformation("Cleared AssetGrain {@AssetGrainId} state", Id);
+        await _properties.ClearAsync();
+        _logger.LogInformation("Cleared AssetGrain {@AssetGrainId} properties", Id);
     }
 }
