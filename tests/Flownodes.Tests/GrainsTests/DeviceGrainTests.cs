@@ -13,12 +13,12 @@ using Xunit;
 namespace Flownodes.Tests.GrainsTests;
 
 [Collection("TestCluster")]
-public class ResourceGrainTests
+public class DeviceGrainTests
 {
     private readonly TestCluster _cluster;
     private readonly IFixture _fixture;
 
-    public ResourceGrainTests(ClusterFixture fixture)
+    public DeviceGrainTests(ClusterFixture fixture)
     {
         _cluster = fixture.Cluster!;
         _fixture = new Fixture();
@@ -27,8 +27,8 @@ public class ResourceGrainTests
     private FlownodesId NewFlownodesId =>
         new(FlownodesEntity.Other, _fixture.Create<string>(), _fixture.Create<string>());
 
-    private ITestResourceGrain NewTestResourceGrain =>
-        _cluster.GrainFactory.GetGrain<ITestResourceGrain>(NewFlownodesId);
+    private IDeviceGrain NewTestResourceGrain =>
+        _cluster.GrainFactory.GetGrain<IDeviceGrain>(NewFlownodesId);
 
     [Fact]
     public async Task UpdateConfiguration_ShouldUpdateConfigurationAsync()
@@ -131,22 +131,5 @@ public class ResourceGrainTests
 
         // Assert.
         state.Should().NotBeNull();
-    }
-
-    [Fact]
-    public async Task ClearState_ShouldClearState()
-    {
-        // Arrange.
-        var grain = NewTestResourceGrain;
-        var state = _fixture.Create<Dictionary<string, object?>>();
-        await grain.UpdateStateAsync(state);
-
-        // Act.
-        await grain.ClearStateAsync();
-
-        // Assert.
-        var newState = await grain.GetState();
-        newState.Should().NotBeEquivalentTo(state);
-        newState.Should().BeEmpty();
     }
 }
