@@ -5,7 +5,6 @@ using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Tests.Fixtures;
-using Flownodes.Tests.Interfaces;
 using FluentAssertions;
 using Orleans.TestingHost;
 using Xunit;

@@ -4,7 +4,6 @@ using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Tests.Fixtures;
-using Flownodes.Tests.Interfaces;
 using FluentAssertions;
 using Orleans.TestingHost;
 using Xunit;
@@ -33,7 +32,7 @@ public class ResourceGroupGrainTests
         // Arrange.
         var resourceManager = NewResourceManager;
         var resourceGroup = await resourceManager.DeployResourceAsync<IResourceGroupGrain>("resource_group");
-        await resourceManager.DeployResourceAsync<ITestResourceGrain>("test_resource");
+        await resourceManager.DeployResourceAsync<IAssetGrain>("test_resource");
 
         // Act.
         await resourceGroup.RegisterResourceAsync("test_resource");
@@ -62,7 +61,7 @@ public class ResourceGroupGrainTests
         // Arrange.
         var resourceManager = NewResourceManager;
         var resourceGroup = await resourceManager.DeployResourceAsync<IResourceGroupGrain>("resource_group");
-        await resourceManager.DeployResourceAsync<ITestResourceGrain>("test_resource");
+        await resourceManager.DeployResourceAsync<IAssetGrain>("test_resource");
         await resourceGroup.RegisterResourceAsync("test_resource");
 
         // Act.
@@ -79,8 +78,8 @@ public class ResourceGroupGrainTests
         // Arrange.
         var resourceManager = NewResourceManager;
         var resourceGroup = await resourceManager.DeployResourceAsync<IResourceGroupGrain>("resource_group");
-        await resourceManager.DeployResourceAsync<ITestResourceGrain>("test_resource_1");
-        await resourceManager.DeployResourceAsync<ITestResourceGrain>("test_resource_2");
+        await resourceManager.DeployResourceAsync<IAssetGrain>("test_resource_1");
+        await resourceManager.DeployResourceAsync<IAssetGrain>("test_resource_2");
         await resourceGroup.RegisterResourceAsync("test_resource_1");
         await resourceGroup.RegisterResourceAsync("test_resource_2");
 
@@ -98,7 +97,7 @@ public class ResourceGroupGrainTests
         // Arrange.
         var resourceManager = NewResourceManager;
         var resourceGroup = await resourceManager.DeployResourceAsync<IResourceGroupGrain>("resource_group");
-        await resourceManager.DeployResourceAsync<ITestResourceGrain>("test_resource");
+        await resourceManager.DeployResourceAsync<IAssetGrain>("test_resource");
         await resourceGroup.RegisterResourceAsync("test_resource");
 
         // Act.
