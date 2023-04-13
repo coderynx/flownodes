@@ -8,4 +8,5 @@ public interface IDeviceZoneGrain : IResourceGrain
     Task UnregisterDeviceAsync(FlownodesId id);
     ValueTask<IDeviceGrain?> GetDeviceAsync(FlownodesId id);
     ValueTask<HashSet<string>> GetRegistrations();
+    Task ClearRegistrationsAsync();
 }

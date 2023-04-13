@@ -71,4 +71,39 @@ public class DeviceZoneGrainTests
         var registered = await zone.GetDeviceAsync(await device.GetId());
         registered.Should().BeNull();
     }
+    
+    [Fact]
+    public async Task ClearRegistrations_ShouldClearRegistrations()
+    {
+        // Arrange.
+        var resourceManager = NewResourceManager;
+        var device = await resourceManager.DeployResourceAsync<IDeviceGrain>("device");
+        var zone = await resourceManager.DeployResourceAsync<IDeviceZoneGrain>("device_zone");
+        await zone.RegisterDeviceAsync(await device.GetId());
+
+        // Act.
+        await zone.ClearRegistrationsAsync();
+
+        // Assert.
+        var registrations = await zone.GetRegistrations();
+        registrations.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetRegistrations_ShouldGetRegistrations()
+    {
+        // Arrange.
+        var resourceManager = NewResourceManager;
+        var device1 = await resourceManager.DeployResourceAsync<IDeviceGrain>("device_1");
+        var device2 = await resourceManager.DeployResourceAsync<IDeviceGrain>("device_2");
+        var zone = await resourceManager.DeployResourceAsync<IDeviceZoneGrain>("device_zone");
+        await zone.RegisterDeviceAsync(await device1.GetId());
+        await zone.RegisterDeviceAsync(await device2.GetId());
+
+        // Act.
+        var registrations = await zone.GetRegistrations();
+
+        // Assert.
+        registrations.Should().HaveCount(2);
+    }
 }

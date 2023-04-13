@@ -54,6 +54,12 @@ internal sealed class DeviceZoneGrain : ResourceGrain, IDeviceZoneGrain
     {
         return ValueTask.FromResult(_registrations.State);
     }
+    
+    public async Task ClearRegistrationsAsync()
+    {
+        await _registrations.ClearStateAsync();
+        _logger.LogInformation("Cleared registrations of DeviceZone {@DeviceZoneGrainId}", Id);
+    }
 
     public ValueTask<ResourceSummary> GetSummary()
     {
