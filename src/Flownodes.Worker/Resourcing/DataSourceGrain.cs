@@ -40,7 +40,7 @@ internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
         return new DataSourceResult(data);
     }
 
-    public async ValueTask<BaseResourceSummary> GetSummary()
+    public async ValueTask<IResourceSummary> GetSummary()
     {
         return new DataSourceSummary(Id, Metadata.State, await _configuration.Get());
     }

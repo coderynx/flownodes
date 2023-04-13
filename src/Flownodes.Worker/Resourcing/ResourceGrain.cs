@@ -72,7 +72,7 @@ internal abstract class ResourceGrain : Grain
         Metadata.State = metadata;
         await Metadata.WriteStateAsync();
 
-        await EventBook.RegisterEventAsync(EventKind.UpdateResourceMetadata, Id);
+        await EventBook.RegisterEventAsync(EventKind.UpdatedResource, Id);
         _logger.LogInformation("Wrote metadata to resource store {@ResourceId}", Id);
     }
 

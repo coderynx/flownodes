@@ -12,8 +12,10 @@ using Orleans.Runtime;
 namespace Flownodes.Tests.Grains;
 
 [GenerateSerializer]
-internal sealed record TestResourceSummary
-    (FlownodesId Id, Dictionary<string, object?> Metadata) : BaseResourceSummary(Id, Metadata);
+internal sealed record TestResourceSummary(
+    [property: Id(0)] FlownodesId Id,
+    [property: Id(1)] Dictionary<string, object?> Metadata
+    ) : IResourceSummary;
 
 internal sealed class TestResourceGrain : ResourceGrain, ITestResourceGrain
 {
@@ -29,9 +31,9 @@ internal sealed class TestResourceGrain : ResourceGrain, ITestResourceGrain
         _state = GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_state");
     }
 
-    public ValueTask<BaseResourceSummary> GetSummary()
+    public ValueTask<IResourceSummary> GetSummary()
     {
-        return ValueTask.FromResult<BaseResourceSummary>(new TestResourceSummary(Id, Metadata.State));
+        return ValueTask.FromResult<IResourceSummary>(new TestResourceSummary(Id, Metadata.State));
     }
 
     public async ValueTask<Dictionary<string, object?>> GetConfiguration()

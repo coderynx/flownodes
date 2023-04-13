@@ -4,7 +4,7 @@ namespace Flownodes.Worker.Mediator.Responses;
 
 public sealed record GetResourceResponse : Response
 {
-    public GetResourceResponse(string tenantName, string resourceName, BaseResourceSummary summary)
+    public GetResourceResponse(string tenantName, string resourceName, IResourceSummary summary)
     {
         TenantName = tenantName;
         ResourceName = resourceName;
@@ -21,5 +21,5 @@ public sealed record GetResourceResponse : Response
 
     public string TenantName { get; }
     public string ResourceName { get; }
-    public BaseResourceSummary? Summary { get; }
+    public IResourceSummary? Summary { get; }
 }

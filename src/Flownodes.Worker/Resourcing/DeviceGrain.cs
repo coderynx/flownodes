@@ -45,7 +45,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         _logger.LogInformation("Updated BehaviourId of ResourceGrain {@ResourceId}", Id);
     }
 
-    public async ValueTask<BaseResourceSummary> GetSummary()
+    public async ValueTask<IResourceSummary> GetSummary()
     {
         return new DeviceSummary(Id, Metadata.State, _behaviourId.State.Value, await GetConfiguration(),
             await GetState());
@@ -65,7 +65,12 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     public async Task UpdateStateAsync(Dictionary<string, object?> state)
     {
         await WriteStateAsync(state);
-        await OnUpdateStateAsync(state);
+        
+        if (_behaviour is null) throw new InvalidOperationException("Behavior cannot be null");
+        var deviceBehaviour = (IWritableDeviceBehaviour)_behaviour;
+        await deviceBehaviour.OnPushStateAsync(state);
+
+        _logger.LogInformation("Applied new state for device {@DeviceId}", Id);
     }
 
     public async Task ClearStateAsync()
@@ -123,16 +128,6 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         RegisterTimer(ExecuteTimerBehaviourAsync, null, timeSpan, timeSpan);
     }
 
-    private async Task OnUpdateStateAsync(Dictionary<string, object?> state)
-    {
-        if (_behaviour is null) throw new InvalidOperationException("Behavior cannot be null");
-
-        var deviceBehaviour = (IWritableDeviceBehaviour)_behaviour;
-        await deviceBehaviour.OnPushStateAsync(state);
-
-        _logger.LogInformation("Applied new state for device {@DeviceId}", Id);
-    }
-
     private async Task WriteConfigurationAsync(Dictionary<string, object?> properties)
     {
         await _configuration.UpdateAsync(properties);
@@ -140,7 +135,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         Metadata.State["configuration_updated_at"] = DateTime.Now;
         await Metadata.WriteStateAsync();
 
-        await EventBook.RegisterEventAsync(EventKind.WroteResourceConfiguration, Id);
+        await EventBook.RegisterEventAsync(EventKind.UpdatedResource, Id);
         _logger.LogInformation("Wrote configuration to resource store {@ResourceId}", Id);
     }
 
@@ -159,7 +154,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         Metadata.State["state_updated_at"] = DateTime.Now;
         await Metadata.WriteStateAsync();
 
-        await EventBook.RegisterEventAsync(EventKind.UpdateResourceState, Id);
+        await EventBook.RegisterEventAsync(EventKind.UpdatedResource, Id);
 
         _logger.LogInformation("Wrote state for device {@DeviceId}", Id);
     }

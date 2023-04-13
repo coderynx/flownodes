@@ -19,7 +19,7 @@ internal sealed class AssetGrain : ResourceGrain, IAssetGrain
         _state = GrainFactory.GetGrain<IJournaledStoreGrain<Dictionary<string, object?>>>($"{Id}_state");
     }
 
-    public async ValueTask<BaseResourceSummary> GetSummary()
+    public async ValueTask<IResourceSummary> GetSummary()
     {
         return new AssetSummary(Id, Metadata.State, await GetState());
     }

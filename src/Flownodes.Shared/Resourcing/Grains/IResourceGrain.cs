@@ -11,7 +11,7 @@ public interface IResourceGrain : IEntityGrain
     ///     Gets the resource POCO.
     /// </summary>
     /// <returns>The resource POCO. </returns>
-    public ValueTask<BaseResourceSummary> GetSummary();
+    public ValueTask<IResourceSummary> GetSummary();
 
     /// <summary>
     ///     Updates the resource metadata.

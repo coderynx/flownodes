@@ -7,9 +7,7 @@ public enum EventKind
 {
     DeployedResource,
     RemovedResource,
-    UpdateResourceMetadata,
-    WroteResourceConfiguration,
-    UpdateResourceState
+    UpdatedResource
 }
 
 [GenerateSerializer]

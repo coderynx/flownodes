@@ -81,9 +81,9 @@ internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
         _logger.LogInformation("Cleared registrations of resource group {@ResourceGroupId}", Id);
     }
 
-    public ValueTask<BaseResourceSummary> GetSummary()
+    public ValueTask<IResourceSummary> GetSummary()
     {
-        return ValueTask.FromResult<BaseResourceSummary>(new ResourceGroupSummary(Id, Metadata.State, _store.State));
+        return ValueTask.FromResult<IResourceSummary>(new ResourceGroupSummary(Id, Metadata.State, _store.State));
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
