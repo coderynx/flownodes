@@ -161,6 +161,36 @@ public class ResourceManagerGrainTests
     }
 
     [Fact]
+    public async Task GetResources_ShouldGetResources_WithKind()
+    {
+        // Arrange.
+        var manager = NewResourceManagerGrain;
+        await manager.DeployResourceAsync<IAssetGrain>("resource_1");
+        await manager.DeployResourceAsync<IAssetGrain>("resource_2");
+
+        // Act.
+        var grains = await manager.GetResourcesAsync("asset");
+
+        // Assert.
+        grains.Should().HaveCount(2);
+    }
+    
+    [Fact]
+    public async Task GetResources_ShouldGetResources()
+    {
+        // Arrange.
+        var manager = NewResourceManagerGrain;
+        await manager.DeployResourceAsync<IAssetGrain>("resource_1");
+        await manager.DeployResourceAsync<IDeviceZoneGrain>("resource_2");
+
+        // Act.
+        var grains = await manager.GetResourcesAsync();
+
+        // Assert.
+        grains.Should().HaveCount(2);
+    }
+
+    [Fact]
     public async Task RemoveResource_ShouldRemoveResource()
     {
         // Arrange.

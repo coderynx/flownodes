@@ -5,6 +5,7 @@ using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Worker.Builders;
+using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Resourcing.Persistence;
 using Orleans.Runtime;
 
@@ -99,6 +100,25 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _logger.LogDebug("Retrieved resource {@ResourceId}", id);
 
         return grain;
+    }
+
+    public ValueTask<IEnumerable<IResourceGrain>> GetResourcesAsync()
+    {
+        var resources = _persistence.State.Registrations
+            .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>())
+            .ToList();
+        
+        return ValueTask.FromResult<IEnumerable<IResourceGrain>>(resources);
+    }
+
+    public ValueTask<IEnumerable<IResourceGrain>> GetResourcesAsync(string kind)
+    {
+        var resources = _persistence.State.Registrations
+            .Where(x => x.GrainId.ToFlownodesId().ToEntityKindString().Equals(kind))
+            .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>())
+            .ToList();
+
+        return ValueTask.FromResult<IEnumerable<IResourceGrain>>(resources);
     }
 
     public ValueTask<IReadOnlyList<IResourceGrain>> SearchResourcesByTags(HashSet<string> tags)
