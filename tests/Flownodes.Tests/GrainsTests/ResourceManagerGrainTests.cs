@@ -169,7 +169,7 @@ public class ResourceManagerGrainTests
         await manager.DeployResourceAsync<IAssetGrain>("resource_2");
 
         // Act.
-        var grains = await manager.GetResourcesAsync("asset");
+        var grains = await manager.GetResources("asset");
 
         // Assert.
         grains.Should().HaveCount(2);
@@ -184,7 +184,7 @@ public class ResourceManagerGrainTests
         await manager.DeployResourceAsync<IDeviceZoneGrain>("resource_2");
 
         // Act.
-        var grains = await manager.GetResourcesAsync();
+        var grains = await manager.GetResources();
 
         // Assert.
         grains.Should().HaveCount(2);

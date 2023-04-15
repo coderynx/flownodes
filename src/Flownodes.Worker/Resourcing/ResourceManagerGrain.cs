@@ -75,7 +75,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             return default;
         }
 
-        var id = FlownodesIdBuilder.CreateFromType(typeof(TResourceGrain), TenantName, name);
+        var id = FlownodesIdBuilder.CreateFromType<TResourceGrain>(TenantName, name);
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
 
         _logger.LogDebug("Retrieved resource {@ResourceId}", id);
@@ -102,7 +102,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return grain;
     }
 
-    public ValueTask<IEnumerable<IResourceGrain>> GetResourcesAsync()
+    public ValueTask<IEnumerable<IResourceGrain>> GetResources()
     {
         var resources = _persistence.State.Registrations
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>())
@@ -111,7 +111,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return ValueTask.FromResult<IEnumerable<IResourceGrain>>(resources);
     }
 
-    public ValueTask<IEnumerable<IResourceGrain>> GetResourcesAsync(string kind)
+    public ValueTask<IEnumerable<IResourceGrain>> GetResources(string kind)
     {
         var resources = _persistence.State.Registrations
             .Where(x => x.GrainId.ToFlownodesId().ToEntityKindString().Equals(kind))
@@ -143,7 +143,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (_persistence.State.IsResourceRegistered(name))
             throw new ResourceAlreadyRegisteredException(TenantName, name);
 
-        var id = FlownodesIdBuilder.CreateFromType(typeof(TResourceGrain), TenantName, name);
+        var id = FlownodesIdBuilder.CreateFromType<TResourceGrain>(TenantName, name);
         var kind = id.ToEntityKindString();
 
         // TODO: Further investigation for singleton resource is needed.

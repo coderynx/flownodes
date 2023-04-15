@@ -32,8 +32,8 @@ public static class FlownodesIdBuilder
         return TypeToFlownodesObject.TryGetValue(type, out var result) ? result : FlownodesEntity.Other;
     }
 
-    public static FlownodesId CreateFromType(Type objectType, string firstName, string? secondName = null)
+    public static FlownodesId CreateFromType<TResourceGrain>(string firstName, string? secondName = null) where TResourceGrain : IResourceGrain
     {
-        return new FlownodesId(GetKindFromType(objectType), firstName, secondName);
+        return new FlownodesId(GetKindFromType(typeof(TResourceGrain)), firstName, secondName);
     }
 }

@@ -49,7 +49,7 @@ internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
     public async ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string name)
         where TResourceGrain : IResourceGrain
     {
-        var id = FlownodesIdBuilder.CreateFromType(typeof(TResourceGrain), TenantName, name);
+        var id = FlownodesIdBuilder.CreateFromType<TResourceGrain>(TenantName, name);
         if (!_store.State.Contains(id)) return default;
 
         return await ResourceManager.GetResourceAsync<TResourceGrain>(id.SecondName!);

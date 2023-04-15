@@ -19,6 +19,6 @@ public interface IResourceManagerGrain : IEntityGrain
     ValueTask<ResourceSummary?> GetResourceSummary(string name);
     ValueTask<IResourceGrain?> GetResourceAsync(string name);
     ValueTask<IReadOnlyList<IResourceGrain>> SearchResourcesByTags(HashSet<string> tags);
-    ValueTask<IEnumerable<IResourceGrain>> GetResourcesAsync();
-    ValueTask<IEnumerable<IResourceGrain>> GetResourcesAsync(string kind);
+    ValueTask<IEnumerable<IResourceGrain>> GetResources();
+    ValueTask<IEnumerable<IResourceGrain>> GetResources(string kind);
 }
