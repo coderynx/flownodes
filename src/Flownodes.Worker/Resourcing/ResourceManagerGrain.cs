@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Eventing;
 using Flownodes.Shared.Resourcing;
@@ -32,29 +31,13 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
     private FlownodesId EventBookId => new(FlownodesEntity.EventBook, TenantName);
     private IEventBookGrain EventBook => GrainFactory.GetGrain<IEventBookGrain>(EventBookId);
 
-    public async ValueTask<ResourceSummary?> GetResourceSummary(string name)
+    public async ValueTask<IEnumerable<ResourceSummary>> GetAllResourceSummaries()
     {
-        ArgumentException.ThrowIfNullOrEmpty(name);
-
-        var registration = _persistence.State.GetRegistration(name);
-        if (registration is null) return default;
-
-        var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
-        var summary = await grain.GetSummary();
-
-        _logger.LogDebug("Retrieved resource summary of resource {@ResourceId}", summary.Id);
-        return summary;
-    }
-
-    public async ValueTask<ReadOnlyCollection<ResourceSummary>> GetAllResourceSummaries()
-    {
-        var summaries = await _persistence.State.Registrations
+        return await _persistence.State.Registrations
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>())
             .ToAsyncEnumerable()
             .SelectAwait(async grain => await grain.GetSummary())
             .ToListAsync();
-
-        return summaries.AsReadOnly();
     }
 
     public ValueTask<bool> IsResourceRegistered(string name)
@@ -121,7 +104,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return ValueTask.FromResult<IEnumerable<IResourceGrain>>(resources);
     }
 
-    public ValueTask<IReadOnlyList<IResourceGrain>> SearchResourcesByTags(HashSet<string> tags)
+    public ValueTask<IEnumerable<IResourceGrain>> SearchResourcesByTags(HashSet<string> tags)
     {
         if (tags.Count is 0)
             throw new ArgumentException("The tags set cannot be empty");
@@ -132,7 +115,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             .ToList();
 
         _logger.LogDebug("Searched for resources in tenant {@TenantName} with tags {@Tags}", TenantName, tags);
-        return ValueTask.FromResult<IReadOnlyList<IResourceGrain>>(resources);
+        return ValueTask.FromResult<IEnumerable<IResourceGrain>>(resources);
     }
 
     public async ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string name)
