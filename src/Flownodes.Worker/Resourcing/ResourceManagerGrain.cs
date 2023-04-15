@@ -133,7 +133,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
         var tags = new HashSet<string> { name, kind };
 
-        _persistence.State.AddRegistration(name, grain.GetGrainId(), kind, tags);
+        _persistence.State.AddRegistration(grain.GetGrainId(), tags);
         await _persistence.WriteStateAsync();
 
         await EventBook.RegisterEventAsync(EventKind.DeployedResource, Id);
