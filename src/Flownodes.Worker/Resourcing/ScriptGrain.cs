@@ -61,6 +61,14 @@ internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
         return ValueTask.FromResult(new ResourceSummary(Id, Metadata.State, properties));
     }
 
+    public async Task ClearStoreAsync()
+    {
+        await ClearMetadataAsync();
+        await _store.ClearStateAsync();
+        
+        _logger.LogInformation("Cleared Script {@ScriptGrainId} store", Id);
+    }
+
     public async Task UpdateCodeAsync(string code)
     {
         _store.State.Code = code;

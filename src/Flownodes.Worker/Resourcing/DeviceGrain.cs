@@ -21,6 +21,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
     private readonly ILogger<DeviceGrain> _logger;
     private readonly IJournaledStoreGrain<Dictionary<string, object?>> _state;
     private IDeviceBehaviour? _behaviour;
+    private IDisposable? _timer;
 
     public DeviceGrain(IExtensionProvider extensionProvider, ILogger<DeviceGrain> logger,
         [PersistentState("deviceMetadata")] IPersistentState<Dictionary<string, object?>> metadata,
@@ -130,7 +131,7 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         if (configuration.GetValueOrDefault("updateStateTimeSpan") is not int updateState) return;
 
         var timeSpan = TimeSpan.FromSeconds(updateState);
-        RegisterTimer(ExecuteTimerBehaviourAsync, null, timeSpan, timeSpan);
+        _timer = RegisterTimer(ExecuteTimerBehaviourAsync, null, timeSpan, timeSpan);
     }
 
     private async Task WriteConfigurationAsync(Dictionary<string, object?> properties)
@@ -170,5 +171,16 @@ internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
         if (storedState.ContainsAll(state)) return;
 
         await WriteStateAsync(state);
+    }
+
+    public async Task ClearStoreAsync()
+    {
+        _timer?.Dispose();
+        await _behaviourId.ClearStateAsync();
+        await ClearMetadataAsync();
+        await ClearConfigurationAsync();
+        await ClearStateAsync();
+        
+        _logger.LogInformation("Cleared Device {@DeviceGrainId} store", Id);
     }
 }

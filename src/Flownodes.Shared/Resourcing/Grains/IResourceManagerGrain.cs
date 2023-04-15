@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using Flownodes.Shared.Entities;
 
 namespace Flownodes.Shared.Resourcing.Grains;
@@ -14,7 +13,7 @@ public interface IResourceManagerGrain : IEntityGrain
 
     ValueTask<TResourceGrain> DeployResourceAsync<TResourceGrain>(string name) where TResourceGrain : IResourceGrain;
 
-    Task RemoveResourceAsync(string name);
+    Task DeleteResourceAsync(string name);
     Task RemoveAllResourcesAsync();
     ValueTask<IResourceGrain?> GetResourceAsync(string name);
     ValueTask<IEnumerable<IResourceGrain>> SearchResourcesByTags(HashSet<string> tags);

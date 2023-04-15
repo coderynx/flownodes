@@ -80,10 +80,4 @@ internal abstract class ResourceGrain : Grain
         await Metadata.ClearStateAsync();
         _logger.LogInformation("Cleared metadata of Resource {@ResourceId}", Id);
     }
-
-    public virtual async Task SelfRemoveAsync()
-    {
-        await ClearMetadataAsync();
-        _logger.LogInformation("Removed ResourceGrain {@ResourceId}", Id);
-    }
 }

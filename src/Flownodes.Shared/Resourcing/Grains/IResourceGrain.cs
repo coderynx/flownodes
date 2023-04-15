@@ -32,5 +32,5 @@ public interface IResourceGrain : IEntityGrain
     /// <summary>
     ///     Clears the resource from the persistence store.
     /// </summary>
-    Task SelfRemoveAsync();
+    Task ClearStoreAsync();
 }

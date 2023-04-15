@@ -91,6 +91,14 @@ internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
         return ValueTask.FromResult(new ResourceSummary(Id, Metadata.State, properties));
     }
 
+    public async Task ClearStoreAsync()
+    {
+        await ClearMetadataAsync();
+        await ClearRegistrationsAsync();
+        
+        _logger.LogInformation("Cleared ResourceGroup {@ResourceGroupGrainId} store", Id);
+    }
+
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Activated resource group grain {@ResourceGroupId}", Id);

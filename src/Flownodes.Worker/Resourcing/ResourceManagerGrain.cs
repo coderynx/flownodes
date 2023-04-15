@@ -146,16 +146,20 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         return grain;
     }
 
-    public async Task RemoveResourceAsync(string name)
+    public async Task DeleteResourceAsync(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 
         var registration = _persistence.State.GetRegistration(name);
-        if (registration is null) throw new ResourceNotFoundException(TenantName, name);
+        if (registration is null)
+        {
+            _logger.LogError("Could not find the resource {ResourceName}", name);
+            return;
+        }
 
         var grain = _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>();
         var id = await grain.GetId();
-        await grain.SelfRemoveAsync();
+        await grain.ClearStoreAsync();
 
         _persistence.State.Registrations.Remove(registration);
         await _persistence.WriteStateAsync();
@@ -169,7 +173,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         var grains = _persistence.State.Registrations
             .Select(registration => _grainFactory.GetGrain(registration.GrainId).AsReference<IResourceGrain>());
 
-        foreach (var grain in grains) await grain.SelfRemoveAsync();
+        foreach (var grain in grains) await grain.ClearStoreAsync();
 
         _persistence.State.Registrations.Clear();
         await _persistence.WriteStateAsync();

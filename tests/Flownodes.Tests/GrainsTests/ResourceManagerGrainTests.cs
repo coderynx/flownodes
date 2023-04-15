@@ -198,7 +198,7 @@ public class ResourceManagerGrainTests
         await manager.DeployResourceAsync<IAssetGrain>("resource");
 
         // Act.
-        await manager.RemoveResourceAsync("resource");
+        await manager.DeleteResourceAsync("resource");
 
         var grain = await manager.GetResourceAsync<IAssetGrain>("resource");
         grain.Should().BeNull();

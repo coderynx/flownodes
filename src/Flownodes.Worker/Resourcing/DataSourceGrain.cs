@@ -50,6 +50,15 @@ internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
         return new ResourceSummary(Id, Metadata.State, properties);
     }
 
+    public async Task ClearStoreAsync()
+    {
+        await ClearMetadataAsync();
+        await _behaviourId.ClearStateAsync();
+        await _configuration.ClearAsync();
+        
+        _logger.LogInformation("Cleared DataSource {@DataSourceGrainId} store", Id);
+    }
+
     public async Task UpdateBehaviourId(string behaviourId)
     {
         _behaviourId.State.Value = behaviourId;

@@ -70,6 +70,14 @@ internal sealed class DeviceZoneGrain : ResourceGrain, IDeviceZoneGrain
         return ValueTask.FromResult(new ResourceSummary(Id, Metadata.State, properties));
     }
 
+    public async Task ClearStoreAsync()
+    {
+        await _registrations.ClearStateAsync();
+        await ClearMetadataAsync();
+
+        _logger.LogInformation("Cleared DeviceZone {@DeviceZoneGrainId} store", Id);
+    }
+
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Activated DeviceZoneGrain {@DeviceZoneGrainId}", Id);

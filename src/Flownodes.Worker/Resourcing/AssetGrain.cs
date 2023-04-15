@@ -2,6 +2,7 @@ using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Grains;
 using Orleans.Runtime;
+using OrleansCodeGen.Orleans;
 
 namespace Flownodes.Worker.Resourcing;
 
@@ -22,6 +23,14 @@ internal sealed class AssetGrain : ResourceGrain, IAssetGrain
     public async ValueTask<ResourceSummary> GetSummary()
     {
         return new ResourceSummary(Id, Metadata.State, await GetProperties());
+    }
+
+    public async Task ClearStoreAsync()
+    {
+        await ClearMetadataAsync();
+        await _properties.ClearAsync();
+        
+        _logger.LogInformation("Cleared Asset {@AssetGrainId} store", Id);
     }
 
     public async ValueTask<Dictionary<string, object?>> GetProperties()
