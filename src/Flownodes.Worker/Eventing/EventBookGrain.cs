@@ -4,7 +4,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Eventing;
 
-[GrainType(FlownodesEntityNames.EventBook)]
+[GrainType(EntityNames.EventBook)]
 internal sealed class EventBookGrain : Grain, IEventBookGrain
 {
     private readonly ILogger<EventBookGrain> _logger;
@@ -17,9 +17,9 @@ internal sealed class EventBookGrain : Grain, IEventBookGrain
         _store = store;
     }
 
-    private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
+    private EntityId Id => (EntityId)this.GetPrimaryKeyString();
 
-    public async ValueTask<EventRegistration> RegisterEventAsync(EventKind kind, FlownodesId targetEntityId)
+    public async ValueTask<EventRegistration> RegisterEventAsync(EventKind kind, EntityId targetEntityId)
     {
         var registration = new EventRegistration(DateTime.Now, kind, targetEntityId);
 
@@ -35,7 +35,7 @@ internal sealed class EventBookGrain : Grain, IEventBookGrain
         return ValueTask.FromResult(_store.State);
     }
 
-    public ValueTask<FlownodesId> GetId()
+    public ValueTask<EntityId> GetId()
     {
         return ValueTask.FromResult(Id);
     }

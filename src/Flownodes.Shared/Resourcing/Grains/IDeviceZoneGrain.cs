@@ -4,9 +4,9 @@ namespace Flownodes.Shared.Resourcing.Grains;
 
 public interface IDeviceZoneGrain : IResourceGrain
 {
-    Task RegisterDeviceAsync(FlownodesId id);
-    Task UnregisterDeviceAsync(FlownodesId id);
-    ValueTask<IDeviceGrain?> GetDeviceAsync(FlownodesId id);
+    Task RegisterDeviceAsync(EntityId id);
+    Task UnregisterDeviceAsync(EntityId id);
+    ValueTask<IDeviceGrain?> GetDeviceAsync(EntityId id);
     ValueTask<HashSet<string>> GetRegistrations();
     Task ClearRegistrationsAsync();
 }

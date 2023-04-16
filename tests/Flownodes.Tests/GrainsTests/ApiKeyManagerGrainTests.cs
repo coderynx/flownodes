@@ -21,10 +21,10 @@ public class ApiKeyManagerGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId => new(FlownodesEntity.ApiKeyManager, _fixture.Create<string>());
+    private EntityId NewEntityId => new(Entity.ApiKeyManager, _fixture.Create<string>());
 
     private IApiKeyManagerGrain NewApiKeyManagerGrain =>
-        _cluster.GrainFactory.GetGrain<IApiKeyManagerGrain>(NewFlownodesId);
+        _cluster.GrainFactory.GetGrain<IApiKeyManagerGrain>(NewEntityId);
 
     [Fact]
     public async Task GenerateApiKey_ShouldGenerateApiKey()

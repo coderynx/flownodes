@@ -19,7 +19,7 @@ public class GetResourceGroupHandler : IRequestHandler<GetResourceGroupRequest, 
     public async Task<GetResourceGroupResponse> Handle(GetResourceGroupRequest request,
         CancellationToken cancellationToken)
     {
-        var id = new FlownodesId(FlownodesEntity.ResourceGroup, request.TenantName, request.ResourceGroupName);
+        var id = new EntityId(Entity.ResourceGroup, request.TenantName, request.ResourceGroupName);
 
         var resourceManager = await _environmentService.GetResourceManager(request.TenantName);
         if (resourceManager is null)

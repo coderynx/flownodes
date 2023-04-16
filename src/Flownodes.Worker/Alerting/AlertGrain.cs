@@ -8,7 +8,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Alerting;
 
-[GrainType(FlownodesEntityNames.Alert)]
+[GrainType(EntityNames.Alert)]
 internal class AlertGrain : Grain, IAlertGrain
 {
     private readonly IList<IAlerterDriver> _drivers = new List<IAlerterDriver>();
@@ -25,7 +25,7 @@ internal class AlertGrain : Grain, IAlertGrain
         _extensionProvider = extensionProvider;
     }
 
-    private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
+    private EntityId Id => (EntityId)this.GetPrimaryKeyString();
     private string TenantName => Id.FirstName;
     private string AlertName => Id.SecondName!;
 
@@ -81,7 +81,7 @@ internal class AlertGrain : Grain, IAlertGrain
         _logger.LogInformation("Cleared state of alert {@AlertGrainId}", Id);
     }
 
-    public ValueTask<FlownodesId> GetId()
+    public ValueTask<EntityId> GetId()
     {
         return ValueTask.FromResult(Id);
     }

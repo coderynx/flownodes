@@ -21,15 +21,15 @@ public class EventBookGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId => new(FlownodesEntity.EventBook, _fixture.Create<string>());
-    private IEventBookGrain NewEventBookGrain => _cluster.GrainFactory.GetGrain<IEventBookGrain>(NewFlownodesId);
+    private EntityId NewEntityId => new(Entity.EventBook, _fixture.Create<string>());
+    private IEventBookGrain NewEventBookGrain => _cluster.GrainFactory.GetGrain<IEventBookGrain>(NewEntityId);
 
     [Fact]
     public async Task RegisterEvent_ShouldRegisterEvent()
     {
         // Arrange.
         var grain = NewEventBookGrain;
-        var id = new FlownodesId(FlownodesEntity.ResourceManager, FlownodesEntityNames.ResourceManager);
+        var id = new EntityId(Entity.ResourceManager, EntityNames.ResourceManager);
 
         // Act.
         var registration = await grain.RegisterEventAsync(EventKind.DeployedResource, id);
@@ -43,7 +43,7 @@ public class EventBookGrainTests
     {
         // Arrange.
         var grain = NewEventBookGrain;
-        var id = new FlownodesId(FlownodesEntity.ResourceManager, FlownodesEntityNames.ResourceManager);
+        var id = new EntityId(Entity.ResourceManager, EntityNames.ResourceManager);
         await grain.RegisterEventAsync(EventKind.DeployedResource, id);
 
         // Act.

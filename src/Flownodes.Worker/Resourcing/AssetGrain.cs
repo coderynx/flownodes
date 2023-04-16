@@ -6,7 +6,7 @@ using OrleansCodeGen.Orleans;
 
 namespace Flownodes.Worker.Resourcing;
 
-[GrainType(FlownodesEntityNames.Asset)]
+[GrainType(EntityNames.Asset)]
 internal sealed class AssetGrain : ResourceGrain, IAssetGrain
 {
     private readonly ILogger<AssetGrain> _logger;

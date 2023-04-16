@@ -22,8 +22,8 @@ public class TenantGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId => new(FlownodesEntity.Tenant, _fixture.Create<string>());
-    private ITenantGrain NewTenantGrain => _cluster.GrainFactory.GetGrain<ITenantGrain>(NewFlownodesId);
+    private EntityId NewEntityId => new(Entity.Tenant, _fixture.Create<string>());
+    private ITenantGrain NewTenantGrain => _cluster.GrainFactory.GetGrain<ITenantGrain>(NewEntityId);
 
     [Fact]
     public async Task UpdateMetadata_ShouldUpdateMetadata()

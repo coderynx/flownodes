@@ -5,7 +5,7 @@ namespace Flownodes.Shared.Resourcing.Exceptions;
 [GenerateSerializer]
 public class ResourceNotFoundException : Exception
 {
-    public ResourceNotFoundException(FlownodesId id)
+    public ResourceNotFoundException(EntityId id)
         : base($"The resource {id.SecondName} of tenant {id.FirstName} was not found")
     {
         TenantName = id.FirstName;

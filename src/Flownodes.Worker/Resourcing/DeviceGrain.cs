@@ -12,7 +12,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
 
-[GrainType(FlownodesEntityNames.Device)]
+[GrainType(EntityNames.Device)]
 internal sealed class DeviceGrain : ResourceGrain, IDeviceGrain
 {
     private readonly IPersistentState<BehaviourId> _behaviourId;

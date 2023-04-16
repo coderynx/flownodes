@@ -6,7 +6,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
 
-[GrainType(FlownodesEntityNames.DeviceZone)]
+[GrainType(EntityNames.DeviceZone)]
 internal sealed class DeviceZoneGrain : ResourceGrain, IDeviceZoneGrain
 {
     private readonly ILogger<DeviceZoneGrain> _logger;
@@ -21,7 +21,7 @@ internal sealed class DeviceZoneGrain : ResourceGrain, IDeviceZoneGrain
         _registrations = registrations;
     }
 
-    public async Task RegisterDeviceAsync(FlownodesId id)
+    public async Task RegisterDeviceAsync(EntityId id)
     {
         if (!await ResourceManager.IsResourceRegistered(id.SecondName!)) throw new ResourceNotFoundException(id);
         if (_registrations.State.Contains(id)) throw new Exception($"Device {id} already registered into DeviceZone");
@@ -32,7 +32,7 @@ internal sealed class DeviceZoneGrain : ResourceGrain, IDeviceZoneGrain
         _logger.LogInformation("Registered device {@DeviceId} into zone {@DeviceZoneId}", id, Id);
     }
 
-    public async Task UnregisterDeviceAsync(FlownodesId id)
+    public async Task UnregisterDeviceAsync(EntityId id)
     {
         _registrations.State.Remove(id);
         await _registrations.WriteStateAsync();
@@ -40,7 +40,7 @@ internal sealed class DeviceZoneGrain : ResourceGrain, IDeviceZoneGrain
         _logger.LogInformation("Unregistered device {@DeviceId} from zone {@DeviceZoneId}", id, Id);
     }
 
-    public async ValueTask<IDeviceGrain?> GetDeviceAsync(FlownodesId id)
+    public async ValueTask<IDeviceGrain?> GetDeviceAsync(EntityId id)
     {
         ArgumentException.ThrowIfNullOrEmpty(id);
 

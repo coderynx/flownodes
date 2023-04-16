@@ -21,10 +21,10 @@ public class TenantManagerGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId => new(FlownodesEntity.TenantManager, _fixture.Create<string>());
+    private EntityId NewEntityId => new(Entity.TenantManager, _fixture.Create<string>());
 
     private ITenantManagerGrain NewTenantManagerGrain =>
-        _cluster.GrainFactory.GetGrain<ITenantManagerGrain>(NewFlownodesId);
+        _cluster.GrainFactory.GetGrain<ITenantManagerGrain>(NewEntityId);
 
     [Fact]
     public async Task CreateTenant_ShouldCreateTenant()

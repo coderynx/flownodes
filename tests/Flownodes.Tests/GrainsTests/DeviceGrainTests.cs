@@ -23,11 +23,11 @@ public class DeviceGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId =>
-        new(FlownodesEntity.Other, _fixture.Create<string>(), _fixture.Create<string>());
+    private EntityId NewEntityId =>
+        new(Entity.Other, _fixture.Create<string>(), _fixture.Create<string>());
 
     private IDeviceGrain NewTestResourceGrain =>
-        _cluster.GrainFactory.GetGrain<IDeviceGrain>(NewFlownodesId);
+        _cluster.GrainFactory.GetGrain<IDeviceGrain>(NewEntityId);
 
     [Fact]
     public async Task UpdateConfiguration_ShouldUpdateConfigurationAsync()
@@ -62,7 +62,7 @@ public class DeviceGrainTests
         UpdateConfiguration_ShouldThrowResourceBehaviourNotRegisteredException_WhenBehaviourIsNotRegistered()
     {
         // Arrange.
-        var id = new FlownodesId(FlownodesEntity.Device, "tenant", "device");
+        var id = new EntityId(Entity.Device, "tenant", "device");
         var grain = _cluster.GrainFactory.GetGrain<IDeviceGrain>(id);
 
         // Act & Assert.

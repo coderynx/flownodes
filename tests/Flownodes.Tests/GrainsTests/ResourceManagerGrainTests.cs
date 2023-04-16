@@ -24,10 +24,10 @@ public class ResourceManagerGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId => new(FlownodesEntity.ResourceManager, _fixture.Create<string>());
+    private EntityId NewEntityId => new(Entity.ResourceManager, _fixture.Create<string>());
 
     private IResourceManagerGrain NewResourceManagerGrain =>
-        _cluster.GrainFactory.GetGrain<IResourceManagerGrain>(NewFlownodesId);
+        _cluster.GrainFactory.GetGrain<IResourceManagerGrain>(NewEntityId);
 
     [Fact]
     public async Task DeployResource_ShouldDeployAssetGrain_WithCorrectId()
@@ -42,7 +42,7 @@ public class ResourceManagerGrainTests
         grain.Should().NotBeNull();
         var id = await grain.GetId();
         id.IsManager.Should().Be(false);
-        id.EntityKind.Should().Be(FlownodesEntity.Asset);
+        id.EntityKind.Should().Be(Entity.Asset);
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public class ResourceManagerGrainTests
         grain.Should().NotBeNull();
         var id = await grain.GetId();
         id.IsManager.Should().Be(false);
-        id.EntityKind.Should().Be(FlownodesEntity.DataSource);
+        id.EntityKind.Should().Be(Entity.DataSource);
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public class ResourceManagerGrainTests
         grain.Should().NotBeNull();
         var id = await grain.GetId();
         id.IsManager.Should().Be(false);
-        id.EntityKind.Should().Be(FlownodesEntity.ResourceGroup);
+        id.EntityKind.Should().Be(Entity.ResourceGroup);
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class ResourceManagerGrainTests
         grain.Should().NotBeNull();
         var id = await grain.GetId();
         id.IsManager.Should().Be(false);
-        id.EntityKind.Should().Be(FlownodesEntity.Device);
+        id.EntityKind.Should().Be(Entity.Device);
     }
 
     [Fact]

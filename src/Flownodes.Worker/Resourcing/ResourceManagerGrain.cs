@@ -10,7 +10,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
 
-[GrainType(FlownodesEntityNames.ResourceManager)]
+[GrainType(EntityNames.ResourceManager)]
 public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
 {
     private readonly IGrainFactory _grainFactory;
@@ -26,9 +26,9 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _grainFactory = grainFactory;
     }
 
-    private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
+    private EntityId Id => (EntityId)this.GetPrimaryKeyString();
     private string TenantName => Id.FirstName;
-    private FlownodesId EventBookId => new(FlownodesEntity.EventBook, TenantName);
+    private EntityId EventBookId => new(Entity.EventBook, TenantName);
     private IEventBookGrain EventBook => GrainFactory.GetGrain<IEventBookGrain>(EventBookId);
 
     public async ValueTask<IEnumerable<ResourceSummary>> GetAllResourceSummaries()
@@ -181,7 +181,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         _logger.LogInformation("Removed all resources of resource manager {@ResourceManagerId}", Id);
     }
 
-    public ValueTask<FlownodesId> GetId()
+    public ValueTask<EntityId> GetId()
     {
         return ValueTask.FromResult(Id);
     }

@@ -22,10 +22,10 @@ public class UserManagerGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId => new(FlownodesEntity.UserManager, _fixture.Create<string>());
+    private EntityId NewEntityId => new(Entity.UserManager, _fixture.Create<string>());
 
     private IUserManagerGrain NewUserManagerGrain =>
-        _cluster.GrainFactory.GetGrain<IUserManagerGrain>(NewFlownodesId);
+        _cluster.GrainFactory.GetGrain<IUserManagerGrain>(NewEntityId);
 
     [Fact]
     public async Task CreateUser_ShouldCreateUser()

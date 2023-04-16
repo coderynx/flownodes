@@ -4,5 +4,5 @@ namespace Flownodes.Shared.Entities;
 
 public interface IEntityGrain : IGrainWithStringKey
 {
-    ValueTask<FlownodesId> GetId();
+    ValueTask<EntityId> GetId();
 }

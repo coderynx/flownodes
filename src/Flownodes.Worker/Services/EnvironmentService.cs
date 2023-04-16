@@ -39,16 +39,16 @@ public class EnvironmentService : IEnvironmentService
     {
         _clusterOptions = clusterOptions.Value;
 
-        var userManagerId = new FlownodesId(FlownodesEntity.UserManager, FlownodesEntityNames.UserManager);
+        var userManagerId = new EntityId(Entity.UserManager, EntityNames.UserManager);
         _userManager = grainFactory.GetGrain<IUserManagerGrain>(userManagerId);
 
-        var rolesManagerId = new FlownodesId(FlownodesEntity.RoleClaimManager, FlownodesEntityNames.RoleClaimManager);
+        var rolesManagerId = new EntityId(Entity.RoleClaimManager, EntityNames.RoleClaimManager);
         _roleClaimManager = grainFactory.GetGrain<IRoleClaimManagerGrain>(rolesManagerId);
 
-        var apiKeyManagerId = new FlownodesId(FlownodesEntity.ApiKeyManager, FlownodesEntityNames.ApiKeyManager);
+        var apiKeyManagerId = new EntityId(Entity.ApiKeyManager, EntityNames.ApiKeyManager);
         _apiKeyManager = grainFactory.GetGrain<IApiKeyManagerGrain>(apiKeyManagerId);
 
-        var tenantManagerId = new FlownodesId(FlownodesEntity.TenantManager, FlownodesEntityNames.TenantManager);
+        var tenantManagerId = new EntityId(Entity.TenantManager, EntityNames.TenantManager);
         _tenantManager = grainFactory.GetGrain<ITenantManagerGrain>(tenantManagerId);
 
         _clusterManifestProvider = clusterManifestProvider;

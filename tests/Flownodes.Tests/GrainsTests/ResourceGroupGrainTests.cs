@@ -23,7 +23,7 @@ public class ResourceGroupGrainTests
     }
 
     private IResourceManagerGrain NewResourceManager =>
-        _cluster.GrainFactory.GetGrain<IResourceManagerGrain>(new FlownodesId(FlownodesEntity.ResourceManager,
+        _cluster.GrainFactory.GetGrain<IResourceManagerGrain>(new EntityId(Entity.ResourceManager,
             _fixture.Create<string>()));
 
     [Fact]

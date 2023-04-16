@@ -5,6 +5,6 @@ namespace Flownodes.Shared.Eventing;
 
 public interface IEventBookGrain : IEntityGrain
 {
-    ValueTask<EventRegistration> RegisterEventAsync(EventKind kind, FlownodesId targetEntityId);
+    ValueTask<EventRegistration> RegisterEventAsync(EventKind kind, EntityId targetEntityId);
     ValueTask<HashSet<EventRegistration>> GetEvents();
 }

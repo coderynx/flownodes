@@ -7,7 +7,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Tenanting;
 
-[GrainType(FlownodesEntityNames.Tenant)]
+[GrainType(EntityNames.Tenant)]
 public class TenantGrain : Grain, ITenantGrain
 {
     private readonly ILogger<TenantGrain> _logger;
@@ -27,7 +27,7 @@ public class TenantGrain : Grain, ITenantGrain
         set => _metadataStore.State = value;
     }
 
-    private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
+    private EntityId Id => (EntityId)this.GetPrimaryKeyString();
 
     public async Task UpdateMetadataAsync(Dictionary<string, string?> metadata)
     {
@@ -51,23 +51,23 @@ public class TenantGrain : Grain, ITenantGrain
 
     public ValueTask<IResourceManagerGrain> GetResourceManager()
     {
-        var id = new FlownodesId(FlownodesEntity.ResourceManager, Id.FirstName);
+        var id = new EntityId(Entity.ResourceManager, Id.FirstName);
         return ValueTask.FromResult(GrainFactory.GetGrain<IResourceManagerGrain>(id));
     }
 
     public ValueTask<IAlertManagerGrain> GetAlertManager()
     {
-        var id = new FlownodesId(FlownodesEntity.AlertManager, Id.FirstName);
+        var id = new EntityId(Entity.AlertManager, Id.FirstName);
         return ValueTask.FromResult(GrainFactory.GetGrain<IAlertManagerGrain>(id));
     }
 
     public ValueTask<IEventBookGrain> GetEventBook()
     {
-        var id = new FlownodesId(FlownodesEntity.EventBook, Id.FirstName);
+        var id = new EntityId(Entity.EventBook, Id.FirstName);
         return ValueTask.FromResult(GrainFactory.GetGrain<IEventBookGrain>(id));
     }
 
-    public ValueTask<FlownodesId> GetId()
+    public ValueTask<EntityId> GetId()
     {
         return ValueTask.FromResult(Id);
     }

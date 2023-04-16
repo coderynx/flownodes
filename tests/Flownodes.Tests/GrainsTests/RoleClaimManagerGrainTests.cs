@@ -22,10 +22,10 @@ public class RoleClaimManagerGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId => new(FlownodesEntity.RoleClaimManager, _fixture.Create<string>());
+    private EntityId NewEntityId => new(Entity.RoleClaimManager, _fixture.Create<string>());
 
     private IRoleClaimManagerGrain NewRoleClaimManager =>
-        _cluster.GrainFactory.GetGrain<IRoleClaimManagerGrain>(NewFlownodesId);
+        _cluster.GrainFactory.GetGrain<IRoleClaimManagerGrain>(NewEntityId);
 
     [Fact]
     public async Task AddRole_ShouldAddClaim()

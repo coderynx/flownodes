@@ -9,6 +9,6 @@ public interface IResourceGroupGrain : IResourceGrain
     ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string name) where TResourceGrain : IResourceGrain;
     ValueTask<IResourceGrain?> GetResourceAsync(string name);
     ValueTask<bool> IsResourceRegistered(string name);
-    ValueTask<HashSet<FlownodesId>> GetRegistrations();
+    ValueTask<HashSet<EntityId>> GetRegistrations();
     Task ClearRegistrationsAsync();
 }

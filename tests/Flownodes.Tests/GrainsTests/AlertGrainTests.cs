@@ -24,10 +24,10 @@ public class AlertGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId =>
-        new(FlownodesEntity.Alert, _fixture.Create<string>(), _fixture.Create<string>());
+    private EntityId NewEntityId =>
+        new(Entity.Alert, _fixture.Create<string>(), _fixture.Create<string>());
 
-    private IAlertGrain NewAlertGrain => _cluster.GrainFactory.GetGrain<IAlertGrain>(NewFlownodesId);
+    private IAlertGrain NewAlertGrain => _cluster.GrainFactory.GetGrain<IAlertGrain>(NewEntityId);
 
     [Fact]
     public async Task Initialize_ShouldInitializeAlert()

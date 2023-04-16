@@ -7,7 +7,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
 
-[GrainType(FlownodesEntityNames.ResourceGroup)]
+[GrainType(EntityNames.ResourceGroup)]
 internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
 {
     private readonly ILogger<ResourceGroupGrain> _logger;
@@ -57,9 +57,10 @@ internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
 
     public async ValueTask<IResourceGrain?> GetResourceAsync(string name)
     {
-        var id = _store.State
-            .Select(x => (FlownodesId)x)
+        EntityId? id = _store.State
+            .Select(x => (EntityId)x)
             .SingleOrDefault(x => x.SecondName!.Equals(name));
+
         if (id is null) return default;
 
         return await ResourceManager.GetResourceAsync(name);
@@ -67,12 +68,12 @@ internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
 
     public ValueTask<bool> IsResourceRegistered(string name)
     {
-        return ValueTask.FromResult(_store.State.Select(x => (FlownodesId)x).Any(x => x.SecondName!.Equals(name)));
+        return ValueTask.FromResult(_store.State.Select(x => (EntityId)x).Any(x => x.SecondName!.Equals(name)));
     }
 
-    public ValueTask<HashSet<FlownodesId>> GetRegistrations()
+    public ValueTask<HashSet<EntityId>> GetRegistrations()
     {
-        return ValueTask.FromResult(_store.State.Select(x => (FlownodesId)x).ToHashSet());
+        return ValueTask.FromResult(_store.State.Select(x => (EntityId)x).ToHashSet());
     }
 
     public async Task ClearRegistrationsAsync()

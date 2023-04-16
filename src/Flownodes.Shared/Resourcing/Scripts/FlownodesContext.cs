@@ -15,7 +15,7 @@ public class FlownodesContext
     private readonly IResourceManagerGrain _resourceManager;
 
     public FlownodesContext(ILogger<FlownodesContext> logger, IResourceManagerGrain resourceManager,
-        IAlertManagerGrain alertManager, FlownodesId id)
+        IAlertManagerGrain alertManager, EntityId id)
     {
         _logger = logger;
         _resourceManager = resourceManager;
@@ -23,7 +23,7 @@ public class FlownodesContext
         Id = id;
     }
 
-    public FlownodesId Id { get; }
+    public EntityId Id { get; }
     public string TenantName => Id.FirstName;
     public string ResourceName => Id.SecondName!;
 

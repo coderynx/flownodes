@@ -5,8 +5,8 @@ namespace Flownodes.Worker.Extensions;
 
 public static class GrainIdExtensions
 {
-    public static FlownodesId ToFlownodesId(this GrainId id)
+    public static EntityId ToFlownodesId(this GrainId id)
     {
-        return (FlownodesId)id.Key.ToString()!;
+        return (EntityId)id.Key.ToString()!;
     }
 }

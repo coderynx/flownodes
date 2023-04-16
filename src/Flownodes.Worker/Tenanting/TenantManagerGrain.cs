@@ -5,7 +5,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Tenanting;
 
-[GrainType(FlownodesEntityNames.TenantManager)]
+[GrainType(EntityNames.TenantManager)]
 public class TenantManagerGrain : ITenantManagerGrain
 {
     private readonly IGrainFactory _grainFactory;
@@ -21,13 +21,13 @@ public class TenantManagerGrain : ITenantManagerGrain
         _grainFactory = grainFactory;
     }
 
-    private FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
+    private EntityId Id => (EntityId)this.GetPrimaryKeyString();
 
     public async ValueTask<ITenantGrain?> GetTenantAsync(string name)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
 
-        var id = new FlownodesId(FlownodesEntity.Tenant, name);
+        var id = new EntityId(Entity.Tenant, name);
         if (await IsTenantRegistered(name))
         {
             var grain = _grainFactory.GetGrain<ITenantGrain>(id);
@@ -60,7 +60,7 @@ public class TenantManagerGrain : ITenantManagerGrain
         _registrations.State.Add(name);
         await _registrations.WriteStateAsync();
 
-        var id = new FlownodesId(FlownodesEntity.Tenant, name);
+        var id = new EntityId(Entity.Tenant, name);
         var grain = _grainFactory.GetGrain<ITenantGrain>(id);
 
         _logger.LogInformation("Created tenant with ID {@TenantId}", id);
@@ -84,7 +84,7 @@ public class TenantManagerGrain : ITenantManagerGrain
         return Task.CompletedTask;
     }
 
-    public ValueTask<FlownodesId> GetId()
+    public ValueTask<EntityId> GetId()
     {
         return ValueTask.FromResult(Id);
     }

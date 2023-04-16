@@ -20,13 +20,13 @@ internal abstract class ResourceGrain : Grain
         Metadata = metadata;
     }
 
-    protected FlownodesId Id => (FlownodesId)this.GetPrimaryKeyString();
+    protected EntityId Id => (EntityId)this.GetPrimaryKeyString();
     protected string TenantName => Id.FirstName;
-    private FlownodesId ResourceManagerId => new(FlownodesEntity.ResourceManager, TenantName);
+    private EntityId ResourceManagerId => new(Entity.ResourceManager, TenantName);
     protected IResourceManagerGrain ResourceManager => GrainFactory.GetGrain<IResourceManagerGrain>(ResourceManagerId);
-    private FlownodesId AlertManagerId => new(FlownodesEntity.AlertManager, TenantName);
+    private EntityId AlertManagerId => new(Entity.AlertManager, TenantName);
     protected IAlertManagerGrain AlertManager => GrainFactory.GetGrain<IAlertManagerGrain>(AlertManagerId);
-    private FlownodesId EventBookId => new(FlownodesEntity.EventBook, TenantName);
+    private EntityId EventBookId => new(Entity.EventBook, TenantName);
     protected IEventBookGrain EventBook => GrainFactory.GetGrain<IEventBookGrain>(EventBookId);
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
@@ -43,7 +43,7 @@ internal abstract class ResourceGrain : Grain
         return base.OnDeactivateAsync(reason, cancellationToken);
     }
 
-    public ValueTask<FlownodesId> GetId()
+    public ValueTask<EntityId> GetId()
     {
         return ValueTask.FromResult(Id);
     }

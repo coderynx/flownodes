@@ -21,10 +21,10 @@ public class ScriptGrainTests
         _fixture = new Fixture();
     }
 
-    private FlownodesId NewFlownodesId =>
-        new(FlownodesEntity.Script, _fixture.Create<string>(), _fixture.Create<string>());
+    private EntityId NewEntityId =>
+        new(Entity.Script, _fixture.Create<string>(), _fixture.Create<string>());
 
-    private IScriptGrain NewScriptGrain => _cluster.GrainFactory.GetGrain<IScriptGrain>(NewFlownodesId);
+    private IScriptGrain NewScriptGrain => _cluster.GrainFactory.GetGrain<IScriptGrain>(NewEntityId);
 
     [Fact]
     public async Task ExecuteAsync_ShouldExecuteScriptWithoutThrowing()

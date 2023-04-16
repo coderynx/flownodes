@@ -7,7 +7,7 @@ namespace Flownodes.Worker.Authentication;
 
 internal sealed record ApiKey(string Name, string Username, string Value);
 
-[GrainType(FlownodesEntityNames.ApiKeyManager)]
+[GrainType(EntityNames.ApiKeyManager)]
 internal sealed class ApiKeyManagerGrain : Grain, IApiKeyManagerGrain
 {
     private readonly ILogger<ApiKeyManagerGrain> _logger;

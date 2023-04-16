@@ -1,6 +1,6 @@
 namespace Flownodes.Sdk.Entities;
 
-public static class FlownodesEntityNames
+public static class EntityNames
 {
     public const string UserManager = "user_manager";
     public const string RoleClaimManager = "role_claim_manager";

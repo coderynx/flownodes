@@ -13,7 +13,7 @@ internal sealed record ScriptStore
     [Id(0)] public string? Code { get; set; }
 }
 
-[GrainType(FlownodesEntityNames.Script)]
+[GrainType(EntityNames.Script)]
 internal sealed class ScriptGrain : ResourceGrain, IScriptGrain
 {
     private readonly ILogger<ScriptGrain> _logger;

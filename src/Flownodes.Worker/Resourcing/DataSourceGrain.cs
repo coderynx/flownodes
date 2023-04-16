@@ -10,7 +10,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
 
-[GrainType(FlownodesEntityNames.DataSource)]
+[GrainType(EntityNames.DataSource)]
 internal sealed class DataSourceGrain : ResourceGrain, IDataSourceGrain
 {
     private readonly IPersistentState<BehaviourId> _behaviourId;

@@ -5,7 +5,7 @@ using Orleans.Runtime;
 
 namespace Flownodes.Worker.Authentication;
 
-[GrainType(FlownodesEntityNames.RoleClaimManager)]
+[GrainType(EntityNames.RoleClaimManager)]
 public class RoleClaimManagerGrain : Grain, IRoleClaimManagerGrain
 {
     private readonly ILogger<RoleClaimManagerGrain> _logger;

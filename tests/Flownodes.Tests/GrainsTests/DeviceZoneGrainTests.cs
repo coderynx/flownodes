@@ -23,7 +23,7 @@ public class DeviceZoneGrainTests
     }
 
     private IResourceManagerGrain NewResourceManager =>
-        _cluster.GrainFactory.GetGrain<IResourceManagerGrain>(new FlownodesId(FlownodesEntity.ResourceManager,
+        _cluster.GrainFactory.GetGrain<IResourceManagerGrain>(new EntityId(Entity.ResourceManager,
             _fixture.Create<string>()));
 
     [Fact]
@@ -50,7 +50,7 @@ public class DeviceZoneGrainTests
         var zone = await resourceManager.DeployResourceAsync<IDeviceZoneGrain>("device_zone");
 
         // Act & Assert.
-        var id = new FlownodesId(FlownodesEntity.Device, "tenant", "device");
+        var id = new EntityId(Entity.Device, "tenant", "device");
         var act = async () => await zone.RegisterDeviceAsync(id);
         await act.Should().ThrowAsync<ResourceNotFoundException>();
     }
