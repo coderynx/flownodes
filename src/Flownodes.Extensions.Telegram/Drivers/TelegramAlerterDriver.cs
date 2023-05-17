@@ -25,7 +25,7 @@ public class TelegramAlerterDriver : IAlerterDriver
     {
         var message = "<b>Flownodes</b> \n \n 🚨 New alert \n 📦 Resource Id: " + alert.TargetResourceId +
                       " \n 🔖 Alert kind: " + alert.Severity + "\n 💬 Alert message: " + alert.Description;
-        await _bot.SendTextMessageAsync(_chatId, message, ParseMode.Html);
+        await _bot.SendTextMessageAsync(_chatId, message, parseMode: ParseMode.Html);
         _logger.LogInformation("Sent alert from resource {TargetResourceId} to Telegram bot", alert.TargetResourceId);
     }
 }
