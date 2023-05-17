@@ -2,7 +2,7 @@ using Flownodes.Sdk.Entities;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
-using Flownodes.Worker.Builders;
+using Flownodes.Worker.Extensions;
 using Orleans.Runtime;
 
 namespace Flownodes.Worker.Resourcing;
@@ -49,7 +49,7 @@ internal sealed class ResourceGroupGrain : ResourceGrain, IResourceGroupGrain
     public async ValueTask<TResourceGrain?> GetResourceAsync<TResourceGrain>(string name)
         where TResourceGrain : IResourceGrain
     {
-        var id = FlownodesIdBuilder.CreateFromType<TResourceGrain>(TenantName, name);
+        var id = FlownodesIdExtensions.CreateFromType<TResourceGrain>(TenantName, name);
         if (!_store.State.Contains(id)) return default;
 
         return await ResourceManager.GetResourceAsync<TResourceGrain>(id.SecondName!);

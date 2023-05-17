@@ -5,9 +5,9 @@ using Flownodes.Shared.Eventing;
 using Flownodes.Shared.Resourcing.Grains;
 using Flownodes.Shared.Tenanting.Grains;
 
-namespace Flownodes.Worker.Builders;
+namespace Flownodes.Worker.Extensions;
 
-public static class FlownodesIdBuilder
+public static class FlownodesIdExtensions
 {
     private static readonly Dictionary<Type, Entity> TypeToFlownodesObject = new()
     {

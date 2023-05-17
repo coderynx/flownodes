@@ -3,7 +3,6 @@ using Flownodes.Shared.Eventing;
 using Flownodes.Shared.Resourcing;
 using Flownodes.Shared.Resourcing.Exceptions;
 using Flownodes.Shared.Resourcing.Grains;
-using Flownodes.Worker.Builders;
 using Flownodes.Worker.Extensions;
 using Flownodes.Worker.Resourcing.Persistence;
 using Orleans.Runtime;
@@ -58,7 +57,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             return default;
         }
 
-        var id = FlownodesIdBuilder.CreateFromType<TResourceGrain>(TenantName, name);
+        var id = FlownodesIdExtensions.CreateFromType<TResourceGrain>(TenantName, name);
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
 
         _logger.LogDebug("Retrieved resource {@ResourceId}", id);
@@ -126,7 +125,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (_persistence.State.IsResourceRegistered(name))
             throw new ResourceAlreadyRegisteredException(TenantName, name);
 
-        var id = FlownodesIdBuilder.CreateFromType<TResourceGrain>(TenantName, name);
+        var id = FlownodesIdExtensions.CreateFromType<TResourceGrain>(TenantName, name);
         var kind = id.ToEntityKindString();
 
         // TODO: Further investigation for singleton resource is needed.
