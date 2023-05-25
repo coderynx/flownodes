@@ -7,7 +7,7 @@ using Flownodes.Shared.Tenanting.Grains;
 
 namespace Flownodes.Worker.Extensions;
 
-public static class FlownodesIdExtensions
+public static class EntityIdExtensions
 {
     private static readonly Dictionary<Type, Entity> TypeToFlownodesObject = new()
     {

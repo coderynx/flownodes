@@ -57,7 +57,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
             return default;
         }
 
-        var id = FlownodesIdExtensions.CreateFromType<TResourceGrain>(TenantName, name);
+        var id = EntityIdExtensions.CreateFromType<TResourceGrain>(TenantName, name);
         var grain = _grainFactory.GetGrain<TResourceGrain>(id);
 
         _logger.LogDebug("Retrieved resource {@ResourceId}", id);
@@ -125,7 +125,7 @@ public sealed class ResourceManagerGrain : Grain, IResourceManagerGrain
         if (_persistence.State.IsResourceRegistered(name))
             throw new ResourceAlreadyRegisteredException(TenantName, name);
 
-        var id = FlownodesIdExtensions.CreateFromType<TResourceGrain>(TenantName, name);
+        var id = EntityIdExtensions.CreateFromType<TResourceGrain>(TenantName, name);
         var kind = id.ToEntityKindString();
 
         // TODO: Further investigation for singleton resource is needed.
