@@ -1,0 +1,26 @@
+<Solution>
+  <Folder Name="/apps/">
+    <Project Path="apps/AppHost/AppHost.csproj" />
+    <Project Path="apps/Flownodes/Flownodes.csproj" />
+  </Folder>
+  <Folder Name="/packages/" />
+  <Folder Name="/packages/core/">
+    <Project Path="packages/core/Core.Application/Core.Application.csproj" />
+    <Project Path="packages/core/Core.Domain/Core.Domain.csproj" />
+    <Project Path="packages/core/Core.Infrastructure/Core.Infrastructure.csproj" />
+    <Project Path="packages/core/Core.Presentation/Core.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/packages/engine/">
+    <Project Path="packages/engine/Engine.Application/Engine.Application.csproj" />
+    <Project Path="packages/engine/Engine.Domain/Engine.Domain.csproj" />
+    <Project Path="packages/engine/Engine.Infrastructure/Engine.Infrastructure.csproj" />
+    <Project Path="packages/engine/Engine.Presentation/Engine.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/packages/registry/">
+    <Project Path="packages/registry/Registry.Application/Registry.Application.csproj" />
+    <Project Path="packages/registry/Registry.Domain/Registry.Domain.csproj" />
+    <Project Path="packages/registry/Registry.Infrastructure/Registry.Infrastructure.csproj" />
+    <Project Path="packages/registry/Registry.Presentation/Registry.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+</Solution>
