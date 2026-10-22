@@ -15,7 +15,7 @@ A reusable template for a kind of Asset, defining the child Assets, Data Points 
 _Avoid_: Template, class, model, profile
 
 **Device**:
-A physical or logical IoT unit through which data is read and Actions are performed. A Device is attached to at most one Asset, at any level of the tree, and is unassigned until it is attached.
+A physical or logical IoT unit, reached through a Connection, through which data is read and Actions are performed. A Device exists only once it is declared; it is attached to at most one Asset, at any level of the tree.
 _Avoid_: Sensor, node, endpoint
 
 **Data Point**:
@@ -41,12 +41,16 @@ _Avoid_: Message, notification, signal
 ### Integrations
 
 **Integration**:
-A plugin that teaches Flownodes to talk to a kind of IoT device or external service, such as MQTT, Modbus TCP or a vendor's cloud API.
+A plugin that teaches Flownodes to talk to a protocol, a vendor's devices or an external service, such as MQTT, Modbus TCP, Philips Hue, Reolink cameras or a weather API.
 _Avoid_: Connector, driver, adapter, extension
 
 **Connection**:
 A configured instance of an Integration, e.g. a specific MQTT broker with its address and credentials. A Connection provides Devices or External Services.
 _Avoid_: Integration instance, account, link
+
+**Discovery**:
+A unit that a Connection can reach but that has not been declared as a Device. It is runtime state of the Connection, not a Resource.
+_Avoid_: Discovered device, candidate, unclaimed device
 
 **External Service**:
 A non-device system reached through an Integration, such as a weather API or a ticketing system. It exposes Actions and Events but never Data Points, and is never modelled as a Device. Its data reaches Assets only through Flows.
@@ -81,7 +85,7 @@ The unit of tenant isolation within one installation. Every Connection, Secret, 
 _Avoid_: Tenant, organisation, workspace, project
 
 **Resource**:
-A declared piece of configuration with a Kind, a name, a Spec and a Status, such as a Connection, an Asset Type, an Asset, a Device or a Flow. Runtime state such as Data Point values or Events is never a Resource.
+A declared piece of configuration with a Kind, a name, a Spec and a Status, such as a Connection, an Asset Type, an Asset, a Device or a Flow. A Resource is identified by its Kind and name within its Namespace. Runtime state such as Data Point values or Events is never a Resource.
 _Avoid_: Object, entity, deployment, config item
 
 **Kind**:
@@ -89,7 +93,7 @@ The type of a Resource, such as `Connection`, `AssetType`, `Asset`, `Device` or 
 _Avoid_: Resource type, class
 
 **Manifest**:
-A document containing one or more Resources, applied to Flownodes to request a change to desired state.
+A document containing one or more Resources, applied to Flownodes to request a change to desired state. A Manifest is applied as a whole or not at all.
 _Avoid_: Deployment, config file, template
 
 **Spec**:
@@ -105,7 +109,7 @@ A counter on a Resource that increases every time its Spec changes. The Status r
 _Avoid_: Version, revision number
 
 **Revision**:
-A recorded past Spec of a Resource, with who applied it and when.
+A recorded Spec of a Resource, with who applied it and when. The current Spec is the latest Revision.
 _Avoid_: History entry, snapshot, version
 
 **Secret**:
