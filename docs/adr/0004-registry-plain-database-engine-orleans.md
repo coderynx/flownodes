@@ -4,5 +4,5 @@ The Registry stores Resources with plain database access (EF Core on Postgres) a
 
 ## Consequences
 
-- The Registry is the only place a Spec is written. The Engine writes only Status back.
+- The Registry is the only place a Spec is written. The Engine only reports Status back, by message (ADR-0012).
 - Each Engine grain persists a read-only copy of the last Spec it reconciled, so it keeps running on its last known configuration if the Registry is unavailable or a Silo restarts.
