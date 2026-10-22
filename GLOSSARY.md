@@ -15,8 +15,12 @@ A reusable template for a kind of Asset, defining the child Assets, Data Points 
 _Avoid_: Template, class, model, profile
 
 **Device**:
-A physical or logical IoT unit, reached through a Connection, through which data is read and Actions are performed. A Device exists only once it is declared; it is attached to at most one Asset, at any level of the tree.
+A physical or logical IoT unit, reached through a Connection, through which data is read and Actions are performed. A Device exists only once it is declared, as an instance of one Device Type; it is attached to at most one Asset, at any level of the tree.
 _Avoid_: Sensor, node, endpoint
+
+**Device Type**:
+A kind of Device that an Integration defines, such as a Hue bulb or a Modbus register map. It determines how a Device of that kind is addressed and configured, and the Data Points, Actions and Events follow from that declaration. A Device Type is defined by an Integration and never declared.
+_Avoid_: Device model, device profile, device class
 
 **Data Point**:
 A named, typed value with a current value, which can be read-only or writable, such as a temperature or a setpoint. Both Devices and Assets have Data Points.
@@ -41,11 +45,11 @@ _Avoid_: Message, notification, signal
 ### Integrations
 
 **Integration**:
-A plugin that teaches Flownodes to talk to a protocol, a vendor's devices or an external service, such as MQTT, Modbus TCP, Philips Hue, Reolink cameras or a weather API.
+A plugin that teaches Flownodes to talk to a protocol, a vendor's devices or an external service, such as MQTT, Modbus TCP, Philips Hue, Reolink cameras or a weather API. It defines one kind of Connection and any number of Device Types.
 _Avoid_: Connector, driver, adapter, extension
 
 **Connection**:
-A configured instance of an Integration, e.g. a specific MQTT broker with its address and credentials. A Connection provides Devices or External Services.
+A configured instance of an Integration, e.g. a specific MQTT broker with its address and credentials. A Connection reaches Devices, and can expose Actions and Events of its own, such as pairing with a bridge or the forecasts of a weather API.
 _Avoid_: Integration instance, account, link
 
 **Discovery**:
@@ -53,7 +57,7 @@ A unit that a Connection can reach but that has not been declared as a Device. I
 _Avoid_: Discovered device, candidate, unclaimed device
 
 **External Service**:
-A non-device system reached through an Integration, such as a weather API or a ticketing system. It exposes Actions and Events but never Data Points, and is never modelled as a Device. Its data reaches Assets only through Flows.
+A non-device system reached through a Connection, such as a weather API or a ticketing system. Its Actions and Events belong to that Connection; it has no Data Points and is never modelled as a Device. Its data reaches Assets only through Flows.
 _Avoid_: Virtual device, cloud device
 
 ### Automation
