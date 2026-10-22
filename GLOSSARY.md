@@ -63,7 +63,7 @@ _Avoid_: Virtual device, cloud device
 ### Automation
 
 **Flow**:
-An automation expressed as a graph of Nodes, triggered by Events or Data Point changes on Assets, Devices or External Services.
+An automation expressed as a graph of Nodes, triggered by Events or Data Point changes on Assets, Devices or External Services, or by a schedule.
 _Avoid_: Workflow, rule, automation, script
 
 **Node**:
@@ -71,8 +71,12 @@ A single step in a Flow, such as a trigger, a condition, a transformation, a wai
 _Avoid_: Block, step, task
 
 **Flow Execution**:
-One run of a Flow, from the trigger that started it to its completion, which may include long waits.
+One run of a Flow, from the trigger that started it to its completion, which may include long waits. It runs the Generation of its Flow it started on, at exactly one Node at a time, and is cancelled if its Flow is deleted.
 _Avoid_: Run, instance, job
+
+**Execution Mode**:
+The setting on a Flow that decides what happens when it is triggered while one of its Flow Executions is still running: `single` drops the new trigger, `restart` cancels the running Execution and starts again, `queue` runs it after the current one, and `parallel` runs both.
+_Avoid_: Concurrency mode, concurrency policy, run mode
 
 **Alarm**:
 An abnormal situation on an Asset that requires an Operator's attention, with a lifecycle of active, acknowledged and cleared. Raised by an Alarm Condition or by a Flow.
