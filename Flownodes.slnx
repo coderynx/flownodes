@@ -5,6 +5,7 @@
   </Folder>
   <Folder Name="/packages/" />
   <Folder Name="/packages/core/">
+    <Project Path="packages/core/Core.Contracts/Core.Contracts.csproj" />
     <Project Path="packages/core/Core.Application/Core.Application.csproj" />
     <Project Path="packages/core/Core.Domain/Core.Domain.csproj" />
     <Project Path="packages/core/Core.Infrastructure/Core.Infrastructure.csproj" />
@@ -24,5 +25,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
+    <Project Path="tests/Registry.Api.Tests/Registry.Api.Tests.csproj" />
   </Folder>
 </Solution>

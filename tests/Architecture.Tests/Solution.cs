@@ -5,7 +5,7 @@ namespace Architecture.Tests;
 
 internal static class Solution
 {
-    public static readonly string[] Layers = ["Domain", "Application", "Infrastructure", "Presentation"];
+    public static readonly string[] Layers = ["Contracts", "Domain", "Application", "Infrastructure", "Presentation"];
     public const string Core = "core";
     private static readonly string[] Ignored = ["bin", "obj", "node_modules"];
 
