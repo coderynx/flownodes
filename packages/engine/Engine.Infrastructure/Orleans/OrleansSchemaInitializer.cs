@@ -4,11 +4,11 @@ using Npgsql;
 
 namespace Engine.Infrastructure.Orleans;
 
-/// <summary>
-/// Applies the Orleans ADO.NET PostgreSQL scripts (main, clustering, persistence) once, before the silo starts.
-/// </summary>
 internal sealed class OrleansSchemaInitializer(string connectionString) : IHostedService
 {
+    private const string LockSql = "SELECT pg_advisory_xact_lock(7019243)";
+    private const string ExistsSql = "SELECT to_regclass('orleansquery') IS NOT NULL";
+
     private static readonly string[] Scripts =
     [
         "PostgreSQL-Main.sql",
@@ -20,17 +20,19 @@ internal sealed class OrleansSchemaInitializer(string connectionString) : IHoste
     {
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
-
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-        await using (var lockCommand = new NpgsqlCommand("SELECT pg_advisory_xact_lock(7019243)", connection, transaction))
+
+        await using (var lockCommand = new NpgsqlCommand(LockSql, connection, transaction))
         {
             await lockCommand.ExecuteNonQueryAsync(cancellationToken);
         }
 
-        await using (var existsCommand = new NpgsqlCommand("SELECT to_regclass('orleansquery') IS NOT NULL", connection, transaction))
+        await using (var existsCommand = new NpgsqlCommand(ExistsSql, connection, transaction))
         {
             if ((bool)(await existsCommand.ExecuteScalarAsync(cancellationToken))!)
+            {
                 return;
+            }
         }
 
         foreach (var script in Scripts)
@@ -50,6 +52,7 @@ internal sealed class OrleansSchemaInitializer(string connectionString) : IHoste
         var resource = assembly.GetManifestResourceNames().Single(n => n.EndsWith(name, StringComparison.Ordinal));
         await using var stream = assembly.GetManifestResourceStream(resource)!;
         using var reader = new StreamReader(stream);
+
         return await reader.ReadToEndAsync();
     }
 }

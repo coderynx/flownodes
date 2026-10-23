@@ -2,9 +2,6 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net10.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
         <AspireUseCliBundle>true</AspireUseCliBundle>
         <UserSecretsId>11367067-f561-4635-a266-a01179b617b3</UserSecretsId>
     </PropertyGroup>
@@ -14,8 +11,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Aspire.Hosting.Orleans" Version="13.6.2" />
-      <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.6.2" />
+      <PackageReference Include="Aspire.Hosting.Orleans" />
+      <PackageReference Include="Aspire.Hosting.PostgreSQL" />
     </ItemGroup>
 
 </Project>

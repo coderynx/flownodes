@@ -1,9 +1,10 @@
-using Registry.Application.Database;
 using Microsoft.EntityFrameworkCore;
+using Registry.Application.Database;
 
 namespace Registry.Infrastructure.Database;
 
-public class RegistryDbContext(DbContextOptions<RegistryDbContext> options) : DbContext(options), IApplicationDbContext
+internal sealed class RegistryDbContext(DbContextOptions<RegistryDbContext> options)
+    : DbContext(options), IApplicationDbContext
 {
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

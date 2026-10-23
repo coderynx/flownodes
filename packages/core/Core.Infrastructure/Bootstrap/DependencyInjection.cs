@@ -8,6 +8,12 @@ using OpenTelemetry.Trace;
 
 namespace Core.Infrastructure.Bootstrap;
 
+/// <summary>
+/// Registers the infrastructure every module shares: telemetry, health checks and outgoing HTTP defaults.
+/// </summary>
+/// <remarks>
+/// Every module's Infrastructure calls each of these, so each one applies once per host and ignores later calls.
+/// </remarks>
 public static class DependencyInjection
 {
     private const string OpenTelemetryAppliedKey = "Core.Infrastructure.OpenTelemetry.Applied";
@@ -16,8 +22,8 @@ public static class DependencyInjection
 
     /// <summary>
     /// Configures the HTTP client defaults: service discovery and the standard resilience handler.
-    /// Safe to call once per module.
     /// </summary>
+    /// <param name="builder">The host the module is being added to.</param>
     public static void AddHttpClientDefaults(this IHostApplicationBuilder builder)
     {
         if (!builder.Properties.TryAdd(HttpClientDefaultsAppliedKey, true))
@@ -34,8 +40,9 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// Configures OpenTelemetry logging, metrics and tracing. Safe to call once per module.
+    /// Configures OpenTelemetry logging, metrics and tracing, exported over OTLP when an endpoint is configured.
     /// </summary>
+    /// <param name="builder">The host the module is being added to.</param>
     public static void AddOpenTelemetry(this IHostApplicationBuilder builder)
     {
         if (!builder.Properties.TryAdd(OpenTelemetryAppliedKey, true))
@@ -54,12 +61,10 @@ public static class DependencyInjection
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddRuntimeInstrumentation())
-            .WithTracing(tracing => tracing
-                .AddSource(builder.Environment.ApplicationName)
-                .AddAspNetCoreInstrumentation(options =>
-                    options.Filter = context =>
-                        !context.Request.Path.StartsWithSegments(HostConfiguration.HealthEndpointPath)
-                        && !context.Request.Path.StartsWithSegments(HostConfiguration.AlivenessEndpointPath))
+            .WithTracing(tracing => tracing.AddSource(builder.Environment.ApplicationName)
+                .AddAspNetCoreInstrumentation(options => options.Filter = context =>
+                    !context.Request.Path.StartsWithSegments(HostConfiguration.HealthEndpointPath) &&
+                    !context.Request.Path.StartsWithSegments(HostConfiguration.AlivenessEndpointPath))
                 .AddHttpClientInstrumentation());
 
         if (!string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]))
@@ -69,8 +74,9 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// Registers the liveness health check. Safe to call once per module.
+    /// Registers the liveness health check.
     /// </summary>
+    /// <param name="builder">The host the module is being added to.</param>
     public static void AddHealthChecks(this IHostApplicationBuilder builder)
     {
         if (!builder.Properties.TryAdd(HealthChecksAppliedKey, true))
@@ -78,7 +84,6 @@ public static class DependencyInjection
             return;
         }
 
-        builder.Services.AddHealthChecks()
-            .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
+        builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
     }
 }
