@@ -6,10 +6,21 @@ using Orleans.Dashboard;
 
 namespace Engine.Infrastructure.Bootstrap;
 
+/// <summary>
+/// Adds the Engine's infrastructure to the host.
+/// </summary>
 public static class DependencyInjection
 {
     private const string AdoNetInvariant = "Npgsql";
 
+    /// <summary>
+    /// Registers the shared infrastructure and makes this Silo a member of the Orleans cluster, clustered and
+    /// persisted on Postgres.
+    /// </summary>
+    /// <param name="builder">The host the Engine is being added to.</param>
+    /// <exception cref="InvalidOperationException">
+    /// The clustering or grain storage connection string is not configured.
+    /// </exception>
     public static void AddInfrastructure(this IHostApplicationBuilder builder)
     {
         Core.Infrastructure.Bootstrap.DependencyInjection.AddOpenTelemetry(builder);
@@ -23,18 +34,11 @@ public static class DependencyInjection
     {
         var clusteringKey = builder.Configuration["Orleans:Clustering:ServiceKey"] ?? "engine";
         var storageKey = builder.Configuration["Orleans:GrainStorage:Default:ServiceKey"] ?? "engine";
-
-        var clusteringConnection = builder.Configuration.GetConnectionString(clusteringKey);
-        if (clusteringConnection == null)
-        {
-            throw new InvalidOperationException($"Connection string '{clusteringKey}' not found.");
-        }
-
-        var storageConnection = builder.Configuration.GetConnectionString(storageKey);
-        if (storageConnection == null)
-        {
-            throw new InvalidOperationException($"Connection string '{storageKey}' not found.");
-        }
+        var clusteringConnection = builder.Configuration.GetConnectionString(clusteringKey) ??
+                                   throw new InvalidOperationException(
+                                       $"Connection string '{clusteringKey}' not found.");
+        var storageConnection = builder.Configuration.GetConnectionString(storageKey) ??
+                                throw new InvalidOperationException($"Connection string '{storageKey}' not found.");
 
         builder.Services.AddHostedService(_ => new OrleansSchemaInitializer(clusteringConnection));
 

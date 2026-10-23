@@ -22,5 +22,7 @@
     <Project Path="packages/registry/Registry.Infrastructure/Registry.Infrastructure.csproj" />
     <Project Path="packages/registry/Registry.Presentation/Registry.Presentation.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
+  </Folder>
 </Solution>

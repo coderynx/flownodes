@@ -3,17 +3,15 @@ using Microsoft.AspNetCore.Routing;
 namespace Core.Presentation.Abstraction;
 
 /// <summary>
-/// A self-contained Minimal API endpoint (or group of endpoints).
-/// Implementations register their routes in <see cref="Map"/>.
+/// One HTTP use case's Minimal API endpoint, discovered and mapped by its module's Presentation.
 /// </summary>
 public interface IEndpoint
 {
     /// <summary>
-    /// Maps this endpoint's route(s) onto the given route builder.
+    /// Maps this endpoint's route onto the given route builder.
     /// </summary>
     /// <param name="app">
-    /// The route builder to register on. This is either the application itself
-    /// or a <see cref="RouteGroupBuilder"/> that carries a shared prefix, filters, or auth policy.
+    /// The versioned API group (<c>/api/v1</c>). The endpoint maps its module's path below it, never the version.
     /// </param>
     void Map(IEndpointRouteBuilder app);
 }
