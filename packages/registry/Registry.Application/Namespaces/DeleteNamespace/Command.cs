@@ -1,0 +1,50 @@
+using Coderynx.Functional.Results;
+using Coderynx.MediatorKit.Abstractions;
+using Microsoft.EntityFrameworkCore;
+using Registry.Application.Database;
+using Registry.Domain.Namespaces;
+
+namespace Registry.Application.Namespaces.DeleteNamespace;
+
+/// <summary>
+/// Deletes a Namespace that is not the <c>default</c> one and holds no Resources.
+/// </summary>
+/// <param name="Name">The name of the Namespace. A name that is not valid names no Namespace.</param>
+public sealed record Command(string Name) : IRequest<Result>;
+
+internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<Command, Result>
+{
+    public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
+    {
+        if (!NamespaceName.TryCreate(request.Name, out var name))
+        {
+            return Errors.NotFound(request.Name);
+        }
+
+        var existing = await database.Namespaces.SingleOrDefaultAsync(
+            @namespace => @namespace.Name == name,
+            cancellationToken);
+        if (existing is null)
+        {
+            return Errors.NotFound(request.Name);
+        }
+
+        if (name.IsDefault)
+        {
+            return Errors.DefaultCannotBeDeleted();
+        }
+
+        if (await database.Resources.AnyAsync(resource => resource.Namespace == name, cancellationToken))
+        {
+            return Errors.HoldsResources(request.Name);
+        }
+
+        existing.Delete();
+        database.Namespaces.Remove(existing);
+
+        await database.PublishAsync(existing.ToDeleted());
+        await database.SaveChangesAsync(cancellationToken);
+
+        return Result.Deleted();
+    }
+}

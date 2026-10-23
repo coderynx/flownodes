@@ -11,6 +11,7 @@
         <PackageVersion Include="Coderynx.Functional.WebApi" Version="1.8.0" />
         <PackageVersion Include="Coderynx.MediatorKit" Version="1.9.0" />
         <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.13" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
         <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
         <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13" />
@@ -34,6 +35,10 @@
         <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
         <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
         <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
+        <PackageVersion Include="WolverineFx" Version="6.51.3" />
+        <PackageVersion Include="WolverineFx.EntityFrameworkCore" Version="6.51.3" />
+        <PackageVersion Include="WolverineFx.Postgresql" Version="6.51.3" />
+        <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.51.3" />
         <PackageVersion Include="xunit.v3" Version="4.0.2" />
     </ItemGroup>
 </Project>
