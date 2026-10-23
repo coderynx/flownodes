@@ -1,0 +1,13 @@
+# Identity issues tokens and replicates Role Grants to the other modules
+
+Users, their credentials and their Role Grants belong to a third module, Identity, with its own database, rather than to the Registry. Identity is the installation's own OAuth2/OIDC token issuer, built on ASP.NET Core Identity and OpenIddict: it signs short-lived JWT access tokens whose subject is the User id, and the Registry and Engine validate them locally as resource servers. Authorisation does not come from claims in the token; Identity publishes Role Grant, Administrator and User-disablement changes as messages (ADR-0012, ADR-0013), and each module authorises every request from its own replicated copy. We chose this over opaque tokens, which every module would have to look up in Identity's database, and over roles carried as claims, which a revocation cannot take back until the token expires. We also chose it over trusting an external identity provider directly, which a local-first installation (ADR-0001) cannot require and which would differ per provider.
+
+## Consequences
+
+- Resource servers fetch Identity's OIDC discovery document and signing keys over HTTP. This is the one sanctioned module-to-module HTTP call, allowed because it is the public OIDC protocol any client uses, not private coupling, and it works unchanged when a module is detached.
+- Identity generates its signing key on first start and stores it encrypted with the installation key (ADR-0014), so every Silo signs with the same key and the deployment supplies nothing new.
+- External OIDC providers are added later by federating them into Identity, which keeps issuing its own tokens; the Registry and Engine never notice.
+- Login never depends on the web UI. Identity hosts a small server-rendered sign-in page, used for first-run setup with a one-time token from the Silo log, for `flowctl login` through the device authorization grant, and later for the web UI through authorization code with PKCE. There is no password grant. Personal Access Tokens are exchanged for access tokens.
+- Identity consumes the Registry's Namespace messages to reject grants in unknown Namespaces and to drop grants when a Namespace is deleted. `default` is always known, so first-run setup never waits for the Registry.
+- A new Role Grant can take a few seconds to reach the Registry and Engine. Disabling a User revokes their refresh tokens and Personal Access Tokens at once, and reaches the other modules as a message.
+- Administrator is installation management only: it gives no access inside a Namespace. A caller with no role in a Namespace gets 404 for anything in it, so its existence is not leaked; a member lacking the role gets 403.
