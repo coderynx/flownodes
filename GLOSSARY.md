@@ -136,11 +136,23 @@ _Avoid_: Catalog, repository, config store
 The part of Flownodes that reconciles Resources into running Connections, Devices, Assets and Flows, holds runtime state, and talks to Devices and External Services.
 _Avoid_: Runtime, executor, worker
 
+**Identity**:
+The part of Flownodes that owns Users, their credentials and their Role Grants, and vouches for who is calling.
+_Avoid_: Auth, IAM, accounts
+
 ### Operation
 
 **Silo**:
 One running Flownodes server process. A Raspberry Pi deployment has one Silo; an HA deployment has several.
 _Avoid_: Node, instance, server
+
+**User**:
+A person who can sign in to an installation and hold roles in it.
+_Avoid_: Account, principal, member, login
+
+**Role Grant**:
+A User holding the Operator or Engineer role in one Namespace, or the Administrator role installation-wide.
+_Avoid_: Role binding, membership, permission
 
 **Operator**:
 A role within a Namespace whose holder watches live state, acknowledges Alarms, and may invoke Actions, without changing configuration.
