@@ -3,8 +3,15 @@ using Microsoft.AspNetCore.Builder;
 
 namespace Registry.Presentation.Bootstrap;
 
+/// <summary>
+/// Maps the Registry's HTTP surface on the host.
+/// </summary>
 public static class HostConfiguration
 {
+    /// <summary>
+    /// Maps the shared presentation endpoints and every endpoint the Registry declares.
+    /// </summary>
+    /// <param name="app">The host the Registry is being added to.</param>
     public static void UsePresentation(this WebApplication app)
     {
         Core.Presentation.Bootstrap.HostConfiguration.UsePresentation(app);

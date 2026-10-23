@@ -1,23 +1,33 @@
-var builder = WebApplication.CreateBuilder(args);
+namespace Flownodes;
 
-Registry.Application.Bootstrap.DependencyInjection.AddApplication(builder);
-Registry.Infrastructure.Bootstrap.DependencyInjection.AddInfrastructure(builder);
-Registry.Presentation.Bootstrap.DependencyInjection.AddPresentation(builder);
+internal sealed class Program
+{
+    private Program()
+    {
+    }
 
-Engine.Application.Bootstrap.DependencyInjection.AddApplication(builder);
-Engine.Infrastructure.Bootstrap.DependencyInjection.AddInfrastructure(builder);
-Engine.Presentation.Bootstrap.DependencyInjection.AddPresentation(builder);
+    private static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
 
-var app = builder.Build();
+        Registry.Application.Bootstrap.DependencyInjection.AddApplication(builder);
+        Registry.Infrastructure.Bootstrap.DependencyInjection.AddInfrastructure(builder);
+        Registry.Presentation.Bootstrap.DependencyInjection.AddPresentation(builder);
 
-app.UseHttpsRedirection();
+        Engine.Application.Bootstrap.DependencyInjection.AddApplication(builder);
+        Engine.Infrastructure.Bootstrap.DependencyInjection.AddInfrastructure(builder);
+        Engine.Presentation.Bootstrap.DependencyInjection.AddPresentation(builder);
 
-Registry.Application.Bootstrap.HostConfiguration.UseApplication(app);
-Registry.Infrastructure.Bootstrap.HostConfiguration.UseInfrastructure(app);
-Registry.Presentation.Bootstrap.HostConfiguration.UsePresentation(app);
+        var app = builder.Build();
 
-Engine.Application.Bootstrap.HostConfiguration.UseApplication(app);
-Engine.Infrastructure.Bootstrap.HostConfiguration.UseInfrastructure(app);
-Engine.Presentation.Bootstrap.HostConfiguration.UsePresentation(app);
+        app.UseHttpsRedirection();
 
-app.Run();
+        Registry.Infrastructure.Bootstrap.HostConfiguration.UseInfrastructure(app);
+        Registry.Presentation.Bootstrap.HostConfiguration.UsePresentation(app);
+
+        Engine.Infrastructure.Bootstrap.HostConfiguration.UseInfrastructure(app);
+        Engine.Presentation.Bootstrap.HostConfiguration.UsePresentation(app);
+
+        app.Run();
+    }
+}

@@ -4,6 +4,23 @@ Product scope, audience and out-of-scope list: `README.md`. Read it before plann
 
 **Pre-release, until further notice**: nothing is deployed and nobody depends on Flownodes yet. Change the API, the Resource and Manifest shapes, the Integration SDK, the database schema and stored data whenever it improves the design. Make the change directly, and leave out migrations, deprecation paths and compatibility shims. The SDK versioning promise in ADR-0003 starts at the first public release.
 
+## Coding standards
+
+Each rule below is an ADR; read the ADR before changing code in its area. The build and the architecture tests (`tests/Architecture.Tests`) enforce what a tool can prove, and review holds the rest.
+
+- **Build**: analyzer warnings fail the build. Fix the code. Turn off a rule that fights a deliberate decision in `.editorconfig` with its reason; `#pragma` and `[SuppressMessage]` fail an architecture test. Package versions live in `Directory.Packages.props`. ADR-0016.
+- **Access**: types are `sealed` and as private as production callers allow. Tests reach internals through an `<InternalsVisibleTo>` item in the `.csproj`. ADR-0017.
+- **Boundaries**: a module project references its own inner layers (Application → Domain; Infrastructure, Presentation → Application) and Core's matching layer, never another module. The host reaches a module only through its `Bootstrap`. ADR-0018.
+- **Domain**: rich entities (private ctor, `private set`, a `Create` factory, behaviour in methods) and value objects for rule-bearing values. Responses are DTOs mapped with `ToDto()`. ADR-0019.
+- **HTTP**: a use case is `<Feature>/<UseCase>/Command.cs` or `Query.cs` in Application, mirrored by `<Feature>/<UseCase>/Endpoint.cs` in Presentation. Routes sit under `/api/v1`, applied by Core; every endpoint has `.WithName(...)`. ADR-0020.
+- **Docs**: only types and members another project can access carry XML docs, with every tag and in `GLOSSARY.md` terms; internal code carries none. ADR-0021.
+- **Layout**: 120 columns, one parameter or argument per line once a call wraps, chains broken after the first call, one blank line between logical steps. Before committing, run `dotnet tool restore` and `dotnet jb cleanupcode Flownodes.slnx --profile="Built-in: Reformat Code" --include="<changed .cs files;separated;by;semicolons>" --no-updates`, then review each changed method's step spacing by hand. ADR-0022.
+- **Comments**: a comment flags a hack and opens with `// HACK:`. ADR-0023.
+- **Dead code**: delete what nothing references, Core contracts included. ADR-0024.
+- **Tests**: `Member_ShouldOutcome_WhenCondition`, `// Arrange` / `// Act` / `// Assert`, Shouldly, NSubstitute for contracts only. ADR-0025.
+
+Run `dotnet build Flownodes.slnx` and `dotnet test --solution Flownodes.slnx` before committing.
+
 ## Agent skills
 
 ### Issue tracker

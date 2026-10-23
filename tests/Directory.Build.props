@@ -1,0 +1,9 @@
+<Project>
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+    <!-- ADR-0025: Shouldly asserts in every test project; NSubstitute is referenced only where a project mocks. -->
+    <ItemGroup>
+        <PackageReference Include="Shouldly" />
+        <Using Include="Shouldly" />
+    </ItemGroup>
+</Project>
