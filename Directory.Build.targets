@@ -1,0 +1,15 @@
+<Project>
+    <!-- HACK: a build is the only step every clone runs, so it wires the pre-commit hook (ADR-0022). Each project
+         repeats the cheap read because MSBuild shares no state between projects. -->
+    <Target Name="WireGitHooks" BeforeTargets="CoreCompile" Condition="'$(CI)' == ''">
+        <Exec Command="git config --get core.hooksPath" WorkingDirectory="$(MSBuildThisFileDirectory)"
+              ConsoleToMSBuild="true" IgnoreExitCode="true" ContinueOnError="true"
+              IgnoreStandardErrorWarningFormat="true" StandardOutputImportance="low" StandardErrorImportance="low">
+            <Output TaskParameter="ConsoleOutput" PropertyName="_ConfiguredHooksPath" />
+        </Exec>
+        <Exec Command="git config core.hooksPath .githooks" WorkingDirectory="$(MSBuildThisFileDirectory)"
+              Condition="'$(_ConfiguredHooksPath)' == '' And Exists('$(MSBuildThisFileDirectory).githooks')"
+              IgnoreExitCode="true" ContinueOnError="true" IgnoreStandardErrorWarningFormat="true"
+              StandardOutputImportance="low" StandardErrorImportance="low" />
+    </Target>
+</Project>
