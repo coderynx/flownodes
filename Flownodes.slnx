@@ -31,7 +31,13 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
-    <Project Path="tests/Identity.Api.Tests/Identity.Api.Tests.csproj" />
-    <Project Path="tests/Registry.Api.Tests/Registry.Api.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/identity/">
+    <Project Path="tests/identity/Identity.IntegrationTests/Identity.IntegrationTests.csproj" />
+    <Project Path="tests/identity/Identity.UnitTests/Identity.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/registry/">
+    <Project Path="tests/registry/Registry.IntegrationTests/Registry.IntegrationTests.csproj" />
+    <Project Path="tests/registry/Registry.UnitTests/Registry.UnitTests.csproj" />
   </Folder>
 </Solution>

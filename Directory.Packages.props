@@ -23,6 +23,7 @@
         <PackageVersion Include="Microsoft.Orleans.Dashboard" Version="10.4.0" />
         <PackageVersion Include="Microsoft.Orleans.Persistence.AdoNet" Version="10.4.0" />
         <PackageVersion Include="Microsoft.Orleans.Server" Version="10.4.0" />
+        <PackageVersion Include="MockQueryable.NSubstitute" Version="10.0.12" />
         <PackageVersion Include="Npgsql" Version="10.0.3" />
         <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
         <PackageVersion Include="NSubstitute" Version="6.2.0" />
