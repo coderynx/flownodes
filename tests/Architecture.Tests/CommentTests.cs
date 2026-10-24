@@ -87,7 +87,8 @@ public sealed class CommentTests
                            text is "// Arrange" or "// Act" or "// Assert";
             var isMarked = text.StartsWith(Marker, StringComparison.Ordinal);
             var isContinuation = isFullLine && inMarkedBlock;
-            if (start >= 0 && !isExempt && !isMarked && !isContinuation)
+            var isUnmarkedComment = start >= 0 && !isExempt && !isMarked && !isContinuation;
+            if (isUnmarkedComment)
             {
                 flagged.Add(i + 1);
             }
