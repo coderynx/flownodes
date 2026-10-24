@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Applies the C# layout standard (ADR-0022) to a commit's staged files. Enabled once per clone with
-# `git config core.hooksPath .githooks`.
+# Applies the C# layout standard (ADR-0022) to a commit's staged files. The first build of a clone enables it
+# (Directory.Build.targets sets `core.hooksPath` to `.githooks`).
 set -euo pipefail
 
 staged=()
