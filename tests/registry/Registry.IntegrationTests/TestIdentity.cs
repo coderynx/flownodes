@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Registry.Api.Tests;
+namespace Registry.IntegrationTests;
 
 /// <summary>
 /// A stand-in for Identity's token issuer: it serves OIDC discovery and JWKS over HTTP and signs access tokens whose

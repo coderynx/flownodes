@@ -5,7 +5,7 @@ using Core.Contracts.Identity;
 using Core.Contracts.Resources;
 using Xunit;
 
-namespace Identity.Api.Tests;
+namespace Identity.IntegrationTests;
 
 public sealed class RoleGrantTests(PostgresFixture postgres)
 {

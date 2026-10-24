@@ -17,10 +17,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\packages\core\Core.Contracts\Core.Contracts.csproj" />
-        <ProjectReference Include="..\..\packages\registry\Registry.Application\Registry.Application.csproj" />
-        <ProjectReference Include="..\..\packages\registry\Registry.Infrastructure\Registry.Infrastructure.csproj" />
-        <ProjectReference Include="..\..\packages\registry\Registry.Presentation\Registry.Presentation.csproj" />
+        <ProjectReference Include="..\..\..\packages\core\Core.Contracts\Core.Contracts.csproj" />
+        <ProjectReference Include="..\..\..\packages\identity\Identity.Application\Identity.Application.csproj" />
+        <ProjectReference Include="..\..\..\packages\identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
+        <ProjectReference Include="..\..\..\packages\identity\Identity.Presentation\Identity.Presentation.csproj" />
     </ItemGroup>
 
 </Project>

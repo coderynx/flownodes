@@ -9,7 +9,7 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using OpenIddict.Abstractions;
 using Xunit;
 
-namespace Identity.Api.Tests;
+namespace Identity.IntegrationTests;
 
 public sealed class SignInTests(PostgresFixture postgres)
 {

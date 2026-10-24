@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Xunit;
 
-namespace Identity.Api.Tests;
+namespace Identity.IntegrationTests;
 
 public sealed class SetupTests(PostgresFixture postgres)
 {

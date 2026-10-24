@@ -6,7 +6,19 @@ on:
   pull_request:
 
 jobs:
-  build-and-test:
+  find-integration-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      projects: ${{ steps.find.outputs.projects }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: find
+        run: echo "projects=$(ls -d tests/*/*.IntegrationTests | jq -R . | jq -cs .)" >> "$GITHUB_OUTPUT"
+
+  # Unit and architecture tests need no database, so they run in seconds beside the integration jobs.
+  build-and-unit-test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -25,8 +37,11 @@ jobs:
       - name: Build
         run: dotnet build Flownodes.slnx
 
-      - name: Test
-        run: dotnet test --solution Flownodes.slnx --no-build --output Detailed
+      - name: Unit and architecture tests
+        run: |
+          for project in tests/Architecture.Tests tests/*/*.UnitTests; do
+            dotnet test --project "$project" --no-build --output Detailed
+          done
 
       # Wolverine's handler code is generated and committed (apps/Flownodes/Internal/Generated/README.md). Writing it
       # again must change nothing; a diff means a handler or message changed without regenerating.
@@ -41,7 +56,35 @@ jobs:
           git diff --exit-code -- apps/Flownodes/Internal/Generated
           test -z "$(git ls-files --others --exclude-standard apps/Flownodes/Internal/Generated)"
 
-  # Runs beside build-and-test: ReSharper reads the project model, so it needs only a restore.
+  # One runner per module: integration tests are CPU-bound, and each runner has its own Postgres.
+  integration-test:
+    needs: find-integration-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJson(needs.find-integration-tests.outputs.projects) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', 'dotnet-tools.json', 'global.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Build
+        run: dotnet build ${{ matrix.project }}
+
+      - name: Integration tests
+        run: dotnet test --project ${{ matrix.project }} --no-build --output Detailed
+
+  # Runs beside the tests: ReSharper reads the project model, so it needs only a restore.
   layout:
     runs-on: ubuntu-latest
     timeout-minutes: 30

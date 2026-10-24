@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Core.Contracts.Resources;
 
-namespace Registry.Api.Tests;
+namespace Registry.IntegrationTests;
 
 public sealed class ResourceMessages
 {
