@@ -5,9 +5,9 @@ using Identity.Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using MockQueryable.NSubstitute;
 
-namespace Identity.UnitTests.Users;
+namespace Identity.UnitTests;
 
-internal static class TestUsers
+internal static class TestDoubles
 {
     public static User Member(string username, string? displayName = null) =>
         User.Create(Username.Create(username), displayName);

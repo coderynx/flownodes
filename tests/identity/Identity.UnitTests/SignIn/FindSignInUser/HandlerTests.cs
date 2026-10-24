@@ -9,8 +9,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldFindTheUser_WhenTheUserIsEnabled()
     {
         // Arrange
-        var user = SignInDoubles.ActiveUser();
-        var handler = new Handler(SignInDoubles.Database([user, SignInDoubles.DisabledUser()]));
+        var user = TestDoubles.Member("alice");
+        var handler = new Handler(TestDoubles.Database([user, TestDoubles.Disabled(TestDoubles.Member("bob"))]));
 
         // Act
         var result = await handler.HandleAsync(new Query(user.Id), TestContext.Current.CancellationToken);
@@ -23,8 +23,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuse_WhenTheUserIsDisabled()
     {
         // Arrange
-        var user = SignInDoubles.DisabledUser();
-        var handler = new Handler(SignInDoubles.Database([user]));
+        var user = TestDoubles.Disabled(TestDoubles.Member("bob"));
+        var handler = new Handler(TestDoubles.Database([user]));
 
         // Act
         var result = await handler.HandleAsync(new Query(user.Id), TestContext.Current.CancellationToken);
@@ -37,7 +37,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuse_WhenTheUserDoesNotExist()
     {
         // Arrange
-        var handler = new Handler(SignInDoubles.Database([SignInDoubles.ActiveUser()]));
+        var handler = new Handler(TestDoubles.Database([TestDoubles.Member("alice")]));
 
         // Act
         var result = await handler.HandleAsync(new Query(Guid.NewGuid()), TestContext.Current.CancellationToken);

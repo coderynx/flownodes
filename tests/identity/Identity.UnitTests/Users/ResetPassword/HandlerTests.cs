@@ -21,10 +21,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnForbidden_WhenTheCallerIsNotAnAdministrator()
     {
         // Arrange
-        var bob = TestUsers.Member("bob");
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([bob, alice]);
-        var handler = new Handler(database, TestUsers.UserManager(_hasher), _revoker, TestUsers.Clock(Now));
+        var bob = TestDoubles.Member("bob");
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([bob, alice]);
+        var handler = new Handler(database, TestDoubles.UserManager(_hasher), _revoker, TestDoubles.Clock(Now));
 
         // Act
         var result = await handler.HandleAsync(new Command(bob.Id, alice.Id, Password), Ct);
@@ -40,10 +40,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnUnauthenticated_WhenTheCallerIsDisabled()
     {
         // Arrange
-        var administrator = TestUsers.Disabled(TestUsers.Administrator());
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice]);
-        var handler = new Handler(database, TestUsers.UserManager(_hasher), _revoker, TestUsers.Clock(Now));
+        var administrator = TestDoubles.Disabled(TestDoubles.Administrator());
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice]);
+        var handler = new Handler(database, TestDoubles.UserManager(_hasher), _revoker, TestDoubles.Clock(Now));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, alice.Id, Password), Ct);
@@ -56,9 +56,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnNotFound_WhenTheUserDoesNotExist()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var database = TestUsers.Database([administrator]);
-        var handler = new Handler(database, TestUsers.UserManager(_hasher), _revoker, TestUsers.Clock(Now));
+        var administrator = TestDoubles.Administrator();
+        var database = TestDoubles.Database([administrator]);
+        var handler = new Handler(database, TestDoubles.UserManager(_hasher), _revoker, TestDoubles.Clock(Now));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, Guid.NewGuid(), Password), Ct);
@@ -72,13 +72,13 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnBadRequestWithEveryReason_WhenThePolicyRejectsThePassword()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice]);
-        var users = TestUsers.UserManager(_hasher);
-        users.PasswordValidators.Add(TestUsers.AcceptingValidator());
-        users.PasswordValidators.Add(TestUsers.RejectingValidator("Too short.", "Too common."));
-        var handler = new Handler(database, users, _revoker, TestUsers.Clock(Now));
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice]);
+        var users = TestDoubles.UserManager(_hasher);
+        users.PasswordValidators.Add(TestDoubles.AcceptingValidator());
+        users.PasswordValidators.Add(TestDoubles.RejectingValidator("Too short.", "Too common."));
+        var handler = new Handler(database, users, _revoker, TestDoubles.Clock(Now));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, alice.Id, "short"), Ct);
@@ -95,17 +95,17 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReplaceTheHashClearTheLockoutAndRevokeTheTokens_WhenThePasswordIsValid()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
         alice.SetPasswordHash("old hash");
         alice.RecordFailedAccess();
         alice.LockOutUntil(Now.AddMinutes(5));
         var token = PersonalAccessToken.Create(alice.Id, "ci", "hash", Now.AddDays(-1), null);
-        var database = TestUsers.Database([administrator, alice], [token]);
-        var users = TestUsers.UserManager(_hasher);
-        users.PasswordValidators.Add(TestUsers.AcceptingValidator());
+        var database = TestDoubles.Database([administrator, alice], [token]);
+        var users = TestDoubles.UserManager(_hasher);
+        users.PasswordValidators.Add(TestDoubles.AcceptingValidator());
         _hasher.HashPassword(alice, Password).Returns("new hash");
-        var handler = new Handler(database, users, _revoker, TestUsers.Clock(Now));
+        var handler = new Handler(database, users, _revoker, TestDoubles.Clock(Now));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, alice.Id, Password), Ct);
@@ -116,7 +116,7 @@ public sealed class HandlerTests
         alice.AccessFailedCount.ShouldBe(0);
         alice.LockoutEnd.ShouldBeNull();
         token.RevokedAt.ShouldBe(Now);
-        TestUsers.Published(database).ShouldBeEmpty();
+        TestDoubles.Published(database).ShouldBeEmpty();
         await _revoker.Received(1).RevokeAllAsync(alice.Id, Ct);
         await database.Received(1).SaveChangesAsync(Ct);
     }
@@ -125,12 +125,12 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldKeepTheRevocationMoment_WhenATokenIsAlreadyRevoked()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
         var token = PersonalAccessToken.Create(alice.Id, "ci", "hash", Now.AddDays(-2), null);
         token.Revoke(Now.AddDays(-1));
-        var database = TestUsers.Database([administrator, alice], [token]);
-        var handler = new Handler(database, TestUsers.UserManager(_hasher), _revoker, TestUsers.Clock(Now));
+        var database = TestDoubles.Database([administrator, alice], [token]);
+        var handler = new Handler(database, TestDoubles.UserManager(_hasher), _revoker, TestDoubles.Clock(Now));
 
         // Act
         await handler.HandleAsync(new Command(administrator.Id, alice.Id, Password), Ct);

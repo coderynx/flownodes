@@ -12,9 +12,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldStoreTheTokenAndReturnItsSecret_WhenTheCallerCreatesATokenForThemself()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var database = TokenDoubles.Database([caller], []);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var caller = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([caller], []);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
         var expiresAt = TokenDoubles.Now.AddDays(30);
 
         // Act
@@ -39,8 +39,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldGenerateADifferentSecret_WhenCalledTwice()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var handler = new Handler(TokenDoubles.Database([caller], []), TokenDoubles.Clock());
+        var caller = TestDoubles.Member("alice");
+        var handler = new Handler(TestDoubles.Database([caller], []), TestDoubles.Clock(TokenDoubles.Now));
         var command = new Command(caller.Id, caller.Id, "laptop", null);
         var first = await handler.HandleAsync(command, TestContext.Current.CancellationToken);
 
@@ -56,8 +56,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuse_WhenTheCallerIsUnknown()
     {
         // Arrange
-        var database = TokenDoubles.Database([], []);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var database = TestDoubles.Database([], []);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
         var callerId = Guid.NewGuid();
 
         // Act
@@ -74,9 +74,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuse_WhenTheCallerIsDisabled()
     {
         // Arrange
-        var caller = TokenDoubles.DisabledUser();
-        var database = TokenDoubles.Database([caller], []);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var caller = TestDoubles.Disabled(TestDoubles.Member("bob"));
+        var database = TestDoubles.Database([caller], []);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -92,10 +92,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldForbid_WhenTheTokenIsForAnotherUser()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var other = TokenDoubles.DisabledUser();
-        var database = TokenDoubles.Database([caller, other], []);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var caller = TestDoubles.Member("alice");
+        var other = TestDoubles.Disabled(TestDoubles.Member("bob"));
+        var database = TestDoubles.Database([caller, other], []);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -113,9 +113,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuseTheName_WhenItIsBlank(string name)
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var database = TokenDoubles.Database([caller], []);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var caller = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([caller], []);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -131,9 +131,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuseTheName_WhenItIsLongerThan100Characters()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var database = TokenDoubles.Database([caller], []);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var caller = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([caller], []);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -149,8 +149,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldAcceptTheName_WhenItIsExactly100Characters()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var handler = new Handler(TokenDoubles.Database([caller], []), TokenDoubles.Clock());
+        var caller = TestDoubles.Member("alice");
+        var handler = new Handler(TestDoubles.Database([caller], []), TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -167,9 +167,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuseTheExpiry_WhenItIsNotInTheFuture(int minutesFromNow)
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var database = TokenDoubles.Database([caller], []);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var caller = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([caller], []);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(

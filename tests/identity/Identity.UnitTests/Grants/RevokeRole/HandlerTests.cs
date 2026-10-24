@@ -4,7 +4,6 @@ using Core.Contracts.Identity;
 using Identity.Application;
 using Identity.Application.Grants.RevokeRole;
 using Identity.Domain.Users;
-using Identity.UnitTests.Users;
 using Xunit;
 
 namespace Identity.UnitTests.Grants.RevokeRole;
@@ -17,10 +16,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnForbidden_WhenTheCallerIsNotAnAdministrator()
     {
         // Arrange
-        var bob = TestUsers.Member("bob");
-        var alice = TestUsers.Member("alice");
+        var bob = TestDoubles.Member("bob");
+        var alice = TestDoubles.Member("alice");
         alice.Grant("default", Role.Engineer);
-        var database = TestUsers.Database([bob, alice]);
+        var database = TestDoubles.Database([bob, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -36,9 +35,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnUnauthenticated_WhenTheCallerIsDisabled()
     {
         // Arrange
-        var administrator = TestUsers.Disabled(TestUsers.Administrator());
-        var other = TestUsers.Administrator("other");
-        var handler = new Handler(TestUsers.Database([administrator, other]));
+        var administrator = TestDoubles.Disabled(TestDoubles.Administrator());
+        var other = TestDoubles.Administrator("other");
+        var handler = new Handler(TestDoubles.Database([administrator, other]));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, other.Id, "Administrator", null), Ct);
@@ -56,9 +55,9 @@ public sealed class HandlerTests
         Error expected)
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var other = TestUsers.Administrator("other");
-        var database = TestUsers.Database([administrator, other]);
+        var administrator = TestDoubles.Administrator();
+        var other = TestDoubles.Administrator("other");
+        var database = TestDoubles.Database([administrator, other]);
         var handler = new Handler(database);
 
         // Act
@@ -74,8 +73,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnNotFound_WhenTheUserDoesNotExist()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var handler = new Handler(TestUsers.Database([administrator]));
+        var administrator = TestDoubles.Administrator();
+        var handler = new Handler(TestDoubles.Database([administrator]));
 
         // Act
         var result = await handler.HandleAsync(
@@ -90,9 +89,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnNotFound_WhenTheUserIsNotAnAdministrator()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice]);
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -107,9 +106,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnConflict_WhenTheUserIsTheLastActiveAdministrator()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var other = TestUsers.Disabled(TestUsers.Administrator("other"));
-        var database = TestUsers.Database([administrator, other]);
+        var administrator = TestDoubles.Administrator();
+        var other = TestDoubles.Disabled(TestDoubles.Administrator("other"));
+        var database = TestDoubles.Database([administrator, other]);
         var handler = new Handler(database);
 
         // Act
@@ -120,7 +119,7 @@ public sealed class HandlerTests
         // Assert
         result.Error.ShouldBe(Errors.LastAdministrator());
         administrator.IsAdministrator.ShouldBeTrue();
-        TestUsers.Published(database).ShouldBeEmpty();
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(Ct);
     }
 
@@ -129,9 +128,9 @@ public sealed class HandlerTests
         HandleAsync_ShouldRevokeAdministratorAndPublishAdministratorRevoked_WhenAnotherActiveAdministratorExists()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var other = TestUsers.Administrator("other");
-        var database = TestUsers.Database([administrator, other]);
+        var administrator = TestDoubles.Administrator();
+        var other = TestDoubles.Administrator("other");
+        var database = TestDoubles.Database([administrator, other]);
         var handler = new Handler(database);
 
         // Act
@@ -140,7 +139,7 @@ public sealed class HandlerTests
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Deleted);
         other.IsAdministrator.ShouldBeFalse();
-        TestUsers.Published(database).ShouldBe([new AdministratorRevoked(other.Id, 2)]);
+        TestDoubles.Published(database).ShouldBe([new AdministratorRevoked(other.Id, 2)]);
         await database.Received(1).SaveChangesAsync(Ct);
     }
 
@@ -148,9 +147,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRevokeAdministrator_WhenTheUserIsADisabledAdministrator()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var other = TestUsers.Disabled(TestUsers.Administrator("other"));
-        var database = TestUsers.Database([administrator, other]);
+        var administrator = TestDoubles.Administrator();
+        var other = TestDoubles.Disabled(TestDoubles.Administrator("other"));
+        var database = TestDoubles.Database([administrator, other]);
         var handler = new Handler(database);
 
         // Act
@@ -159,18 +158,18 @@ public sealed class HandlerTests
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Deleted);
         other.IsAdministrator.ShouldBeFalse();
-        TestUsers.Published(database).ShouldBe([new AdministratorRevoked(other.Id, 3)]);
+        TestDoubles.Published(database).ShouldBe([new AdministratorRevoked(other.Id, 3)]);
     }
 
     [Fact]
     public async Task HandleAsync_ShouldRevokeTheRoleAndPublishRoleRevoked_WhenTheUserHoldsIt()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
         alice.Grant("default", Role.Operator);
         alice.Grant("default", Role.Engineer);
-        var database = TestUsers.Database([administrator, alice]);
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -179,7 +178,7 @@ public sealed class HandlerTests
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Deleted);
         alice.RoleGrants.ShouldHaveSingleItem().Role.ShouldBe(Role.Engineer);
-        TestUsers.Published(database).ShouldBe([new RoleRevoked(alice.Id, "default", "Operator", 3)]);
+        TestDoubles.Published(database).ShouldBe([new RoleRevoked(alice.Id, "default", "Operator", 3)]);
         await database.Received(1).SaveChangesAsync(Ct);
     }
 
@@ -191,10 +190,10 @@ public sealed class HandlerTests
         string @namespace)
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
         alice.Grant("default", Role.Operator);
-        var database = TestUsers.Database([administrator, alice]);
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -203,7 +202,7 @@ public sealed class HandlerTests
         // Assert
         result.Error.ShouldBe(Errors.RoleNotHeld());
         alice.RoleGrants.Count.ShouldBe(1);
-        TestUsers.Published(database).ShouldBeEmpty();
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(Ct);
     }
 
