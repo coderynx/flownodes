@@ -6,6 +6,7 @@ Messages between modules (ADR-0012) go through Wolverine, using its Postgres tra
 
 - Wolverine is used only between modules. Commands and queries inside a module keep using `Coderynx.MediatorKit`.
 - A single Silo runs Wolverine in Solo durability mode; a cluster elects a leader through a Postgres advisory lock, so connections must be direct or session-pooled, never transaction-pooled.
+- Queue listeners wake on Postgres `LISTEN/NOTIFY` rather than waiting out Wolverine's 5-second idle poll, so a message reaches its module as soon as it commits. This holds one extra connection per module database; polling stays on as the fallback.
 - Builds ship pre-generated handler code (`TypeLoadMode.Static`) so a Raspberry Pi never loads Roslyn at runtime.
 - Wolverine does not order messages strictly, so ordering is the receiver's job (the per-Namespace `seq`, ADR-0014).
 - An Engine grain cannot write its state and the outbox in one transaction, so messages from the Engine are at-least-once and may be lost relative to grain state; the Engine re-sends Status on resync to compensate.

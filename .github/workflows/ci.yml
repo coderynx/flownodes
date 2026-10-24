@@ -16,14 +16,17 @@ jobs:
         with:
           global-json-file: global.json
 
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', 'dotnet-tools.json', 'global.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+
       - name: Build
         run: dotnet build Flownodes.slnx
 
-      - name: Layout standard is applied
-        run: scripts/format.sh --check
-
       - name: Test
-        run: dotnet test --solution Flownodes.slnx --no-build
+        run: dotnet test --solution Flownodes.slnx --no-build --output Detailed
 
       # Wolverine's handler code is generated and committed (apps/Flownodes/Internal/Generated/README.md). Writing it
       # again must change nothing; a diff means a handler or message changed without regenerating.
@@ -37,3 +40,26 @@ jobs:
           dotnet run --project apps/Flownodes --no-build -- codegen write
           git diff --exit-code -- apps/Flownodes/Internal/Generated
           test -z "$(git ls-files --others --exclude-standard apps/Flownodes/Internal/Generated)"
+
+  # Runs beside build-and-test: ReSharper reads the project model, so it needs only a restore.
+  layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', 'dotnet-tools.json', 'global.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore Flownodes.slnx
+
+      - name: Layout standard is applied
+        run: scripts/format.sh --check
