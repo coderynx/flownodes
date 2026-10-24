@@ -1,7 +1,6 @@
 <Project>
-    <!-- ADR-0022: wires the pre-commit format hook on the first build of a clone. It never overrides a configured
-         hooksPath, never runs in CI, and never fails the build (no git, not a work tree). Every project runs the
-         cheap read, only a clone without the setting runs the write. -->
+    <!-- HACK: a build is the only step every clone runs, so it wires the pre-commit hook (ADR-0022). Each project
+         repeats the cheap read because MSBuild shares no state between projects. -->
     <Target Name="WireGitHooks" BeforeTargets="CoreCompile" Condition="'$(CI)' == ''">
         <Exec Command="git config --get core.hooksPath" WorkingDirectory="$(MSBuildThisFileDirectory)"
               ConsoleToMSBuild="true" IgnoreExitCode="true" ContinueOnError="true"
