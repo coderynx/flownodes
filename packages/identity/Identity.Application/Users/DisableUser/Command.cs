@@ -30,8 +30,12 @@ internal sealed class Handler(IIdentityDbContext database, IUserTokenRevoker rev
 
         var user = found.Value;
 
-        if (user.IsAdministrator && !user.IsDisabled &&
-            !await CallerChecks.AnotherActiveAdministratorExistsAsync(database, user.Id, cancellationToken))
+        var isLastActiveAdministrator = user.IsAdministrator && !user.IsDisabled &&
+                                        !await CallerChecks.AnotherActiveAdministratorExistsAsync(
+                                            database,
+                                            user.Id,
+                                            cancellationToken);
+        if (isLastActiveAdministrator)
         {
             return Errors.LastAdministrator();
         }

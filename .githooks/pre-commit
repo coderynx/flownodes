@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Applies the C# layout standard (ADR-0022) to a commit's staged files. Enabled once per clone with
+# `git config core.hooksPath .githooks`.
+set -euo pipefail
+
+staged=()
+while IFS= read -r file; do
+    staged+=("$file")
+done < <(git diff --cached --name-only --diff-filter=ACMR -- '*.cs')
+if [[ ${#staged[@]} -eq 0 ]]; then
+    exit 0
+fi
+
+# Restaging a file that also has unstaged edits would commit those edits too.
+partial=$(git diff --name-only -- "${staged[@]}")
+if [[ -n "$partial" ]]; then
+    echo "Stage or stash the remaining edits in these files before committing:" >&2
+    echo "$partial" >&2
+    exit 1
+fi
+
+scripts/format.sh
+git add -- "${staged[@]}"

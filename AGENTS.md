@@ -14,7 +14,7 @@ Each rule below is an ADR; read the ADR before changing code in its area. The bu
 - **Domain**: rich entities (private ctor, `private set`, a `Create` factory, behaviour in methods) and value objects for rule-bearing values. Responses are DTOs mapped with `ToDto()`. ADR-0019.
 - **HTTP**: a use case is `<Feature>/<UseCase>/Command.cs` or `Query.cs` in Application, mirrored by `<Feature>/<UseCase>/Endpoint.cs` in Presentation. Routes sit under `/api/v1`, applied by Core; every endpoint has `.WithName(...)`. ADR-0020.
 - **Docs**: only types and members another project can access carry XML docs, with every tag and in `GLOSSARY.md` terms; internal code carries none. ADR-0021.
-- **Layout**: 120 columns, one parameter or argument per line once a call wraps, chains broken after the first call, one blank line between logical steps. Before committing, run `dotnet tool restore` and `dotnet jb cleanupcode Flownodes.slnx --profile="Built-in: Reformat Code" --include="<changed .cs files;separated;by;semicolons>" --no-updates`, then review each changed method's step spacing by hand. ADR-0022.
+- **Layout**: scripts lay code out; never rearrange layout by hand. Run `scripts/format.sh` after changing C# (the pre-commit hook runs it too, once `git config core.hooksPath .githooks` is set), and fix what the architecture tests flag: a line nothing can wrap, an `if` with three or more predicates. ADR-0022.
 - **Comments**: a comment flags a hack and opens with `// HACK:`. ADR-0023.
 - **Dead code**: delete what nothing references, Core contracts included. ADR-0024.
 - **Tests**: `Member_ShouldOutcome_WhenCondition`, `// Arrange` / `// Act` / `// Assert`, Shouldly, NSubstitute for contracts only. ADR-0025.
