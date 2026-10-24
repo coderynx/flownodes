@@ -28,7 +28,7 @@ public sealed class DeadCodeTests
         var sources = new Dictionary<string, string>
         {
             ["a/Lonely.cs"] = "public sealed class Lonely\n{\n}\n",
-            ["b/Other.cs"] = "public sealed class Other\n{\n}\n",
+            ["b/Other.cs"] = "public sealed class Other\n{\n}\n"
         };
 
         // Act
@@ -46,7 +46,7 @@ public sealed class DeadCodeTests
         {
             ["a/Used.cs"] = "public sealed class Used\n{\n}\n",
             ["b/User.cs"] = "public sealed class User\n{\n    private Used _used;\n}\n",
-            ["c/Main.cs"] = "public static class Main\n{\n    public static User Make() => new User();\n}\n",
+            ["c/Main.cs"] = "public static class Main\n{\n    public static User Make() => new User();\n}\n"
         };
 
         // Act
@@ -64,7 +64,7 @@ public sealed class DeadCodeTests
         {
             ["a/Pair.cs"] =
                 "public sealed class Pair\n{\n    public Half Left { get; }\n}\n\npublic sealed class Half\n{\n}\n",
-            ["b/Main.cs"] = "public static class Main\n{\n    public static Pair Make() => new Pair();\n}\n",
+            ["b/Main.cs"] = "public static class Main\n{\n    public static Pair Make() => new Pair();\n}\n"
         };
 
         // Act
@@ -81,7 +81,7 @@ public sealed class DeadCodeTests
         var sources = new Dictionary<string, string>
         {
             ["a/Ghost.cs"] = "public sealed class Ghost\n{\n}\n",
-            ["b/Note.cs"] = "// Ghost is mentioned here\npublic sealed class Note\n{\n}\n",
+            ["b/Note.cs"] = "// Ghost is mentioned here\npublic sealed class Note\n{\n}\n"
         };
 
         // Act

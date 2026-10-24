@@ -21,7 +21,7 @@ internal sealed class SigningKeyProvider
         if (stored is null)
         {
             using var generated = RSA.Create(3072);
-            var created = new Database.SigningKey
+            var created = new SigningKey
             {
                 Id = Database.SigningKey.CurrentId,
                 EncryptedPrivateKey = installationKey.Encrypt(generated.ExportPkcs8PrivateKey())

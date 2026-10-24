@@ -123,7 +123,7 @@ public sealed class HttpUseCaseTests
         // Arrange
         var builder = WebApplication.CreateBuilder();
         Core.Application.Bootstrap.DependencyInjection.AddCqrs(builder, [.. Solution.Assemblies("Application")]);
-        Core.Presentation.Bootstrap.DependencyInjection.AddPresentation(builder);
+        DependencyInjection.AddPresentation(builder);
         var app = builder.Build();
         app.MapEndpoints([.. Solution.Assemblies("Presentation")]);
 
