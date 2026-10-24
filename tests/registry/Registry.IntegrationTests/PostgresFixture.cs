@@ -1,9 +1,9 @@
 using Testcontainers.PostgreSql;
 using Xunit;
 
-[assembly: AssemblyFixture(typeof(Registry.Api.Tests.PostgresFixture))]
+[assembly: AssemblyFixture(typeof(Registry.IntegrationTests.PostgresFixture))]
 
-namespace Registry.Api.Tests;
+namespace Registry.IntegrationTests;
 
 public sealed class PostgresFixture : IAsyncLifetime
 {

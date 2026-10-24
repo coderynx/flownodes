@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.RegularExpressions;
 
-namespace Identity.Api.Tests;
+namespace Identity.IntegrationTests;
 
 public sealed partial class Browser : IDisposable
 {

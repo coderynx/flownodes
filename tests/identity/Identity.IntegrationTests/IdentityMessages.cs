@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Core.Contracts.Identity;
 
-namespace Identity.Api.Tests;
+namespace Identity.IntegrationTests;
 
 public sealed class IdentityMessages
 {

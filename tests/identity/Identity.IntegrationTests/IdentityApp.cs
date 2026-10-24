@@ -17,7 +17,7 @@ using Npgsql;
 using Wolverine;
 using Wolverine.Postgresql;
 
-namespace Identity.Api.Tests;
+namespace Identity.IntegrationTests;
 
 public sealed partial class IdentityApp : IAsyncDisposable
 {

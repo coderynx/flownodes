@@ -17,7 +17,7 @@ Each rule below is an ADR; read the ADR before changing code in its area. The bu
 - **Layout**: scripts lay code out; never rearrange layout by hand. Run `scripts/format.sh` after changing C# (the pre-commit hook runs it too, once `git config core.hooksPath .githooks` is set), and fix what the architecture tests flag: a line nothing can wrap, an `if` with three or more predicates. ADR-0022.
 - **Comments**: a comment flags a hack and opens with `// HACK:`. ADR-0023.
 - **Dead code**: delete what nothing references, Core contracts included. ADR-0024.
-- **Tests**: `Member_ShouldOutcome_WhenCondition`, `// Arrange` / `// Act` / `// Assert`, Shouldly, NSubstitute for contracts only. ADR-0025.
+- **Tests**: each module has `tests/<module>/<Module>.UnitTests` (Domain and CQRS handlers, every dependency substituted with NSubstitute, `DbSet`s through MockQueryable) and `<Module>.IntegrationTests` (real host and Postgres, no mocks). `Member_ShouldOutcome_WhenCondition`, `// Arrange` / `// Act` / `// Assert`, Shouldly everywhere. ADR-0025.
 
 Run `dotnet build Flownodes.slnx` and `dotnet test --solution Flownodes.slnx` before committing.
 

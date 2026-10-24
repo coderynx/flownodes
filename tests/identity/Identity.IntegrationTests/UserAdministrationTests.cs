@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Xunit;
 
-namespace Identity.Api.Tests;
+namespace Identity.IntegrationTests;
 
 public sealed class UserAdministrationTests(PostgresFixture postgres)
 {

@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Registry.Application.Database;
 using Xunit;
 
-namespace Registry.Api.Tests;
+namespace Registry.IntegrationTests;
 
 public sealed class AccessTests(PostgresFixture postgres)
 {

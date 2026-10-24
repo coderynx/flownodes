@@ -6,7 +6,7 @@ using Registry.Domain.Namespaces;
 using Registry.Domain.Resources;
 using Xunit;
 
-namespace Registry.Api.Tests;
+namespace Registry.IntegrationTests;
 
 public sealed class NamespaceMessageTests(PostgresFixture postgres)
 {

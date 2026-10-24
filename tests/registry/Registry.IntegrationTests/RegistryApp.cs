@@ -13,7 +13,7 @@ using Registry.Presentation.Bootstrap;
 using Wolverine;
 using Wolverine.Postgresql;
 
-namespace Registry.Api.Tests;
+namespace Registry.IntegrationTests;
 
 /// <summary>
 /// The Registry as the monolith runs it, with a stand-in for Identity beside it: tokens come from a real HTTP issuer
