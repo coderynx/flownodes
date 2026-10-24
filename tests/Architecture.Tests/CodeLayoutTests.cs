@@ -26,7 +26,7 @@ public sealed class CodeLayoutTests
                 Directory.EnumerateFiles(Path.GetDirectoryName(project)!, "*.cs", SearchOption.AllDirectories)
                     .Where(file => !Path.GetRelativePath(Path.GetDirectoryName(project)!, file)
                         .Split(Path.DirectorySeparatorChar)
-                        .Any(part => part is "bin" or "obj"))
+                        .Any(part => part is "bin" or "obj" or "Generated"))
                     .Select(file => (Project: project, File: file)));
 
         // Act

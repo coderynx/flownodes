@@ -23,7 +23,7 @@ internal static partial class DeadCode
                          SearchOption.AllDirectories))
             {
                 var relative = Path.GetRelativePath(repoRoot, file).Replace('\\', '/');
-                if (!relative.Split('/').Any(part => part is "bin" or "obj" or "Migrations"))
+                if (!relative.Split('/').Any(part => part is "bin" or "obj" or "Migrations" or "Generated"))
                 {
                     sources[relative] = File.ReadAllText(file);
                 }
@@ -65,8 +65,11 @@ internal static partial class DeadCode
         var isEndpoint = body.Contains(": IEndpoint", StringComparison.Ordinal);
         var isEntryPoint = EntryPoint().IsMatch(body);
         var holdsExtensionMethods = Regex.IsMatch(body, @"\(\s*this\s+");
+        var isPageModel = body.Contains(": PageModel", StringComparison.Ordinal);
+        var isMessageHandler = Regex.IsMatch(body, @"static\s+(async\s+)?(void|Task)\s+Handle\s*\(");
 
-        return isEntityConfiguration || isRequestHandler || isEndpoint || isEntryPoint || holdsExtensionMethods;
+        return isEntityConfiguration || isRequestHandler || isEndpoint || isEntryPoint || holdsExtensionMethods ||
+               isPageModel || isMessageHandler;
     }
 
     private static int DeclarationEnd(string text, int start)

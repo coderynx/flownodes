@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" />
+        <PackageReference Include="Testcontainers.PostgreSql" />
+        <PackageReference Include="WolverineFx.RuntimeCompilation" />
+        <PackageReference Include="xunit.v3" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\packages\core\Core.Contracts\Core.Contracts.csproj" />
+        <ProjectReference Include="..\..\packages\registry\Registry.Application\Registry.Application.csproj" />
+        <ProjectReference Include="..\..\packages\registry\Registry.Infrastructure\Registry.Infrastructure.csproj" />
+        <ProjectReference Include="..\..\packages\registry\Registry.Presentation\Registry.Presentation.csproj" />
+    </ItemGroup>
+
+</Project>
