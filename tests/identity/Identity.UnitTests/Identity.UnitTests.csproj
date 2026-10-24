@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="xunit.v3" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\packages\identity\Identity.Application\Identity.Application.csproj" />
+        <ProjectReference Include="..\..\..\packages\identity\Identity.Domain\Identity.Domain.csproj" />
+    </ItemGroup>
+
+</Project>
