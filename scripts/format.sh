@@ -1,33 +1,36 @@
 #!/usr/bin/env bash
-# Applies the C# layout standard (ADR-0022) to every hand-written source file.
+# Applies the C# layout standard (ADR-0022) to the given .cs files, or to every hand-written one when none are given.
 # With --check, fails when that changes anything, so CI proves the tree was formatted.
 set -euo pipefail
 
+check=false
+if [[ "${1:-}" == "--check" ]]; then
+    check=true
+    shift
+fi
+
 cd "$(dirname "$0")/.."
+
+include="**/*.cs"
+if [[ $# -gt 0 ]]; then
+    include=$(IFS=';'; echo "$*")
+fi
 
 dotnet tool restore > /dev/null
 
-# The analyzers' warnings would fail ReSharper's project load, and its exit code is 4 whenever the solution reports
-# any warning, so only a load or argument error counts as a failure.
-status=0
+# --no-build: formatting needs the project model, not compiled output.
 dotnet jb cleanupcode Flownodes.slnx \
     --profile="Flownodes" \
-    --include="**/*.cs" \
+    --include="$include" \
     --exclude="**/Database/Migrations/**;**/Internal/Generated/**" \
-    --properties:"TreatWarningsAsErrors=false;EnforceCodeStyleInBuild=false" \
+    --no-build \
     --no-updates \
-    > /dev/null || status=$?
-if [[ $status -ne 0 && $status -ne 4 ]]; then
-    echo "ReSharper cleanup failed with exit code $status." >&2
-    exit "$status"
-fi
+    > /dev/null
 
 # Namespaces matching folders and using-directive order, which ReSharper's cleanup cannot apply.
 dotnet run scripts/Layout.cs
 
-if [[ "${1:-}" == "--check" ]]; then
-    if ! git diff --exit-code --stat -- '*.cs'; then
-        echo "These files do not follow the layout standard. Run scripts/format.sh and commit the result." >&2
-        exit 1
-    fi
+if [[ "$check" == true ]] && ! git diff --exit-code --stat -- '*.cs'; then
+    echo "These files do not follow the layout standard. Run scripts/format.sh and commit the result." >&2
+    exit 1
 fi
