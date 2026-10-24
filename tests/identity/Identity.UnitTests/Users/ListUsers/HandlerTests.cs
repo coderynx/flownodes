@@ -12,8 +12,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnForbidden_WhenTheCallerIsNotAnAdministrator()
     {
         // Arrange
-        var bob = TestUsers.Member("bob");
-        var handler = new Handler(TestUsers.Database([bob]));
+        var bob = TestDoubles.Member("bob");
+        var handler = new Handler(TestDoubles.Database([bob]));
 
         // Act
         var result = await handler.HandleAsync(new Query(bob.Id, null, null, false, 0, 50), Ct);
@@ -26,7 +26,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnUnauthenticated_WhenTheCallerIsUnknown()
     {
         // Arrange
-        var handler = new Handler(TestUsers.Database([TestUsers.Administrator()]));
+        var handler = new Handler(TestDoubles.Database([TestDoubles.Administrator()]));
 
         // Act
         var result = await handler.HandleAsync(new Query(Guid.NewGuid(), null, null, false, 0, 50), Ct);
@@ -41,8 +41,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnBadRequest_WhenTheSortKeyIsUnknown(string sort)
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var handler = new Handler(TestUsers.Database([administrator]));
+        var administrator = TestDoubles.Administrator();
+        var handler = new Handler(TestDoubles.Database([administrator]));
 
         // Act
         var result = await handler.HandleAsync(new Query(administrator.Id, null, sort, false, 0, 50), Ct);
@@ -57,8 +57,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldSortByUsernameIgnoringCase_WhenTheSortKeyIsUsernameOrNone(string? sort)
     {
         // Arrange
-        var administrator = TestUsers.Administrator("carol");
-        var database = TestUsers.Database([TestUsers.Member("bob"), administrator, TestUsers.Member("Alice")]);
+        var administrator = TestDoubles.Administrator("carol");
+        var database = TestDoubles.Database([TestDoubles.Member("bob"), administrator, TestDoubles.Member("Alice")]);
         var handler = new Handler(database);
 
         // Act
@@ -73,8 +73,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReverseTheOrder_WhenDescIsSet()
     {
         // Arrange
-        var administrator = TestUsers.Administrator("carol");
-        var database = TestUsers.Database([TestUsers.Member("bob"), administrator, TestUsers.Member("Alice")]);
+        var administrator = TestDoubles.Administrator("carol");
+        var database = TestDoubles.Database([TestDoubles.Member("bob"), administrator, TestDoubles.Member("Alice")]);
         var handler = new Handler(database);
 
         // Act
@@ -88,10 +88,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldKeepOnlyUsernamesContainingTheText_WhenQIsSetIgnoringCase()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
+        var administrator = TestDoubles.Administrator();
         var users = new[]
-            { administrator, TestUsers.Member("Alice"), TestUsers.Member("malice"), TestUsers.Member("bob") };
-        var handler = new Handler(TestUsers.Database(users));
+            { administrator, TestDoubles.Member("Alice"), TestDoubles.Member("malice"), TestDoubles.Member("bob") };
+        var handler = new Handler(TestDoubles.Database(users));
 
         // Act
         var result = await handler.HandleAsync(new Query(administrator.Id, "ALI", null, false, 0, 50), Ct);
@@ -105,9 +105,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnOnePageAndTheTotal_WhenOffsetAndLimitAreSet()
     {
         // Arrange
-        var administrator = TestUsers.Administrator("a0");
-        var users = new[] { administrator, TestUsers.Member("a1"), TestUsers.Member("a2"), TestUsers.Member("a3") };
-        var handler = new Handler(TestUsers.Database(users));
+        var administrator = TestDoubles.Administrator("a0");
+        var users = new[]
+            { administrator, TestDoubles.Member("a1"), TestDoubles.Member("a2"), TestDoubles.Member("a3") };
+        var handler = new Handler(TestDoubles.Database(users));
 
         // Act
         var result = await handler.HandleAsync(new Query(administrator.Id, null, null, false, 1, 2), Ct);
@@ -121,8 +122,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldStartAtTheFirstUser_WhenTheOffsetIsNegative()
     {
         // Arrange
-        var administrator = TestUsers.Administrator("a0");
-        var handler = new Handler(TestUsers.Database([administrator, TestUsers.Member("a1")]));
+        var administrator = TestDoubles.Administrator("a0");
+        var handler = new Handler(TestDoubles.Database([administrator, TestDoubles.Member("a1")]));
 
         // Act
         var result = await handler.HandleAsync(new Query(administrator.Id, null, null, false, -5, 50), Ct);
@@ -138,9 +139,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldClampTheLimit_WhenItIsOutsideOneToTwoHundred(int limit, int expected)
     {
         // Arrange
-        var administrator = TestUsers.Administrator("a000");
-        var members = Enumerable.Range(1, 210).Select(index => TestUsers.Member($"a{index:000}"));
-        var handler = new Handler(TestUsers.Database(members.Append(administrator)));
+        var administrator = TestDoubles.Administrator("a000");
+        var members = Enumerable.Range(1, 210).Select(index => TestDoubles.Member($"a{index:000}"));
+        var handler = new Handler(TestDoubles.Database(members.Append(administrator)));
 
         // Act
         var result = await handler.HandleAsync(new Query(administrator.Id, null, null, false, 0, limit), Ct);

@@ -11,8 +11,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldListTheCallersUnrevokedTokensOldestFirst_WhenTheCallerListsTheirOwn()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var other = TokenDoubles.DisabledUser();
+        var caller = TestDoubles.Member("alice");
+        var other = TestDoubles.Disabled(TestDoubles.Member("bob"));
         var newer = PersonalAccessToken.Create(caller.Id, "newer", "hash-1", TokenDoubles.Now, null);
         var older = PersonalAccessToken.Create(caller.Id, "older", "hash-2", TokenDoubles.Now.AddDays(-2), null);
         var expired = PersonalAccessToken.Create(
@@ -24,7 +24,7 @@ public sealed class HandlerTests
         var revoked = PersonalAccessToken.Create(caller.Id, "revoked", "hash-4", TokenDoubles.Now, null);
         revoked.Revoke(TokenDoubles.Now);
         var othersToken = PersonalAccessToken.Create(other.Id, "theirs", "hash-5", TokenDoubles.Now, null);
-        var database = TokenDoubles.Database([caller, other], [newer, revoked, othersToken, older, expired]);
+        var database = TestDoubles.Database([caller, other], [newer, revoked, othersToken, older, expired]);
         var handler = new Handler(database);
 
         // Act
@@ -38,8 +38,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldListNothing_WhenTheCallerHasNoTokens()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var handler = new Handler(TokenDoubles.Database([caller], []));
+        var caller = TestDoubles.Member("alice");
+        var handler = new Handler(TestDoubles.Database([caller], []));
 
         // Act
         var result = await handler.HandleAsync(new Query(caller.Id, caller.Id), TestContext.Current.CancellationToken);
@@ -53,9 +53,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldForbid_WhenTheCallerListsAnotherUsersTokens()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var other = TokenDoubles.DisabledUser();
-        var handler = new Handler(TokenDoubles.Database([caller, other], [TokenDoubles.TokenOf(other)]));
+        var caller = TestDoubles.Member("alice");
+        var other = TestDoubles.Disabled(TestDoubles.Member("bob"));
+        var handler = new Handler(TestDoubles.Database([caller, other], [TokenDoubles.TokenOf(other)]));
 
         // Act
         var result = await handler.HandleAsync(new Query(caller.Id, other.Id), TestContext.Current.CancellationToken);
@@ -68,8 +68,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuse_WhenTheCallerIsDisabled()
     {
         // Arrange
-        var caller = TokenDoubles.DisabledUser();
-        var handler = new Handler(TokenDoubles.Database([caller], [TokenDoubles.TokenOf(caller)]));
+        var caller = TestDoubles.Disabled(TestDoubles.Member("bob"));
+        var handler = new Handler(TestDoubles.Database([caller], [TokenDoubles.TokenOf(caller)]));
 
         // Act
         var result = await handler.HandleAsync(new Query(caller.Id, caller.Id), TestContext.Current.CancellationToken);
@@ -82,7 +82,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuse_WhenTheCallerIsUnknown()
     {
         // Arrange
-        var handler = new Handler(TokenDoubles.Database([], []));
+        var handler = new Handler(TestDoubles.Database([], []));
         var callerId = Guid.NewGuid();
 
         // Act

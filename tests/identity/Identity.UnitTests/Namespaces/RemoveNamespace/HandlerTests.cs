@@ -14,7 +14,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var known = KnownNamespace.Create("acme", NamespaceDoubles.Uid, 1);
-        var database = NamespaceDoubles.Database([known], []);
+        var database = TestDoubles.Database([], namespaces: [known]);
         var handler = new Handler(database);
 
         // Act
@@ -37,7 +37,9 @@ public sealed class HandlerTests
             ("acme", Role.Engineer),
             ("acme", Role.Operator),
             ("globex", Role.Operator));
-        var database = NamespaceDoubles.Database([KnownNamespace.Create("acme", NamespaceDoubles.Uid, 1)], [holder]);
+        var database = TestDoubles.Database(
+            [holder],
+            namespaces: [KnownNamespace.Create("acme", NamespaceDoubles.Uid, 1)]);
         var handler = new Handler(database);
 
         // Act
@@ -56,7 +58,9 @@ public sealed class HandlerTests
     {
         // Arrange
         var bystander = NamespaceDoubles.UserWith("bob", ("globex", Role.Engineer));
-        var database = NamespaceDoubles.Database([KnownNamespace.Create("acme", NamespaceDoubles.Uid, 1)], [bystander]);
+        var database = TestDoubles.Database(
+            [bystander],
+            namespaces: [KnownNamespace.Create("acme", NamespaceDoubles.Uid, 1)]);
         var handler = new Handler(database);
 
         // Act
@@ -75,7 +79,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var known = KnownNamespace.Create("acme", NamespaceDoubles.Uid, 1);
-        var database = NamespaceDoubles.Database([known], []);
+        var database = TestDoubles.Database([], namespaces: [known]);
         var handler = new Handler(database);
 
         // Act
@@ -92,7 +96,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var known = KnownNamespace.Create("acme", NamespaceDoubles.Uid, 1);
-        var database = NamespaceDoubles.Database([known], []);
+        var database = TestDoubles.Database([], namespaces: [known]);
         var handler = new Handler(database);
 
         // Act
@@ -107,7 +111,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var holder = NamespaceDoubles.UserWith("alice", ("acme", Role.Engineer));
-        var database = NamespaceDoubles.Database([], [holder]);
+        var database = TestDoubles.Database([holder], namespaces: []);
         var handler = new Handler(database);
 
         // Act
@@ -128,7 +132,7 @@ public sealed class HandlerTests
         // Arrange
         var holder = NamespaceDoubles.UserWith("alice", (KnownNamespace.Default, Role.Engineer));
         var known = KnownNamespace.Create(KnownNamespace.Default, NamespaceDoubles.Uid, 1);
-        var database = NamespaceDoubles.Database([known], [holder]);
+        var database = TestDoubles.Database([holder], namespaces: [known]);
         var handler = new Handler(database);
 
         // Act

@@ -5,7 +5,6 @@ using Identity.Application;
 using Identity.Application.Grants.GrantRole;
 using Identity.Domain.Namespaces;
 using Identity.Domain.Users;
-using Identity.UnitTests.Users;
 using Xunit;
 
 namespace Identity.UnitTests.Grants.GrantRole;
@@ -18,9 +17,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnForbidden_WhenTheCallerIsNotAnAdministrator()
     {
         // Arrange
-        var bob = TestUsers.Member("bob");
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([bob, alice]);
+        var bob = TestDoubles.Member("bob");
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([bob, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -36,8 +35,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnUnauthenticated_WhenTheCallerIsUnknown()
     {
         // Arrange
-        var alice = TestUsers.Member("alice");
-        var handler = new Handler(TestUsers.Database([alice]));
+        var alice = TestDoubles.Member("alice");
+        var handler = new Handler(TestDoubles.Database([alice]));
 
         // Act
         var result = await handler.HandleAsync(new Command(Guid.NewGuid(), alice.Id, "Administrator", null), Ct);
@@ -55,9 +54,9 @@ public sealed class HandlerTests
         Error expected)
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice]);
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -74,8 +73,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldCheckTheRoleBeforeTheUser_WhenBothAreWrong()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var handler = new Handler(TestUsers.Database([administrator]));
+        var administrator = TestDoubles.Administrator();
+        var handler = new Handler(TestDoubles.Database([administrator]));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, Guid.NewGuid(), "Wizard", "default"), Ct);
@@ -88,8 +87,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnNotFound_WhenTheUserDoesNotExist()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var database = TestUsers.Database([administrator]);
+        var administrator = TestDoubles.Administrator();
+        var database = TestDoubles.Database([administrator]);
         var handler = new Handler(database);
 
         // Act
@@ -111,9 +110,9 @@ public sealed class HandlerTests
             string? @namespace)
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice]);
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -123,7 +122,7 @@ public sealed class HandlerTests
         result.Success.Kind.ShouldBe(SuccessKind.Created);
         result.Value.ShouldBeSameAs(alice);
         alice.IsAdministrator.ShouldBeTrue();
-        TestUsers.Published(database).ShouldBe([new AdministratorGranted(alice.Id, 1)]);
+        TestDoubles.Published(database).ShouldBe([new AdministratorGranted(alice.Id, 1)]);
         await database.Received(1).SaveChangesAsync(Ct);
     }
 
@@ -131,9 +130,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnFoundWithoutSaving_WhenTheUserIsAlreadyAnAdministrator()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var other = TestUsers.Administrator("other");
-        var database = TestUsers.Database([administrator, other]);
+        var administrator = TestDoubles.Administrator();
+        var other = TestDoubles.Administrator("other");
+        var database = TestDoubles.Database([administrator, other]);
         var handler = new Handler(database);
 
         // Act
@@ -142,7 +141,7 @@ public sealed class HandlerTests
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Found);
         other.Seq.ShouldBe(1);
-        TestUsers.Published(database).ShouldBeEmpty();
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(Ct);
     }
 
@@ -154,9 +153,9 @@ public sealed class HandlerTests
         Role expected)
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice]);
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -167,7 +166,7 @@ public sealed class HandlerTests
         var grant = alice.RoleGrants.ShouldHaveSingleItem();
         grant.Namespace.ShouldBe("default");
         grant.Role.ShouldBe(expected);
-        TestUsers.Published(database).ShouldBe([new RoleGranted(alice.Id, "default", expected.ToString(), 1)]);
+        TestDoubles.Published(database).ShouldBe([new RoleGranted(alice.Id, "default", expected.ToString(), 1)]);
         await database.Received(1).SaveChangesAsync(Ct);
     }
 
@@ -175,10 +174,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldGrantTheRole_WhenTheRegistryAnnouncedTheNamespace()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
         var plant = KnownNamespace.Create("plant", Guid.NewGuid(), 1);
-        var database = TestUsers.Database([administrator, alice], namespaces: [plant]);
+        var database = TestDoubles.Database([administrator, alice], namespaces: [plant]);
         var handler = new Handler(database);
 
         // Act
@@ -186,17 +185,17 @@ public sealed class HandlerTests
 
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Created);
-        TestUsers.Published(database).ShouldBe([new RoleGranted(alice.Id, "plant", "Engineer", 1)]);
+        TestDoubles.Published(database).ShouldBe([new RoleGranted(alice.Id, "plant", "Engineer", 1)]);
     }
 
     [Fact]
     public async Task HandleAsync_ShouldReturnBadRequest_WhenTheNamespaceIsUnknown()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
         var plant = KnownNamespace.Create("plant", Guid.NewGuid(), 1);
-        var database = TestUsers.Database([administrator, alice], namespaces: [plant]);
+        var database = TestDoubles.Database([administrator, alice], namespaces: [plant]);
         var handler = new Handler(database);
 
         // Act
@@ -212,10 +211,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnFoundWithoutSaving_WhenTheUserAlreadyHoldsTheRole()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
         alice.Grant("default", Role.Operator);
-        var database = TestUsers.Database([administrator, alice]);
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -224,7 +223,7 @@ public sealed class HandlerTests
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Found);
         alice.Seq.ShouldBe(1);
-        TestUsers.Published(database).ShouldBeEmpty();
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(Ct);
     }
 

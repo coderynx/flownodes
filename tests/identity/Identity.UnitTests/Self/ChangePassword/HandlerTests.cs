@@ -2,7 +2,6 @@ using Coderynx.Functional.Results.Successes;
 using Identity.Application;
 using Identity.Application.Self.ChangePassword;
 using Identity.Domain.Users;
-using Identity.UnitTests.Users;
 using Microsoft.AspNetCore.Identity;
 using Xunit;
 
@@ -17,7 +16,7 @@ public sealed class HandlerTests
 
     public HandlerTests()
     {
-        _users = TestUsers.UserManager(_hasher);
+        _users = TestDoubles.UserManager(_hasher);
         _users.CheckPasswordAsync(Arg.Any<User>(), Current).Returns(true);
     }
 
@@ -27,7 +26,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnUnauthenticated_WhenTheCallerIsUnknown()
     {
         // Arrange
-        var database = TestUsers.Database([TestUsers.Member("alice")]);
+        var database = TestDoubles.Database([TestDoubles.Member("alice")]);
         var handler = new Handler(database, _users);
 
         // Act
@@ -42,8 +41,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnUnauthenticated_WhenTheCallerIsDisabled()
     {
         // Arrange
-        var alice = TestUsers.Disabled(TestUsers.Member("alice"));
-        var database = TestUsers.Database([alice]);
+        var alice = TestDoubles.Disabled(TestDoubles.Member("alice"));
+        var database = TestDoubles.Database([alice]);
         var handler = new Handler(database, _users);
 
         // Act
@@ -59,9 +58,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnBadRequest_WhenTheCurrentPasswordIsWrong()
     {
         // Arrange
-        var alice = TestUsers.Member("alice");
+        var alice = TestDoubles.Member("alice");
         alice.SetPasswordHash("old hash");
-        var database = TestUsers.Database([alice]);
+        var database = TestDoubles.Database([alice]);
         var handler = new Handler(database, _users);
 
         // Act
@@ -77,10 +76,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnBadRequest_WhenThePolicyRejectsTheNewPassword()
     {
         // Arrange
-        var alice = TestUsers.Member("alice");
+        var alice = TestDoubles.Member("alice");
         alice.SetPasswordHash("old hash");
-        var database = TestUsers.Database([alice]);
-        _users.PasswordValidators.Add(TestUsers.RejectingValidator("Too short."));
+        var database = TestDoubles.Database([alice]);
+        _users.PasswordValidators.Add(TestDoubles.RejectingValidator("Too short."));
         var handler = new Handler(database, _users);
 
         // Act
@@ -96,10 +95,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldStoreTheNewHash_WhenTheCurrentPasswordIsRightAndTheNewOneIsValid()
     {
         // Arrange
-        var alice = TestUsers.Member("alice");
+        var alice = TestDoubles.Member("alice");
         alice.SetPasswordHash("old hash");
-        var database = TestUsers.Database([alice]);
-        _users.PasswordValidators.Add(TestUsers.AcceptingValidator());
+        var database = TestDoubles.Database([alice]);
+        _users.PasswordValidators.Add(TestDoubles.AcceptingValidator());
         _hasher.HashPassword(alice, New).Returns("new hash");
         var handler = new Handler(database, _users);
 
@@ -109,7 +108,7 @@ public sealed class HandlerTests
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Updated);
         alice.PasswordHash.ShouldBe("new hash");
-        TestUsers.Published(database).ShouldBeEmpty();
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.Received(1).SaveChangesAsync(Ct);
     }
 }

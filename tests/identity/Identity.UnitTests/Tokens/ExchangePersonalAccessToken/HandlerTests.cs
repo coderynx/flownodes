@@ -9,9 +9,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldFindTheOwner_WhenTheTokenIsActive()
     {
         // Arrange
-        var owner = TokenDoubles.ActiveUser();
-        var database = TokenDoubles.Database([owner], [TokenDoubles.TokenOf(owner, TokenDoubles.Now.AddDays(1))]);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var owner = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([owner], [TokenDoubles.TokenOf(owner, TokenDoubles.Now.AddDays(1))]);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(new Command(TokenDoubles.Secret), TestContext.Current.CancellationToken);
@@ -25,9 +25,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuseTheExchange_WhenTheSecretIsUnknown()
     {
         // Arrange
-        var owner = TokenDoubles.ActiveUser();
-        var database = TokenDoubles.Database([owner], [TokenDoubles.TokenOf(owner)]);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var owner = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([owner], [TokenDoubles.TokenOf(owner)]);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -42,9 +42,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuseTheExchange_WhenTheTokenHasExpired()
     {
         // Arrange
-        var owner = TokenDoubles.ActiveUser();
-        var database = TokenDoubles.Database([owner], [TokenDoubles.TokenOf(owner, TokenDoubles.Now)]);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var owner = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([owner], [TokenDoubles.TokenOf(owner, TokenDoubles.Now)]);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(new Command(TokenDoubles.Secret), TestContext.Current.CancellationToken);
@@ -57,11 +57,11 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuseTheExchange_WhenTheTokenIsRevoked()
     {
         // Arrange
-        var owner = TokenDoubles.ActiveUser();
+        var owner = TestDoubles.Member("alice");
         var token = TokenDoubles.TokenOf(owner);
         token.Revoke(TokenDoubles.Now.AddHours(-1));
-        var database = TokenDoubles.Database([owner], [token]);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var database = TestDoubles.Database([owner], [token]);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(new Command(TokenDoubles.Secret), TestContext.Current.CancellationToken);
@@ -74,9 +74,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuseTheExchange_WhenTheOwnerIsDisabled()
     {
         // Arrange
-        var owner = TokenDoubles.DisabledUser();
-        var database = TokenDoubles.Database([owner], [TokenDoubles.TokenOf(owner)]);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var owner = TestDoubles.Disabled(TestDoubles.Member("bob"));
+        var database = TestDoubles.Database([owner], [TokenDoubles.TokenOf(owner)]);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(new Command(TokenDoubles.Secret), TestContext.Current.CancellationToken);
@@ -89,9 +89,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuseTheExchange_WhenTheOwnerNoLongerExists()
     {
         // Arrange
-        var owner = TokenDoubles.ActiveUser();
-        var database = TokenDoubles.Database([], [TokenDoubles.TokenOf(owner)]);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var owner = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([], [TokenDoubles.TokenOf(owner)]);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(new Command(TokenDoubles.Secret), TestContext.Current.CancellationToken);

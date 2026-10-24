@@ -14,8 +14,8 @@ public sealed class HandlerTests
 {
     private const string LiveToken = "live-setup-token";
     private const string Password = "a-long-enough-password";
-    private readonly IIdentityDbContext _database = SetupDoubles.Database([]);
-    private readonly UserManager<User> _users = SetupDoubles.UserManager();
+    private readonly IIdentityDbContext _database = TestDoubles.Database([]);
+    private readonly UserManager<User> _users = TestDoubles.UserManager();
     private readonly ISetupToken _setupToken = Substitute.For<ISetupToken>();
 
     public HandlerTests()
@@ -103,7 +103,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReportSetupDone_WhenAUserAlreadyExists()
     {
         // Arrange
-        var database = SetupDoubles.Database([SetupDoubles.ExistingUser()]);
+        var database = TestDoubles.Database([TestDoubles.Member("alice")]);
         var handler = new Handler(database, _users, _setupToken);
 
         // Act

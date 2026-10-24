@@ -11,10 +11,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRevokeTheTokenNow_WhenTheCallerRevokesTheirOwn()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
+        var caller = TestDoubles.Member("alice");
         var token = TokenDoubles.TokenOf(caller);
-        var database = TokenDoubles.Database([caller], [token]);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var database = TestDoubles.Database([caller], [token]);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -31,10 +31,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldKeepTheFirstRevocation_WhenTheTokenIsAlreadyRevoked()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
+        var caller = TestDoubles.Member("alice");
         var token = TokenDoubles.TokenOf(caller);
         token.Revoke(TokenDoubles.Now.AddHours(-1));
-        var handler = new Handler(TokenDoubles.Database([caller], [token]), TokenDoubles.Clock());
+        var handler = new Handler(TestDoubles.Database([caller], [token]), TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -50,9 +50,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReportNotFound_WhenTheTokenDoesNotExist()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var database = TokenDoubles.Database([caller], []);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var caller = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([caller], []);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -68,11 +68,11 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReportNotFound_WhenTheTokenBelongsToAnotherUser()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var other = TokenDoubles.DisabledUser();
+        var caller = TestDoubles.Member("alice");
+        var other = TestDoubles.Disabled(TestDoubles.Member("bob"));
         var othersToken = TokenDoubles.TokenOf(other);
-        var database = TokenDoubles.Database([caller, other], [othersToken]);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var database = TestDoubles.Database([caller, other], [othersToken]);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -88,11 +88,11 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldForbid_WhenTheCallerRevokesAnotherUsersToken()
     {
         // Arrange
-        var caller = TokenDoubles.ActiveUser();
-        var other = TokenDoubles.DisabledUser();
+        var caller = TestDoubles.Member("alice");
+        var other = TestDoubles.Disabled(TestDoubles.Member("bob"));
         var othersToken = TokenDoubles.TokenOf(other);
-        var database = TokenDoubles.Database([caller, other], [othersToken]);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var database = TestDoubles.Database([caller, other], [othersToken]);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -109,10 +109,10 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuse_WhenTheCallerIsDisabled()
     {
         // Arrange
-        var caller = TokenDoubles.DisabledUser();
+        var caller = TestDoubles.Disabled(TestDoubles.Member("bob"));
         var token = TokenDoubles.TokenOf(caller);
-        var database = TokenDoubles.Database([caller], [token]);
-        var handler = new Handler(database, TokenDoubles.Clock());
+        var database = TestDoubles.Database([caller], [token]);
+        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(

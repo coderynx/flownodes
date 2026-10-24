@@ -14,9 +14,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnForbidden_WhenTheCallerIsNotAnAdministrator()
     {
         // Arrange
-        var bob = TestUsers.Member("bob");
-        var alice = TestUsers.Disabled(TestUsers.Member("alice"));
-        var database = TestUsers.Database([bob, alice]);
+        var bob = TestDoubles.Member("bob");
+        var alice = TestDoubles.Disabled(TestDoubles.Member("alice"));
+        var database = TestDoubles.Database([bob, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -32,8 +32,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnUnauthenticated_WhenTheCallerIsDisabled()
     {
         // Arrange
-        var administrator = TestUsers.Disabled(TestUsers.Administrator());
-        var database = TestUsers.Database([administrator]);
+        var administrator = TestDoubles.Disabled(TestDoubles.Administrator());
+        var database = TestDoubles.Database([administrator]);
         var handler = new Handler(database);
 
         // Act
@@ -48,8 +48,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnNotFound_WhenTheUserDoesNotExist()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var database = TestUsers.Database([administrator]);
+        var administrator = TestDoubles.Administrator();
+        var database = TestDoubles.Database([administrator]);
         var handler = new Handler(database);
 
         // Act
@@ -64,9 +64,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldEnableTheUserAndPublishUserEnabled_WhenTheUserIsDisabled()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Disabled(TestUsers.Member("alice"));
-        var database = TestUsers.Database([administrator, alice]);
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Disabled(TestDoubles.Member("alice"));
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -75,7 +75,7 @@ public sealed class HandlerTests
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Updated);
         alice.IsDisabled.ShouldBeFalse();
-        TestUsers.Published(database).ShouldBe([new UserEnabled(alice.Id, 2)]);
+        TestDoubles.Published(database).ShouldBe([new UserEnabled(alice.Id, 2)]);
         await database.Received(1).SaveChangesAsync(Ct);
     }
 
@@ -83,9 +83,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldSucceedWithoutPublishing_WhenTheUserIsAlreadyEnabled()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice]);
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -94,7 +94,7 @@ public sealed class HandlerTests
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Updated);
         alice.Seq.ShouldBe(0);
-        TestUsers.Published(database).ShouldBeEmpty();
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.Received(1).SaveChangesAsync(Ct);
     }
 }

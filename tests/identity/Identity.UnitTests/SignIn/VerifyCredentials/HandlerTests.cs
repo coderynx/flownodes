@@ -9,14 +9,14 @@ namespace Identity.UnitTests.SignIn.VerifyCredentials;
 public sealed class HandlerTests
 {
     private const string Password = "the-right-password";
-    private readonly IIdentityDbContext _database = SignInDoubles.Database([]);
-    private readonly UserManager<User> _users = SignInDoubles.UserManager();
+    private readonly IIdentityDbContext _database = TestDoubles.Database([]);
+    private readonly UserManager<User> _users = TestDoubles.UserManager();
 
     [Fact]
     public async Task HandleAsync_ShouldFindTheUserAndForgetFailedAttempts_WhenThePasswordIsRight()
     {
         // Arrange
-        var user = Known(SignInDoubles.ActiveUser());
+        var user = Known(TestDoubles.Member("alice"));
         _users.CheckPasswordAsync(user, Password).Returns(true);
         var handler = new Handler(_database, _users);
 
@@ -34,7 +34,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldCountTheFailure_WhenThePasswordIsWrong()
     {
         // Arrange
-        var user = Known(SignInDoubles.ActiveUser());
+        var user = Known(TestDoubles.Member("alice"));
         var handler = new Handler(_database, _users);
 
         // Act
@@ -51,7 +51,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReportTheLockout_WhenAWrongPasswordLocksTheUserOut()
     {
         // Arrange
-        var user = Known(SignInDoubles.ActiveUser());
+        var user = Known(TestDoubles.Member("alice"));
         _users.IsLockedOutAsync(user).Returns(false, true);
         var handler = new Handler(_database, _users);
 
@@ -68,7 +68,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuseWithoutCheckingThePassword_WhenTheUserIsLockedOut()
     {
         // Arrange
-        var user = Known(SignInDoubles.ActiveUser());
+        var user = Known(TestDoubles.Member("alice"));
         _users.IsLockedOutAsync(user).Returns(true);
         _users.CheckPasswordAsync(user, Password).Returns(true);
         var handler = new Handler(_database, _users);
@@ -86,7 +86,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuseWithoutCheckingThePassword_WhenTheUserIsDisabled()
     {
         // Arrange
-        var user = Known(SignInDoubles.DisabledUser());
+        var user = Known(TestDoubles.Disabled(TestDoubles.Member("bob")));
         _users.CheckPasswordAsync(user, Password).Returns(true);
         var handler = new Handler(_database, _users);
 

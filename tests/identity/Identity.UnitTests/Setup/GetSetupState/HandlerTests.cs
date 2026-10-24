@@ -9,7 +9,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReportSetupPending_WhenNoUserExists()
     {
         // Arrange
-        var handler = new Handler(SetupDoubles.Database([]));
+        var handler = new Handler(TestDoubles.Database([]));
 
         // Act
         var result = await handler.HandleAsync(new Query(), TestContext.Current.CancellationToken);
@@ -22,7 +22,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReportSetupDone_WhenAUserExists()
     {
         // Arrange
-        var handler = new Handler(SetupDoubles.Database([SetupDoubles.ExistingUser()]));
+        var handler = new Handler(TestDoubles.Database([TestDoubles.Member("alice")]));
 
         // Act
         var result = await handler.HandleAsync(new Query(), TestContext.Current.CancellationToken);

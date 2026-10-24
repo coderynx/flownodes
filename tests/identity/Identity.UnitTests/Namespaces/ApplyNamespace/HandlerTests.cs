@@ -11,7 +11,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRecordTheNamespace_WhenItIsNew()
     {
         // Arrange
-        var database = NamespaceDoubles.Database([], []);
+        var database = TestDoubles.Database([], namespaces: []);
         var handler = new Handler(database);
 
         // Act
@@ -33,7 +33,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var known = KnownNamespace.Create("acme", NamespaceDoubles.Uid, 1);
-        var database = NamespaceDoubles.Database([known], []);
+        var database = TestDoubles.Database([], namespaces: [known]);
         var handler = new Handler(database);
 
         // Act
@@ -53,7 +53,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var known = KnownNamespace.Create("acme", NamespaceDoubles.Uid, 5);
-        var database = NamespaceDoubles.Database([known], []);
+        var database = TestDoubles.Database([], namespaces: [known]);
         var handler = new Handler(database);
         var recreated = Guid.NewGuid();
 
@@ -76,7 +76,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var known = KnownNamespace.Create("acme", NamespaceDoubles.Uid, 5);
-        var database = NamespaceDoubles.Database([known], []);
+        var database = TestDoubles.Database([], namespaces: [known]);
         var handler = new Handler(database);
 
         // Act

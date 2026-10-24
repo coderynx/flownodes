@@ -2,7 +2,6 @@ using Coderynx.Functional.Results.Successes;
 using Identity.Application;
 using Identity.Application.Self.GetProfile;
 using Identity.Domain.Users;
-using Identity.UnitTests.Users;
 using Xunit;
 
 namespace Identity.UnitTests.Self.GetProfile;
@@ -15,7 +14,7 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnUnauthenticated_WhenTheCallerIsUnknown()
     {
         // Arrange
-        var handler = new Handler(TestUsers.Database([TestUsers.Member("alice")]));
+        var handler = new Handler(TestDoubles.Database([TestDoubles.Member("alice")]));
 
         // Act
         var result = await handler.HandleAsync(new Query(Guid.NewGuid()), Ct);
@@ -28,8 +27,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnUnauthenticated_WhenTheCallerIsDisabled()
     {
         // Arrange
-        var alice = TestUsers.Disabled(TestUsers.Member("alice"));
-        var handler = new Handler(TestUsers.Database([alice]));
+        var alice = TestDoubles.Disabled(TestDoubles.Member("alice"));
+        var handler = new Handler(TestDoubles.Database([alice]));
 
         // Act
         var result = await handler.HandleAsync(new Query(alice.Id), Ct);
@@ -42,9 +41,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnTheCallerWithTheirRoleGrants_WhenTheCallerIsActive()
     {
         // Arrange
-        var alice = TestUsers.Member("alice");
+        var alice = TestDoubles.Member("alice");
         alice.Grant("default", Role.Engineer);
-        var handler = new Handler(TestUsers.Database([TestUsers.Administrator(), alice]));
+        var handler = new Handler(TestDoubles.Database([TestDoubles.Administrator(), alice]));
 
         // Act
         var result = await handler.HandleAsync(new Query(alice.Id), Ct);

@@ -18,9 +18,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnForbidden_WhenTheCallerIsNotAnAdministrator()
     {
         // Arrange
-        var bob = TestUsers.Member("bob");
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([bob, alice]);
+        var bob = TestDoubles.Member("bob");
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([bob, alice]);
         var handler = new Handler(database, _revoker);
 
         // Act
@@ -37,9 +37,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnUnauthenticated_WhenTheCallerIsDisabled()
     {
         // Arrange
-        var administrator = TestUsers.Disabled(TestUsers.Administrator());
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice]);
+        var administrator = TestDoubles.Disabled(TestDoubles.Administrator());
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database, _revoker);
 
         // Act
@@ -54,8 +54,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnNotFound_WhenTheUserDoesNotExist()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var database = TestUsers.Database([administrator]);
+        var administrator = TestDoubles.Administrator();
+        var database = TestDoubles.Database([administrator]);
         var handler = new Handler(database, _revoker);
 
         // Act
@@ -70,9 +70,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnConflict_WhenTheUserIsTheLastActiveAdministrator()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var other = TestUsers.Disabled(TestUsers.Administrator("other"));
-        var database = TestUsers.Database([administrator, other]);
+        var administrator = TestDoubles.Administrator();
+        var other = TestDoubles.Disabled(TestDoubles.Administrator("other"));
+        var database = TestDoubles.Database([administrator, other]);
         var handler = new Handler(database, _revoker);
 
         // Act
@@ -81,7 +81,7 @@ public sealed class HandlerTests
         // Assert
         result.Error.ShouldBe(Errors.LastAdministrator());
         database.Users.DidNotReceiveWithAnyArgs().Remove(administrator);
-        TestUsers.Published(database).ShouldBeEmpty();
+        TestDoubles.Published(database).ShouldBeEmpty();
         await _revoker.DidNotReceiveWithAnyArgs().RevokeAllAsync(Guid.Empty, Ct);
         await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(Ct);
     }
@@ -90,9 +90,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldDeleteTheAdministrator_WhenAnotherActiveAdministratorExists()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var other = TestUsers.Administrator("other");
-        var database = TestUsers.Database([administrator, other]);
+        var administrator = TestDoubles.Administrator();
+        var other = TestDoubles.Administrator("other");
+        var database = TestDoubles.Database([administrator, other]);
         var handler = new Handler(database, _revoker);
 
         // Act
@@ -101,18 +101,18 @@ public sealed class HandlerTests
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Deleted);
         database.Users.Received(1).Remove(other);
-        TestUsers.Published(database).ShouldBe([new UserDeleted(other.Id, 2)]);
+        TestDoubles.Published(database).ShouldBe([new UserDeleted(other.Id, 2)]);
     }
 
     [Fact]
     public async Task HandleAsync_ShouldDeleteTheUserAndTheirTokensAndPublishUserDeleted_WhenTheUserExists()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Disabled(TestUsers.Member("alice"));
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Disabled(TestDoubles.Member("alice"));
         var aliceToken = PersonalAccessToken.Create(alice.Id, "ci", "hash", Now, null);
         var administratorToken = PersonalAccessToken.Create(administrator.Id, "ci", "hash", Now, null);
-        var database = TestUsers.Database([administrator, alice], [aliceToken, administratorToken]);
+        var database = TestDoubles.Database([administrator, alice], [aliceToken, administratorToken]);
         var handler = new Handler(database, _revoker);
 
         // Act
@@ -123,7 +123,7 @@ public sealed class HandlerTests
         database.PersonalAccessTokens.Received(1)
             .RemoveRange(Arg.Is<IEnumerable<PersonalAccessToken>>(tokens => tokens.Single() == aliceToken));
         database.Users.Received(1).Remove(alice);
-        TestUsers.Published(database).ShouldBe([new UserDeleted(alice.Id, 2)]);
+        TestDoubles.Published(database).ShouldBe([new UserDeleted(alice.Id, 2)]);
         await _revoker.Received(1).RevokeAllAsync(alice.Id, Ct);
         await database.Received(1).SaveChangesAsync(Ct);
     }

@@ -14,9 +14,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnForbidden_WhenTheCallerIsNotAnAdministrator()
     {
         // Arrange
-        var bob = TestUsers.Member("bob");
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([bob, alice]);
+        var bob = TestDoubles.Member("bob");
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([bob, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -33,9 +33,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnUnauthenticated_WhenTheCallerIsDisabled()
     {
         // Arrange
-        var administrator = TestUsers.Disabled(TestUsers.Administrator());
-        var alice = TestUsers.Member("alice");
-        var handler = new Handler(TestUsers.Database([administrator, alice]));
+        var administrator = TestDoubles.Disabled(TestDoubles.Administrator());
+        var alice = TestDoubles.Member("alice");
+        var handler = new Handler(TestDoubles.Database([administrator, alice]));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, alice.Id, "alicia", null), Ct);
@@ -48,8 +48,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnNotFound_WhenTheUserDoesNotExist()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var database = TestUsers.Database([administrator]);
+        var administrator = TestDoubles.Administrator();
+        var database = TestDoubles.Database([administrator]);
         var handler = new Handler(database);
 
         // Act
@@ -64,9 +64,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnBadRequest_WhenTheNewUsernameIsInvalid()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice]);
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -75,7 +75,7 @@ public sealed class HandlerTests
         // Assert
         result.Error.ShouldBe(Errors.InvalidUsername("alice smith"));
         alice.Username.Value.ShouldBe("alice");
-        TestUsers.Published(database).ShouldBeEmpty();
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(Ct);
     }
 
@@ -83,9 +83,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnConflict_WhenAnotherUserHasTheUsername()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice, TestUsers.Member("bob")]);
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice, TestDoubles.Member("bob")]);
         var handler = new Handler(database);
 
         // Act
@@ -94,7 +94,7 @@ public sealed class HandlerTests
         // Assert
         result.Error.ShouldBe(Errors.UsernameTaken("bob"));
         alice.Username.Value.ShouldBe("alice");
-        TestUsers.Published(database).ShouldBeEmpty();
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(Ct);
     }
 
@@ -102,9 +102,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRenameTheUserAndPublishUserRenamed_WhenTheUsernameIsFree()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice]);
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -114,7 +114,7 @@ public sealed class HandlerTests
         result.Success.Kind.ShouldBe(SuccessKind.Updated);
         result.Value.ShouldBeSameAs(alice);
         alice.Username.Value.ShouldBe("alicia");
-        TestUsers.Published(database).ShouldBe([new UserRenamed(alice.Id, "alicia", 1)]);
+        TestDoubles.Published(database).ShouldBe([new UserRenamed(alice.Id, "alicia", 1)]);
         await database.Received(1).SaveChangesAsync(Ct);
     }
 
@@ -122,9 +122,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldSucceedWithoutPublishing_WhenTheUsernameIsUnchanged()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice]);
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -133,7 +133,7 @@ public sealed class HandlerTests
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Updated);
         alice.Seq.ShouldBe(0);
-        TestUsers.Published(database).ShouldBeEmpty();
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.Received(1).SaveChangesAsync(Ct);
     }
 
@@ -141,9 +141,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldChangeOnlyTheDisplayNameWithoutPublishing_WhenNoUsernameIsGiven()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice");
-        var database = TestUsers.Database([administrator, alice]);
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice");
+        var database = TestDoubles.Database([administrator, alice]);
         var handler = new Handler(database);
 
         // Act
@@ -153,7 +153,7 @@ public sealed class HandlerTests
         result.Success.Kind.ShouldBe(SuccessKind.Updated);
         alice.DisplayName.ShouldBe("Alice A.");
         alice.Username.Value.ShouldBe("alice");
-        TestUsers.Published(database).ShouldBeEmpty();
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.Received(1).SaveChangesAsync(Ct);
     }
 
@@ -161,9 +161,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldClearTheDisplayName_WhenItIsEmpty()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice", "Alice A.");
-        var handler = new Handler(TestUsers.Database([administrator, alice]));
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice", "Alice A.");
+        var handler = new Handler(TestDoubles.Database([administrator, alice]));
 
         // Act
         await handler.HandleAsync(new Command(administrator.Id, alice.Id, null, string.Empty), Ct);
@@ -176,9 +176,9 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldKeepTheDisplayName_WhenNoneIsGiven()
     {
         // Arrange
-        var administrator = TestUsers.Administrator();
-        var alice = TestUsers.Member("alice", "Alice A.");
-        var handler = new Handler(TestUsers.Database([administrator, alice]));
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Member("alice", "Alice A.");
+        var handler = new Handler(TestDoubles.Database([administrator, alice]));
 
         // Act
         await handler.HandleAsync(new Command(administrator.Id, alice.Id, "alicia", null), Ct);
