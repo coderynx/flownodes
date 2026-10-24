@@ -26,7 +26,7 @@ jobs:
         run: dotnet build Flownodes.slnx
 
       - name: Test
-        run: dotnet test --solution Flownodes.slnx --no-build
+        run: dotnet test --solution Flownodes.slnx --no-build --output Detailed
 
       # Wolverine's handler code is generated and committed (apps/Flownodes/Internal/Generated/README.md). Writing it
       # again must change nothing; a diff means a handler or message changed without regenerating.
@@ -41,7 +41,7 @@ jobs:
           git diff --exit-code -- apps/Flownodes/Internal/Generated
           test -z "$(git ls-files --others --exclude-standard apps/Flownodes/Internal/Generated)"
 
-  # Runs beside build-and-test: ReSharper loads the solution itself, so it needs only a restore.
+  # Runs beside build-and-test: ReSharper reads the project model, so it needs only a restore.
   layout:
     runs-on: ubuntu-latest
     timeout-minutes: 30

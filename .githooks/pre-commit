@@ -19,5 +19,5 @@ if [[ -n "$partial" ]]; then
     exit 1
 fi
 
-scripts/format.sh
+scripts/format.sh "${staged[@]}"
 git add -- "${staged[@]}"
