@@ -1,40 +1,28 @@
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
-using Microsoft.EntityFrameworkCore;
+using Core.Application.Authorization;
 using Registry.Application.Database;
 using Registry.Domain.Namespaces;
 
 namespace Registry.Application.Namespaces.PutNamespace;
 
 /// <summary>
-/// Creates a Namespace, or finds it when it already exists.
+/// Creates a Namespace, or finds it when it already exists. Only an Administrator can.
 /// </summary>
+/// <param name="CallerId">The subject of the caller's access token.</param>
 /// <param name="Name">The name of the Namespace, validated by the handler.</param>
-public sealed record Command(string Name) : IRequest<Result<Namespace>>;
+public sealed record Command(Guid CallerId, string Name) : IRequest<Result<Namespace>>;
 
 internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<Command, Result<Namespace>>
 {
     public async Task<Result<Namespace>> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        if (!NamespaceName.TryCreate(request.Name, out var name))
+        var caller = await database.RequireAdministratorAsync(request.CallerId, cancellationToken);
+        if (caller.IsFailure)
         {
-            return Errors.InvalidName(request.Name);
+            return caller.Error;
         }
 
-        var existing = await database.Namespaces.SingleOrDefaultAsync(
-            @namespace => @namespace.Name == name,
-            cancellationToken);
-        if (existing is not null)
-        {
-            return Result.Found(existing);
-        }
-
-        var created = Namespace.Create(name);
-        database.Namespaces.Add(created);
-
-        await database.PublishAsync(created.ToApplied());
-        await database.SaveChangesAsync(cancellationToken);
-
-        return Result.Created(created);
+        return await NamespaceCreation.EnsureAsync(database, request.Name, cancellationToken);
     }
 }

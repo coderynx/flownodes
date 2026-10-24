@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
 using Core.Presentation.Abstraction;
+using Core.Presentation.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,9 +18,17 @@ internal sealed class Endpoint : IEndpoint
     {
         app.MapGet(
                 "/registry/namespaces",
-                async ([AsParameters] Request request, ISender sender, CancellationToken cancellationToken) =>
+                async (
+                    [AsParameters] Request request, ClaimsPrincipal caller, ISender sender,
+                    CancellationToken cancellationToken) =>
                 {
-                    var query = new Query(request.Q, request.Sort, request.Desc, request.Offset, request.Limit);
+                    var query = new Query(
+                        caller.CallerId(),
+                        request.Q,
+                        request.Sort,
+                        request.Desc,
+                        request.Offset,
+                        request.Limit);
                     var result = await sender.SendAsync(query, cancellationToken);
 
                     return result.Match(
@@ -27,7 +37,8 @@ internal sealed class Endpoint : IEndpoint
                 })
             .WithName("ListNamespaces")
             .Produces<Response>()
-            .ProducesProblem(StatusCodes.Status400BadRequest);
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
     }
 
     internal sealed record Request(

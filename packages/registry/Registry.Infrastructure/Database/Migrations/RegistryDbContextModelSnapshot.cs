@@ -23,6 +23,33 @@ namespace Registry.Infrastructure.Database.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Core.Domain.Authorization.UserAccess", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsAdministrator")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDisabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("LastSeq")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Username")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("user_access", (string)null);
+                });
+
             modelBuilder.Entity("Registry.Domain.Namespaces.Namespace", b =>
                 {
                     b.Property<string>("Name")
@@ -155,6 +182,42 @@ namespace Registry.Infrastructure.Database.Migrations
                         {
                             t.ExcludeFromMigrations();
                         });
+                });
+
+            modelBuilder.Entity("Core.Domain.Authorization.UserAccess", b =>
+                {
+                    b.OwnsMany("Core.Domain.Authorization.NamespaceGrant", "Grants", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
+
+                            b1.Property<string>("Namespace")
+                                .IsRequired()
+                                .HasMaxLength(63)
+                                .HasColumnType("character varying(63)");
+
+                            b1.Property<string>("Role")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("character varying(16)");
+
+                            b1.Property<Guid>("UserId")
+                                .HasColumnType("uuid");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("UserId");
+
+                            b1.ToTable("user_access_grants", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserId");
+                        });
+
+                    b.Navigation("Grants");
                 });
 
             modelBuilder.Entity("Registry.Domain.Resources.Resource", b =>

@@ -19,8 +19,8 @@ public static class HostConfiguration
     private const string PresentationMappedKey = "Core.Presentation.Mapped";
 
     /// <summary>
-    /// Maps the OpenAPI document (<c>/openapi/v1.json</c>) and the Scalar API reference (<c>/scalar</c>) in
-    /// Development.
+    /// Adds authentication and authorisation to the pipeline, and maps the OpenAPI document
+    /// (<c>/openapi/v1.json</c>) and the Scalar API reference (<c>/scalar</c>) in Development.
     /// </summary>
     /// <remarks>
     /// Every module's Presentation calls this, so it maps once per host and ignores later calls.
@@ -34,10 +34,14 @@ public static class HostConfiguration
             return;
         }
 
+        app.UseAuthentication();
+        app.UseAuthorization();
+
         if (app.Environment.IsDevelopment())
         {
-            app.MapOpenApi();
-            app.MapScalarApiReference(options => options.WithTitle("Flownodes API").WithTheme(ScalarTheme.Default));
+            app.MapOpenApi().AllowAnonymous();
+            app.MapScalarApiReference(options => options.WithTitle("Flownodes API").WithTheme(ScalarTheme.Default))
+                .AllowAnonymous();
         }
     }
 

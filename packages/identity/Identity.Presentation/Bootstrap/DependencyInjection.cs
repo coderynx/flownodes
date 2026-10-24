@@ -13,11 +13,27 @@ public static class DependencyInjection
 
     /// <summary>
     /// Registers the sign-in page, the cookie it signs a person in with, and access token authentication for the API.
+    /// Tokens are validated in process, or over HTTP like any other module when the <c>Flownodes:Identity:Authority</c>
+    /// setting is present.
     /// </summary>
     /// <param name="builder">The host Identity is being added to.</param>
     public static void AddPresentation(this IHostApplicationBuilder builder)
     {
         Core.Presentation.Bootstrap.DependencyInjection.AddPresentation(builder);
+
+        if (builder.Configuration[Core.Presentation.Bootstrap.DependencyInjection.AuthoritySetting] is null)
+        {
+            builder.Services.AddOpenIddict()
+                .AddValidation(validation =>
+                {
+                    validation.UseLocalServer();
+                    validation.UseAspNetCore();
+                });
+        }
+        else
+        {
+            Core.Presentation.Bootstrap.DependencyInjection.AddTokenValidation(builder);
+        }
 
         builder.Services.AddRazorPages().AddApplicationPart(typeof(DependencyInjection).Assembly);
         builder.Services.AddAuthentication(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)

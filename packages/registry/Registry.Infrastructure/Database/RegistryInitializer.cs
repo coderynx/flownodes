@@ -2,8 +2,7 @@ using Coderynx.MediatorKit.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Registry.Application.Namespaces.PutNamespace;
-using Registry.Domain.Namespaces;
+using Registry.Application.Namespaces.SeedDefaultNamespace;
 
 namespace Registry.Infrastructure.Database;
 
@@ -16,7 +15,7 @@ internal sealed class RegistryInitializer(IServiceScopeFactory scopeFactory) : I
         await scope.ServiceProvider.GetRequiredService<RegistryDbContext>().Database.MigrateAsync(cancellationToken);
 
         var sender = scope.ServiceProvider.GetRequiredService<ISender>();
-        var result = await sender.SendAsync(new Command(NamespaceName.Default), cancellationToken);
+        var result = await sender.SendAsync(new Command(), cancellationToken);
         if (result.IsFailure)
         {
             throw new InvalidOperationException($"Seeding the default Namespace failed: {result.Error.Message}");

@@ -57,6 +57,7 @@ public sealed class NamespaceTests(PostgresFixture postgres)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
         (await response.Content.ReadFromJsonAsync<NamespaceBody>(Ct)).ShouldBe(new NamespaceBody(name));
+        await app.JoinAsync(name, Ct);
         (await app.Client.GetAsync($"{Route}/{name}", Ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
@@ -191,6 +192,7 @@ public sealed class NamespaceTests(PostgresFixture postgres)
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
         await app.Client.PutAsync($"{Route}/acme", null, Ct);
+        await app.JoinAsync("acme", Ct);
         await using (var scope = app.Services.CreateAsyncScope())
         {
             var database = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();

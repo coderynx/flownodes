@@ -18,8 +18,6 @@ public static class HostConfiguration
     {
         Core.Presentation.Bootstrap.HostConfiguration.UsePresentation(app);
 
-        app.UseAuthentication();
-        app.UseAuthorization();
         app.MapRazorPages();
         app.MapTokenEndpoint();
         app.MapEndpoints(typeof(HostConfiguration).Assembly);

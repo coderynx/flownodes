@@ -28,7 +28,7 @@ internal sealed class AppHost
             .WithClustering(engineDb)
             .WithGrainStorage("Default", engineDb);
 
-        builder.AddProject<Flownodes>("flownodes", options => options.ExcludeLaunchProfile = true)
+        var flownodes = builder.AddProject<Flownodes>("flownodes", options => options.ExcludeLaunchProfile = true)
             .WithHttpEndpoint(name: "http")
             .WithHttpsEndpoint(name: "https")
             .WithReference(engineDb)
@@ -53,6 +53,8 @@ internal sealed class AppHost
                     Url = "/orleans",
                     DisplayText = "Orleans Dashboard"
                 });
+
+        flownodes.WithEnvironment("Flownodes__Identity__Authority", flownodes.GetEndpoint("https"));
 
         builder.Build().Run();
     }
