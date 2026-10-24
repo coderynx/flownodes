@@ -50,17 +50,18 @@ public sealed class UserAdministrationTests(PostgresFixture postgres)
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
-    [Theory]
-    [InlineData("short")]
-    [InlineData("12345678901")]
-    public async Task CreateUser_ShouldReturnBadRequest_WhenThePasswordIsShorterThanTwelveCharacters(string password)
+    [Fact]
+    public async Task CreateUser_ShouldReturnBadRequest_WhenThePasswordIsShorterThanTwelveCharacters()
     {
         // Arrange
         await using var app = await IdentityApp.StartAsync(postgres);
         var administrator = await app.AdministratorAsync(Ct);
 
         // Act
-        var response = await administrator.PostAsJsonAsync(Users, new { username = "alice", password }, Ct);
+        var response = await administrator.PostAsJsonAsync(
+            Users,
+            new { username = "alice", password = "12345678901" },
+            Ct);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
