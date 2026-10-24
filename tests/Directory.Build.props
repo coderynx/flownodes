@@ -1,9 +1,14 @@
 <Project>
     <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
-    <!-- ADR-0025: Shouldly asserts in every test project; NSubstitute is referenced only where a project mocks. -->
+    <!-- ADR-0025: Shouldly asserts in every test project; NSubstitute and MockQueryable mock in unit tests only. -->
     <ItemGroup>
         <PackageReference Include="Shouldly" />
         <Using Include="Shouldly" />
+    </ItemGroup>
+    <ItemGroup Condition="$(MSBuildProjectName.EndsWith('.UnitTests'))">
+        <PackageReference Include="MockQueryable.NSubstitute" />
+        <PackageReference Include="NSubstitute" />
+        <Using Include="NSubstitute" />
     </ItemGroup>
 </Project>
