@@ -1,0 +1,16 @@
+<Project>
+    <!-- ADR-0022: wires the pre-commit format hook on the first build of a clone. It never overrides a configured
+         hooksPath, never runs in CI, and never fails the build (no git, not a work tree). Every project runs the
+         cheap read, only a clone without the setting runs the write. -->
+    <Target Name="WireGitHooks" BeforeTargets="CoreCompile" Condition="'$(CI)' == ''">
+        <Exec Command="git config --get core.hooksPath" WorkingDirectory="$(MSBuildThisFileDirectory)"
+              ConsoleToMSBuild="true" IgnoreExitCode="true" ContinueOnError="true"
+              IgnoreStandardErrorWarningFormat="true" StandardOutputImportance="low" StandardErrorImportance="low">
+            <Output TaskParameter="ConsoleOutput" PropertyName="_ConfiguredHooksPath" />
+        </Exec>
+        <Exec Command="git config core.hooksPath .githooks" WorkingDirectory="$(MSBuildThisFileDirectory)"
+              Condition="'$(_ConfiguredHooksPath)' == '' And Exists('$(MSBuildThisFileDirectory).githooks')"
+              IgnoreExitCode="true" ContinueOnError="true" IgnoreStandardErrorWarningFormat="true"
+              StandardOutputImportance="low" StandardErrorImportance="low" />
+    </Target>
+</Project>
