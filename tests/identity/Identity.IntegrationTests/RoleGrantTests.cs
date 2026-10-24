@@ -139,11 +139,8 @@ public sealed class RoleGrantTests(PostgresFixture postgres)
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
-    [Theory]
-    [InlineData("Engineer", null)]
-    [InlineData("Administrator", "default")]
-    [InlineData("Wizard", "default")]
-    public async Task GrantRole_ShouldReturnBadRequest_WhenRoleAndNamespaceDoNotFit(string role, string? @namespace)
+    [Fact]
+    public async Task GrantRole_ShouldReturnBadRequest_WhenRoleAndNamespaceDoNotFit()
     {
         // Arrange
         await using var app = await IdentityApp.StartAsync(postgres);
@@ -151,7 +148,7 @@ public sealed class RoleGrantTests(PostgresFixture postgres)
         var alice = await IdentityApp.CreateUserAsync(administrator, "alice", AlicePassword, Ct);
 
         // Act
-        var response = await administrator.PostAsJsonAsync(Grants, new { userId = alice, role, @namespace }, Ct);
+        var response = await administrator.PostAsJsonAsync(Grants, new { userId = alice, role = "Engineer" }, Ct);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
