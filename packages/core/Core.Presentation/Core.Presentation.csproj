@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Coderynx.Functional.WebApi" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="OpenIddict.AspNetCore" />
     <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
 

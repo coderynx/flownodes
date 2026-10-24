@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build Flownodes.slnx
+
+      - name: Test
+        run: dotnet test --solution Flownodes.slnx --no-build
+
+      # Wolverine's handler code is generated and committed (apps/Flownodes/Internal/Generated/README.md). Writing it
+      # again must change nothing; a diff means a handler or message changed without regenerating.
+      - name: Generated handler code is current
+        env:
+          ConnectionStrings__registry: Host=localhost;Database=ci
+          ConnectionStrings__identity: Host=localhost;Database=ci
+          ConnectionStrings__engine: Host=localhost;Database=ci
+          Flownodes__InstallationKey: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+        run: |
+          dotnet run --project apps/Flownodes --no-build -- codegen write
+          git diff --exit-code -- apps/Flownodes/Internal/Generated
+          test -z "$(git ls-files --others --exclude-standard apps/Flownodes/Internal/Generated)"

@@ -154,6 +154,10 @@ _Avoid_: Account, principal, member, login
 A User holding the Operator or Engineer role in one Namespace, or the Administrator role installation-wide.
 _Avoid_: Role binding, membership, permission
 
+**Personal Access Token**:
+A long-lived secret a User creates to sign in without a browser, such as from a script, with an optional expiry. It is exchanged for short-lived access tokens, shown once when created, and revoked at once when its User is disabled or deleted.
+_Avoid_: API key, API token, service account
+
 **Operator**:
 A role within a Namespace whose holder watches live state, acknowledges Alarms, and may invoke Actions, without changing configuration.
 _Avoid_: User, viewer

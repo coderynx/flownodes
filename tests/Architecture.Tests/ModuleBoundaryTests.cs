@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Xunit;
 
 namespace Architecture.Tests;
@@ -11,6 +12,7 @@ public sealed partial class ModuleBoundaryTests
 {
     private static readonly Dictionary<string, string[]> InnerLayers = new()
     {
+        ["Contracts"] = [],
         ["Domain"] = [],
         ["Application"] = ["Domain"],
         ["Infrastructure"] = ["Application"],
@@ -52,11 +54,31 @@ public sealed partial class ModuleBoundaryTests
         offenders.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void CoreContracts_ShouldReferenceNothing_WhenUnderPackages()
+    {
+        // Arrange
+        var project = Path.Combine(Solution.Root(), "packages/core/Core.Contracts/Core.Contracts.csproj");
+
+        // Act
+        var references = XDocument.Load(project)
+            .Descendants()
+            .Where(element =>
+                element.Name.LocalName is "ProjectReference" or "PackageReference" or "FrameworkReference")
+            .Select(element => (string?)element.Attribute("Include"))
+            .ToList();
+
+        // Assert
+        references.ShouldBeEmpty();
+    }
+
     [Theory]
     [InlineData("engine", "Application", "engine", "Domain")]
     [InlineData("engine", "Infrastructure", "engine", "Application")]
     [InlineData("engine", "Presentation", "core", "Presentation")]
     [InlineData("core", "Presentation", "core", "Application")]
+    [InlineData("registry", "Application", "core", "Contracts")]
+    [InlineData("registry", "Infrastructure", "core", "Contracts")]
     public void MayReference_ShouldAllow_WhenTheTargetIsAnInnerLayerOrCore(
         string module,
         string layer,
@@ -76,6 +98,10 @@ public sealed partial class ModuleBoundaryTests
     [InlineData("engine", "Presentation", "engine", "Infrastructure")]
     [InlineData("engine", "Presentation", "core", "Infrastructure")]
     [InlineData("core", "Application", "engine", "Application")]
+    [InlineData("registry", "Domain", "core", "Contracts")]
+    [InlineData("registry", "Presentation", "core", "Contracts")]
+    [InlineData("core", "Application", "core", "Contracts")]
+    [InlineData("core", "Contracts", "core", "Domain")]
     public void MayReference_ShouldRefuse_WhenTheTargetCrossesAModuleOrPointsOutward(
         string module,
         string layer,
@@ -140,7 +166,10 @@ public sealed partial class ModuleBoundaryTests
         var coreCounterpart = project.Module != Solution.Core && target.Module == Solution.Core &&
                               target.Layer == project.Layer;
 
-        return innerLayer || coreCounterpart;
+        var contracts = project.Module != Solution.Core && target is { Module: Solution.Core, Layer: "Contracts" } &&
+                        project.Layer is "Application" or "Infrastructure";
+
+        return innerLayer || coreCounterpart || contracts;
     }
 
     private static ModuleProject Project(string module, string layer) =>

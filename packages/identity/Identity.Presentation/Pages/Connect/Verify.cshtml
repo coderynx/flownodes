@@ -1,0 +1,39 @@
+@page "/connect/verify"
+@model VerifyModel
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flownodes device sign-in</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 24rem; margin: 4rem auto; padding: 0 1rem; }
+        input, button { display: block; width: 100%; box-sizing: border-box; margin-top: .5rem; }
+        .error { color: #b00020; }
+    </style>
+</head>
+<body>
+<h1>Sign in a device</h1>
+@if (Model.Error is not null)
+{
+    <p class="error">@Model.Error</p>
+}
+@if (Model.ClientName is null)
+{
+    <p>Enter the code your device shows.</p>
+    <form method="get">
+        <input name="user_code" autocomplete="off" required>
+        <button type="submit">Continue</button>
+    </form>
+}
+else
+{
+    <p>Allow <strong>@Model.ClientName</strong> to act as <strong>@Model.SignedInAs</strong>?</p>
+    <form method="post">
+        <input type="hidden" name="user_code" value="@Model.UserCode">
+        <button type="submit" name="Decision" value="accept">Allow</button>
+        <button type="submit" name="Decision" value="deny">Deny</button>
+    </form>
+}
+</body>
+</html>
