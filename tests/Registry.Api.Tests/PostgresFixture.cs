@@ -7,7 +7,9 @@ namespace Registry.Api.Tests;
 
 public sealed class PostgresFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:17-alpine").Build();
+    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:17-alpine")
+        .WithCommand("-c", "max_connections=1000")
+        .Build();
 
     public async ValueTask InitializeAsync()
     {

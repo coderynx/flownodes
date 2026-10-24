@@ -1,3 +1,4 @@
+using Core.Domain.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Registry.Application.Database;
 using Registry.Domain.Namespaces;
@@ -10,6 +11,7 @@ internal sealed class RegistryUnitOfWork(IDbContextOutbox<RegistryDbContext> out
 {
     public DbSet<Namespace> Namespaces => outbox.DbContext.Namespaces;
     public DbSet<Resource> Resources => outbox.DbContext.Resources;
+    public DbSet<UserAccess> UserAccess => outbox.DbContext.UserAccess;
 
     public ValueTask PublishAsync<TMessage>(TMessage message) where TMessage : notnull =>
         new(outbox.PublishAsync(message).AsTask());

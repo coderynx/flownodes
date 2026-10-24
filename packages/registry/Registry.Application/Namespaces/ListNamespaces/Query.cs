@@ -1,5 +1,6 @@
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
+using Core.Application.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Registry.Application.Database;
 using Registry.Domain.Namespaces;
@@ -7,14 +8,17 @@ using Registry.Domain.Namespaces;
 namespace Registry.Application.Namespaces.ListNamespaces;
 
 /// <summary>
-/// Lists Namespaces.
+/// Lists the Namespaces the caller may see: every one for an Administrator, otherwise those where the caller holds a
+/// role.
 /// </summary>
+/// <param name="CallerId">The subject of the caller's access token.</param>
 /// <param name="Q">Keeps only Namespaces whose name contains this text; no filter when empty.</param>
 /// <param name="Sort">The key to sort by. Only <c>name</c> exists; it is also the default.</param>
 /// <param name="Desc">Reverses the sort order.</param>
 /// <param name="Offset">How many Namespaces to skip; negative values count as zero.</param>
 /// <param name="Limit">How many Namespaces to return; clamped to 1 through 200.</param>
-public sealed record Query(string? Q, string? Sort, bool Desc, int Offset, int Limit) : IRequest<Result<NamespacePage>>;
+public sealed record Query(Guid CallerId, string? Q, string? Sort, bool Desc, int Offset, int Limit)
+    : IRequest<Result<NamespacePage>>;
 
 /// <summary>
 /// One page of a Namespace listing.
@@ -35,10 +39,18 @@ internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<
             return Errors.UnknownSortKey(request.Sort);
         }
 
+        var scope = await database.ScopeAsync(request.CallerId, cancellationToken);
+        if (scope.IsFailure)
+        {
+            return scope.Error;
+        }
+
         var all = await database.Namespaces.AsNoTracking().ToListAsync(cancellationToken);
 
-        var matching = all.Where(@namespace => string.IsNullOrEmpty(request.Q) ||
-                                               @namespace.Name.Value.Contains(request.Q, StringComparison.Ordinal))
+        var matching = all.Where(@namespace => scope.Value.Includes(@namespace.Name.Value) &&
+                                               (string.IsNullOrEmpty(request.Q) || @namespace.Name.Value.Contains(
+                                                   request.Q,
+                                                   StringComparison.Ordinal)))
             .ToList();
         var ordered = request.Desc
             ? matching.OrderByDescending(@namespace => @namespace.Name.Value, StringComparer.Ordinal)

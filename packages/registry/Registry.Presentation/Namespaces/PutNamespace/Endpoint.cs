@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using Coderynx.Functional.Results;
 using Coderynx.Functional.Results.Successes;
 using Coderynx.MediatorKit.Abstractions;
 using Core.Presentation.Abstraction;
+using Core.Presentation.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,9 +19,13 @@ internal sealed class Endpoint : IEndpoint
     {
         app.MapPut(
                 "/registry/namespaces/{name}",
-                async ([AsParameters] Request request, ISender sender, CancellationToken cancellationToken) =>
+                async (
+                    [AsParameters] Request request, ClaimsPrincipal caller, ISender sender,
+                    CancellationToken cancellationToken) =>
                 {
-                    var result = await sender.SendAsync(new Command(request.Name), cancellationToken);
+                    var result = await sender.SendAsync(
+                        new Command(caller.CallerId(), request.Name),
+                        cancellationToken);
 
                     return result.Match(
                         @namespace => result.Success.Kind == SuccessKind.Created
@@ -30,7 +36,9 @@ internal sealed class Endpoint : IEndpoint
             .WithName("PutNamespace")
             .Produces<NamespaceDto>()
             .Produces<NamespaceDto>(StatusCodes.Status201Created)
-            .ProducesProblem(StatusCodes.Status400BadRequest);
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
     }
 
     internal sealed record Request([FromRoute] string Name);

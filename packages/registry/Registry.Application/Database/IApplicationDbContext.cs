@@ -1,3 +1,4 @@
+using Core.Application.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Registry.Domain.Namespaces;
 using Registry.Domain.Resources;
@@ -5,9 +6,10 @@ using Registry.Domain.Resources;
 namespace Registry.Application.Database;
 
 /// <summary>
-/// The Registry's database as its command handlers see it: the unit of work an apply commits through.
+/// The Registry's database as its command handlers see it: the unit of work an apply commits through, and the replica
+/// of Users and Role Grants that authorises every request.
 /// </summary>
-public interface IApplicationDbContext
+public interface IApplicationDbContext : IUserAccessSource
 {
     /// <summary>
     /// Gets the Namespaces the Registry stores.
@@ -32,5 +34,5 @@ public interface IApplicationDbContext
     /// </summary>
     /// <param name="cancellationToken">Cancels the commit.</param>
     /// <returns>A task that completes when the transaction has committed and its messages are on their way.</returns>
-    Task SaveChangesAsync(CancellationToken cancellationToken = default);
+    new Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

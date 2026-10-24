@@ -3,11 +3,13 @@ using Coderynx.MediatorKit.Abstractions;
 using Identity.Domain.Users;
 using Identity.Presentation.Bootstrap;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Identity.Presentation.Pages;
 
+[AllowAnonymous]
 internal sealed class SignInModel(ISender sender) : PageModel
 {
     [BindProperty(SupportsGet = true)] public string? ReturnUrl { get; set; }

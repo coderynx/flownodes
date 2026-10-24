@@ -20,7 +20,7 @@ internal static class TokenEndpoint
 {
     public static void MapTokenEndpoint(this WebApplication app)
     {
-        app.MapPost("/connect/token", HandleAsync).WithName("Token").DisableAntiforgery();
+        app.MapPost("/connect/token", HandleAsync).WithName("Token").DisableAntiforgery().AllowAnonymous();
     }
 
     public static ClaimsPrincipal SignInPrincipal(User user, IEnumerable<string> scopes)

@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -26,6 +27,22 @@ namespace Registry.Infrastructure.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "user_access",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Username = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    IsDisabled = table.Column<bool>(type: "boolean", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    IsAdministrator = table.Column<bool>(type: "boolean", nullable: false),
+                    LastSeq = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_user_access", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "resources",
                 columns: table => new
                 {
@@ -44,11 +61,37 @@ namespace Registry.Infrastructure.Database.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "user_access_grants",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Namespace = table.Column<string>(type: "character varying(63)", maxLength: 63, nullable: false),
+                    Role = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_user_access_grants", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_user_access_grants_user_access_UserId",
+                        column: x => x.UserId,
+                        principalTable: "user_access",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_namespaces_Uid",
                 table: "namespaces",
                 column: "Uid",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_user_access_grants_UserId",
+                table: "user_access_grants",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -58,7 +101,13 @@ namespace Registry.Infrastructure.Database.Migrations
                 name: "resources");
 
             migrationBuilder.DropTable(
+                name: "user_access_grants");
+
+            migrationBuilder.DropTable(
                 name: "namespaces");
+
+            migrationBuilder.DropTable(
+                name: "user_access");
         }
     }
 }

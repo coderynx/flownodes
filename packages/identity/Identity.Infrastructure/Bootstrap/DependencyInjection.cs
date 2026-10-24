@@ -132,6 +132,11 @@ public static class DependencyInjection
                         })
                         .SetOrder(OpenIddictServerHandlers.EvaluateValidatedTokens.Descriptor.Order + 500));
 
+                if (builder.Configuration["Flownodes:Identity:Authority"] is { } authority)
+                {
+                    server.SetIssuer(new Uri(authority));
+                }
+
                 var aspNetCore = server.UseAspNetCore()
                     .EnableTokenEndpointPassthrough()
                     .EnableEndUserVerificationEndpointPassthrough();
@@ -139,11 +144,6 @@ public static class DependencyInjection
                 {
                     aspNetCore.DisableTransportSecurityRequirement();
                 }
-            })
-            .AddValidation(validation =>
-            {
-                validation.UseLocalServer();
-                validation.UseAspNetCore();
             });
     }
 

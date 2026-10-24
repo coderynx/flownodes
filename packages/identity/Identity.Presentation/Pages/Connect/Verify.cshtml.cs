@@ -4,6 +4,7 @@ using Identity.Application.SignIn.FindSignInUser;
 using Identity.Presentation.Bootstrap;
 using Identity.Presentation.Connect;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using OpenIddict.Abstractions;
@@ -12,6 +13,7 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Identity.Presentation.Pages.Connect;
 
+[AllowAnonymous]
 internal sealed class VerifyModel(ISender sender, IOpenIddictApplicationManager applications) : PageModel
 {
     [BindProperty(Name = "user_code")] public string? UserCode { get; set; }

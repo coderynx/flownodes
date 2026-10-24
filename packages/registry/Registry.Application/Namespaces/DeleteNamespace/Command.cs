@@ -1,5 +1,6 @@
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
+using Core.Application.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Registry.Application.Database;
 using Registry.Domain.Namespaces;
@@ -7,15 +8,22 @@ using Registry.Domain.Namespaces;
 namespace Registry.Application.Namespaces.DeleteNamespace;
 
 /// <summary>
-/// Deletes a Namespace that is not the <c>default</c> one and holds no Resources.
+/// Deletes a Namespace that is not the <c>default</c> one and holds no Resources. Only an Administrator can.
 /// </summary>
+/// <param name="CallerId">The subject of the caller's access token.</param>
 /// <param name="Name">The name of the Namespace. A name that is not valid names no Namespace.</param>
-public sealed record Command(string Name) : IRequest<Result>;
+public sealed record Command(Guid CallerId, string Name) : IRequest<Result>;
 
 internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<Command, Result>
 {
     public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
+        var caller = await database.RequireAdministratorAsync(request.CallerId, cancellationToken);
+        if (caller.IsFailure)
+        {
+            return caller.Error;
+        }
+
         if (!NamespaceName.TryCreate(request.Name, out var name))
         {
             return Errors.NotFound(request.Name);

@@ -27,12 +27,13 @@ public static class HostConfiguration
             return;
         }
 
-        app.MapHealthChecks(HealthEndpointPath);
+        app.MapHealthChecks(HealthEndpointPath).AllowAnonymous();
         app.MapHealthChecks(
-            AlivenessEndpointPath,
-            new HealthCheckOptions
-            {
-                Predicate = r => r.Tags.Contains("live")
-            });
+                AlivenessEndpointPath,
+                new HealthCheckOptions
+                {
+                    Predicate = r => r.Tags.Contains("live")
+                })
+            .AllowAnonymous();
     }
 }

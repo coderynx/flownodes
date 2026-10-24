@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
 using Core.Presentation.Abstraction;
+using Core.Presentation.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,14 +18,17 @@ internal sealed class Endpoint : IEndpoint
     {
         app.MapGet(
                 "/registry/namespaces/{name}",
-                async ([AsParameters] Request request, ISender sender, CancellationToken cancellationToken) =>
+                async (
+                    [AsParameters] Request request, ClaimsPrincipal caller, ISender sender,
+                    CancellationToken cancellationToken) =>
                 {
-                    var result = await sender.SendAsync(new Query(request.Name), cancellationToken);
+                    var result = await sender.SendAsync(new Query(caller.CallerId(), request.Name), cancellationToken);
 
                     return result.Match(@namespace => Results.Ok(@namespace.ToDto()), error => error.ToProblem());
                 })
             .WithName("GetNamespace")
             .Produces<NamespaceDto>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
