@@ -67,7 +67,7 @@ public static class DependencyInjection
             options.CodeGeneration.TypeLoadMode = TypeLoadMode.Static;
             options.CodeGeneration.AlwaysUseServiceLocationFor<ISender>();
 
-            options.UsePostgresqlPersistenceAndTransport(connectionString);
+            options.UsePostgresqlPersistenceAndTransport(connectionString).EnableQueueNotifications();
             options.UseEntityFrameworkCoreTransactions();
 
             configure(options);
