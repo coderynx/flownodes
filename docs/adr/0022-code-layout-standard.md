@@ -1,25 +1,30 @@
-# C# is laid out to one standard
+# C# is laid out by scripts, never by hand
 
-Every C# file wraps, breaks and braces the same way, so a diff shows a change rather than a reflow and an agent has one layout to imitate. The mechanical rules fail the build; the rest are held by review, because no formatter can tell where a method's logical steps begin.
+Every C# file wraps, breaks and braces the same way, so a diff shows a change rather than a reflow. The layout is whatever `scripts/format.sh` produces: an agent or a human runs it and never arranges code by hand, and no rule is held by review alone. A rule a script can apply is applied by one; a rule only a script can detect fails a test at the offending line and is fixed there; a rule neither can check is not part of the standard.
 
 ## The standard
+
+Applied by `scripts/format.sh`:
 
 - **Namespaces**: each file uses its project's name followed by every directory below the project root, entry points included. A file holding only assembly attributes has no namespace.
 - **Using directives**: ordinary directives sorted alphabetically with `System` first, then aliases sorted by alias. Only directives that are used.
 - **Qualification**: no `this.`, and no containing type's name when the member is unambiguous in its scope.
-- **Whitespace**: blank lines are empty, and at most one blank line in a row.
-- **Line length**: at most 120 columns, wrapped at a sensible syntax boundary. A string literal or regex is never changed only to fit; a line whose overlength is a single unbreakable token (string, raw string, URL) is exempt. XML docs and comments are in scope.
-- **General layout**: four-space indent, file-scoped namespaces, braces on their own line for types and control blocks, braces on every `if` body even for one statement.
-- **Blank lines in a method**: keep a value beside its immediate validation, and consecutive assignments or related calls together. One blank line between distinct steps such as validation, construction, persistence and return. Separate setup from a following loop or `try`, and changes to tracked entities from `SaveChangesAsync`. No blank line just inside braces. Adjacent fields, auto-properties and enum values sit without blank lines.
-- **Signatures**: one line if they fit. If they wrap, `(` follows the name and every parameter takes its own indented line. `: BaseType` stays with the declaration when it fits.
-- **Arguments**: short calls stay inline. Once a call wraps, one argument per line, named arguments and cancellation tokens included. A logging call may keep its message template beside the method name.
-- **Method chains**: short chains stay inline. A wrapped chain keeps the receiver and first call together (`db.Resources.Where(...)`); each later call starts an indented line with `.`.
-- **Conditions**: an `if` with three or more predicates, mixed `&&` and `||`, or hard-to-read nesting is extracted into a named Boolean local just before it. Where extraction does not fit, one predicate per continuation line, operator at the end of the line.
-- **Lambdas, initializers, collections, ternaries**: short ones stay inline. A wrapped expression lambda breaks after `=>`. A multi-property initializer puts `{` on its own line and one property per line. A collection that would pass 120 columns goes one element per line. A wrapped ternary starts each branch on its own line with `?` or `:` first.
-- **Trailing commas**: none.
+- **Syntax**: file-scoped namespaces, braces on every control-statement body, no trailing commas.
+- **Whitespace and wrapping**: four-space indent, blank lines empty and never two in a row, none just inside braces or between adjacent fields, auto-properties and enum values. Lines wrap at 120 columns with one parameter or argument per line once a signature or call wraps, and a wrapped chain keeps the receiver and first call together. The `resharper_*` keys in `.editorconfig` define the wrapping; where they and a reader disagree, the keys win.
+
+Detected by `tests/Architecture.Tests`:
+
+- **Line length**: a line the formatter cannot wrap, such as a long comment, is wrapped by whoever wrote it. A line whose overlength is a single unbreakable token (string, raw string, URL) is exempt.
+- **Conditions**: an `if` whose condition joins three or more predicates with `&&` or `||` names them in a Boolean local just before it.
+
+Blank lines between a method's steps are kept as written and not judged: no script can tell where a step begins.
 
 ## Enforcement
 
-`.editorconfig` sets the indent, compact member groups and ReSharper's wrapping preferences, and raises IDE0011 (braces), IDE0161 (file-scoped namespaces), IDE0001 and IDE0003 (qualification) to warnings, which the build turns into errors (ADR-0016). Architecture tests check namespaces, using order, empty and consecutive blank lines and line length under `apps/`, `packages/` and `tests/`, skipping `bin/`, `obj/` and `Database/Migrations/`. Changed files are reformatted with `dotnet jb cleanupcode Flownodes.slnx --profile="Built-in: Reformat Code" --include="<files;separated;by;semicolons>" --no-updates`, whose reformat-only profile neither reorders members nor changes syntax. Logical-step spacing, the complex-condition extraction, the logging-template exception and trailing commas are held by review.
+`scripts/format.sh` runs ReSharper's command-line cleanup with the `Flownodes` profile from `Flownodes.slnx.DotSettings` (reformat, optimise usings, qualifiers, braces, namespaces, trailing commas) over every `.cs` file outside `Database/Migrations/` and `Internal/Generated/`, then `scripts/Layout.cs`, which fixes namespaces and using order. It takes about a minute whatever the number of files, because the cost is loading the solution. `scripts/format.sh --check` fails CI when the committed tree differs from its output, and the `.githooks/pre-commit` hook runs it on every commit once a clone sets `git config core.hooksPath .githooks`. The build still fails on IDE0011 (braces), IDE0161 (file-scoped namespaces) and IDE0001 and IDE0003 (qualification) through ADR-0016, so a missed run is caught before CI.
 
-StyleCop's own layout rules stay off: they cannot express the logical-step spacing or the logging-template exception.
+StyleCop's own layout rules stay off: the formatter owns layout, and two tools ruling it would fight.
+
+## Considered
+
+A logical-step spacing rule, a logging-template exception to argument wrapping and trailing-comma removal were once held by review. Review missed trailing commas in practice, and an agent spending turns rearranging code that a script can arrange is the cost this ADR removes. Trailing commas moved to the formatter; the other two were dropped.

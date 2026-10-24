@@ -19,6 +19,9 @@ jobs:
       - name: Build
         run: dotnet build Flownodes.slnx
 
+      - name: Layout standard is applied
+        run: scripts/format.sh --check
+
       - name: Test
         run: dotnet test --solution Flownodes.slnx --no-build
 

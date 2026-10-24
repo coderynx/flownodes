@@ -1,78 +1,28 @@
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
 namespace Architecture.Tests;
 
 /// <summary>
-///     C# lines stay within 120 columns and blank lines do not repeat (ADR-0022). A line whose overlength is a string,
-///     raw string or URL that cannot be broken without changing its meaning is exempt; generated migrations keep their
-///     generated layout apart from namespaces, imports and empty blank lines (ADR-0022).
-/// </summary>
+///     Checks the parts of the layout standard (ADR-0022) that no script can apply: C# lines stay within 120 columns
+///     unless their overlength is a string, raw string or URL that cannot be broken without changing its meaning, and
+///     an <c>if</c> joining three or more predicates names them in a Boolean local first.
+/// /// </summary>
 public sealed class CodeLayoutTests
 {
     private const int MaxColumns = 120;
     private const int LongStringLength = 60;
 
     [Fact]
-    public void SourceFile_ShouldMatchProjectAndDirectoryNamespace_WhenCSharpSource()
+    public void IfStatement_ShouldHaveAtMostTwoPredicates_WhenCSharpSource()
     {
         // Arrange
-        var root = Solution.Root();
-        var files = new[] { "apps", "packages", "tests" }
-            .SelectMany(directory => Directory.EnumerateFiles(
-                Path.Combine(root, directory),
-                "*.csproj",
-                SearchOption.AllDirectories))
-            .SelectMany(project =>
-                Directory.EnumerateFiles(Path.GetDirectoryName(project)!, "*.cs", SearchOption.AllDirectories)
-                    .Where(file => !Path.GetRelativePath(Path.GetDirectoryName(project)!, file)
-                        .Split(Path.DirectorySeparatorChar)
-                        .Any(part => part is "bin" or "obj" or "Generated"))
-                    .Select(file => (Project: project, File: file)));
+        var files = Solution.HandWrittenSourceFiles();
 
         // Act
-        var offenders = new List<string>();
-
-        foreach (var entry in files)
-        {
-            var projectDirectory = Path.GetDirectoryName(entry.Project)!;
-            var projectName = Path.GetFileNameWithoutExtension(entry.Project);
-            var suffix = Path.GetRelativePath(projectDirectory, Path.GetDirectoryName(entry.File)!)
-                .Replace(Path.DirectorySeparatorChar, '.');
-            var expected = suffix == "." ? projectName : $"{projectName}.{suffix}";
-            var actual = File.ReadLines(entry.File)
-                .FirstOrDefault(line => line.StartsWith("namespace ", StringComparison.Ordinal))
-                ?.Replace("namespace ", string.Empty, StringComparison.Ordinal)
-                .TrimEnd('{', ';', ' ');
-            if (actual != expected)
-            {
-                offenders.Add(Solution.Relative(entry.File));
-            }
-        }
-
-        // Assert
-        offenders.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void SourceFile_ShouldOrderUsingDirectives_WhenCSharpSource()
-    {
-        // Arrange
-        var files = Solution.SourceFiles("apps", "packages", "tests");
-
-        // Act
-        var offenders = files.Where(file =>
-            {
-                var usings = File.ReadLines(file)
-                    .TakeWhile(line => !line.StartsWith("namespace ", StringComparison.Ordinal))
-                    .Where(line => line.StartsWith("using ", StringComparison.Ordinal) && line.EndsWith(';'))
-                    .Select(line => line[6..^1])
-                    .ToList();
-                var ordered = usings.OrderBy(line => line.Contains(" = ", StringComparison.Ordinal))
-                    .ThenBy(line => line is "System" || line.StartsWith("System.", StringComparison.Ordinal) ? 0 : 1)
-                    .ThenBy(line => line, StringComparer.Ordinal);
-                return !usings.SequenceEqual(ordered);
-            })
-            .Select(file => Solution.Relative(file))
+        var offenders = files.SelectMany(file =>
+                OvercomplexConditions(File.ReadAllText(file)).Select(number => $"{Solution.Relative(file)}:{number}"))
             .ToList();
 
         // Assert
@@ -80,46 +30,29 @@ public sealed class CodeLayoutTests
     }
 
     [Fact]
-    public void SourceLine_ShouldHaveEmptyBlankLines_WhenCSharpSource()
+    public void OvercomplexConditions_ShouldFlagAnIf_WhenItJoinsThreePredicates()
     {
         // Arrange
-        var files = Solution.SourceFiles("apps", "packages", "tests");
+        var source = "class C { void M(bool a, bool b, bool c) { if (a && (b || !c)) { } } }";
 
         // Act
-        var offenders = files.SelectMany(file => File.ReadLines(file)
-                .Select((line, index) => (Line: line, Number: index + 1))
-                .Where(entry => entry.Line.Length > 0 && string.IsNullOrWhiteSpace(entry.Line))
-                .Select(entry => $"{Solution.Relative(file)}:{entry.Number}"))
-            .ToList();
+        var flagged = OvercomplexConditions(source);
 
         // Assert
-        offenders.ShouldBeEmpty();
+        flagged.ShouldBe([1]);
     }
 
     [Fact]
-    public void SourceLine_ShouldNotHaveConsecutiveBlankLines_WhenCSharpSource()
+    public void OvercomplexConditions_ShouldSkipAnIf_WhenExtraPredicatesSitInsideALambda()
     {
         // Arrange
-        var files = Solution.HandWrittenSourceFiles().Select(file => (File: file, Relative: Solution.Relative(file)));
+        var source = "class C { void M(bool a, int[] xs) { if (a && xs.Any(x => x > 0 && x < 9)) { } } }";
 
         // Act
-        var offenders = new List<string>();
-
-        foreach (var file in files)
-        {
-            var lines = File.ReadAllLines(file.File);
-
-            for (var index = 1; index < lines.Length; index++)
-            {
-                if (string.IsNullOrWhiteSpace(lines[index]) && string.IsNullOrWhiteSpace(lines[index - 1]))
-                {
-                    offenders.Add($"{file.Relative}:{index + 1}");
-                }
-            }
-        }
+        var flagged = OvercomplexConditions(source);
 
         // Assert
-        offenders.ShouldBeEmpty();
+        flagged.ShouldBeEmpty();
     }
 
     [Fact]
@@ -203,6 +136,27 @@ public sealed class CodeLayoutTests
         flagged.ShouldBeEmpty();
     }
 
+    private static List<int> OvercomplexConditions(string source) =>
+        CSharpSyntaxTree.ParseText(source)
+            .GetRoot()
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .Where(statement => LogicalOperators(statement.Condition) >= 2)
+            .Select(statement => statement.GetLocation().GetLineSpan().StartLinePosition.Line + 1)
+            .ToList();
+
+    private static int LogicalOperators(ExpressionSyntax expression) => expression switch
+    {
+        BinaryExpressionSyntax binary when IsLogical(binary) => 1 + LogicalOperators(binary.Left) +
+                                                                LogicalOperators(binary.Right),
+        ParenthesizedExpressionSyntax parenthesized => LogicalOperators(parenthesized.Expression),
+        PrefixUnaryExpressionSyntax unary => LogicalOperators(unary.Operand),
+        _ => 0
+    };
+
+    private static bool IsLogical(BinaryExpressionSyntax binary) =>
+        binary.Kind() is SyntaxKind.LogicalAndExpression or SyntaxKind.LogicalOrExpression;
+
     private static List<int> OverlongLines(IReadOnlyList<string> lines)
     {
         var flagged = new List<int>();
@@ -213,7 +167,9 @@ public sealed class CodeLayoutTests
             var line = lines[i];
             var startedInRawString = inRawString;
             var limitInsideString = LimitFallsInsideString(line, ref inRawString);
-            if (line.Length > MaxColumns && !startedInRawString && !limitInsideString && !LimitFallsInsideUrl(line))
+            var isWrappableOverlong = line.Length > MaxColumns && !startedInRawString && !limitInsideString &&
+                                      !LimitFallsInsideUrl(line);
+            if (isWrappableOverlong)
             {
                 flagged.Add(i + 1);
             }
