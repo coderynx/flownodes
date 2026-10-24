@@ -27,7 +27,8 @@ internal static class Solution
         roots.Select(root => Path.Combine(Root(), root))
             .Where(Directory.Exists)
             .SelectMany(root => Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories))
-            .Where(file => !Relative(file).Split('/').Any(Ignored.Contains));
+            .Where(file => !Relative(file).Split('/').Any(Ignored.Contains))
+            .Where(file => !Relative(file).Contains("/Internal/Generated/", StringComparison.Ordinal));
 
     public static IEnumerable<string> HandWrittenSourceFiles() =>
         SourceFiles("apps", "packages", "tests").Where(file => !Relative(file).Contains("/Database/Migrations/"));

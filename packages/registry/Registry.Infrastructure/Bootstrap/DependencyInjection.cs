@@ -1,12 +1,10 @@
 using Core.Contracts.Resources;
-using JasperFx.CodeGeneration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Registry.Application.Database;
 using Registry.Infrastructure.Database;
-using Wolverine;
 using Wolverine.EntityFrameworkCore;
 using Wolverine.Postgresql;
 
@@ -49,17 +47,13 @@ public static class DependencyInjection
 
     private static void AddMessaging(IHostApplicationBuilder builder, string connectionString)
     {
-        builder.Services.AddWolverine(options =>
-        {
-            options.ServiceName = "registry";
-            options.Durability.Mode = DurabilityMode.Solo;
-            options.CodeGeneration.TypeLoadMode = TypeLoadMode.Static;
-
-            options.UsePostgresqlPersistenceAndTransport(connectionString);
-            options.UseEntityFrameworkCoreTransactions();
-
-            options.PublishMessage<ResourceApplied>().ToPostgresqlQueue(ResourceQueue);
-            options.PublishMessage<ResourceDeleted>().ToPostgresqlQueue(ResourceQueue);
-        });
+        Core.Infrastructure.Bootstrap.DependencyInjection.AddMessaging<RegistryDbContext>(
+            builder,
+            connectionString,
+            options =>
+            {
+                options.PublishMessage<ResourceApplied>().ToPostgresqlQueue(ResourceQueue);
+                options.PublishMessage<ResourceDeleted>().ToPostgresqlQueue(ResourceQueue);
+            });
     }
 }

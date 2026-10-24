@@ -15,6 +15,12 @@ internal sealed class AppHost
         var postgres = builder.AddPostgres("postgres").WithDataVolume();
         var engineDb = postgres.AddDatabase("engine");
         var registryDb = postgres.AddDatabase("registry");
+        var identityDb = postgres.AddDatabase("identity");
+        var installationKey = builder.AddParameter(
+            "installation-key",
+            new InstallationKeyDefault(),
+            secret: true,
+            persist: true);
 
         engineDb.WithOrleansProviderType("AdoNet");
 
@@ -30,6 +36,9 @@ internal sealed class AppHost
             .WithReference(orleans)
             .WithReference(registryDb)
             .WaitFor(registryDb)
+            .WithReference(identityDb)
+            .WaitFor(identityDb)
+            .WithEnvironment("Flownodes__InstallationKey", installationKey)
             .WithUrlForEndpoint(
                 "https",
                 _ => new ResourceUrlAnnotation
