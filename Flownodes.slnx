@@ -17,6 +17,12 @@
     <Project Path="packages/engine/Engine.Infrastructure/Engine.Infrastructure.csproj" />
     <Project Path="packages/engine/Engine.Presentation/Engine.Presentation.csproj" />
   </Folder>
+  <Folder Name="/packages/identity/">
+    <Project Path="packages/identity/Identity.Application/Identity.Application.csproj" />
+    <Project Path="packages/identity/Identity.Domain/Identity.Domain.csproj" />
+    <Project Path="packages/identity/Identity.Infrastructure/Identity.Infrastructure.csproj" />
+    <Project Path="packages/identity/Identity.Presentation/Identity.Presentation.csproj" />
+  </Folder>
   <Folder Name="/packages/registry/">
     <Project Path="packages/registry/Registry.Application/Registry.Application.csproj" />
     <Project Path="packages/registry/Registry.Domain/Registry.Domain.csproj" />
@@ -25,6 +31,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
+    <Project Path="tests/Identity.Api.Tests/Identity.Api.Tests.csproj" />
     <Project Path="tests/Registry.Api.Tests/Registry.Api.Tests.csproj" />
   </Folder>
 </Solution>

@@ -1,0 +1,55 @@
+@page "/signin"
+@model SignInModel
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flownodes sign-in</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 24rem; margin: 4rem auto; padding: 0 1rem; }
+        label, input, button { display: block; width: 100%; box-sizing: border-box; margin-top: .5rem; }
+        button { margin-top: 1rem; }
+        .error { color: #b00020; }
+    </style>
+</head>
+<body>
+@if (Model.SetupRequired)
+{
+    <h1>Set up Flownodes</h1>
+    <p>Create the first User. Read the setup token from the Silo's log.</p>
+    @if (Model.Error is not null)
+    {
+        <p class="error">@Model.Error</p>
+    }
+    <form method="post" asp-page-handler="Setup">
+        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl">
+        <label for="SetupToken">Setup token</label>
+        <input id="SetupToken" name="SetupToken" autocomplete="off" required>
+        <label for="Username">Username</label>
+        <input id="Username" name="Username" autocomplete="username" required>
+        <label for="DisplayName">Display name (optional)</label>
+        <input id="DisplayName" name="DisplayName">
+        <label for="Password">Password (at least 12 characters)</label>
+        <input id="Password" name="Password" type="password" autocomplete="new-password" required>
+        <button type="submit">Create the first User</button>
+    </form>
+}
+else
+{
+    <h1>Sign in to Flownodes</h1>
+    @if (Model.Error is not null)
+    {
+        <p class="error">@Model.Error</p>
+    }
+    <form method="post">
+        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl">
+        <label for="Username">Username</label>
+        <input id="Username" name="Username" autocomplete="username" required>
+        <label for="Password">Password</label>
+        <input id="Password" name="Password" type="password" autocomplete="current-password" required>
+        <button type="submit">Sign in</button>
+    </form>
+}
+</body>
+</html>
