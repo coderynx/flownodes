@@ -18,6 +18,9 @@ fi
 
 dotnet tool restore > /dev/null
 
+# Without restored packages ReSharper cannot resolve references, and optimising usings would delete used directives.
+dotnet restore Flownodes.slnx > /dev/null
+
 # --no-build: formatting needs the project model, not compiled output.
 dotnet jb cleanupcode Flownodes.slnx \
     --profile="Flownodes" \
