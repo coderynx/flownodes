@@ -10,12 +10,6 @@ public sealed class NamespaceGrant
         Namespace = string.Empty;
     }
 
-    internal NamespaceGrant(string @namespace, NamespaceRole role)
-    {
-        Namespace = @namespace;
-        Role = role;
-    }
-
     /// <summary>
     /// Gets the name of the Namespace the role applies to.
     /// </summary>
@@ -24,4 +18,11 @@ public sealed class NamespaceGrant
     /// Gets the role held in that Namespace.
     /// </summary>
     public NamespaceRole Role { get; private set; }
+
+    internal static NamespaceGrant Create(string @namespace, NamespaceRole role) =>
+        new()
+        {
+            Namespace = @namespace,
+            Role = role
+        };
 }

@@ -132,6 +132,34 @@ public sealed class SetupTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Setup_ShouldBeGone_WhenAnotherSiloAlreadyCreatedTheFirstUser()
+    {
+        // Arrange
+        var installationKey = Convert.ToBase64String(new byte[32].Select((_, index) => (byte)(index + 3)).ToArray());
+        await using var first = await IdentityApp.StartAsync(postgres, installationKey);
+        await using var second = await IdentityApp.StartAsync(postgres, installationKey, first.ConnectionString);
+        using var firstBrowser = first.NewBrowser();
+        using var secondBrowser = second.NewBrowser();
+        await IdentityApp.CompleteSetupAsync(
+            firstBrowser,
+            first.SetupToken!,
+            IdentityApp.AdministratorName,
+            IdentityApp.AdministratorPassword,
+            Ct);
+
+        // Act
+        var again = await IdentityApp.CompleteSetupAsync(
+            secondBrowser,
+            second.SetupToken!,
+            "intruder",
+            IdentityApp.AdministratorPassword,
+            Ct);
+
+        // Assert
+        again.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Startup_ShouldNotLogASetupToken_WhenAUserExists()
     {
         // Arrange

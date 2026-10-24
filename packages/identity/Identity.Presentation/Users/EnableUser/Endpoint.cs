@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
 using Core.Presentation.Abstraction;
+using Core.Presentation.Http;
 using Identity.Application.Users.EnableUser;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

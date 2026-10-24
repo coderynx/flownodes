@@ -21,7 +21,7 @@ internal sealed class Handler(IIdentityDbContext database) : IRequestHandler<Com
 {
     public async Task<Result<User>> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await Callers.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
+        var caller = await CallerChecks.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;
@@ -33,12 +33,13 @@ internal sealed class Handler(IIdentityDbContext database) : IRequestHandler<Com
             return spec.Error;
         }
 
-        var user = await database.Users.Include(candidate => candidate.RoleGrants)
-            .SingleOrDefaultAsync(candidate => candidate.Id == request.UserId, cancellationToken);
-        if (user is null)
+        var found = await CallerChecks.FindUserAsync(database, request.UserId, cancellationToken);
+        if (found.IsFailure)
         {
-            return Errors.UserNotFound();
+            return found.Error;
         }
+
+        var user = found.Value;
 
         if (spec.Value.IsAdministrator)
         {

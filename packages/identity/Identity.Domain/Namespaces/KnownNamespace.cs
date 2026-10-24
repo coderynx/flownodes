@@ -48,6 +48,15 @@ public sealed class KnownNamespace
         };
 
     /// <summary>
+    /// Determines whether a deletion message is about this incarnation of the Namespace and newer than the last
+    /// message applied.
+    /// </summary>
+    /// <param name="uid">The identifier of the incarnation the message is about.</param>
+    /// <param name="seq">The sequence number of the message.</param>
+    /// <returns><see langword="true"/> when the Namespace should be forgotten.</returns>
+    public bool IsDeletedBy(Guid uid, long seq) => uid == Uid && seq > Seq;
+
+    /// <summary>
     /// Applies a later message about the Namespace, unless the message is not newer than the last one applied.
     /// </summary>
     /// <param name="uid">The identifier of the incarnation the message is about.</param>

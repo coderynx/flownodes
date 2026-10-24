@@ -1,7 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Identity.Domain.Users;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
+using OpenIddict.Abstractions;
 using Xunit;
 
 namespace Identity.Api.Tests;
@@ -125,6 +130,109 @@ public sealed class SignInTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task SignInPage_ShouldLockTheUserOutForFifteenMinutes_WhenFiveAttemptsFail()
+    {
+        // Arrange
+        await using var app = await IdentityApp.StartAsync(postgres);
+        await app.AdministratorAsync(Ct);
+        using var browser = app.NewBrowser();
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            await browser.PostFormAsync("/signin", "/signin", Credentials("wrong password here"), Ct);
+        }
+
+        // Act
+        await using var scope = app.Services.CreateAsyncScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var user = await users.FindByNameAsync(IdentityApp.AdministratorName);
+        var lockoutEnd = await users.GetLockoutEndDateAsync(user!);
+
+        // Assert
+        lockoutEnd.ShouldNotBeNull();
+        lockoutEnd.Value.ShouldBe(DateTimeOffset.UtcNow.AddMinutes(15), TimeSpan.FromMinutes(1));
+    }
+
+    [Fact]
+    public async Task TokenEndpoint_ShouldRotateTheRefreshToken_WhenARefreshTokenIsRedeemed()
+    {
+        // Arrange
+        await using var app = await IdentityApp.StartAsync(postgres);
+        await app.AdministratorAsync(Ct);
+        var tokens = await app.SignInWithDeviceFlowAsync(
+            IdentityApp.AdministratorName,
+            IdentityApp.AdministratorPassword,
+            Ct);
+
+        // Act
+        var response = await app.PostTokenAsync(
+            new Dictionary<string, string>
+            {
+                ["grant_type"] = "refresh_token",
+                ["client_id"] = IdentityApp.ClientId,
+                ["refresh_token"] = tokens.RefreshToken!
+            },
+            Ct);
+
+        // Assert
+        var refreshed = await response.Content.ReadFromJsonAsync<IdentityApp.TokenSet>(Ct);
+        refreshed!.RefreshToken.ShouldNotBe(tokens.RefreshToken);
+        var statuses = await RefreshTokenStatusesAsync(app);
+        statuses.Count(status => status == OpenIddictConstants.Statuses.Redeemed).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task RefreshToken_ShouldExpireInThirtyDays_WhenIssued()
+    {
+        // Arrange
+        await using var app = await IdentityApp.StartAsync(postgres);
+        await app.AdministratorAsync(Ct);
+        await app.SignInWithDeviceFlowAsync(IdentityApp.AdministratorName, IdentityApp.AdministratorPassword, Ct);
+
+        // Act
+        await using var scope = app.Services.CreateAsyncScope();
+        var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictTokenManager>();
+        var lifetimes = new List<TimeSpan>();
+        await foreach (var token in manager.ListAsync(count: null, offset: null, Ct))
+        {
+            if (await manager.GetTypeAsync(token, Ct) == OpenIddictConstants.TokenTypeIdentifiers.RefreshToken)
+            {
+                lifetimes.Add(
+                    (await manager.GetExpirationDateAsync(token, Ct))!.Value -
+                    (await manager.GetCreationDateAsync(token, Ct))!.Value);
+            }
+        }
+
+        // Assert
+        lifetimes.ShouldNotBeEmpty();
+        lifetimes.ShouldAllBe(lifetime => Math.Abs((lifetime - TimeSpan.FromDays(30)).TotalMinutes) < 1);
+    }
+
+    [Fact]
+    public async Task DataProtection_ShouldReadKeysAnotherSiloStored_WhenSilosShareTheDatabase()
+    {
+        // Arrange
+        var installationKey = Convert.ToBase64String(new byte[32].Select((_, index) => (byte)(index + 5)).ToArray());
+        string protectedText;
+        string connectionString;
+        await using (var first = await IdentityApp.StartAsync(postgres, installationKey))
+        {
+            protectedText = first.Services.GetRequiredService<IDataProtectionProvider>()
+                .CreateProtector("flownodes-test")
+                .Protect("session");
+            connectionString = first.ConnectionString;
+        }
+
+        // Act
+        await using var second = await IdentityApp.StartAsync(postgres, installationKey, connectionString);
+        var unprotected = second.Services.GetRequiredService<IDataProtectionProvider>()
+            .CreateProtector("flownodes-test")
+            .Unprotect(protectedText);
+
+        // Assert
+        unprotected.ShouldBe("session");
+    }
+
+    [Fact]
     public async Task SignInPage_ShouldRefuseTheUser_WhenThePasswordIsWrong()
     {
         // Arrange
@@ -205,6 +313,22 @@ public sealed class SignInTests(PostgresFixture postgres)
         // Act
         // Assert
         await act.ShouldThrowAsync<Exception>();
+    }
+
+    private static async Task<List<string?>> RefreshTokenStatusesAsync(IdentityApp app)
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictTokenManager>();
+        var statuses = new List<string?>();
+        await foreach (var token in manager.ListAsync(count: null, offset: null, Ct))
+        {
+            if (await manager.GetTypeAsync(token, Ct) == OpenIddictConstants.TokenTypeIdentifiers.RefreshToken)
+            {
+                statuses.Add(await manager.GetStatusAsync(token, Ct));
+            }
+        }
+
+        return statuses;
     }
 
     private static Dictionary<string, string> Credentials(string password) =>

@@ -32,7 +32,7 @@ internal sealed class Handler(IIdentityDbContext database) : IRequestHandler<Que
 
     public async Task<Result<UserPage>> HandleAsync(Query request, CancellationToken cancellationToken = default)
     {
-        var caller = await Callers.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
+        var caller = await CallerChecks.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;

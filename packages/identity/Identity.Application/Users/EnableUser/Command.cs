@@ -1,7 +1,6 @@
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
 using Identity.Application.Database;
-using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Application.Users.EnableUser;
 
@@ -16,19 +15,17 @@ internal sealed class Handler(IIdentityDbContext database) : IRequestHandler<Com
 {
     public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await Callers.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
-        if (caller.IsFailure)
+        var found = await CallerChecks.RequireAdministratorAndFindUserAsync(
+            database,
+            request.CallerId,
+            request.UserId,
+            cancellationToken);
+        if (found.IsFailure)
         {
-            return caller.Error;
+            return found.Error;
         }
 
-        var user = await database.Users.SingleOrDefaultAsync(
-            candidate => candidate.Id == request.UserId,
-            cancellationToken);
-        if (user is null)
-        {
-            return Errors.UserNotFound();
-        }
+        var user = found.Value;
 
         if (user.Enable())
         {

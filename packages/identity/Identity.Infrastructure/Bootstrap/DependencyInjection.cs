@@ -6,6 +6,7 @@ using Identity.Domain.Users;
 using Identity.Infrastructure.Database;
 using Identity.Infrastructure.Messaging;
 using Identity.Infrastructure.Security;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,6 +56,7 @@ public static class DependencyInjection
 
         AddDatabase(builder, connectionString);
         AddUsers(builder);
+        AddDataProtection(builder);
         AddTokenServer(builder);
         AddMessaging(builder, connectionString);
 
@@ -90,6 +92,13 @@ public static class DependencyInjection
                 options.User.AllowedUserNameCharacters = string.Empty;
             })
             .AddUserStore<UserStore>();
+    }
+
+    private static void AddDataProtection(IHostApplicationBuilder builder)
+    {
+        builder.Services.AddDataProtection()
+            .SetApplicationName("flownodes-identity")
+            .PersistKeysToDbContext<IdentityDbContext>();
     }
 
     private static void AddTokenServer(IHostApplicationBuilder builder)

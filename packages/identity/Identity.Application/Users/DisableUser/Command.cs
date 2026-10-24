@@ -2,7 +2,6 @@ using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
 using Identity.Application.Database;
 using Identity.Application.Security;
-using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Application.Users.DisableUser;
 
@@ -19,35 +18,25 @@ internal sealed class Handler(IIdentityDbContext database, IUserTokenRevoker rev
 {
     public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await Callers.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
-        if (caller.IsFailure)
+        var found = await CallerChecks.RequireAdministratorAndFindUserAsync(
+            database,
+            request.CallerId,
+            request.UserId,
+            cancellationToken);
+        if (found.IsFailure)
         {
-            return caller.Error;
+            return found.Error;
         }
 
-        var user = await database.Users.SingleOrDefaultAsync(
-            candidate => candidate.Id == request.UserId,
-            cancellationToken);
-        if (user is null)
-        {
-            return Errors.UserNotFound();
-        }
+        var user = found.Value;
 
         if (user.IsAdministrator && !user.IsDisabled &&
-            !await Callers.AnotherActiveAdministratorExistsAsync(database, user.Id, cancellationToken))
+            !await CallerChecks.AnotherActiveAdministratorExistsAsync(database, user.Id, cancellationToken))
         {
             return Errors.LastAdministrator();
         }
 
-        await revoker.RevokeAllAsync(user.Id, cancellationToken);
-
-        var now = time.GetUtcNow();
-        var tokens = await database.PersonalAccessTokens.Where(token => token.UserId == user.Id)
-            .ToListAsync(cancellationToken);
-        foreach (var token in tokens)
-        {
-            token.Revoke(now);
-        }
+        await UserTokens.RevokeAllAsync(database, revoker, time, user.Id, cancellationToken);
 
         if (user.Disable())
         {

@@ -10,6 +10,7 @@
         <PackageVersion Include="Coderynx.Functional" Version="1.8.0" />
         <PackageVersion Include="Coderynx.Functional.WebApi" Version="1.8.0" />
         <PackageVersion Include="Coderynx.MediatorKit" Version="1.9.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.13" />
         <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
         <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.13" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />

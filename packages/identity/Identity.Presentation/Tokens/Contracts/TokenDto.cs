@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Core.Presentation.Http;
 using Identity.Domain.Tokens;
 
 namespace Identity.Presentation.Tokens.Contracts;

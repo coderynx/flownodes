@@ -20,7 +20,7 @@ internal sealed class Handler(IIdentityDbContext database)
         Query request,
         CancellationToken cancellationToken = default)
     {
-        var caller = await Callers.RequireActiveAsync(database, request.CallerId, cancellationToken);
+        var caller = await CallerChecks.RequireActiveAsync(database, request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;

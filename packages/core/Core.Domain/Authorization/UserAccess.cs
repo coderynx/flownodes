@@ -156,7 +156,7 @@ public sealed class UserAccess
     {
         if (Advance(seq) && !_grants.Any(grant => grant.Namespace == @namespace && grant.Role == role))
         {
-            _grants.Add(new NamespaceGrant(@namespace, role));
+            _grants.Add(NamespaceGrant.Create(@namespace, role));
         }
     }
 
