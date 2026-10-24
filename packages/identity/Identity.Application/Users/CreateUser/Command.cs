@@ -22,7 +22,7 @@ internal sealed class Handler(IIdentityDbContext database, UserManager<User> use
 {
     public async Task<Result<User>> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await Callers.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
+        var caller = await CallerChecks.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;

@@ -96,6 +96,30 @@ public sealed class NamespaceTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task PutNamespace_ShouldCreateOnceAndNeverFail_WhenRequestsRace()
+    {
+        // Arrange
+        const int names = 8;
+        const int requestsPerName = 32;
+        await using var app = await RegistryApp.StartAsync(postgres);
+
+        // Act
+        var responses = await Task.WhenAll(
+            Enumerable.Range(0, names)
+                .Select(name => Task.WhenAll(
+                    Enumerable.Range(0, requestsPerName)
+                        .Select(_ => app.Client.PutAsync($"{Route}/race-{name}", null, Ct)))));
+
+        // Assert
+        foreach (var perName in responses)
+        {
+            perName.ShouldAllBe(response => response.StatusCode == HttpStatusCode.Created ||
+                                            response.StatusCode == HttpStatusCode.OK);
+            perName.Count(response => response.StatusCode == HttpStatusCode.Created).ShouldBe(1);
+        }
+    }
+
+    [Fact]
     public async Task GetNamespace_ShouldReturnNotFound_WhenNamespaceIsAbsent()
     {
         // Arrange

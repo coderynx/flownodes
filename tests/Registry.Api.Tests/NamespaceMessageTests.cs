@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Registry.Application.Database;
 using Registry.Domain.Namespaces;
@@ -102,6 +103,36 @@ public sealed class NamespaceMessageTests(PostgresFixture postgres)
         await app.Client.PutAsync($"{Route}/marker", null, Ct);
         await app.Messages.WaitForAppliedAsync("marker", Ct);
         app.Messages.Received.OfType<Core.Contracts.Resources.ResourceDeleted>().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task SaveChanges_ShouldSendNothing_WhenTheTransactionRollsBack()
+    {
+        // Arrange
+        await using var app = await RegistryApp.StartAsync(postgres);
+        await app.Client.PutAsync($"{Route}/acme", null, Ct);
+        await using var scope = app.Services.CreateAsyncScope();
+        var database = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
+        database.Namespaces.Add(Namespace.Create(NamespaceName.Create("acme")));
+        await database.PublishAsync(
+            new Core.Contracts.Resources.ResourceApplied(
+                "ghost",
+                Namespace.Kind,
+                "ghost",
+                Guid.NewGuid(),
+                1,
+                1,
+                JsonSerializer.SerializeToElement(new { })));
+
+        // Act
+        var save = () => database.SaveChangesAsync(Ct);
+
+        // Assert
+        await Should.ThrowAsync<DbUpdateException>(save);
+        await app.Client.PutAsync($"{Route}/marker", null, Ct);
+        await app.Messages.WaitForAppliedAsync("marker", Ct);
+        app.Messages.Received.OfType<Core.Contracts.Resources.ResourceApplied>()
+            .ShouldNotContain(applied => applied.Name == "ghost");
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

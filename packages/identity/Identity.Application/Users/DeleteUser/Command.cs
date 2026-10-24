@@ -18,21 +18,20 @@ internal sealed class Handler(IIdentityDbContext database, IUserTokenRevoker rev
 {
     public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await Callers.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
-        if (caller.IsFailure)
+        var found = await CallerChecks.RequireAdministratorAndFindUserAsync(
+            database,
+            request.CallerId,
+            request.UserId,
+            cancellationToken);
+        if (found.IsFailure)
         {
-            return caller.Error;
+            return found.Error;
         }
 
-        var user = await database.Users.Include(candidate => candidate.RoleGrants)
-            .SingleOrDefaultAsync(candidate => candidate.Id == request.UserId, cancellationToken);
-        if (user is null)
-        {
-            return Errors.UserNotFound();
-        }
+        var user = found.Value;
 
         if (user.IsAdministrator && !user.IsDisabled &&
-            !await Callers.AnotherActiveAdministratorExistsAsync(database, user.Id, cancellationToken))
+            !await CallerChecks.AnotherActiveAdministratorExistsAsync(database, user.Id, cancellationToken))
         {
             return Errors.LastAdministrator();
         }

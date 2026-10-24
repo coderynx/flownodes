@@ -1,17 +1,18 @@
 using Coderynx.Functional.Results.Errors;
+using Core.Application.Authorization;
 
 namespace Identity.Application;
 
 internal static class Errors
 {
     public static Error Unauthenticated() =>
-        Error.Custom(ErrorCodes.Unauthenticated, "The caller is not an enabled User of this installation.");
+        Error.Custom(AccessErrors.UnauthenticatedCode, "The caller is not an enabled User of this installation.");
 
     public static Error Forbidden() =>
-        Error.Custom(ErrorCodes.Forbidden, "Only an Administrator can do this.");
+        Error.Custom(AccessErrors.ForbiddenCode, "Only an Administrator can do this.");
 
     public static Error ForbiddenOtherUser() =>
-        Error.Custom(ErrorCodes.Forbidden, "A User can manage only their own Personal Access Tokens.");
+        Error.Custom(AccessErrors.ForbiddenCode, "A User can manage only their own Personal Access Tokens.");
 
     public static Error InvalidUsername(string username) =>
         Error.InvalidInput(

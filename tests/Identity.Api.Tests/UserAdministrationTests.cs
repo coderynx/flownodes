@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Xunit;
 
 namespace Identity.Api.Tests;
@@ -224,6 +225,43 @@ public sealed class UserAdministrationTests(PostgresFixture postgres)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await app.SignedInAsync("alice", "a brand new passphrase", Ct)).ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task ResetPassword_ShouldRevokeRefreshTokensAndPersonalAccessTokens_WhenAnAdministratorResetsIt()
+    {
+        // Arrange
+        await using var app = await IdentityApp.StartAsync(postgres);
+        var administrator = await app.AdministratorAsync(Ct);
+        var id = await IdentityApp.CreateUserAsync(administrator, "alice", AlicePassword, Ct);
+        var tokens = await app.SignInWithDeviceFlowAsync("alice", AlicePassword, Ct);
+        var created = await (await app.ClientFor(tokens.AccessToken)
+                .PostAsJsonAsync("/api/v1/identity/users/me/tokens", new { name = "ci" }, Ct)).Content
+            .ReadFromJsonAsync<JsonElement>(Ct);
+
+        // Act
+        await administrator.PutAsJsonAsync($"{Users}/{id}/password", new { password = "a brand new passphrase" }, Ct);
+
+        // Assert
+        var refresh = await app.PostTokenAsync(
+            new Dictionary<string, string>
+            {
+                ["grant_type"] = "refresh_token",
+                ["client_id"] = IdentityApp.ClientId,
+                ["refresh_token"] = tokens.RefreshToken!
+            },
+            Ct);
+        refresh.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var exchange = await app.PostTokenAsync(
+            new Dictionary<string, string>
+            {
+                ["grant_type"] = IdentityApp.TokenExchangeGrant,
+                ["client_id"] = IdentityApp.ClientId,
+                ["subject_token"] = created.GetProperty("secret").GetString()!,
+                ["subject_token_type"] = IdentityApp.PersonalAccessTokenType
+            },
+            Ct);
+        exchange.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]

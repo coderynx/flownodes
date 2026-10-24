@@ -18,7 +18,7 @@ internal sealed class Handler(IIdentityDbContext database, UserManager<User> use
 {
     public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await Callers.RequireActiveAsync(database, request.CallerId, cancellationToken);
+        var caller = await CallerChecks.RequireActiveAsync(database, request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;

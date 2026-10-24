@@ -29,7 +29,7 @@ internal sealed class Handler(IIdentityDbContext database, TimeProvider time)
 
     public async Task<Result<CreatedToken>> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await Callers.RequireActiveAsync(database, request.CallerId, cancellationToken);
+        var caller = await CallerChecks.RequireActiveAsync(database, request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;

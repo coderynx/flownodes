@@ -4,87 +4,87 @@ using Registry.Application.Access.ApplyIdentityMessage;
 
 namespace Registry.Infrastructure.Messaging;
 
+// HACK: public and documented only because Wolverine discovers handlers among public types; nothing calls it.
 /// <summary>
-/// Consumes Identity's messages about Users and Role Grants, which the Registry authorises every request from
-/// (ADR-0026). It is public because Wolverine discovers handlers only among public types.
+/// Hands Identity's messages to the use case that records them (ADR-0026).
 /// </summary>
 public static class IdentityMessageHandler
 {
     /// <summary>
-    /// Records a role granted in a Namespace.
+    /// Handles a role granted in a Namespace.
     /// </summary>
     /// <param name="message">Identity's message.</param>
-    /// <param name="sender">The mediator the Registry's use cases run through.</param>
+    /// <param name="sender">The Registry's mediator.</param>
     /// <param name="cancellationToken">Cancels the handling.</param>
     /// <returns>A task that completes when the message is handled.</returns>
     public static Task Handle(RoleGranted message, ISender sender, CancellationToken cancellationToken) =>
         sender.SendAsync(new Command(message), cancellationToken);
 
     /// <summary>
-    /// Records a role revoked in a Namespace.
+    /// Handles a role revoked in a Namespace.
     /// </summary>
     /// <param name="message">Identity's message.</param>
-    /// <param name="sender">The mediator the Registry's use cases run through.</param>
+    /// <param name="sender">The Registry's mediator.</param>
     /// <param name="cancellationToken">Cancels the handling.</param>
     /// <returns>A task that completes when the message is handled.</returns>
     public static Task Handle(RoleRevoked message, ISender sender, CancellationToken cancellationToken) =>
         sender.SendAsync(new Command(message), cancellationToken);
 
     /// <summary>
-    /// Records a new Administrator.
+    /// Handles a new Administrator.
     /// </summary>
     /// <param name="message">Identity's message.</param>
-    /// <param name="sender">The mediator the Registry's use cases run through.</param>
+    /// <param name="sender">The Registry's mediator.</param>
     /// <param name="cancellationToken">Cancels the handling.</param>
     /// <returns>A task that completes when the message is handled.</returns>
     public static Task Handle(AdministratorGranted message, ISender sender, CancellationToken cancellationToken) =>
         sender.SendAsync(new Command(message), cancellationToken);
 
     /// <summary>
-    /// Records an Administrator who no longer is one.
+    /// Handles an Administrator who no longer is one.
     /// </summary>
     /// <param name="message">Identity's message.</param>
-    /// <param name="sender">The mediator the Registry's use cases run through.</param>
+    /// <param name="sender">The Registry's mediator.</param>
     /// <param name="cancellationToken">Cancels the handling.</param>
     /// <returns>A task that completes when the message is handled.</returns>
     public static Task Handle(AdministratorRevoked message, ISender sender, CancellationToken cancellationToken) =>
         sender.SendAsync(new Command(message), cancellationToken);
 
     /// <summary>
-    /// Records a disabled User.
+    /// Handles a disabled User.
     /// </summary>
     /// <param name="message">Identity's message.</param>
-    /// <param name="sender">The mediator the Registry's use cases run through.</param>
+    /// <param name="sender">The Registry's mediator.</param>
     /// <param name="cancellationToken">Cancels the handling.</param>
     /// <returns>A task that completes when the message is handled.</returns>
     public static Task Handle(UserDisabled message, ISender sender, CancellationToken cancellationToken) =>
         sender.SendAsync(new Command(message), cancellationToken);
 
     /// <summary>
-    /// Records a User enabled again.
+    /// Handles a User enabled again.
     /// </summary>
     /// <param name="message">Identity's message.</param>
-    /// <param name="sender">The mediator the Registry's use cases run through.</param>
+    /// <param name="sender">The Registry's mediator.</param>
     /// <param name="cancellationToken">Cancels the handling.</param>
     /// <returns>A task that completes when the message is handled.</returns>
     public static Task Handle(UserEnabled message, ISender sender, CancellationToken cancellationToken) =>
         sender.SendAsync(new Command(message), cancellationToken);
 
     /// <summary>
-    /// Records a deleted User.
+    /// Handles a deleted User.
     /// </summary>
     /// <param name="message">Identity's message.</param>
-    /// <param name="sender">The mediator the Registry's use cases run through.</param>
+    /// <param name="sender">The Registry's mediator.</param>
     /// <param name="cancellationToken">Cancels the handling.</param>
     /// <returns>A task that completes when the message is handled.</returns>
     public static Task Handle(UserDeleted message, ISender sender, CancellationToken cancellationToken) =>
         sender.SendAsync(new Command(message), cancellationToken);
 
     /// <summary>
-    /// Records a User's new username.
+    /// Handles a User's new username.
     /// </summary>
     /// <param name="message">Identity's message.</param>
-    /// <param name="sender">The mediator the Registry's use cases run through.</param>
+    /// <param name="sender">The Registry's mediator.</param>
     /// <param name="cancellationToken">Cancels the handling.</param>
     /// <returns>A task that completes when the message is handled.</returns>
     public static Task Handle(UserRenamed message, ISender sender, CancellationToken cancellationToken) =>

@@ -26,7 +26,7 @@ internal sealed class Handler(IIdentityDbContext database) : IRequestHandler<Com
         var known = await database.KnownNamespaces.SingleOrDefaultAsync(
             candidate => candidate.Name == request.Name,
             cancellationToken);
-        if (known is not null && known.Uid == request.Uid && known.Seq < request.Seq)
+        if (known is not null && known.IsDeletedBy(request.Uid, request.Seq))
         {
             database.KnownNamespaces.Remove(known);
         }

@@ -20,18 +20,17 @@ internal sealed class Handler(IIdentityDbContext database) : IRequestHandler<Com
 {
     public async Task<Result<User>> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await Callers.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
-        if (caller.IsFailure)
+        var found = await CallerChecks.RequireAdministratorAndFindUserAsync(
+            database,
+            request.CallerId,
+            request.UserId,
+            cancellationToken);
+        if (found.IsFailure)
         {
-            return caller.Error;
+            return found.Error;
         }
 
-        var user = await database.Users.Include(candidate => candidate.RoleGrants)
-            .SingleOrDefaultAsync(candidate => candidate.Id == request.UserId, cancellationToken);
-        if (user is null)
-        {
-            return Errors.UserNotFound();
-        }
+        var user = found.Value;
 
         if (request.DisplayName is not null)
         {

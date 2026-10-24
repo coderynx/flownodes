@@ -17,9 +17,7 @@ internal static class NamespaceCreation
             return Errors.InvalidName(rawName);
         }
 
-        var existing = await database.Namespaces.SingleOrDefaultAsync(
-            @namespace => @namespace.Name == name,
-            cancellationToken);
+        var existing = await FindAsync(database, name, cancellationToken);
         if (existing is not null)
         {
             return Result.Found(existing);
@@ -28,9 +26,30 @@ internal static class NamespaceCreation
         var created = Namespace.Create(name);
         database.Namespaces.Add(created);
 
-        await database.PublishAsync(created.ToApplied());
-        await database.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await database.PublishAsync(created.ToApplied());
+            await database.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            database.Namespaces.Remove(created);
+
+            var winner = await FindAsync(database, name, cancellationToken);
+            if (winner is null)
+            {
+                throw;
+            }
+
+            return Result.Found(winner);
+        }
 
         return Result.Created(created);
     }
+
+    private static Task<Namespace?> FindAsync(
+        IApplicationDbContext database,
+        NamespaceName name,
+        CancellationToken cancellationToken) =>
+        database.Namespaces.SingleOrDefaultAsync(@namespace => @namespace.Name == name, cancellationToken);
 }
