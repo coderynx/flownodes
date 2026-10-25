@@ -37,3 +37,7 @@ A .NET modular monolith, orchestrated locally with Aspire:
 - **Registry** stores, validates and versions Resources (desired state) using plain database access on Postgres.
 - **Engine** reconciles Resources into live state on Microsoft Orleans, talks to Devices and External Services, and runs Flows.
 - **Core** holds shared application and presentation plumbing.
+
+## License
+
+Flownodes is licensed under the [GNU Affero General Public License v3.0](LICENSE). If you run a modified version as a network service, you must offer its source code to the service's users.

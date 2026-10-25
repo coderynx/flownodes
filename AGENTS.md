@@ -25,7 +25,7 @@ Run `dotnet build Flownodes.slnx` and `dotnet test --solution Flownodes.slnx` be
 
 ### Issue tracker
 
-Issues are tracked in GitHub Issues (`coderynx/neo-flownodes`) via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues are tracked in GitHub Issues via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

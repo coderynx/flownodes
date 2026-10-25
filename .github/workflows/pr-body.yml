@@ -1,0 +1,23 @@
+name: PR body
+
+# Pull request bodies never pass through git, so the commit-msg hook cannot see them. Editing a body re-runs this
+# check without re-running CI.
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  no-session-links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Body links no agent session
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s' "$BODY" | grep -nE 'claude\.ai/code/session_[A-Za-z0-9]{8,}'; then
+            echo "::error::Remove the agent session link from the pull request body."
+            exit 1
+          fi
