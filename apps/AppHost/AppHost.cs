@@ -39,6 +39,7 @@ internal sealed class AppHost
             .WaitFor(registryDb)
             .WithReference(identityDb)
             .WaitFor(identityDb)
+            .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName)
             .WithEnvironment("Flownodes__InstallationKey", installationKey)
             .WithUrlForEndpoint(
                 "https",
