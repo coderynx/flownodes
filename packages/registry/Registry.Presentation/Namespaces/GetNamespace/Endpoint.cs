@@ -8,7 +8,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Registry.Application.Namespaces.GetNamespace;
-using Registry.Presentation.Namespaces.Contracts;
+using Registry.Presentation.Resources.Contracts;
+using Registry.Presentation.Resources.Http;
 
 namespace Registry.Presentation.Namespaces.GetNamespace;
 
@@ -19,15 +20,17 @@ internal sealed class Endpoint : IEndpoint
         app.MapGet(
                 "/registry/namespaces/{name}",
                 async (
-                    [AsParameters] Request request, ClaimsPrincipal caller, ISender sender,
+                    [AsParameters] Request request, ClaimsPrincipal caller, ISender sender, HttpContext http,
                     CancellationToken cancellationToken) =>
                 {
                     var result = await sender.SendAsync(new Query(caller.CallerId(), request.Name), cancellationToken);
 
-                    return result.Match(@namespace => Results.Ok(@namespace.ToDto()), error => error.ToProblem());
+                    return result.Match(
+                        @namespace => ManifestFormat.Negotiate(http, @namespace.ToDto()),
+                        error => error.ToProblem());
                 })
             .WithName("GetNamespace")
-            .Produces<NamespaceDto>()
+            .Produces<ResourceDto>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
     }

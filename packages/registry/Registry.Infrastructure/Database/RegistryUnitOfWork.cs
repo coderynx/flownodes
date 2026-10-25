@@ -12,6 +12,24 @@ internal sealed class RegistryUnitOfWork(IDbContextOutbox<RegistryDbContext> out
     public DbSet<Namespace> Namespaces => outbox.DbContext.Namespaces;
     public DbSet<Resource> Resources => outbox.DbContext.Resources;
     public DbSet<UserAccess> UserAccess => outbox.DbContext.UserAccess;
+    public DbSet<Revision> Revisions => outbox.DbContext.Revisions;
+
+    public async Task LockNamespacesAsync(IReadOnlyList<string> names, CancellationToken cancellationToken = default)
+    {
+        var database = outbox.DbContext.Database;
+        if (database.CurrentTransaction is null)
+        {
+            await database.BeginTransactionAsync(cancellationToken);
+        }
+
+        foreach (var name in names)
+        {
+            var key = $"registry.namespace:{name}";
+            await database.ExecuteSqlAsync(
+                $"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))",
+                cancellationToken);
+        }
+    }
 
     public ValueTask PublishAsync<TMessage>(TMessage message) where TMessage : notnull =>
         new(outbox.PublishAsync(message).AsTask());

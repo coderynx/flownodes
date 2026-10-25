@@ -76,6 +76,28 @@ internal sealed class NamespaceGrain(
         DeactivateOnIdle();
     }
 
+    public async Task ObserveAsync(long seq)
+    {
+        var current = state.State;
+        var isLive = !current.Deleted && current.Uid != Guid.Empty;
+        if (!isLive || seq <= current.Seq)
+        {
+            return;
+        }
+
+        state.State = new NamespaceState
+        {
+            Uid = current.Uid,
+            Seq = seq
+        };
+        await state.WriteStateAsync();
+
+        if (seq > current.Seq + 1)
+        {
+            await registry.ResyncNamespaceAsync(this.GetPrimaryKeyString(), CancellationToken.None);
+        }
+    }
+
     public Task ReceiveReminder(string reminderName, TickStatus status) => Task.CompletedTask;
 
     private void StartResyncTimer() =>

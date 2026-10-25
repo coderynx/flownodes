@@ -62,4 +62,39 @@ public sealed class NamespaceTests
         act.ShouldThrow<InvalidOperationException>();
         created.Seq.ShouldBe(1);
     }
+
+    [Fact]
+    public void NextSeq_ShouldAdvanceTheCounterByOne_WhenAResourceInTheNamespaceChanges()
+    {
+        // Arrange
+        var @namespace = Namespace.Create(NamespaceName.Create("acme"));
+
+        // Act
+        var first = @namespace.NextSeq();
+        var second = @namespace.NextSeq();
+
+        // Assert
+        first.ShouldBe(2);
+        second.ShouldBe(3);
+        @namespace.Seq.ShouldBe(3);
+    }
+
+    [Theory]
+    [InlineData("acme", false, NamespaceDeletion.Allowed)]
+    [InlineData("acme", true, NamespaceDeletion.HoldsResources)]
+    [InlineData(NamespaceName.Default, false, NamespaceDeletion.Default)]
+    public void CheckDeletion_ShouldAllowOnlyAnEmptyNamespaceThatIsNotDefault(
+        string name,
+        bool holdsResources,
+        NamespaceDeletion expected)
+    {
+        // Arrange
+        var @namespace = Namespace.Create(NamespaceName.Create(name));
+
+        // Act
+        var deletion = @namespace.CheckDeletion(holdsResources);
+
+        // Assert
+        deletion.ShouldBe(expected);
+    }
 }

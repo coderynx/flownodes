@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Registry.Application.Database;
 using Registry.Domain.Namespaces;
@@ -24,7 +25,9 @@ public sealed class NamespaceTests(PostgresFixture postgres)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var body = await response.Content.ReadFromJsonAsync<NamespaceBody>(Ct);
-        body.ShouldBe(new NamespaceBody("default"));
+        body!.Kind.ShouldBe("Namespace");
+        body.Metadata.Name.ShouldBe("default");
+        body.Metadata.Generation.ShouldBe(1);
     }
 
     [Fact]
@@ -43,53 +46,53 @@ public sealed class NamespaceTests(PostgresFixture postgres)
 
     [Theory]
     [InlineData("acme")]
-    public async Task PutNamespace_ShouldCreateNamespace_WhenNameIsADnsLabel(string name)
+    public async Task ApplyNamespace_ShouldCreateNamespace_WhenNameIsADnsLabel(string name)
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
 
         // Act
-        var response = await app.Client.PutAsync($"{Route}/{name}", null, Ct);
+        var response = await RegistryApp.ApplyNamespaceAsync(app.Client, name, Ct);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
-        (await response.Content.ReadFromJsonAsync<NamespaceBody>(Ct)).ShouldBe(new NamespaceBody(name));
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await Actions(response)).ShouldBe([(name, "created")]);
         await app.JoinAsync(name, Ct);
         (await app.Client.GetAsync($"{Route}/{name}", Ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Theory]
     [InlineData("Acme")]
-    public async Task PutNamespace_ShouldReturnBadRequest_WhenNameIsNotADnsLabel(string name)
+    public async Task ApplyNamespace_ShouldReturnUnprocessable_WhenNameIsNotADnsLabel(string name)
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
 
         // Act
-        var response = await app.Client.PutAsync($"{Route}/{name}", null, Ct);
+        var response = await RegistryApp.ApplyNamespaceAsync(app.Client, name, Ct);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
         (await app.Client.GetAsync($"{Route}/{name}", Ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
-    public async Task PutNamespace_ShouldReturnOk_WhenNamespaceExists()
+    public async Task ApplyNamespace_ShouldLeaveItUnchanged_WhenNamespaceExists()
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
-        await app.Client.PutAsync($"{Route}/acme", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "acme", Ct);
 
         // Act
-        var response = await app.Client.PutAsync($"{Route}/acme", null, Ct);
+        var response = await RegistryApp.ApplyNamespaceAsync(app.Client, "acme", Ct);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        (await response.Content.ReadFromJsonAsync<NamespaceBody>(Ct)).ShouldBe(new NamespaceBody("acme"));
+        (await Actions(response)).ShouldBe([("acme", "unchanged")]);
     }
 
     [Fact]
-    public async Task PutNamespace_ShouldCreateOnceAndNeverFail_WhenRequestsRace()
+    public async Task ApplyNamespace_ShouldCreateOnceAndNeverFail_WhenRequestsRace()
     {
         // Arrange
         const int names = 8;
@@ -101,14 +104,14 @@ public sealed class NamespaceTests(PostgresFixture postgres)
             Enumerable.Range(0, names)
                 .Select(name => Task.WhenAll(
                     Enumerable.Range(0, requestsPerName)
-                        .Select(_ => app.Client.PutAsync($"{Route}/race-{name}", null, Ct)))));
+                        .Select(_ => RegistryApp.ApplyNamespaceAsync(app.Client, $"race-{name}", Ct)))));
 
         // Assert
         foreach (var perName in responses)
         {
-            perName.ShouldAllBe(response => response.StatusCode == HttpStatusCode.Created ||
-                                            response.StatusCode == HttpStatusCode.OK);
-            perName.Count(response => response.StatusCode == HttpStatusCode.Created).ShouldBe(1);
+            perName.ShouldAllBe(response => response.StatusCode == HttpStatusCode.OK);
+            var actions = await Task.WhenAll(perName.Select(Actions));
+            actions.Count(action => action.Single().Action == "created").ShouldBe(1);
         }
     }
 
@@ -130,8 +133,8 @@ public sealed class NamespaceTests(PostgresFixture postgres)
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
-        await app.Client.PutAsync($"{Route}/zeta", null, Ct);
-        await app.Client.PutAsync($"{Route}/alpha", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "zeta", Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "alpha", Ct);
 
         // Act
         var response = await app.Client.GetAsync(Route, Ct);
@@ -140,7 +143,7 @@ public sealed class NamespaceTests(PostgresFixture postgres)
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var body = await response.Content.ReadFromJsonAsync<ListBody>(Ct);
         body!.Total.ShouldBe(3);
-        body.Items.Select(item => item.Name).ShouldBe(["alpha", "default", "zeta"]);
+        body.Items.Select(item => item.Metadata.Name).ShouldBe(["alpha", "default", "zeta"]);
     }
 
     [Fact]
@@ -148,9 +151,9 @@ public sealed class NamespaceTests(PostgresFixture postgres)
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
-        await app.Client.PutAsync($"{Route}/plant-a", null, Ct);
-        await app.Client.PutAsync($"{Route}/plant-b", null, Ct);
-        await app.Client.PutAsync($"{Route}/plant-c", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "plant-a", Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "plant-b", Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "plant-c", Ct);
 
         // Act
         var response = await app.Client.GetAsync($"{Route}?q=plant&sort=name&desc=true&offset=1&limit=1", Ct);
@@ -158,7 +161,7 @@ public sealed class NamespaceTests(PostgresFixture postgres)
         // Assert
         var body = await response.Content.ReadFromJsonAsync<ListBody>(Ct);
         body!.Total.ShouldBe(3);
-        body.Items.Select(item => item.Name).ShouldBe(["plant-b"]);
+        body.Items.Select(item => item.Metadata.Name).ShouldBe(["plant-b"]);
     }
 
     [Fact]
@@ -180,13 +183,13 @@ public sealed class NamespaceTests(PostgresFixture postgres)
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
-        await app.Client.PutAsync($"{Route}/acme", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "acme", Ct);
 
         // Act
         var response = await app.Client.DeleteAsync($"{Route}/acme", Ct);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await app.Client.GetAsync($"{Route}/acme", Ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
@@ -208,12 +211,18 @@ public sealed class NamespaceTests(PostgresFixture postgres)
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
-        await app.Client.PutAsync($"{Route}/acme", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "acme", Ct);
         await app.JoinAsync("acme", Ct);
         await using (var scope = app.Services.CreateAsyncScope())
         {
             var database = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
-            database.Resources.Add(Resource.Create(NamespaceName.Create("acme"), "Connection", "broker"));
+            database.Resources.Add(
+                Resource.Create(
+                    NamespaceName.Create("acme"),
+                    "Connection",
+                    ResourceName.Create("broker"),
+                    JsonSerializer.SerializeToElement(new { }),
+                    2));
             await database.SaveChangesAsync(Ct);
         }
 
@@ -227,7 +236,20 @@ public sealed class NamespaceTests(PostgresFixture postgres)
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private sealed record NamespaceBody(string Name);
+    private static async Task<IReadOnlyList<(string Name, string Action)>> Actions(HttpResponseMessage response)
+    {
+        var body = await response.Content.ReadFromJsonAsync<ApplyBody>(Ct);
+
+        return [.. body!.Resources.Select(resource => (resource.Name, resource.Action))];
+    }
+
+    private sealed record Metadata(string Name, long Generation);
+
+    private sealed record NamespaceBody(string Kind, Metadata Metadata);
 
     private sealed record ListBody(IReadOnlyList<NamespaceBody> Items, int Total);
+
+    private sealed record AppliedBody(string Name, string Action);
+
+    private sealed record ApplyBody(IReadOnlyList<AppliedBody> Resources);
 }

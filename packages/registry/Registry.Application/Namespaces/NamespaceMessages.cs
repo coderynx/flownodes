@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Core.Contracts.Resources;
 using Registry.Domain.Namespaces;
 
@@ -14,7 +13,7 @@ internal static class NamespaceMessages
             @namespace.Uid,
             @namespace.Generation,
             @namespace.Seq,
-            JsonSerializer.SerializeToElement(new { }));
+            Namespace.Spec);
 
     public static ResourceDeleted ToDeleted(this Namespace @namespace) =>
         new(

@@ -22,6 +22,17 @@ Run Flownodes locally through the Aspire AppHost:
 dotnet run --project apps/AppHost
 ```
 
+The API always listens on `https://localhost:7076` and `http://localhost:5164`, the ports in its `https` launch profile, so a `flowctl` sign-in keeps working across restarts.
+
+Install `flowctl` from your checkout as a global .NET tool, and run the script again to pick up later changes:
+
+```sh
+scripts/install-flowctl.sh
+flowctl login --server https://localhost:7076
+```
+
+The .NET SDK installs tools into `~/.dotnet/tools`; add it to your `PATH` if `flowctl` is not found.
+
 The first build sets `core.hooksPath` to `.githooks`: a pre-commit hook formats your staged C# files, and a commit-msg hook rejects messages that link an agent session.
 
 ## Coding standards

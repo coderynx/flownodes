@@ -146,11 +146,12 @@ public sealed partial class ModuleBoundaryTests
         var offenders = projects.SelectMany(project =>
             {
                 var module = Path.GetFileNameWithoutExtension(project).Split('.')[0];
+                var testsAnApp = File.Exists(Path.Combine(Solution.Root(), "apps", module, $"{module}.csproj"));
 
                 return Solution.ProjectReferences(project)
                     .Select(ModuleProject.From)
                     .Where(target => !target.Module.Equals(module, StringComparison.OrdinalIgnoreCase) &&
-                                     target.Module != Solution.Core)
+                                     target.Module != Solution.Core && !MayTestApp(testsAnApp, target, module))
                     .Select(target => $"{Path.GetFileName(project)} references {target.Name}");
             })
             .ToList();
@@ -158,6 +159,9 @@ public sealed partial class ModuleBoundaryTests
         // Assert
         offenders.ShouldBeEmpty();
     }
+
+    private static bool MayTestApp(bool testsAnApp, ModuleProject target, string app) =>
+        testsAnApp && (target.Module != "apps" || target.Name.Equals(app, StringComparison.OrdinalIgnoreCase));
 
     private static bool MayReference(ModuleProject project, ModuleProject target)
     {

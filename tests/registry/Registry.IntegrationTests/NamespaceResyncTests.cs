@@ -26,6 +26,38 @@ public sealed class NamespaceResyncTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task NamespacesResyncRequested_ShouldPublishEveryResourceInTheNamespaceAgain_WhenReceived()
+    {
+        // Arrange
+        await using var app = await RegistryApp.StartAsync(postgres);
+        await app.CreateNamespaceAsync("acme", Ct);
+        await app.JoinAsync("acme", Ct);
+        await app.GrantAsync(app.AdministratorId, "Engineer", "acme");
+        await RegistryApp.EventuallyAsync(
+            async () => (await RegistryApp.ApplyAsync(
+                app.Client,
+                """
+                apiVersion: flownodes.io/v1alpha1
+                kind: Widget
+                metadata:
+                  name: w-1
+                spec: {}
+                """,
+                Ct,
+                "?namespace=acme")).IsSuccessStatusCode,
+            Ct);
+        var first = await app.Messages.WaitForAppliedAsync("w-1", Ct);
+
+        // Act
+        await app.PublishAsync(new NamespacesResyncRequested("acme"));
+
+        // Assert
+        await app.Messages.WaitForAppliedCountAsync("w-1", 2, Ct);
+        var again = app.Messages.Received.OfType<ResourceApplied>().Last(applied => applied.Name == "w-1");
+        (again.Uid, again.Generation, again.Seq).ShouldBe((first.Uid, first.Generation, first.Seq));
+    }
+
+    [Fact]
     public async Task NamespacesResyncRequested_ShouldPublishOnlyThatNamespaceAgain_WhenReceived()
     {
         // Arrange

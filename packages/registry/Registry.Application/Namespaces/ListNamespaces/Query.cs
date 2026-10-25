@@ -30,7 +30,6 @@ public sealed record NamespacePage(IReadOnlyList<Namespace> Items, int Total);
 internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<Query, Result<NamespacePage>>
 {
     private const string NameKey = "name";
-    private const int MaxLimit = 200;
 
     public async Task<Result<NamespacePage>> HandleAsync(Query request, CancellationToken cancellationToken = default)
     {
@@ -55,7 +54,7 @@ internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<
         var ordered = request.Desc
             ? matching.OrderByDescending(@namespace => @namespace.Name.Value, StringComparer.Ordinal)
             : matching.OrderBy(@namespace => @namespace.Name.Value, StringComparer.Ordinal);
-        var items = ordered.Skip(Math.Max(request.Offset, 0)).Take(Math.Clamp(request.Limit, 1, MaxLimit)).ToList();
+        var items = ordered.Page(request.Offset, request.Limit).ToList();
 
         return Result.Found(new NamespacePage(items, matching.Count));
     }

@@ -19,6 +19,20 @@ public interface IApplicationDbContext : IUserAccessSource
     /// Gets the namespaced Resources the Registry stores.
     /// </summary>
     DbSet<Resource> Resources { get; }
+    /// <summary>
+    /// Gets the Revisions of every Resource and Namespace, tombstones included.
+    /// </summary>
+    DbSet<Revision> Revisions { get; }
+
+    /// <summary>
+    /// Starts the transaction <see cref="SaveChangesAsync"/> commits and, inside it, waits for every other apply or
+    /// delete in the given Namespaces to finish, so validation sees a consistent Namespace (ADR-0007). The locks are
+    /// released when the transaction commits or the unit of work is disposed.
+    /// </summary>
+    /// <param name="names">The names of the Namespaces, in ordinal order so two callers never deadlock.</param>
+    /// <param name="cancellationToken">Cancels the wait.</param>
+    /// <returns>A task that completes when the caller holds every lock.</returns>
+    Task LockNamespacesAsync(IReadOnlyList<string> names, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Queues a message for the other modules. It is sent when, and only when, <see cref="SaveChangesAsync"/>

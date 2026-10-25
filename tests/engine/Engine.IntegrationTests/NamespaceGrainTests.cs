@@ -84,6 +84,39 @@ public sealed class NamespaceGrainTests
     }
 
     [Fact]
+    public async Task ObserveAsync_ShouldNotRequestResync_WhenResourceSeqsFollowTheNamespaces()
+    {
+        // Arrange
+        await using var engine = await EngineCluster.StartAsync();
+        var grain = engine.Namespace("acme");
+        await grain.ApplyAsync(Uid, 1);
+
+        // Act
+        await grain.ObserveAsync(2);
+        await grain.ObserveAsync(3);
+        await grain.ApplyAsync(Uid, 3);
+
+        // Assert
+        engine.Registry.Resyncs("acme").ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task ObserveAsync_ShouldRequestResync_WhenAResourceSeqSkipsAhead()
+    {
+        // Arrange
+        await using var engine = await EngineCluster.StartAsync();
+        var grain = engine.Namespace("acme");
+        await grain.ApplyAsync(Uid, 1);
+
+        // Act
+        await grain.ObserveAsync(3);
+
+        // Assert
+        await engine.Registry.WaitForResyncsAsync("acme", 2, Ct);
+        engine.Registry.Resyncs("acme").ShouldBeGreaterThanOrEqualTo(2);
+    }
+
+    [Fact]
     public async Task Grain_ShouldRequestResyncPeriodically_WhenItIsLive()
     {
         // Arrange

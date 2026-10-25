@@ -8,7 +8,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Registry.Application.Namespaces.ListNamespaces;
-using Registry.Presentation.Namespaces.Contracts;
+using Registry.Presentation.Resources.Contracts;
+using Registry.Presentation.Resources.Http;
 
 namespace Registry.Presentation.Namespaces.ListNamespaces;
 
@@ -19,7 +20,7 @@ internal sealed class Endpoint : IEndpoint
         app.MapGet(
                 "/registry/namespaces",
                 async (
-                    [AsParameters] Request request, ClaimsPrincipal caller, ISender sender,
+                    [AsParameters] Request request, ClaimsPrincipal caller, ISender sender, HttpContext http,
                     CancellationToken cancellationToken) =>
                 {
                     var query = new Query(
@@ -32,7 +33,9 @@ internal sealed class Endpoint : IEndpoint
                     var result = await sender.SendAsync(query, cancellationToken);
 
                     return result.Match(
-                        page => Results.Ok(new Response([.. page.Items.Select(item => item.ToDto())], page.Total)),
+                        page => ManifestFormat.Negotiate(
+                            http,
+                            new Response([.. page.Items.Select(item => item.ToDto())], page.Total)),
                         error => error.ToProblem());
                 })
             .WithName("ListNamespaces")
@@ -48,5 +51,5 @@ internal sealed class Endpoint : IEndpoint
         [FromQuery] int Offset = 0,
         [FromQuery] int Limit = 50);
 
-    internal sealed record Response(IReadOnlyList<NamespaceDto> Items, int Total);
+    internal sealed record Response(IReadOnlyList<ResourceDto> Items, int Total);
 }
