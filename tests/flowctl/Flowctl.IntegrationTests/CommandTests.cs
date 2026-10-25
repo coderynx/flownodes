@@ -79,6 +79,40 @@ public sealed class CommandTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Get_ShouldListEveryIntegrationWithItsVersionsAndDeviceTypes_WhenAskedForIntegrations()
+    {
+        // Arrange
+        await using var app = await FlowctlApp.StartAsync(postgres);
+        await app.EngineerAsync();
+
+        // Act
+        var run = await app.RunAsync("get", "integrations");
+
+        // Assert
+        run.ExitCode.ShouldBe(0, run.Error);
+        run.Output.ShouldBe(
+            Lines(
+                "ID                    VERSION   SDK     DEVICE TYPES          STATUS",
+                "legacy                -         0.9.0   -                     failed: IncompatibleSdk: Built against SDK 0.9.0.",
+                "flownodes.simulator   0.1.0     0.1.0   Thermometer, Switch   loaded"));
+    }
+
+    [Fact]
+    public async Task Get_ShouldRefuse_WhenIntegrationsAreAskedForByName()
+    {
+        // Arrange
+        await using var app = await FlowctlApp.StartAsync(postgres);
+        await app.EngineerAsync();
+
+        // Act
+        var run = await app.RunAsync("get", "integrations", "flownodes.simulator");
+
+        // Assert
+        run.ExitCode.ShouldBe(1);
+        run.Error.ShouldContain("Integrations are listed");
+    }
+
+    [Fact]
     public async Task Diff_ShouldPrintEveryChangeWithoutApplyingIt_WhenTheSpecDiffers()
     {
         // Arrange

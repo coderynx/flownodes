@@ -4,6 +4,8 @@ internal static class Routes
 {
     private const string Registry = "api/v1/registry";
     private const string Namespaces = "namespaces";
+    public static string Integrations => "api/v1/engine/integrations";
+    public static bool IsIntegrations(string kind) => kind.ToLowerInvariant() is "integration" or "integrations";
 
     public static string Collection(string kind, string @namespace)
     {

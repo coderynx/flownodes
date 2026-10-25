@@ -24,6 +24,12 @@
     <Project Path="packages/identity/Identity.Infrastructure/Identity.Infrastructure.csproj" />
     <Project Path="packages/identity/Identity.Presentation/Identity.Presentation.csproj" />
   </Folder>
+  <Folder Name="/packages/sdk/">
+    <Project Path="packages/sdk/Flownodes.Sdk/Flownodes.Sdk.csproj" />
+  </Folder>
+  <Folder Name="/integrations/">
+    <Project Path="integrations/flownodes.simulator/Flownodes.Simulator.csproj" />
+  </Folder>
   <Folder Name="/packages/registry/">
     <Project Path="packages/registry/Registry.Application/Registry.Application.csproj" />
     <Project Path="packages/registry/Registry.Domain/Registry.Domain.csproj" />
@@ -34,6 +40,7 @@
     <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/engine/">
+    <Project Path="tests/engine/Engine.UnitTests/Engine.UnitTests.csproj" />
     <Project Path="tests/engine/Engine.IntegrationTests/Engine.IntegrationTests.csproj" />
   </Folder>
   <Folder Name="/tests/flowctl/">

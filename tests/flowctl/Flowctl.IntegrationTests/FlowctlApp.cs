@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Core.Contracts.Identity;
+using Engine.Application.Integrations;
 using JasperFx.CodeGeneration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
@@ -48,12 +49,17 @@ public sealed class FlowctlApp : IAsyncDisposable
         builder.AddInfrastructure();
         builder.AddPresentation();
 
+        Engine.Application.Bootstrap.DependencyInjection.AddApplication(builder);
+        Engine.Presentation.Bootstrap.DependencyInjection.AddPresentation(builder);
+
         builder.Services.AddSingleton<IResourceKind, WidgetKind>();
+        builder.Services.AddSingleton<IInstalledIntegrations, InstalledIntegrationsStub>();
         builder.Services.ConfigureWolverine(options => options.CodeGeneration.TypeLoadMode = TypeLoadMode.Dynamic);
 
         var app = builder.Build();
         app.UseInfrastructure();
         app.UsePresentation();
+        Engine.Presentation.Bootstrap.HostConfiguration.UsePresentation(app);
         identity.MapConnect(app);
 
         await app.StartAsync();
