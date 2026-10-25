@@ -4,7 +4,7 @@ Flownodes is pre-release: nothing is deployed yet, and the API, Resource shapes,
 
 ## Before you start
 
-- Read [`README.md`](README.md) for the product scope and what is out of scope.
+- Read [`README.md`](README.md) for what Flownodes is and who it is for.
 - Learn the vocabulary in [`GLOSSARY.md`](GLOSSARY.md) and use its terms in issues, code and commit messages.
 - Read the ADRs in [`docs/adr/`](docs/adr/) that touch the area you want to change.
 - For anything larger than a small fix, open an issue first so the design can be agreed before you write code.
