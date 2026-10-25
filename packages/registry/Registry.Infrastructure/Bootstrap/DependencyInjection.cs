@@ -24,7 +24,7 @@ public static class DependencyInjection
     /// <summary>
     /// Registers the shared infrastructure, the Registry's Postgres database, the messaging that carries its
     /// Resource messages to the other modules and the messaging that brings it Identity's Role Grants and the
-    /// Engine's resync requests.
+    /// Engine's resync requests and Status reports.
     /// </summary>
     /// <param name="builder">The host the Registry is being added to.</param>
     /// <exception cref="InvalidOperationException">The <c>registry</c> connection string is not configured.</exception>
@@ -63,6 +63,7 @@ public static class DependencyInjection
                 options.Discovery.IncludeAssembly(typeof(IdentityMessageHandler).Assembly);
 
                 options.PublishMessage<NamespacesResyncRequested>().ToPostgresqlQueue(EngineQueue);
+                options.PublishMessage<StatusReported>().ToPostgresqlQueue(EngineQueue);
                 options.ListenToPostgresqlQueue(EngineQueue).Sequential();
 
                 options.PublishMessage<RoleGranted>().ToPostgresqlQueue(IdentityQueue);

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Registry.Application.Bootstrap;
+using Registry.Domain.Resources;
 using Registry.Infrastructure.Bootstrap;
 using Registry.Presentation.Bootstrap;
 using Wolverine;
@@ -54,6 +55,7 @@ public sealed class RegistryApp : IAsyncDisposable
         builder.AddPresentation();
 
         builder.Services.AddSingleton<ResourceMessages>();
+        builder.Services.AddSingleton<IResourceKind, WidgetKind>();
         builder.Services.ConfigureWolverine(options =>
         {
             options.CodeGeneration.TypeLoadMode = TypeLoadMode.Dynamic;
@@ -131,9 +133,39 @@ public sealed class RegistryApp : IAsyncDisposable
 
     public async Task CreateNamespaceAsync(string name, CancellationToken cancellationToken)
     {
-        var response = await Client.PutAsync($"/api/v1/registry/namespaces/{name}", null, cancellationToken);
+        var response = await ApplyNamespaceAsync(Client, name, cancellationToken);
         response.EnsureSuccessStatusCode();
     }
+
+    public static Task<HttpResponseMessage> ApplyNamespaceAsync(
+        HttpClient client,
+        string name,
+        CancellationToken cancellationToken) =>
+        ApplyAsync(
+            client,
+            $"""
+             apiVersion: flownodes.io/v1alpha1
+             kind: Namespace
+             metadata:
+               name: {name}
+             """,
+            cancellationToken);
+
+    public static Task<HttpResponseMessage> ApplyAsync(
+        HttpClient client,
+        string yaml,
+        CancellationToken cancellationToken,
+        string query = "") =>
+        client.PostAsync($"/api/v1/registry/apply{query}", Yaml(yaml), cancellationToken);
+
+    public static Task<HttpResponseMessage> DeleteManifestAsync(
+        HttpClient client,
+        string yaml,
+        CancellationToken cancellationToken,
+        string query = "") =>
+        client.PostAsync($"/api/v1/registry/delete{query}", Yaml(yaml), cancellationToken);
+
+    private static StringContent Yaml(string yaml) => new(yaml, System.Text.Encoding.UTF8, "application/yaml");
 
     public async Task JoinAsync(string @namespace, CancellationToken cancellationToken)
     {

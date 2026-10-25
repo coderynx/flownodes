@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Registry.Domain.Namespaces;
 
 /// <summary>
@@ -10,6 +12,11 @@ public sealed class Namespace
     /// The Kind a Namespace has in messages.
     /// </summary>
     public const string Kind = "Namespace";
+
+    /// <summary>
+    /// The plural a route and <c>flowctl</c> give the Kind.
+    /// </summary>
+    public const string Plural = "namespaces";
 
     private Namespace()
     {
@@ -28,7 +35,12 @@ public sealed class Namespace
     /// </summary>
     public long Generation { get; private set; }
     /// <summary>
-    /// Gets the sequence number of the last message published about the Namespace.
+    /// Gets the Spec every Namespace has: an empty object, since a Namespace has nothing to configure yet.
+    /// </summary>
+    public static JsonElement Spec { get; } = JsonDocument.Parse("{}").RootElement.Clone();
+    /// <summary>
+    /// Gets the Namespace's gap-free sequence number: that of the last message published about the Namespace or any
+    /// Resource in it (ADR-0014).
     /// </summary>
     public long Seq { get; private set; }
 
@@ -45,6 +57,12 @@ public sealed class Namespace
             Generation = 1,
             Seq = 1
         };
+
+    /// <summary>
+    /// Advances the sequence number for a message about a Resource in the Namespace.
+    /// </summary>
+    /// <returns>The number the message carries.</returns>
+    public long NextSeq() => ++Seq;
 
     /// <summary>
     /// Advances the sequence number to the one the deletion message carries.

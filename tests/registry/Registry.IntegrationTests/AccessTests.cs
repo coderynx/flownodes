@@ -18,7 +18,12 @@ public sealed class AccessTests(PostgresFixture postgres)
     [Theory]
     [InlineData("GET", Route)]
     [InlineData("GET", $"{Route}/default")]
-    [InlineData("PUT", $"{Route}/acme")]
+    [InlineData("POST", "/api/v1/registry/apply")]
+    [InlineData("POST", "/api/v1/registry/delete")]
+    [InlineData("GET", $"{Route}/default/widgets")]
+    [InlineData("GET", $"{Route}/default/widgets/w-1")]
+    [InlineData("GET", $"{Route}/default/widgets/w-1/revisions")]
+    [InlineData("DELETE", $"{Route}/default/widgets/w-1")]
     [InlineData("DELETE", $"{Route}/acme")]
     public async Task Request_ShouldReturnUnauthorized_WhenThereIsNoAccessToken(string method, string route)
     {
@@ -47,7 +52,7 @@ public sealed class AccessTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task PutNamespace_ShouldReturnForbidden_WhenCallerIsNotAnAdministrator()
+    public async Task ApplyNamespace_ShouldReturnForbidden_WhenCallerIsNotAnAdministrator()
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
@@ -57,7 +62,7 @@ public sealed class AccessTests(PostgresFixture postgres)
             Ct);
 
         // Act
-        var response = await engineer.PutAsync($"{Route}/acme", null, Ct);
+        var response = await RegistryApp.ApplyNamespaceAsync(engineer, "acme", Ct);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
@@ -102,7 +107,7 @@ public sealed class AccessTests(PostgresFixture postgres)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var body = await response.Content.ReadFromJsonAsync<ListBody>(Ct);
-        body!.Items.Select(item => item.Name).ShouldBe(["acme", "globex"]);
+        body!.Items.Select(item => item.Metadata.Name).ShouldBe(["acme", "globex"]);
         body.Total.ShouldBe(2);
     }
 
@@ -118,7 +123,7 @@ public sealed class AccessTests(PostgresFixture postgres)
 
         // Assert
         var body = await response.Content.ReadFromJsonAsync<ListBody>(Ct);
-        body!.Items.Select(item => item.Name).ShouldBe(["acme", "default"]);
+        body!.Items.Select(item => item.Metadata.Name).ShouldBe(["acme", "default"]);
     }
 
     [Fact]
@@ -221,7 +226,7 @@ public sealed class AccessTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task PutNamespace_ShouldReturnForbidden_WhenAdministratorIsRevokedInIdentity()
+    public async Task ApplyNamespace_ShouldReturnForbidden_WhenAdministratorIsRevokedInIdentity()
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
@@ -229,7 +234,7 @@ public sealed class AccessTests(PostgresFixture postgres)
         await app.GrantAsync(userId, "Administrator", null);
         var administrator = app.SignedIn("ada");
         await RegistryApp.EventuallyAsync(
-            async () => (await administrator.PutAsync($"{Route}/acme", null, Ct)).IsSuccessStatusCode,
+            async () => (await RegistryApp.ApplyNamespaceAsync(administrator, "acme", Ct)).IsSuccessStatusCode,
             Ct);
 
         // Act
@@ -237,7 +242,7 @@ public sealed class AccessTests(PostgresFixture postgres)
 
         // Assert
         var status = await RegistryApp.StatusEventuallyAsync(
-            () => administrator.PutAsync($"{Route}/acme", null, Ct),
+            () => RegistryApp.ApplyNamespaceAsync(administrator, "acme", Ct),
             HttpStatusCode.Forbidden,
             Ct);
         status.ShouldBe(HttpStatusCode.Forbidden);
@@ -306,7 +311,9 @@ public sealed class AccessTests(PostgresFixture postgres)
             .SingleOrDefaultAsync(user => user.Id == userId, TestContext.Current.CancellationToken);
     }
 
-    private sealed record NamespaceBody(string Name);
+    private sealed record Metadata(string Name);
+
+    private sealed record NamespaceBody(Metadata Metadata);
 
     private sealed record ListBody(IReadOnlyList<NamespaceBody> Items, int Total);
 }

@@ -28,13 +28,13 @@ public sealed class NamespaceMessageTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task PutNamespace_ShouldPublishResourceApplied_WhenNamespaceIsCreated()
+    public async Task ApplyNamespace_ShouldPublishResourceApplied_WhenNamespaceIsCreated()
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
 
         // Act
-        await app.Client.PutAsync($"{Route}/acme", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "acme", Ct);
 
         // Assert
         var applied = await app.Messages.WaitForAppliedAsync("acme", Ct);
@@ -51,7 +51,7 @@ public sealed class NamespaceMessageTests(PostgresFixture postgres)
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
-        await app.Client.PutAsync($"{Route}/acme", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "acme", Ct);
 
         // Act
         await app.Client.DeleteAsync($"{Route}/acme", Ct);
@@ -65,17 +65,17 @@ public sealed class NamespaceMessageTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task PutNamespace_ShouldPublishNothing_WhenNamespaceExists()
+    public async Task ApplyNamespace_ShouldPublishNothing_WhenNamespaceExists()
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
-        await app.Client.PutAsync($"{Route}/acme", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "acme", Ct);
 
         // Act
-        await app.Client.PutAsync($"{Route}/acme", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "acme", Ct);
 
         // Assert
-        await app.Client.PutAsync($"{Route}/marker", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "marker", Ct);
         await app.Messages.WaitForAppliedAsync("marker", Ct);
         app.Messages.Received.OfType<Core.Contracts.Resources.ResourceApplied>()
             .Count(applied => applied.Name == "acme")
@@ -87,11 +87,17 @@ public sealed class NamespaceMessageTests(PostgresFixture postgres)
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
-        await app.Client.PutAsync($"{Route}/acme", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "acme", Ct);
         await using (var scope = app.Services.CreateAsyncScope())
         {
             var database = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
-            database.Resources.Add(Resource.Create(NamespaceName.Create("acme"), "Connection", "broker"));
+            database.Resources.Add(
+                Resource.Create(
+                    NamespaceName.Create("acme"),
+                    "Connection",
+                    ResourceName.Create("broker"),
+                    JsonSerializer.SerializeToElement(new { }),
+                    2));
             await database.SaveChangesAsync(Ct);
         }
 
@@ -100,7 +106,7 @@ public sealed class NamespaceMessageTests(PostgresFixture postgres)
         await app.Client.DeleteAsync($"{Route}/default", Ct);
 
         // Assert
-        await app.Client.PutAsync($"{Route}/marker", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "marker", Ct);
         await app.Messages.WaitForAppliedAsync("marker", Ct);
         app.Messages.Received.OfType<Core.Contracts.Resources.ResourceDeleted>().ShouldBeEmpty();
     }
@@ -110,7 +116,7 @@ public sealed class NamespaceMessageTests(PostgresFixture postgres)
     {
         // Arrange
         await using var app = await RegistryApp.StartAsync(postgres);
-        await app.Client.PutAsync($"{Route}/acme", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "acme", Ct);
         await using var scope = app.Services.CreateAsyncScope();
         var database = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
         database.Namespaces.Add(Namespace.Create(NamespaceName.Create("acme")));
@@ -129,7 +135,7 @@ public sealed class NamespaceMessageTests(PostgresFixture postgres)
 
         // Assert
         await Should.ThrowAsync<DbUpdateException>(save);
-        await app.Client.PutAsync($"{Route}/marker", null, Ct);
+        await RegistryApp.ApplyNamespaceAsync(app.Client, "marker", Ct);
         await app.Messages.WaitForAppliedAsync("marker", Ct);
         app.Messages.Received.OfType<Core.Contracts.Resources.ResourceApplied>()
             .ShouldNotContain(applied => applied.Name == "ghost");

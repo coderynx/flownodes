@@ -10,6 +10,7 @@ internal sealed class RegistryDbContext(DbContextOptions<RegistryDbContext> opti
 {
     public DbSet<Namespace> Namespaces => Set<Namespace>();
     public DbSet<Resource> Resources => Set<Resource>();
+    public DbSet<Revision> Revisions => Set<Revision>();
     public DbSet<UserAccess> UserAccess => Set<UserAccess>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

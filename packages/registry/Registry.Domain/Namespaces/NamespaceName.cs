@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
 
 namespace Registry.Domain.Namespaces;
 
@@ -7,14 +6,12 @@ namespace Registry.Domain.Namespaces;
 /// The name of a Namespace: a DNS label of lowercase letters, digits and hyphens, at most 63 characters, that starts
 /// and ends with a letter or a digit.
 /// </summary>
-public sealed partial record NamespaceName
+public sealed record NamespaceName
 {
     /// <summary>
     /// The name of the Namespace every installation starts with.
     /// </summary>
     public const string Default = "default";
-
-    private const int MaxLength = 63;
 
     private NamespaceName(string value)
     {
@@ -38,7 +35,7 @@ public sealed partial record NamespaceName
     /// <returns><see langword="true"/> when <paramref name="raw"/> is a valid Namespace name.</returns>
     public static bool TryCreate(string? raw, [NotNullWhen(true)] out NamespaceName? name)
     {
-        var valid = raw is { Length: > 0 and <= MaxLength } && DnsLabel().IsMatch(raw);
+        var valid = DnsLabel.IsValid(raw);
         name = valid ? new NamespaceName(raw!) : null;
 
         return valid;
@@ -54,12 +51,9 @@ public sealed partial record NamespaceName
         TryCreate(raw, out var name)
             ? name
             : throw new ArgumentException(
-                $"'{raw}' is not a DNS label of at most {MaxLength} characters.",
+                $"'{raw}' is not a DNS label of at most {DnsLabel.MaxLength} characters.",
                 nameof(raw));
 
     /// <inheritdoc/>
     public override string ToString() => Value;
-
-    [GeneratedRegex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?$")]
-    private static partial Regex DnsLabel();
 }

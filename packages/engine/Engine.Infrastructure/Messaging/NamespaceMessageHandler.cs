@@ -12,7 +12,8 @@ public static class NamespaceMessageHandler
     private const string NamespaceKind = "Namespace";
 
     /// <summary>
-    /// Handles a Resource applied; only a Namespace reaches a Namespace grain so far.
+    /// Handles a Resource applied. A Namespace is applied to its grain; any other Resource only advances its
+    /// Namespace grain's sequence number, so the grain notices a lost message.
     /// </summary>
     /// <param name="message">The Registry's message.</param>
     /// <param name="grains">Orleans' grain factory.</param>
@@ -20,10 +21,11 @@ public static class NamespaceMessageHandler
     public static Task Handle(ResourceApplied message, IGrainFactory grains) =>
         message.Kind == NamespaceKind
             ? grains.GetGrain<INamespaceGrain>(message.Name).ApplyAsync(message.Uid, message.Seq)
-            : Task.CompletedTask;
+            : grains.GetGrain<INamespaceGrain>(message.Namespace).ObserveAsync(message.Seq);
 
     /// <summary>
-    /// Handles a Resource deleted; only a Namespace reaches a Namespace grain so far.
+    /// Handles a Resource deleted. A Namespace is deleted from its grain; any other Resource only advances its
+    /// Namespace grain's sequence number.
     /// </summary>
     /// <param name="message">The Registry's message.</param>
     /// <param name="grains">Orleans' grain factory.</param>
@@ -31,5 +33,5 @@ public static class NamespaceMessageHandler
     public static Task Handle(ResourceDeleted message, IGrainFactory grains) =>
         message.Kind == NamespaceKind
             ? grains.GetGrain<INamespaceGrain>(message.Name).DeleteAsync(message.Uid, message.Seq)
-            : Task.CompletedTask;
+            : grains.GetGrain<INamespaceGrain>(message.Namespace).ObserveAsync(message.Seq);
 }

@@ -35,6 +35,7 @@ namespace Internal.Generated.WolverineHandlers
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.ResourceDeletedHandler1845495848))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RoleGrantedHandler443699331))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RoleRevokedHandler1823564040))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.StatusReportedHandler1741691186))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserDeletedHandler1589093158))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserDisabledHandler76682799))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserEnabledHandler100489586))]
@@ -54,6 +55,7 @@ namespace Internal.Generated.WolverineHandlers
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Core.Contracts.Resources.NamespacesResyncRequested))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Core.Contracts.Resources.ResourceApplied))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Core.Contracts.Resources.ResourceDeleted))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Core.Contracts.Resources.StatusReported))]
         public static void Pin()
         {
             // Intentionally empty. The [DynamicDependency] attributes above are the payload: they root the generated types for Native AOT, and [ModuleInitializer] guarantees this method is itself an ILC root.

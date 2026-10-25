@@ -20,6 +20,13 @@ internal static class Callers
         return caller;
     }
 
+    public static UserAccess Named(UserAccess caller, string username)
+    {
+        caller.Rename(username, caller.LastSeq + 1);
+
+        return caller;
+    }
+
     public static UserAccess DisabledAdministrator()
     {
         var caller = Administrator();

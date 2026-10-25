@@ -46,5 +46,6 @@
         <PackageVersion Include="WolverineFx.Postgresql" Version="6.51.3" />
         <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.51.3" />
         <PackageVersion Include="xunit.v3" Version="4.0.2" />
+        <PackageVersion Include="YamlDotNet" Version="18.1.0" />
     </ItemGroup>
 </Project>

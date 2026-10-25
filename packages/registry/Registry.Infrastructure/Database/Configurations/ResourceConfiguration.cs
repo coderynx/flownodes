@@ -16,8 +16,13 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<Resource>
             .HasConversion(name => name.Value, value => NamespaceName.Create(value))
             .HasMaxLength(63);
         builder.Property(resource => resource.Kind).HasMaxLength(63);
-        builder.Property(resource => resource.Name).HasMaxLength(253);
+        builder.Property(resource => resource.Name)
+            .HasConversion(name => name.Value, value => ResourceName.Create(value))
+            .HasMaxLength(63);
+        builder.Property(resource => resource.Spec).IsJsonb();
+        builder.Property(resource => resource.Status).IsJsonb();
 
+        builder.HasIndex(resource => resource.Uid).IsUnique();
         builder.HasOne<Namespace>()
             .WithMany()
             .HasForeignKey(resource => resource.Namespace)

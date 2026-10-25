@@ -62,4 +62,20 @@ public sealed class NamespaceTests
         act.ShouldThrow<InvalidOperationException>();
         created.Seq.ShouldBe(1);
     }
+
+    [Fact]
+    public void NextSeq_ShouldAdvanceTheCounterByOne_WhenAResourceInTheNamespaceChanges()
+    {
+        // Arrange
+        var @namespace = Namespace.Create(NamespaceName.Create("acme"));
+
+        // Act
+        var first = @namespace.NextSeq();
+        var second = @namespace.NextSeq();
+
+        // Assert
+        first.ShouldBe(2);
+        second.ShouldBe(3);
+        @namespace.Seq.ShouldBe(3);
+    }
 }
