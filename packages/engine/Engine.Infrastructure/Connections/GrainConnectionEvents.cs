@@ -3,9 +3,6 @@ using Flownodes.Sdk;
 
 namespace Engine.Infrastructure.Connections;
 
-/// <summary>
-/// Carries what a running Connection pushes to its grain, which handles it on the Orleans scheduler.
-/// </summary>
 internal sealed class GrainConnectionEvents(IConnectionGrain grain, long runtime) : IConnectionEvents
 {
     private static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web);

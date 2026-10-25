@@ -4,10 +4,6 @@ using Flownodes.Sdk;
 
 namespace Engine.Infrastructure.Connections;
 
-/// <summary>
-/// Runs one Connection of an Integration off the Orleans scheduler: connects, keeps the declared Devices told to it,
-/// and starts over with capped backoff whenever it fails (ADR-0003).
-/// </summary>
 internal sealed class ConnectionRuntime(
     LoadedIntegration integration,
     JsonElement config,

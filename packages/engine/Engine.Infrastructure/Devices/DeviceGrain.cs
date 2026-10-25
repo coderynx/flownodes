@@ -50,7 +50,7 @@ internal sealed class DeviceGrain(
         }
 
         await RegisterAsync();
-        await ReportStatusAsync(true);
+        await ReportStatusAsync();
     }
 
     public async Task DeleteAsync(Guid uid, long seq)
@@ -85,12 +85,13 @@ internal sealed class DeviceGrain(
         }
 
         Adopt(connection);
-        await ReportStatusAsync(true);
+        await ReportStatusAsync();
     }
 
     public Task ValueReportedAsync(string dataPoint, string value, DateTimeOffset timestamp, int quality)
     {
-        if (IsLive)
+        var isNewer = !_readings.TryGetValue(dataPoint, out var known) || timestamp >= known.Timestamp;
+        if (IsLive && isNewer)
         {
             _readings[dataPoint] = new Reading(value, (Quality)quality, timestamp);
         }
@@ -103,7 +104,7 @@ internal sealed class DeviceGrain(
         if (IsLive && _deviceState != (DeviceState)deviceState)
         {
             _deviceState = (DeviceState)deviceState;
-            await ReportStatusAsync(true);
+            await ReportStatusAsync();
         }
     }
 

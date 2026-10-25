@@ -62,7 +62,7 @@ internal abstract class ResourceGrain(
         return true;
     }
 
-    protected Task ReportStatusAsync(bool immediate = false)
+    protected Task ReportStatusAsync()
     {
         if (!IsLive)
         {
@@ -70,7 +70,7 @@ internal abstract class ResourceGrain(
         }
 
         var wait = _lastReport + statusInterval - DateTimeOffset.UtcNow;
-        if (immediate || wait <= TimeSpan.Zero)
+        if (wait <= TimeSpan.Zero)
         {
             return FlushStatusAsync();
         }

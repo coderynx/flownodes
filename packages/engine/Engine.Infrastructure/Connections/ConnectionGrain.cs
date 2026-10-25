@@ -55,7 +55,7 @@ internal sealed class ConnectionGrain(
             await StartAsync();
         }
 
-        await ReportStatusAsync(true);
+        await ReportStatusAsync();
     }
 
     public async Task DeleteAsync(Guid uid, long seq)
@@ -279,7 +279,7 @@ internal sealed class ConnectionGrain(
             await NotifyDevicesAsync();
         }
 
-        await ReportStatusAsync(changed);
+        await ReportStatusAsync();
     }
 
     private async Task StartAsync()
