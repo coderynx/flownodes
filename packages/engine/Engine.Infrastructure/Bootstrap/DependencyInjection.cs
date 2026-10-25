@@ -1,5 +1,6 @@
 using Core.Application.Integrations;
 using Core.Contracts.Resources;
+using Engine.Application.Assets;
 using Engine.Application.Devices;
 using Engine.Application.Integrations;
 using Engine.Infrastructure.Assets;
@@ -105,6 +106,7 @@ public static class DependencyInjection
         builder.Services.Configure<DeviceGrainOptions>(builder.Configuration.GetSection(DeviceGrainOptions.Section));
         builder.Services.AddSingleton<IStatusReporter, WolverineStatusReporter>();
         builder.Services.AddSingleton<IDeviceRuntime, GrainDeviceRuntime>();
+        builder.Services.AddSingleton<IAssetRuntime, GrainAssetRuntime>();
     }
 
     private static void AddMessaging(IHostApplicationBuilder builder)

@@ -69,7 +69,7 @@ internal sealed class AssetTypeGrain(
             },
             Web);
 
-    private AssetTypeInfo Info() => new(IsLive, IsLive ? DataPointDeclarations.Names(Spec) : []);
+    private AssetTypeInfo Info() => new(IsLive, IsLive ? AssetDataPoint.DeclarationTexts(Spec) : []);
 
     private async Task NotifyInstancesAsync()
     {

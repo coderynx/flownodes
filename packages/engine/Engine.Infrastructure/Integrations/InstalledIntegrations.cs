@@ -31,7 +31,15 @@ internal sealed class InstalledIntegrations(
                     .. loaded.Integration.DeviceTypes.Select(deviceType => new DeviceTypeSchema(
                         deviceType.Name,
                         address => Problems(deviceType.Address, address),
-                        config => Problems(deviceType.Config, config)))
+                        config => Problems(deviceType.Config, config),
+                        (address, config) =>
+                        [
+                            .. deviceType.Surface(address, config)
+                                .DataPoints.Select(dataPoint => new DeviceDataPointSchema(
+                                    dataPoint.Name,
+                                    dataPoint.Type.ToString().ToLowerInvariant(),
+                                    dataPoint.Writable))
+                        ]))
                 ])
             : null;
 
