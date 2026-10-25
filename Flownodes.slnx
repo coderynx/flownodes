@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/apps/">
     <Project Path="apps/AppHost/AppHost.csproj" />
+    <Project Path="apps/Flowctl/Flowctl.csproj" />
     <Project Path="apps/Flownodes/Flownodes.csproj" />
   </Folder>
   <Folder Name="/packages/" />
@@ -34,6 +35,9 @@
   </Folder>
   <Folder Name="/tests/engine/">
     <Project Path="tests/engine/Engine.IntegrationTests/Engine.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/flowctl/">
+    <Project Path="tests/flowctl/Flowctl.IntegrationTests/Flowctl.IntegrationTests.csproj" />
   </Folder>
   <Folder Name="/tests/identity/">
     <Project Path="tests/identity/Identity.IntegrationTests/Identity.IntegrationTests.csproj" />

@@ -40,6 +40,7 @@
         <PackageVersion Include="Shouldly" Version="4.3.0" />
         <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
         <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+        <PackageVersion Include="System.CommandLine" Version="2.0.13" />
         <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
         <PackageVersion Include="WolverineFx" Version="6.51.3" />
         <PackageVersion Include="WolverineFx.EntityFrameworkCore" Version="6.51.3" />

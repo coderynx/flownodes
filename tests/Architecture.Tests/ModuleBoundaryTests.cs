@@ -150,7 +150,7 @@ public sealed partial class ModuleBoundaryTests
                 return Solution.ProjectReferences(project)
                     .Select(ModuleProject.From)
                     .Where(target => !target.Module.Equals(module, StringComparison.OrdinalIgnoreCase) &&
-                                     target.Module != Solution.Core)
+                                     target.Module != Solution.Core && !IsApp(target, module))
                     .Select(target => $"{Path.GetFileName(project)} references {target.Name}");
             })
             .ToList();
@@ -158,6 +158,9 @@ public sealed partial class ModuleBoundaryTests
         // Assert
         offenders.ShouldBeEmpty();
     }
+
+    private static bool IsApp(ModuleProject target, string name) =>
+        target.Module == "apps" && target.Name.Equals(name, StringComparison.OrdinalIgnoreCase);
 
     private static bool MayReference(ModuleProject project, ModuleProject target)
     {
