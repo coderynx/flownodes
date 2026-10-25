@@ -13,7 +13,7 @@ using Registry.Infrastructure.Database;
 namespace Registry.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(RegistryDbContext))]
-    [Migration("20261025164555_InitialRegistry")]
+    [Migration("20261025200618_InitialRegistry")]
     partial class InitialRegistry
     {
         /// <inheritdoc />
@@ -178,6 +178,29 @@ namespace Registry.Infrastructure.Database.Migrations
                     b.HasIndex("Namespace", "Kind", "Name", "Id");
 
                     b.ToTable("revisions", (string)null);
+                });
+
+            modelBuilder.Entity("Registry.Domain.Resources.SecretValue", b =>
+                {
+                    b.Property<string>("Namespace")
+                        .HasMaxLength(63)
+                        .HasColumnType("character varying(63)");
+
+                    b.Property<string>("Secret")
+                        .HasMaxLength(63)
+                        .HasColumnType("character varying(63)");
+
+                    b.Property<string>("Key")
+                        .HasMaxLength(253)
+                        .HasColumnType("character varying(253)");
+
+                    b.Property<byte[]>("Encrypted")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.HasKey("Namespace", "Secret", "Key");
+
+                    b.ToTable("secret_values", (string)null);
                 });
 
             modelBuilder.Entity("Wolverine.EntityFrameworkCore.Internals.IncomingMessage", b =>

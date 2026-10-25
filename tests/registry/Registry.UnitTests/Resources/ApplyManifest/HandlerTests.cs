@@ -421,6 +421,121 @@ public sealed class HandlerTests
         result.Value.ShouldHaveSingleItem().Action.ShouldBe(ApplyAction.Created);
     }
 
+    [Fact]
+    public async Task HandleAsync_ShouldStoreFingerprintsInTheSpecAndEncryptedValuesApart_WhenASecretIsNew()
+    {
+        // Arrange
+        var caller = Engineer();
+        var resources = new List<Resource>();
+        var database = TestDatabase.Create([Acme()], resources, [caller]);
+
+        // Act
+        var result = await Handler(database).HandleAsync(Apply(caller.Id, SecretDocument("db", "hunter2")), Ct);
+
+        // Assert
+        var applied = result.Value.ShouldHaveSingleItem();
+        applied.Action.ShouldBe(ApplyAction.Created);
+        applied.Changes.ShouldAllBe(change => change.To!.Value.GetString() == SecretKind.Hidden);
+        database.Resources.Received(1)
+            .Add(Arg.Is<Resource>(resource => !resource.Spec.GetRawText().Contains("hunter2")));
+        database.SecretValues.Received(1).Add(Arg.Is<SecretValue>(value => value.Key == "password"));
+        await database.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldReportChangedWithoutValuesAndKeepTheNewValue_WhenASecretValueChanges()
+    {
+        // Arrange
+        var caller = Engineer();
+        var vault = ResourceHandlers.Vault();
+        var stored = Resource.Create(
+            NamespaceName.Create("acme"),
+            SecretKind.KindName,
+            ResourceName.Create("db"),
+            SecretKind.Seal(Widgets.Json("""{"data": {"password": "old"}}"""), vault.Fingerprint),
+            2);
+        var held = SecretValue.Create(NamespaceName.Create("acme"), stored.Name, "password", [1]);
+        var database = TestDatabase.Create([Acme()], [stored], [caller], secretValues: [held]);
+
+        // Act
+        var result = await Handler(database).HandleAsync(Apply(caller.Id, SecretDocument("db", "new")), Ct);
+
+        // Assert
+        var applied = result.Value.ShouldHaveSingleItem();
+        applied.Action.ShouldBe(ApplyAction.Configured);
+        applied.Changes.Single().Path.ShouldBe("spec.data.password");
+        applied.Changes.Single().To!.Value.GetString().ShouldBe(SecretKind.Hidden);
+        held.Encrypted.ShouldBe(System.Text.Encoding.UTF8.GetBytes("encrypted-new"));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldLeaveASecretAlone_WhenItsValuesAreUnchanged()
+    {
+        // Arrange
+        var caller = Engineer();
+        var vault = ResourceHandlers.Vault();
+        var stored = Resource.Create(
+            NamespaceName.Create("acme"),
+            SecretKind.KindName,
+            ResourceName.Create("db"),
+            SecretKind.Seal(Widgets.Json("""{"data": {"password": "same"}}"""), vault.Fingerprint),
+            2);
+        var database = TestDatabase.Create([Acme()], [stored], [caller]);
+
+        // Act
+        var result = await Handler(database).HandleAsync(Apply(caller.Id, SecretDocument("db", "same")), Ct);
+
+        // Assert
+        result.Value.ShouldHaveSingleItem().Action.ShouldBe(ApplyAction.Unchanged);
+        database.SecretValues.DidNotReceive().Add(Arg.Any<SecretValue>());
+        await database.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldRejectTheManifest_WhenAWidgetReferencesAMissingSecret()
+    {
+        // Arrange
+        var caller = Engineer();
+        var database = TestDatabase.Create([Acme()], users: [caller]);
+
+        // Act
+        var result = await Handler(database)
+            .HandleAsync(Apply(caller.Id, Widgets.Document("w-1", """{"secret": "db"}""")), Ct);
+
+        // Assert
+        var rejected = result.Error.ShouldBeOfType<ManifestRejected>();
+        rejected.Problems.ShouldHaveSingleItem().Path.ShouldBe("spec.secret");
+        await ShouldNotHaveSavedAsync(database);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldApply_WhenAWidgetReferencesASecretInTheSameManifest()
+    {
+        // Arrange
+        var caller = Engineer();
+        var database = TestDatabase.Create([Acme()], users: [caller]);
+
+        // Act
+        var result = await Handler(database)
+            .HandleAsync(
+                Apply(caller.Id, SecretDocument("db", "hunter2"), Widgets.Document("w-1", """{"secret": "db"}""")),
+                Ct);
+
+        // Assert
+        result.Value.Count.ShouldBe(2);
+    }
+
+    private static JsonElement SecretDocument(string name, string password) =>
+        Widgets.Json(
+            JsonSerializer.Serialize(
+                new
+                {
+                    apiVersion = "flownodes.io/v1alpha1",
+                    kind = "Secret",
+                    metadata = new { name },
+                    spec = new { data = new { password } }
+                }));
+
     private static UserAccess Engineer() => Callers.Named(Callers.Member("acme", NamespaceRole.Engineer), "erin");
     private static Namespace Acme() => Namespace.Create(NamespaceName.Create("acme"));
 
@@ -433,7 +548,12 @@ public sealed class HandlerTests
 
     private static Handler Handler(IApplicationDbContext database, int keep = 50)
     {
-        return new Handler(database, WidgetKind.Catalog, ResourceHandlers.Time(), ResourceHandlers.Retention(keep));
+        return new Handler(
+            database,
+            WidgetKind.Catalog,
+            ResourceHandlers.Time(),
+            ResourceHandlers.Vault(),
+            ResourceHandlers.Retention(keep));
     }
 
     private static async Task ShouldNotHaveSavedAsync(IApplicationDbContext database)

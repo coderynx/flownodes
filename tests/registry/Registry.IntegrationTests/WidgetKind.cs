@@ -37,6 +37,11 @@ public sealed class WidgetKind : IResourceKind
         {
             yield return new SpecReference(Name, name, "spec.parent");
         }
+
+        if (spec.TryGetProperty("secret", out var secret) && secret.GetString() is { } secretName)
+        {
+            yield return new SpecReference(SecretKind.KindName, secretName, "spec.secret");
+        }
     }
 
     private static decimal? Size(JsonElement spec) =>

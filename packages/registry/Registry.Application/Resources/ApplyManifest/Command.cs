@@ -4,6 +4,7 @@ using Coderynx.MediatorKit.Abstractions;
 using Microsoft.Extensions.Options;
 using Registry.Application.Database;
 using Registry.Application.Namespaces;
+using Registry.Application.Secrets;
 using Registry.Domain.Namespaces;
 using Registry.Domain.Resources;
 
@@ -65,6 +66,7 @@ internal sealed class Handler(
     IApplicationDbContext database,
     KindCatalog catalog,
     TimeProvider time,
+    ISecretVault vault,
     IOptions<RevisionRetention> retention) : IRequestHandler<Command, Result<IReadOnlyList<AppliedResource>>>
 {
     public async Task<Result<IReadOnlyList<AppliedResource>>> HandleAsync(
@@ -110,7 +112,7 @@ internal sealed class Handler(
 
         var author = new RevisionAuthor(request.CallerId, access.Value!.Username);
         var applied = new List<AppliedResource>();
-        foreach (var entry in reading.Entries)
+        foreach (var entry in reading.Entries.Select(Seal))
         {
             applied.Add(
                 entry.IsNamespace
@@ -162,6 +164,11 @@ internal sealed class Handler(
     {
         var existing = state.FindResource(entry);
         var changes = SpecDiff.Between(existing?.Spec, entry.Spec);
+        if (entry.Values is not null)
+        {
+            changes = SecretKind.Hide(changes);
+        }
+
         if (existing is not null && changes.Count == 0)
         {
             return Outcome(entry, ApplyAction.Unchanged, existing.Generation, changes);
@@ -184,6 +191,11 @@ internal sealed class Handler(
             existing.Apply(entry.Spec, seq);
         }
 
+        if (entry.Values is not null)
+        {
+            await database.StoreAsync(vault, entry, cancellationToken);
+        }
+
         await database.PublishAsync(resource.ToApplied());
         await database.RecordAsync(
             Revision.Applied(resource, author, time.GetUtcNow()),
@@ -192,6 +204,15 @@ internal sealed class Handler(
 
         return Outcome(entry, action, resource.Generation, changes);
     }
+
+    private ManifestEntry Seal(ManifestEntry entry) =>
+        entry.Kind == SecretKind.KindName
+            ? entry with
+            {
+                Spec = SecretKind.Seal(entry.Spec, vault.Fingerprint),
+                Values = SecretKind.Values(entry.Spec)
+            }
+            : entry;
 
     private static AppliedResource Outcome(
         ManifestEntry entry,

@@ -23,6 +23,10 @@ public interface IApplicationDbContext : IUserAccessSource
     /// Gets the Revisions of every Resource and Namespace, tombstones included.
     /// </summary>
     DbSet<Revision> Revisions { get; }
+    /// <summary>
+    /// Gets the encrypted values of the Secrets, which no Revision carries.
+    /// </summary>
+    DbSet<SecretValue> SecretValues { get; }
 
     /// <summary>
     /// Starts the transaction <see cref="SaveChangesAsync"/> commits and, inside it, waits for every other apply or

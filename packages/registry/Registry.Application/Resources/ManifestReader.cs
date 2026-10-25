@@ -11,7 +11,8 @@ internal sealed record ManifestEntry(
     NamespaceName Namespace,
     long? Generation,
     JsonElement Spec,
-    IResourceKind? Rules)
+    IResourceKind? Rules,
+    IReadOnlyDictionary<string, string>? Values = null)
 {
     public bool IsNamespace => Kind == Domain.Namespaces.Namespace.Kind;
     public string? NamespaceOrNull => IsNamespace ? null : Namespace.Value;

@@ -11,7 +11,7 @@ namespace Registry.UnitTests;
 internal sealed class WidgetKind : IResourceKind
 {
     public const string Kind = "Widget";
-    public static KindCatalog Catalog { get; } = new([new WidgetKind()]);
+    public static KindCatalog Catalog { get; } = new([new WidgetKind(), new SecretKind()]);
     public string Name => Kind;
     public string Plural => "widgets";
 
@@ -38,6 +38,11 @@ internal sealed class WidgetKind : IResourceKind
         if (spec.TryGetProperty("parent", out var parent) && parent.GetString() is { } name)
         {
             yield return new SpecReference(Kind, name, "spec.parent");
+        }
+
+        if (spec.TryGetProperty("secret", out var secret) && secret.GetString() is { } secretName)
+        {
+            yield return new SpecReference(SecretKind.KindName, secretName, "spec.secret");
         }
     }
 

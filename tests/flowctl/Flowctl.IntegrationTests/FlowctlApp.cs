@@ -43,6 +43,8 @@ public sealed class FlowctlApp : IAsyncDisposable
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
         builder.Configuration["ConnectionStrings:registry"] = await postgres.CreateDatabaseAsync();
+        builder.Configuration["Flownodes:InstallationKey"] =
+            Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
         builder.Configuration["Flownodes:Identity:Authority"] = identity.Address.ToString();
 
         builder.AddApplication();
