@@ -10,6 +10,8 @@ namespace Architecture.Tests;
 /// </summary>
 public sealed partial class ModuleBoundaryTests
 {
+    private const string Integrations = "integrations";
+
     private static readonly Dictionary<string, string[]> InnerLayers = new()
     {
         ["Contracts"] = [],
@@ -79,6 +81,7 @@ public sealed partial class ModuleBoundaryTests
     [InlineData("core", "Presentation", "core", "Application")]
     [InlineData("registry", "Application", "core", "Contracts")]
     [InlineData("registry", "Infrastructure", "core", "Contracts")]
+    [InlineData("engine", "Infrastructure", "sdk", "Sdk")]
     public void MayReference_ShouldAllow_WhenTheTargetIsAnInnerLayerOrCore(
         string module,
         string layer,
@@ -102,6 +105,7 @@ public sealed partial class ModuleBoundaryTests
     [InlineData("registry", "Presentation", "core", "Contracts")]
     [InlineData("core", "Application", "core", "Contracts")]
     [InlineData("core", "Contracts", "core", "Domain")]
+    [InlineData("engine", "Application", "sdk", "Sdk")]
     public void MayReference_ShouldRefuse_WhenTheTargetCrossesAModuleOrPointsOutward(
         string module,
         string layer,
@@ -151,7 +155,8 @@ public sealed partial class ModuleBoundaryTests
                 return Solution.ProjectReferences(project)
                     .Select(ModuleProject.From)
                     .Where(target => !target.Module.Equals(module, StringComparison.OrdinalIgnoreCase) &&
-                                     target.Module != Solution.Core && !MayTestApp(testsAnApp, target, module))
+                                     target.Module is not (Solution.Core or Integrations) &&
+                                     !MayTestApp(testsAnApp, target, module))
                     .Select(target => $"{Path.GetFileName(project)} references {target.Name}");
             })
             .ToList();
@@ -173,7 +178,9 @@ public sealed partial class ModuleBoundaryTests
         var contracts = project.Module != Solution.Core && target is { Module: Solution.Core, Layer: "Contracts" } &&
                         project.Layer is "Application" or "Infrastructure";
 
-        return innerLayer || coreCounterpart || contracts;
+        var sdk = target.Module == Solution.Sdk && project.Layer == "Infrastructure";
+
+        return innerLayer || coreCounterpart || contracts || sdk;
     }
 
     private static ModuleProject Project(string module, string layer) =>

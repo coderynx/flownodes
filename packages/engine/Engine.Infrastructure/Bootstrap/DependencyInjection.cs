@@ -1,4 +1,6 @@
 using Core.Contracts.Resources;
+using Engine.Application.Integrations;
+using Engine.Infrastructure.Integrations;
 using Engine.Infrastructure.Namespaces;
 using Engine.Infrastructure.Orleans;
 using Microsoft.Extensions.Configuration;
@@ -19,7 +21,8 @@ public static class DependencyInjection
 
     /// <summary>
     /// Registers the shared infrastructure, makes this Silo a member of the Orleans cluster, clustered, persisted and
-    /// reminded on Postgres, and connects it to the Registry's Resource messages.
+    /// reminded on Postgres, connects it to the Registry's Resource messages and loads the Integrations installed with
+    /// the deployment from the directory in <c>Flownodes:Integrations:Directory</c>.
     /// </summary>
     /// <param name="builder">The host the Engine is being added to.</param>
     /// <exception cref="InvalidOperationException">
@@ -33,6 +36,17 @@ public static class DependencyInjection
 
         AddOrleans(builder);
         AddMessaging(builder);
+        AddIntegrations(builder);
+    }
+
+    private static void AddIntegrations(IHostApplicationBuilder builder)
+    {
+        builder.Services.Configure<IntegrationOptions>(builder.Configuration.GetSection(IntegrationOptions.Section));
+        builder.Services.AddSingleton<IntegrationLoader>();
+        builder.Services.AddSingleton<InstalledIntegrations>();
+        builder.Services.AddSingleton<IInstalledIntegrations>(services =>
+            services.GetRequiredService<InstalledIntegrations>());
+        builder.Services.AddHostedService(services => services.GetRequiredService<InstalledIntegrations>());
     }
 
     private static void AddOrleans(IHostApplicationBuilder builder)

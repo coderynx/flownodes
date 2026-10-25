@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Engine.Application\Engine.Application.csproj" />
+    <ProjectReference Include="..\..\sdk\Flownodes.Sdk\Flownodes.Sdk.csproj" />
     <ProjectReference Include="..\..\core\Core.Contracts\Core.Contracts.csproj" />
     <ProjectReference Include="..\..\core\Core.Infrastructure\Core.Infrastructure.csproj" />
   </ItemGroup>

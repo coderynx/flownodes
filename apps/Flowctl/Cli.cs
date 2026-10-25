@@ -136,7 +136,7 @@ internal sealed class Cli
 
     private Command Get()
     {
-        var kind = new Argument<string>("kind") { Description = "The Kind, such as namespace." };
+        var kind = new Argument<string>("kind") { Description = "The Kind, such as namespace, or integrations." };
         var name = new Argument<string?>("name")
         {
             Description = "The name of one Resource; every Resource of the Kind when omitted.",
@@ -152,6 +152,11 @@ internal sealed class Cli
             }
 
             var one = parse.GetValue(name);
+            if (Routes.IsIntegrations(parse.GetValue(kind)!))
+            {
+                return await ShowIntegrationsAsync(http, one, parse.GetValue(_output) ?? Table, cancellationToken);
+            }
+
             var @namespace = Namespace(parse);
             var output = parse.GetValue(_output) ?? (one is null ? Table : "yaml");
             var path = one is null
@@ -334,6 +339,63 @@ internal sealed class Cli
             "json" => await WriteAsync(JsonSerializer.Serialize(merged, Indented)),
             _ => await TableAsync(table, merged)
         };
+    }
+
+    private async Task<int> ShowIntegrationsAsync(
+        HttpClient http,
+        string? name,
+        string output,
+        CancellationToken cancellationToken)
+    {
+        if (name is not null || output == "yaml")
+        {
+            await _context.Error.WriteLineAsync(
+                "error: Integrations are listed as a table or json; give neither a name nor -o yaml.");
+
+            return 1;
+        }
+
+        var response = await GetAsync(http, Routes.Integrations, MediaTypes.Json, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return await _printer.ProblemAsync(response, cancellationToken);
+        }
+
+        var text = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (output == "json")
+        {
+            return await WriteAsync(text.TrimEnd());
+        }
+
+        using var body = JsonDocument.Parse(text);
+
+        return await TableAsync(IntegrationTableAsync, body.RootElement);
+    }
+
+    private Task IntegrationTableAsync(JsonElement body)
+    {
+        var rows = body.GetProperty("items")
+            .EnumerateArray()
+            .Select(item => (IReadOnlyList<string>)
+            [
+                Printer.Text(item, "id") ?? Printer.Text(item, "folder")!,
+                Printer.Text(item, "version") ?? "-",
+                Printer.Text(item, "sdkVersion") ?? "-",
+                DeviceTypes(item),
+                Printer.Text(item, "reason") is { } reason
+                    ? $"failed: {reason}: {Printer.Text(item, "message")}"
+                    : "loaded"
+            ])
+            .ToList();
+
+        return _printer.TableAsync(["ID", "VERSION", "SDK", "DEVICE TYPES", "STATUS"], rows);
+    }
+
+    private static string DeviceTypes(JsonElement item)
+    {
+        var names = item.GetProperty("deviceTypes").EnumerateArray().Select(name => name.GetString()!).ToList();
+
+        return names.Count == 0 ? "-" : string.Join(", ", names);
     }
 
     private async Task<int> WriteAsync(string text)

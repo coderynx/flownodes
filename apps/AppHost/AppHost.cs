@@ -39,6 +39,9 @@ internal sealed class AppHost
             .WaitFor(identityDb)
             .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName)
             .WithEnvironment("Flownodes__InstallationKey", installationKey)
+            .WithEnvironment(
+                "Flownodes__Integrations__Directory",
+                Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "..", "artifacts", "integrations")))
             .WithUrlForEndpoint(
                 "https",
                 _ => new ResourceUrlAnnotation

@@ -7,6 +7,7 @@ internal static class Solution
 {
     public static readonly string[] Layers = ["Contracts", "Domain", "Application", "Infrastructure", "Presentation"];
     public const string Core = "core";
+    public const string Sdk = "sdk";
     private static readonly string[] Ignored = ["bin", "obj", "node_modules"];
 
     public static string Root()
@@ -31,11 +32,13 @@ internal static class Solution
             .Where(file => !Relative(file).Contains("/Internal/Generated/", StringComparison.Ordinal));
 
     public static IEnumerable<string> HandWrittenSourceFiles() =>
-        SourceFiles("apps", "packages", "tests").Where(file => !Relative(file).Contains("/Database/Migrations/"));
+        SourceFiles("apps", "packages", "integrations", "tests")
+            .Where(file => !Relative(file).Contains("/Database/Migrations/"));
 
     public static IReadOnlyList<ModuleProject> ModuleProjects() =>
         Directory.EnumerateFiles(Path.Combine(Root(), "packages"), "*.csproj", SearchOption.AllDirectories)
             .Select(ModuleProject.From)
+            .Where(project => project.Module != Sdk)
             .ToList();
 
     public static IReadOnlyList<string> ProjectReferences(string project) =>

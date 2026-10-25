@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <!-- An Integration is a folder of publish output (ADR-0003); building stages it where the AppHost and the tests read it. -->
+    <PublishDir>$(MSBuildThisFileDirectory)..\..\artifacts\integrations\flownodes.simulator\</PublishDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\packages\sdk\Flownodes.Sdk\Flownodes.Sdk.csproj" />
+  </ItemGroup>
+
+  <Target Name="StageIntegration" AfterTargets="Build" DependsOnTargets="Publish" />
+
+</Project>

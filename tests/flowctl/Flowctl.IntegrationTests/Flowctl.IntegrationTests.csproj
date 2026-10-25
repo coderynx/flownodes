@@ -19,6 +19,9 @@
     <ItemGroup>
         <ProjectReference Include="..\..\..\apps\Flowctl\Flowctl.csproj" />
         <ProjectReference Include="..\..\..\packages\core\Core.Contracts\Core.Contracts.csproj" />
+        <ProjectReference Include="..\..\..\packages\engine\Engine.Application\Engine.Application.csproj" />
+        <ProjectReference Include="..\..\..\packages\engine\Engine.Domain\Engine.Domain.csproj" />
+        <ProjectReference Include="..\..\..\packages\engine\Engine.Presentation\Engine.Presentation.csproj" />
         <ProjectReference Include="..\..\..\packages\registry\Registry.Application\Registry.Application.csproj" />
         <ProjectReference Include="..\..\..\packages\registry\Registry.Infrastructure\Registry.Infrastructure.csproj" />
         <ProjectReference Include="..\..\..\packages\registry\Registry.Presentation\Registry.Presentation.csproj" />
