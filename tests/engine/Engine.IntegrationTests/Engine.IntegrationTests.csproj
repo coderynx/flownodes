@@ -13,6 +13,13 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\..\packages\engine\Engine.Infrastructure\Engine.Infrastructure.csproj" />
+        <ProjectReference Include="..\..\..\integrations\flownodes.simulator\Flownodes.Simulator.csproj" ReferenceOutputAssembly="false" />
     </ItemGroup>
+
+
+    <!-- The loader tests read the simulator's staged publish output; the reference restores it but never builds it. -->
+    <Target Name="StageSimulator" BeforeTargets="BeforeBuild">
+        <MSBuild Projects="..\..\..\integrations\flownodes.simulator\Flownodes.Simulator.csproj" Targets="Build" />
+    </Target>
 
 </Project>

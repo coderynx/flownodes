@@ -8,7 +8,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Flownodes\Flownodes.csproj" />
-      <!-- Building the simulator stages it under artifacts/integrations, where the AppHost points Flownodes. -->
       <ProjectReference Include="..\..\integrations\flownodes.simulator\Flownodes.Simulator.csproj"
                         ReferenceOutputAssembly="false" IsAspireProjectResource="false" />
     </ItemGroup>
@@ -17,5 +16,11 @@
       <PackageReference Include="Aspire.Hosting.Orleans" />
       <PackageReference Include="Aspire.Hosting.PostgreSQL" />
     </ItemGroup>
+
+    <!-- Building the simulator stages it under artifacts/integrations, where the AppHost points Flownodes. The
+         reference restores it but never builds it. -->
+    <Target Name="StageSimulator" BeforeTargets="BeforeBuild">
+        <MSBuild Projects="..\..\integrations\flownodes.simulator\Flownodes.Simulator.csproj" Targets="Build" />
+    </Target>
 
 </Project>
