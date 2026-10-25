@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Rejects a commit message that links an agent session: session links are private and must stay out of the public
+# history. CI applies the same check to pull request bodies (.github/workflows/pr-body.yml).
+set -euo pipefail
+
+if grep -nE 'claude\.ai/code/session_' "$1" >&2; then
+    echo "Remove the agent session link from the commit message." >&2
+    exit 1
+fi

@@ -22,7 +22,7 @@ Run Flownodes locally through the Aspire AppHost:
 dotnet run --project apps/AppHost
 ```
 
-The first build sets `core.hooksPath` to `.githooks`, so a pre-commit hook formats your staged C# files.
+The first build sets `core.hooksPath` to `.githooks`: a pre-commit hook formats your staged C# files, and a commit-msg hook rejects messages that link an agent session.
 
 ## Coding standards
 
