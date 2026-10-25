@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Headers;
 using Core.Contracts.Identity;
-using JasperFx.CodeGeneration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,10 +43,22 @@ public sealed class RegistryApp : IAsyncDisposable
     public static async Task<RegistryApp> StartAsync(PostgresFixture postgres)
     {
         var identity = await TestIdentity.StartAsync();
+        var app = Build(await postgres.CreateDatabaseAsync(), identity.Address.ToString());
+
+        await app.StartAsync();
+
+        var running = new RegistryApp(app, identity);
+        await running.SetUpAdministratorAsync();
+
+        return running;
+    }
+
+    internal static WebApplication Build(string connectionString, string authority)
+    {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
-        builder.Configuration["ConnectionStrings:registry"] = await postgres.CreateDatabaseAsync();
-        builder.Configuration["Flownodes:Identity:Authority"] = identity.Address.ToString();
+        builder.Configuration["ConnectionStrings:registry"] = connectionString;
+        builder.Configuration["Flownodes:Identity:Authority"] = authority;
 
         builder.AddApplication();
         builder.AddInfrastructure();
@@ -56,7 +67,6 @@ public sealed class RegistryApp : IAsyncDisposable
         builder.Services.AddSingleton<ResourceMessages>();
         builder.Services.ConfigureWolverine(options =>
         {
-            options.CodeGeneration.TypeLoadMode = TypeLoadMode.Dynamic;
             options.Discovery.IncludeAssembly(typeof(RegistryApp).Assembly);
             options.ListenToPostgresqlQueue("resources");
         });
@@ -65,12 +75,7 @@ public sealed class RegistryApp : IAsyncDisposable
         app.UseInfrastructure();
         app.UsePresentation();
 
-        await app.StartAsync();
-
-        var running = new RegistryApp(app, identity);
-        await running.SetUpAdministratorAsync();
-
-        return running;
+        return app;
     }
 
     public HttpClient ClientFor(string accessToken)

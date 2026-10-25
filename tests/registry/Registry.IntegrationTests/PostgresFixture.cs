@@ -7,31 +7,37 @@ namespace Registry.IntegrationTests;
 
 public sealed class PostgresFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:17-alpine")
-        .WithCommand("-c", "max_connections=1000")
-        .Build();
-
-    public async ValueTask InitializeAsync()
-    {
-        await _container.StartAsync();
-    }
+    private readonly Lazy<Task<PostgreSqlContainer>> _container = new(StartContainerAsync);
+    public ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
     public async ValueTask DisposeAsync()
     {
-        await _container.DisposeAsync();
+        if (_container.IsValueCreated)
+        {
+            await (await _container.Value).DisposeAsync();
+        }
     }
 
     public async Task<string> CreateDatabaseAsync()
     {
+        var container = await _container.Value;
         var name = $"registry_{Guid.NewGuid():N}";
 
-        var result = await _container.ExecScriptAsync($"CREATE DATABASE {name}");
+        var result = await container.ExecScriptAsync($"CREATE DATABASE {name}");
         if (result.ExitCode != 0)
         {
             throw new InvalidOperationException($"Creating database {name} failed: {result.Stderr}");
         }
 
-        return _container.GetConnectionString()
+        return container.GetConnectionString()
             .Replace("Database=postgres", $"Database={name}", StringComparison.Ordinal);
+    }
+
+    private static async Task<PostgreSqlContainer> StartContainerAsync()
+    {
+        var container = new PostgreSqlBuilder("postgres:17-alpine").WithCommand("-c", "max_connections=1000").Build();
+        await container.StartAsync();
+
+        return container;
     }
 }

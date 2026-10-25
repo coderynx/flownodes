@@ -8,7 +8,6 @@ using Core.Contracts.Identity;
 using Identity.Application.Bootstrap;
 using Identity.Infrastructure.Bootstrap;
 using Identity.Presentation.Bootstrap;
-using JasperFx.CodeGeneration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,13 +48,29 @@ public sealed partial class IdentityApp : IAsyncDisposable
         string? installationKey = null,
         string? connectionString = null)
     {
+        connectionString ??= await postgres.CreateDatabaseAsync();
         var logs = new LogCapture();
+        var app = Build(connectionString, installationKey, logs);
+
+        await app.StartAsync();
+
+        return new IdentityApp(app, logs)
+        {
+            ConnectionString = connectionString
+        };
+    }
+
+    internal static WebApplication Build(string connectionString, string? installationKey, ILoggerProvider? logs = null)
+    {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
         builder.Logging.ClearProviders();
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
-        builder.Logging.AddProvider(logs);
-        connectionString ??= await postgres.CreateDatabaseAsync();
+        if (logs is not null)
+        {
+            builder.Logging.AddProvider(logs);
+        }
+
         builder.Configuration["ConnectionStrings:identity"] = connectionString;
         builder.Configuration["Flownodes:InstallationKey"] =
             installationKey ?? Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
@@ -68,7 +83,6 @@ public sealed partial class IdentityApp : IAsyncDisposable
         builder.Services.AddSingleton<IdentityMessages>();
         builder.Services.ConfigureWolverine(options =>
         {
-            options.CodeGeneration.TypeLoadMode = TypeLoadMode.Dynamic;
             options.Discovery.IncludeAssembly(typeof(IdentityApp).Assembly);
             options.PublishMessage<RoleGranted>().ToPostgresqlQueue("identity-test");
             options.PublishMessage<RoleRevoked>().ToPostgresqlQueue("identity-test");
@@ -85,12 +99,7 @@ public sealed partial class IdentityApp : IAsyncDisposable
         app.UseInfrastructure();
         app.UsePresentation();
 
-        await app.StartAsync();
-
-        return new IdentityApp(app, logs)
-        {
-            ConnectionString = connectionString
-        };
+        return app;
     }
 
     public Browser NewBrowser() => new(_app.GetTestServer().CreateHandler());

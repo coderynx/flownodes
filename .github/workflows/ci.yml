@@ -56,6 +56,13 @@ jobs:
           git diff --exit-code -- apps/Flownodes/Internal/Generated
           test -z "$(git ls-files --others --exclude-standard apps/Flownodes/Internal/Generated)"
 
+      # The integration-test hosts load their own committed handler code (tests/*/*.IntegrationTests/Internal/Generated).
+      - name: Generated test handler code is current
+        run: |
+          scripts/generate-test-handlers.sh
+          git diff --exit-code -- 'tests/*/*.IntegrationTests/Internal/Generated'
+          test -z "$(git ls-files --others --exclude-standard 'tests/*/*.IntegrationTests/Internal/Generated')"
+
   # One runner per module: integration tests are CPU-bound, and each runner has its own Postgres.
   integration-test:
     needs: find-integration-tests
