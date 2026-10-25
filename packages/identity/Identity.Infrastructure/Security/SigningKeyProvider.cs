@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Core.Infrastructure.Security;
 using Identity.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;

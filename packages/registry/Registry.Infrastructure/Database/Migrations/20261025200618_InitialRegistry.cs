@@ -49,6 +49,20 @@ namespace Registry.Infrastructure.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "secret_values",
+                columns: table => new
+                {
+                    Namespace = table.Column<string>(type: "character varying(63)", maxLength: 63, nullable: false),
+                    Secret = table.Column<string>(type: "character varying(63)", maxLength: 63, nullable: false),
+                    Key = table.Column<string>(type: "character varying(253)", maxLength: 253, nullable: false),
+                    Encrypted = table.Column<byte[]>(type: "bytea", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_secret_values", x => new { x.Namespace, x.Secret, x.Key });
+                });
+
+            migrationBuilder.CreateTable(
                 name: "user_access",
                 columns: table => new
                 {
@@ -142,6 +156,9 @@ namespace Registry.Infrastructure.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "revisions");
+
+            migrationBuilder.DropTable(
+                name: "secret_values");
 
             migrationBuilder.DropTable(
                 name: "user_access_grants");

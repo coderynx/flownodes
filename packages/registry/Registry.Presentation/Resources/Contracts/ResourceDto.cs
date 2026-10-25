@@ -33,7 +33,7 @@ internal static class ResourceMappings
             Resource.ApiVersion,
             resource.Kind,
             new ResourceMetadataDto(resource.Name.Value, resource.Namespace.Value, resource.Generation, resource.Uid),
-            resource.Spec,
+            Shown(resource.Kind, resource.Spec),
             Status(resource));
 
     public static ResourceDto ToDto(this Namespace @namespace) =>
@@ -53,7 +53,10 @@ internal static class ResourceMappings
             revision.Deleted,
             new RevisionAuthorDto(revision.Author.UserId, revision.Author.Username),
             revision.AppliedAt,
-            revision.Spec);
+            revision.Spec is { } spec ? Shown(revision.Kind, spec) : null);
+
+    private static JsonElement Shown(string kind, JsonElement spec) =>
+        kind == SecretKind.KindName ? SecretKind.Redact(spec) : spec;
 
     private static JsonObject? Status(Resource resource)
     {

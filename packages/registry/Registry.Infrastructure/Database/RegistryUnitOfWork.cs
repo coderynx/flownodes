@@ -13,6 +13,7 @@ internal sealed class RegistryUnitOfWork(IDbContextOutbox<RegistryDbContext> out
     public DbSet<Resource> Resources => outbox.DbContext.Resources;
     public DbSet<UserAccess> UserAccess => outbox.DbContext.UserAccess;
     public DbSet<Revision> Revisions => outbox.DbContext.Revisions;
+    public DbSet<SecretValue> SecretValues => outbox.DbContext.SecretValues;
 
     public async Task LockNamespacesAsync(IReadOnlyList<string> names, CancellationToken cancellationToken = default)
     {

@@ -2,6 +2,7 @@ using Coderynx.Functional.Results;
 using Coderynx.Functional.Results.Errors;
 using Registry.Application.Database;
 using Registry.Application.Namespaces;
+using Registry.Application.Secrets;
 using Registry.Domain.Namespaces;
 using Registry.Domain.Resources;
 
@@ -123,6 +124,11 @@ internal sealed class ResourceDeletion(IApplicationDbContext database, KindCatal
             var resource = state.FindResource(entry)!;
             resource.Delete(state.FindNamespace(entry.Namespace)!.NextSeq());
             database.Resources.Remove(resource);
+            if (entry.Kind == SecretKind.KindName)
+            {
+                await database.ForgetAsync(entry, cancellationToken);
+            }
+
             await database.PublishAsync(resource.ToDeleted());
             await database.RecordAsync(Revision.Tombstone(resource, author, now), keep, cancellationToken);
         }

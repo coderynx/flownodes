@@ -12,13 +12,16 @@ internal static class TestDatabase
         List<Namespace>? namespaces = null,
         List<Resource>? resources = null,
         List<UserAccess>? users = null,
-        List<Revision>? revisions = null)
+        List<Revision>? revisions = null,
+        List<SecretValue>? secretValues = null)
     {
         var database = Substitute.For<IApplicationDbContext>();
         var namespaceSet = (namespaces ?? []).BuildMockDbSet();
         var resourceSet = (resources ?? []).BuildMockDbSet();
         var userSet = (users ?? []).BuildMockDbSet();
         var revisionSet = (revisions ?? []).BuildMockDbSet();
+        var secretValueSet = (secretValues ?? []).BuildMockDbSet();
+        database.SecretValues.Returns(secretValueSet);
         database.Namespaces.Returns(namespaceSet);
         database.Resources.Returns(resourceSet);
         database.UserAccess.Returns(userSet);

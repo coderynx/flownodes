@@ -1,12 +1,15 @@
 using Core.Contracts.Identity;
 using Core.Contracts.Resources;
+using Core.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Registry.Application.Database;
+using Registry.Application.Secrets;
 using Registry.Infrastructure.Database;
 using Registry.Infrastructure.Messaging;
+using Registry.Infrastructure.Secrets;
 using Wolverine.EntityFrameworkCore;
 using Wolverine.Postgresql;
 
@@ -26,8 +29,14 @@ public static class DependencyInjection
     /// Resource messages to the other modules and the messaging that brings it Identity's Role Grants and the
     /// Engine's resync requests and Status reports.
     /// </summary>
+    /// <remarks>
+    /// The <c>Flownodes:InstallationKey</c> setting, a base64 256-bit key, encrypts the values of Secrets.
+    /// </remarks>
     /// <param name="builder">The host the Registry is being added to.</param>
-    /// <exception cref="InvalidOperationException">The <c>registry</c> connection string is not configured.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// The <c>registry</c> connection string is not configured, or the installation key is missing or is not a base64
+    /// 256-bit key.
+    /// </exception>
     public static void AddInfrastructure(this IHostApplicationBuilder builder)
     {
         Core.Infrastructure.Bootstrap.DependencyInjection.AddOpenTelemetry(builder);
@@ -36,6 +45,9 @@ public static class DependencyInjection
 
         var connectionString = builder.Configuration.GetConnectionString("registry") ??
                                throw new InvalidOperationException("Connection string 'registry' not found.");
+
+        builder.Services.AddSingleton<ISecretVault>(
+            new SecretVault(InstallationKey.Parse(builder.Configuration[InstallationKey.Setting])));
 
         AddDatabase(builder, connectionString);
         AddMessaging(builder, connectionString);

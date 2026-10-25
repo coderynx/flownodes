@@ -1,3 +1,4 @@
+using Core.Infrastructure.Security;
 using Identity.Domain.Users;
 using Identity.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;

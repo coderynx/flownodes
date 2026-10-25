@@ -4,6 +4,7 @@ using Registry.Application.Database;
 using Registry.Application.Resources;
 using Registry.Application.Resources.DeleteResource;
 using Registry.Domain.Namespaces;
+using Registry.Domain.Resources;
 using Xunit;
 
 namespace Registry.UnitTests.Resources.DeleteResource;
@@ -101,6 +102,54 @@ public sealed class HandlerTests
 
         // Assert
         result.Value.Kind.ShouldBe(WidgetKind.Kind);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldRemoveTheValues_WhenASecretIsDeleted()
+    {
+        // Arrange
+        var caller = Callers.Member("acme", NamespaceRole.Engineer);
+        var acme = NamespaceName.Create("acme");
+        var secret = Resource.Create(
+            acme,
+            SecretKind.KindName,
+            ResourceName.Create("db"),
+            Widgets.Json("""{"data": {"password": "fp"}}"""),
+            2);
+        var value = SecretValue.Create(acme, secret.Name, "password", [1]);
+        var other = SecretValue.Create(acme, ResourceName.Create("other"), "password", [2]);
+        var database = TestDatabase.Create([Namespace.Create(acme)], [secret], [caller], secretValues: [value, other]);
+
+        // Act
+        var result = await Handler(database).HandleAsync(new Command(caller.Id, "acme", "secrets", "db", false), Ct);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        database.SecretValues.Received(1)
+            .RemoveRange(Arg.Is<IEnumerable<SecretValue>>(values => values.SequenceEqual(new[] { value })));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldRefuse_WhenAWidgetStillReferencesTheSecret()
+    {
+        // Arrange
+        var caller = Callers.Member("acme", NamespaceRole.Engineer);
+        var acme = NamespaceName.Create("acme");
+        var secret = Resource.Create(
+            acme,
+            SecretKind.KindName,
+            ResourceName.Create("db"),
+            Widgets.Json("""{"data": {"password": "fp"}}"""),
+            2);
+        var widget = Widgets.Stored("acme", "w-1", """{"secret": "db"}""");
+        var database = TestDatabase.Create([Namespace.Create(acme)], [secret, widget], [caller]);
+
+        // Act
+        var result = await Handler(database).HandleAsync(new Command(caller.Id, "acme", "secrets", "db", false), Ct);
+
+        // Assert
+        result.Error.ShouldBeOfType<DeletionRefused>();
+        await database.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     private static Handler Handler(IApplicationDbContext database) =>

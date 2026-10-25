@@ -177,6 +177,29 @@ namespace Registry.Infrastructure.Database.Migrations
                     b.ToTable("revisions", (string)null);
                 });
 
+            modelBuilder.Entity("Registry.Domain.Resources.SecretValue", b =>
+                {
+                    b.Property<string>("Namespace")
+                        .HasMaxLength(63)
+                        .HasColumnType("character varying(63)");
+
+                    b.Property<string>("Secret")
+                        .HasMaxLength(63)
+                        .HasColumnType("character varying(63)");
+
+                    b.Property<string>("Key")
+                        .HasMaxLength(253)
+                        .HasColumnType("character varying(253)");
+
+                    b.Property<byte[]>("Encrypted")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.HasKey("Namespace", "Secret", "Key");
+
+                    b.ToTable("secret_values", (string)null);
+                });
+
             modelBuilder.Entity("Wolverine.EntityFrameworkCore.Internals.IncomingMessage", b =>
                 {
                     b.Property<Guid>("Id")

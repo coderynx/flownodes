@@ -1,4 +1,5 @@
 using Core.Contracts.Resources;
+using Core.Infrastructure.Security;
 using Identity.Application;
 using Identity.Application.Database;
 using Identity.Application.Security;

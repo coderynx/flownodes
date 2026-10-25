@@ -1,11 +1,19 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Identity.Infrastructure.Security;
+namespace Core.Infrastructure.Security;
 
-internal sealed class InstallationKey
+/// <summary>
+/// The one key a deployment supplies, identically on every Silo, from which everything Flownodes keeps encrypted at
+/// rest is protected (ADR-0014).
+/// </summary>
+public sealed class InstallationKey
 {
+    /// <summary>
+    /// The configuration setting that holds the key.
+    /// </summary>
     public const string Setting = "Flownodes:InstallationKey";
+
     private const int KeyBytes = 32;
     private const int NonceBytes = 12;
     private const int TagBytes = 16;
@@ -16,6 +24,12 @@ internal sealed class InstallationKey
         _key = key;
     }
 
+    /// <summary>
+    /// Reads the key from its configured text.
+    /// </summary>
+    /// <param name="base64">The value of <see cref="Setting"/>.</param>
+    /// <returns>The key.</returns>
+    /// <exception cref="InvalidOperationException">The value is missing or is not a base64 256-bit key.</exception>
     public static InstallationKey Parse(string? base64)
     {
         if (string.IsNullOrWhiteSpace(base64))
@@ -32,9 +46,19 @@ internal sealed class InstallationKey
         return new InstallationKey(buffer[..written]);
     }
 
+    /// <summary>
+    /// Derives a key for one purpose, so no two uses share key material.
+    /// </summary>
+    /// <param name="purpose">What the derived key is for.</param>
+    /// <returns>A 256-bit key.</returns>
     public byte[] Derive(string purpose) =>
         HKDF.DeriveKey(HashAlgorithmName.SHA256, _key, KeyBytes, info: Encoding.UTF8.GetBytes(purpose));
 
+    /// <summary>
+    /// Encrypts bytes with AES-256-GCM under a fresh nonce.
+    /// </summary>
+    /// <param name="plain">The bytes to protect.</param>
+    /// <returns>The nonce, the tag and the cipher text, in that order.</returns>
     public byte[] Encrypt(byte[] plain)
     {
         var nonce = RandomNumberGenerator.GetBytes(NonceBytes);
@@ -47,6 +71,11 @@ internal sealed class InstallationKey
         return [.. nonce, .. tag, .. cipher];
     }
 
+    /// <summary>
+    /// Decrypts bytes <see cref="Encrypt"/> produced.
+    /// </summary>
+    /// <param name="sealedBytes">The nonce, the tag and the cipher text.</param>
+    /// <returns>The original bytes.</returns>
     public byte[] Decrypt(byte[] sealedBytes)
     {
         var nonce = sealedBytes[..NonceBytes];

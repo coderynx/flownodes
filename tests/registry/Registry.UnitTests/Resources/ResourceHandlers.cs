@@ -1,5 +1,7 @@
+using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using Registry.Application.Resources;
+using Registry.Application.Secrets;
 
 namespace Registry.UnitTests.Resources;
 
@@ -13,6 +15,18 @@ internal static class ResourceHandlers
         time.GetUtcNow().Returns(Now);
 
         return time;
+    }
+
+    public static ISecretVault Vault()
+    {
+        var vault = Substitute.For<ISecretVault>();
+        vault.Fingerprint(Arg.Any<string>())
+            .Returns(call =>
+                Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(call.Arg<string>()))));
+        vault.Encrypt(Arg.Any<string>())
+            .Returns(call => System.Text.Encoding.UTF8.GetBytes($"encrypted-{call.Arg<string>()}"));
+
+        return vault;
     }
 
     public static IOptions<RevisionRetention> Retention(int keep = 50) =>
