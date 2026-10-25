@@ -29,9 +29,7 @@ internal sealed class AppHost
             .WithGrainStorage("Default", engineDb)
             .WithReminders(engineDb);
 
-        var flownodes = builder.AddProject<Flownodes>("flownodes", options => options.ExcludeLaunchProfile = true)
-            .WithHttpEndpoint(name: "http")
-            .WithHttpsEndpoint(name: "https")
+        var flownodes = builder.AddProject<Flownodes>("flownodes", launchProfileName: "https")
             .WithReference(engineDb)
             .WaitFor(engineDb)
             .WithReference(orleans)
