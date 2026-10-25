@@ -19,7 +19,20 @@ Each rule below is an ADR; read the ADR before changing code in its area. The bu
 - **Dead code**: delete what nothing references, Core contracts included. ADR-0024.
 - **Tests**: unit tests substitute every handler dependency; integration tests use a real host and Postgres. ADR-0025.
 
-Run `dotnet build Flownodes.slnx` and `dotnet test --solution Flownodes.slnx` before committing.
+Before each commit, build the solution and run the unit and architecture tests:
+
+```sh
+dotnet build Flownodes.slnx
+for project in tests/Architecture.Tests tests/*/*.UnitTests; do dotnet test --project "$project" --no-build; done
+```
+
+Also run a module's integration tests when the commit changes its Infrastructure, Presentation, the queries a handler runs or its messages. Unit tests run queries in memory and miss Postgres collation and translation:
+
+```sh
+dotnet test --project tests/<module>/<Module>.IntegrationTests
+```
+
+CI runs the whole suite.
 
 ## Agent skills
 
