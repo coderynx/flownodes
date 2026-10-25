@@ -17,7 +17,7 @@ jobs:
         env:
           BODY: ${{ github.event.pull_request.body }}
         run: |
-          if printf '%s' "$BODY" | grep -nE 'claude\.ai/code/session_'; then
+          if printf '%s' "$BODY" | grep -nE 'claude\.ai/code/session_[A-Za-z0-9]{8,}'; then
             echo "::error::Remove the agent session link from the pull request body."
             exit 1
           fi

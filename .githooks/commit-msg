@@ -3,7 +3,7 @@
 # history. CI applies the same check to pull request bodies (.github/workflows/pr-body.yml).
 set -euo pipefail
 
-if grep -nE 'claude\.ai/code/session_' "$1" >&2; then
+if grep -nE 'claude\.ai/code/session_[A-Za-z0-9]{8,}' "$1" >&2; then
     echo "Remove the agent session link from the commit message." >&2
     exit 1
 fi
