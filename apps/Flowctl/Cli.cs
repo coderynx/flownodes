@@ -136,7 +136,7 @@ internal sealed class Cli
 
     private Command Get()
     {
-        var kind = new Argument<string>("kind") { Description = "The Kind, such as widgets or namespace." };
+        var kind = new Argument<string>("kind") { Description = "The Kind, such as namespace." };
         var name = new Argument<string?>("name")
         {
             Description = "The name of one Resource; every Resource of the Kind when omitted.",
