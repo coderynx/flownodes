@@ -4,6 +4,12 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>flowctl</AssemblyName>
     <RootNamespace>Flowctl</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>flowctl</ToolCommandName>
+    <PackageId>Flownodes.Flowctl</PackageId>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <Description>The Flownodes command line: apply, diff, get and delete Resources.</Description>
+    <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
