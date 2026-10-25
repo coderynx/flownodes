@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Engine.Application\Engine.Application.csproj" />
+    <ProjectReference Include="..\..\core\Core.Contracts\Core.Contracts.csproj" />
     <ProjectReference Include="..\..\core\Core.Infrastructure\Core.Infrastructure.csproj" />
   </ItemGroup>
 
@@ -13,8 +14,13 @@
     <PackageReference Include="Microsoft.Orleans.Clustering.AdoNet" />
     <PackageReference Include="Microsoft.Orleans.Dashboard" />
     <PackageReference Include="Microsoft.Orleans.Persistence.AdoNet" />
+    <PackageReference Include="Microsoft.Orleans.Reminders.AdoNet" />
     <PackageReference Include="Microsoft.Orleans.Server" />
     <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Engine.IntegrationTests" />
   </ItemGroup>
 
   <ItemGroup>

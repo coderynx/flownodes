@@ -7,13 +7,14 @@ namespace Engine.Infrastructure.Orleans;
 internal sealed class OrleansSchemaInitializer(string connectionString) : IHostedService
 {
     private const string LockSql = "SELECT pg_advisory_xact_lock(7019243)";
-    private const string ExistsSql = "SELECT to_regclass('orleansquery') IS NOT NULL";
+    private const string ExistsSql = "SELECT to_regclass(@table) IS NOT NULL";
 
-    private static readonly string[] Scripts =
+    private static readonly (string Script, string Table)[] Scripts =
     [
-        "PostgreSQL-Main.sql",
-        "PostgreSQL-Clustering.sql",
-        "PostgreSQL-Persistence.sql"
+        ("PostgreSQL-Main.sql", "orleansquery"),
+        ("PostgreSQL-Clustering.sql", "orleansmembershiptable"),
+        ("PostgreSQL-Persistence.sql", "orleansstorage"),
+        ("PostgreSQL-Reminders.sql", "orleansreminderstable")
     ];
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -27,21 +28,30 @@ internal sealed class OrleansSchemaInitializer(string connectionString) : IHoste
             await lockCommand.ExecuteNonQueryAsync(cancellationToken);
         }
 
-        await using (var existsCommand = new NpgsqlCommand(ExistsSql, connection, transaction))
+        foreach (var (script, table) in Scripts)
         {
-            if ((bool)(await existsCommand.ExecuteScalarAsync(cancellationToken))!)
+            if (await ExistsAsync(connection, transaction, table, cancellationToken))
             {
-                return;
+                continue;
             }
-        }
 
-        foreach (var script in Scripts)
-        {
             await using var command = new NpgsqlCommand(await ReadScriptAsync(script), connection, transaction);
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    private static async Task<bool> ExistsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        string table,
+        CancellationToken cancellationToken)
+    {
+        await using var command = new NpgsqlCommand(ExistsSql, connection, transaction);
+        command.Parameters.AddWithValue("table", table);
+
+        return (bool)(await command.ExecuteScalarAsync(cancellationToken))!;
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

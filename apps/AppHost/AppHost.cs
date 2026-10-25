@@ -26,7 +26,8 @@ internal sealed class AppHost
 
         var orleans = builder.AddOrleans("engine-cluster")
             .WithClustering(engineDb)
-            .WithGrainStorage("Default", engineDb);
+            .WithGrainStorage("Default", engineDb)
+            .WithReminders(engineDb);
 
         var flownodes = builder.AddProject<Flownodes>("flownodes", options => options.ExcludeLaunchProfile = true)
             .WithHttpEndpoint(name: "http")
@@ -38,6 +39,7 @@ internal sealed class AppHost
             .WaitFor(registryDb)
             .WithReference(identityDb)
             .WaitFor(identityDb)
+            .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName)
             .WithEnvironment("Flownodes__InstallationKey", installationKey)
             .WithUrlForEndpoint(
                 "https",

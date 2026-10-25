@@ -167,7 +167,7 @@ public static class DependencyInjection
 
                 options.PublishMessage<ResourceApplied>().ToPostgresqlQueue(ResourceQueue);
                 options.PublishMessage<ResourceDeleted>().ToPostgresqlQueue(ResourceQueue);
-                options.ListenToPostgresqlQueue(ResourceQueue);
+                options.ListenToPostgresqlQueue(ResourceQueue).Sequential();
             });
     }
 }
