@@ -1,6 +1,12 @@
 ## Project context
 
-Product scope, audience and out-of-scope list: `README.md`. Read it before planning a feature, triaging an issue or proposing new scope.
+Product scope and audience: `README.md`. Read it, and the out-of-scope list below, before planning a feature, triaging an issue or proposing new scope.
+
+Out of scope:
+
+- Tracking equipment lifecycle or maintenance history. Flownodes is not an asset-management system.
+- Long-term time-series storage. Use an Integration to an external database.
+- Safety-critical control. Flownodes supervises and automates, but it does not replace PLC-level safety logic.
 
 **Pre-release, until further notice**: nothing is deployed and nobody depends on Flownodes yet. Change the API, the Resource and Manifest shapes, the Integration SDK, the database schema and stored data whenever it improves the design. Make the change directly, and leave out migrations, deprecation paths and compatibility shims. The SDK versioning promise in ADR-0003 starts at the first public release.
 

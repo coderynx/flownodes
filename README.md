@@ -1,43 +1,70 @@
 # Flownodes
 
-Flownodes is an open-source automation platform that integrates IoT devices and external services. It is built around an **asset-centric** data model: you model the real-world things you care about (a train, a production line, a house) as Assets, attach the Devices that measure and control them, and automate them with Flows.
+[![CI](https://github.com/coderynx/flownodes/actions/workflows/ci.yml/badge.svg)](https://github.com/coderynx/flownodes/actions/workflows/ci.yml)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
-Think of it as Home Assistant designed for mission-critical, professional and industrial environments. It runs equally well on a home server for home automation.
+Flownodes is an open-source automation platform for IoT devices and external services. You describe the real-world things you care about, such as a train, a production line or a house, as Assets. Then you attach the Devices that measure and control them and automate them with Flows.
 
-## Who it is for
+If you know Home Assistant, Flownodes covers similar ground but is built for mission-critical professional and industrial sites. It also runs fine on a home server.
 
-Flownodes is aimed first at technical users. They are comfortable with declarative configuration and a command line, and they want reproducible, version-controllable setups. Configuration works like Kubernetes: you `apply` Manifests with `flowctl`, through the Web API, or through the web UI, and Flownodes reconciles reality towards them.
+> [!WARNING]
+> Flownodes is pre-release and has no published version yet. The API, the Manifest format, the Integration SDK and the database schema still change between commits, without migrations. Don't run it for anything you depend on.
 
-The web UI is how Flownodes will later reach non-technical users. It writes the same Resources through the same API, so ease of use never needs a separate configuration model.
+## Who it's for
 
-## Core ideas
+Right now, technical users: people who are happy with a command line and declarative configuration, and who want setups they can reproduce and keep in version control.
 
-- **Local-first**: no cloud service or internet connection is ever required.
-- **Assets** form a tree. An Asset can be an ad-hoc one-off, such as your living room, or an instance of an **Asset Type**, so a fleet of 50 identical trains is configured once.
-- **Devices** come from **Connections** to **Integrations**, which are plugins released independently of Flownodes. Devices attach to Assets.
-- Assets expose their own **Data Points**, so Flows and dashboards keep working when hardware is replaced. Every value carries a **Quality** and a timestamp.
-- **External Services** (weather APIs, ticketing, webhooks) are never Devices. They expose **Actions** and **Events**, and their data reaches Assets through **Flows**.
-- **Flows** are graphs of **Nodes**. A Flow Execution survives a server failure and resumes where it stopped.
-- **Alarms** follow an industrial active / acknowledged / cleared lifecycle.
-- **Namespaces** isolate tenants within one installation. A single-person install just uses the `default` Namespace.
-- It runs on a single Raspberry Pi or as a high-availability cluster, from the same codebase.
+Configuration works the way it does in Kubernetes. You `apply` Manifests with the `flowctl` CLI, the Web API or the web UI, and Flownodes keeps reconciling the running system toward what they describe. The web UI is meant to open Flownodes up to non-technical users later. It writes the same Resources through the same API, so there is only one configuration model to learn.
 
-The full vocabulary is in [`GLOSSARY.md`](GLOSSARY.md), and the reasoning behind the big decisions is in [`docs/adr/`](docs/adr/).
+## How it works
 
-## Out of scope
+Assets form a tree. An Asset can be a one-off, like your living room, or an instance of an Asset Type, so a fleet of 50 identical trains is configured once.
 
-- Tracking equipment lifecycle or maintenance history. Flownodes is not an asset-management system.
-- Long-term time-series storage. Use an Integration to an external database.
-- Safety-critical control. Flownodes supervises and automates, but it does not replace PLC-level safety logic.
+Devices come from Connections to Integrations. Integrations are plugins with their own release cycle, separate from Flownodes itself. Once a Device exists, you attach it to an Asset. Each Asset exposes its own Data Points, and Flows and dashboards read those rather than the Device directly, so replacing a sensor doesn't break them. Every value carries a Quality and a timestamp.
 
-## Architecture at a glance
+External Services, such as a weather API, a ticketing system or a webhook, are never modelled as Devices. They expose Actions and Events, and Flows carry their data to Assets.
 
-A .NET modular monolith, orchestrated locally with Aspire:
+A Flow is a graph of Nodes. If the server fails partway through a Flow Execution, the execution resumes where it stopped.
 
-- **Registry** stores, validates and versions Resources (desired state) using plain database access on Postgres.
-- **Engine** reconciles Resources into live state on Microsoft Orleans, talks to Devices and External Services, and runs Flows.
-- **Core** holds shared application and presentation plumbing.
+A few other properties:
+
+- It is local-first. Nothing requires a cloud service or an internet connection.
+- Alarms follow the industrial lifecycle of active, acknowledged and cleared.
+- Namespaces keep tenants apart inside one installation. A single-person setup just uses the `default` Namespace.
+- The same codebase runs on a single Raspberry Pi or as a high-availability cluster.
+
+## Running it locally
+
+You need the .NET SDK version pinned in [`global.json`](global.json) and Docker, which runs Postgres for local runs and integration tests.
+
+```sh
+git clone https://github.com/coderynx/flownodes.git
+cd flownodes
+dotnet run --project apps/AppHost
+```
+
+This starts the whole system through the .NET Aspire AppHost. To build and run the tests:
+
+```sh
+dotnet build Flownodes.slnx
+dotnet test --solution Flownodes.slnx
+```
+
+## Architecture
+
+Flownodes is a .NET modular monolith, orchestrated locally with Aspire. It has four modules:
+
+- Registry stores, validates and versions Resources, the desired state, in Postgres.
+- Engine runs on Microsoft Orleans. It reconciles Resources into live state, talks to Devices and External Services, and runs Flows.
+- Identity issues tokens and handles sign-in.
+- Core holds the plumbing the other modules share.
+
+## Contributing
+
+Contributions are welcome. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md), which covers the development setup, the coding standards and what a pull request needs. For anything bigger than a small fix, open an issue first so the design can be agreed before you write code.
+
+Questions and bug reports go in [GitHub Issues](https://github.com/coderynx/flownodes/issues). Report security vulnerabilities privately, as described in [`SECURITY.md`](SECURITY.md).
 
 ## License
 
-Flownodes is licensed under the [GNU Affero General Public License v3.0](LICENSE). If you run a modified version as a network service, you must offer its source code to the service's users.
+Flownodes is licensed under the [GNU Affero General Public License v3.0](LICENSE). If you run a modified version as a network service, you must offer its source code to the people who use that service.
