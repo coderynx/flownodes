@@ -19,6 +19,17 @@ public sealed class ResourceMessages
     public async Task<ResourceDeleted> WaitForDeletedAsync(string name, CancellationToken cancellationToken) =>
         await WaitForAsync<ResourceDeleted>(deleted => deleted.Name == name, cancellationToken);
 
+    public async Task WaitForAppliedCountAsync(string name, int count, CancellationToken cancellationToken)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(30));
+
+        while (_received.OfType<ResourceApplied>().Count(applied => applied.Name == name) < count)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(100), timeout.Token);
+        }
+    }
+
     private async Task<TMessage> WaitForAsync<TMessage>(Func<TMessage, bool> match, CancellationToken cancellationToken)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);

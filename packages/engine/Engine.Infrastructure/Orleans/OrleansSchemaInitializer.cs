@@ -13,7 +13,8 @@ internal sealed class OrleansSchemaInitializer(string connectionString) : IHoste
     [
         "PostgreSQL-Main.sql",
         "PostgreSQL-Clustering.sql",
-        "PostgreSQL-Persistence.sql"
+        "PostgreSQL-Persistence.sql",
+        "PostgreSQL-Reminders.sql"
     ];
 
     public async Task StartAsync(CancellationToken cancellationToken)

@@ -1,8 +1,11 @@
+using Core.Contracts.Resources;
+using Engine.Infrastructure.Namespaces;
 using Engine.Infrastructure.Orleans;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Orleans.Dashboard;
+using Wolverine.Postgresql;
 
 namespace Engine.Infrastructure.Bootstrap;
 
@@ -12,10 +15,11 @@ namespace Engine.Infrastructure.Bootstrap;
 public static class DependencyInjection
 {
     private const string AdoNetInvariant = "Npgsql";
+    private const string ResourceQueue = "engine-resources";
 
     /// <summary>
-    /// Registers the shared infrastructure and makes this Silo a member of the Orleans cluster, clustered and
-    /// persisted on Postgres.
+    /// Registers the shared infrastructure, makes this Silo a member of the Orleans cluster, clustered, persisted and
+    /// reminded on Postgres, and connects it to the Registry's Resource messages.
     /// </summary>
     /// <param name="builder">The host the Engine is being added to.</param>
     /// <exception cref="InvalidOperationException">
@@ -28,6 +32,7 @@ public static class DependencyInjection
         Core.Infrastructure.Bootstrap.DependencyInjection.AddHttpClientDefaults(builder);
 
         AddOrleans(builder);
+        AddMessaging(builder);
     }
 
     private static void AddOrleans(IHostApplicationBuilder builder)
@@ -57,6 +62,36 @@ public static class DependencyInjection
                 options.Invariant = AdoNetInvariant;
                 options.ConnectionString = storageConnection;
             });
+
+            silo.UseAdoNetReminderService(options =>
+            {
+                options.Invariant = AdoNetInvariant;
+                options.ConnectionString = storageConnection;
+            });
         });
+
+        builder.Services.Configure<NamespaceGrainOptions>(
+            builder.Configuration.GetSection(NamespaceGrainOptions.Section));
+        builder.Services.AddSingleton<IRegistryRequests, WolverineRegistryRequests>();
+    }
+
+    private static void AddMessaging(IHostApplicationBuilder builder)
+    {
+        var connectionString = builder.Configuration.GetConnectionString("engine") ??
+                               throw new InvalidOperationException("Connection string 'engine' not found.");
+
+        Core.Infrastructure.Bootstrap.DependencyInjection.AddMessaging(
+            builder,
+            connectionString,
+            options =>
+            {
+                options.Discovery.IncludeAssembly(typeof(DependencyInjection).Assembly);
+
+                options.PublishMessage<ResourceApplied>().ToPostgresqlQueue(ResourceQueue);
+                options.PublishMessage<ResourceDeleted>().ToPostgresqlQueue(ResourceQueue);
+                options.ListenToPostgresqlQueue(ResourceQueue);
+            });
+
+        builder.Services.AddHostedService<ResyncOnStart>();
     }
 }

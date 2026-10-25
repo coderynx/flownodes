@@ -57,21 +57,34 @@ public static class DependencyInjection
             return;
         }
 
-        builder.Services.AddWolverine(options =>
+        AddWolverine(builder, connectionString, configure);
+    }
+
+    /// <summary>
+    /// Adds a module that has no database of its own writing messages, such as the Engine, to the host's one Wolverine
+    /// (ADR-0013).
+    /// </summary>
+    /// <remarks>
+    /// The module has no outbox, so what it sends is at-least-once and not tied to a transaction. When it is the
+    /// first module to call this, the connection string's database becomes the Wolverine message store and the home
+    /// of the Postgres queues.
+    /// </remarks>
+    /// <param name="builder">The host the module is being added to.</param>
+    /// <param name="connectionString">The connection string to use if no module has set up Wolverine yet.</param>
+    /// <param name="configure">Adds the module's publishing rules and queues.</param>
+    public static void AddMessaging(
+        this IHostApplicationBuilder builder,
+        string connectionString,
+        Action<WolverineOptions> configure)
+    {
+        if (builder.Properties.TryGetValue(MessagingOptionsKey, out var existing))
         {
-            builder.Properties[MessagingOptionsKey] = options;
+            configure((WolverineOptions)existing);
 
-            options.ServiceName = "flownodes";
-            options.ApplicationAssembly = Assembly.GetEntryAssembly();
-            options.Durability.Mode = DurabilityMode.Solo;
-            options.CodeGeneration.TypeLoadMode = TypeLoadMode.Static;
-            options.CodeGeneration.AlwaysUseServiceLocationFor<ISender>();
+            return;
+        }
 
-            options.UsePostgresqlPersistenceAndTransport(connectionString).EnableQueueNotifications();
-            options.UseEntityFrameworkCoreTransactions();
-
-            configure(options);
-        });
+        AddWolverine(builder, connectionString, configure);
     }
 
     /// <summary>
@@ -140,4 +153,24 @@ public static class DependencyInjection
 
         builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
     }
+
+    private static void AddWolverine(
+        IHostApplicationBuilder builder,
+        string connectionString,
+        Action<WolverineOptions> configure) =>
+        builder.Services.AddWolverine(options =>
+        {
+            builder.Properties[MessagingOptionsKey] = options;
+
+            options.ServiceName = "flownodes";
+            options.ApplicationAssembly = Assembly.GetEntryAssembly();
+            options.Durability.Mode = DurabilityMode.Solo;
+            options.CodeGeneration.TypeLoadMode = TypeLoadMode.Static;
+            options.CodeGeneration.AlwaysUseServiceLocationFor<ISender>();
+
+            options.UsePostgresqlPersistenceAndTransport(connectionString).EnableQueueNotifications();
+            options.UseEntityFrameworkCoreTransactions();
+
+            configure(options);
+        });
 }
