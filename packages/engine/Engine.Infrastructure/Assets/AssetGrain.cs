@@ -303,6 +303,11 @@ internal sealed class AssetGrain(
             }
         }
 
+        if (AssetTypeName is not null && _assetType is not { Exists: true })
+        {
+            return;
+        }
+
         var written = values.State.Written.Keys
             .Where(name => _points.All(point => point.Name != name || point.Source is not null))
             .ToList();
