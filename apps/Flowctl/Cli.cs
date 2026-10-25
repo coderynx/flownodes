@@ -75,6 +75,10 @@ internal sealed class Cli
         root.Subcommands.Add(Get());
         root.Subcommands.Add(Delete());
         root.Subcommands.Add(Revisions());
+        root.Subcommands.Add(DataPoints());
+        root.Subcommands.Add(Write());
+        root.Subcommands.Add(Invoke());
+        root.Subcommands.Add(Discoveries());
 
         return root;
     }
@@ -243,6 +247,240 @@ internal sealed class Cli
         });
 
         return command;
+    }
+
+    private Command DataPoints()
+    {
+        var device = new Argument<string>("device") { Description = "The name of the Device." };
+        var command = new Command("datapoints", "Show a Device's Data Points with value, Quality and timestamp.")
+        {
+            device
+        };
+        command.SetAction(async (parse, cancellationToken) =>
+        {
+            using var http = await ConnectAsync(parse, cancellationToken);
+            if (http is null)
+            {
+                return 1;
+            }
+
+            var path = Routes.DataPoints(Namespace(parse), parse.GetValue(device)!);
+            var response = await GetAsync(http, path, MediaTypes.Json, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                return await _printer.ProblemAsync(response, cancellationToken);
+            }
+
+            var text = await response.Content.ReadAsStringAsync(cancellationToken);
+            if ((parse.GetValue(_output) ?? Table) != Table)
+            {
+                return await WriteAsync(text.TrimEnd());
+            }
+
+            using var body = JsonDocument.Parse(text);
+
+            return await TableAsync(DataPointTableAsync, body.RootElement);
+        });
+
+        return command;
+    }
+
+    private Command Write()
+    {
+        var device = new Argument<string>("device") { Description = "The name of the Device." };
+        var dataPoint = new Argument<string>("datapoint") { Description = "The name of the Data Point." };
+        var value = new Argument<string>("value") { Description = "The value: JSON, or plain text." };
+        var command = new Command("write", "Write a writable Data Point of a Device.") { device, dataPoint, value };
+        command.SetAction(async (parse, cancellationToken) =>
+        {
+            using var http = await ConnectAsync(parse, cancellationToken);
+            if (http is null)
+            {
+                return 1;
+            }
+
+            var path = Routes.DataPoint(Namespace(parse), parse.GetValue(device)!, parse.GetValue(dataPoint)!);
+            var body = new StringContent(
+                JsonSerializer.Serialize(new { value = ParseJsonOrText(parse.GetValue(value)!) }),
+                System.Text.Encoding.UTF8,
+                MediaTypes.Json);
+            var response = await http.PutAsync(path, body, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                return await _printer.ProblemAsync(response, cancellationToken);
+            }
+
+            await _context.Output.WriteLineAsync($"{parse.GetValue(device)}/{parse.GetValue(dataPoint)} written");
+
+            return 0;
+        });
+
+        return command;
+    }
+
+    private Command Invoke()
+    {
+        var device = new Argument<string>("device") { Description = "The name of the Device." };
+        var action = new Argument<string>("action") { Description = "The name of the Action." };
+        var parameters = new Option<string?>("--params")
+        {
+            Description = "The Action's parameters, as JSON."
+        };
+        var command = new Command("invoke", "Call an Action of a Device and print its result.")
+        {
+            device,
+            action,
+            parameters
+        };
+        command.SetAction(async (parse, cancellationToken) =>
+        {
+            using var http = await ConnectAsync(parse, cancellationToken);
+            if (http is null)
+            {
+                return 1;
+            }
+
+            var given = parse.GetValue(parameters);
+            if (given is not null && !Manifest.IsJson(given))
+            {
+                await _context.Error.WriteLineAsync("error: --params must be JSON.");
+
+                return 1;
+            }
+
+            var path = Routes.Action(Namespace(parse), parse.GetValue(device)!, parse.GetValue(action)!);
+            var body = new StringContent(
+                $"{{\"parameters\":{given ?? "{}"}}}",
+                System.Text.Encoding.UTF8,
+                MediaTypes.Json);
+            var response = await http.PostAsync(path, body, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                return await _printer.ProblemAsync(response, cancellationToken);
+            }
+
+            using var result = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
+
+            return await WriteAsync(JsonSerializer.Serialize(result.RootElement.GetProperty("result"), Indented));
+        });
+
+        return command;
+    }
+
+    private Command Discoveries()
+    {
+        var connection = new Argument<string>("connection") { Description = "The name of the Connection." };
+        var command = new Command(
+            "discoveries",
+            "List what a Connection can reach but nobody has declared; -o json prints Device Manifests to apply.")
+        {
+            connection
+        };
+        command.SetAction(async (parse, cancellationToken) =>
+        {
+            using var http = await ConnectAsync(parse, cancellationToken);
+            if (http is null)
+            {
+                return 1;
+            }
+
+            var name = parse.GetValue(connection)!;
+            var namespaceName = Namespace(parse);
+            var response = await GetAsync(
+                http,
+                Routes.Item("connections", namespaceName, name),
+                MediaTypes.Json,
+                cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                return await _printer.ProblemAsync(response, cancellationToken);
+            }
+
+            using var resource = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
+            var found = resource.RootElement.TryGetProperty("status", out var status) &&
+                        status.ValueKind == JsonValueKind.Object && status.TryGetProperty("discoveries", out var list)
+                ? list.EnumerateArray().ToList()
+                : [];
+            if ((parse.GetValue(_output) ?? Table) == Table)
+            {
+                return await TableAsync(
+                    _ => _printer.TableAsync(
+                        ["SUGGESTED NAME", "TYPE", "ADDRESS"],
+                        [
+                            .. found.Select(item => (IReadOnlyList<string>)
+                            [
+                                Printer.Text(item, "suggestedName")!,
+                                Printer.Text(item, "deviceType")!,
+                                item.GetProperty("address").GetRawText()
+                            ])
+                        ]),
+                    resource.RootElement);
+            }
+
+            var manifests = found.Select(item => DeviceManifest(item, name, namespaceName)).ToList();
+
+            return await WriteAsync(JsonSerializer.Serialize(manifests, Indented));
+        });
+
+        return command;
+    }
+
+    private static object DeviceManifest(JsonElement discovery, string connection, string @namespace)
+    {
+        var spec = new Dictionary<string, object?>
+        {
+            ["connection"] = connection,
+            ["type"] = Printer.Text(discovery, "deviceType"),
+            ["address"] = discovery.GetProperty("address")
+        };
+        if (discovery.TryGetProperty("suggestedConfig", out var config) && config.ValueKind == JsonValueKind.Object)
+        {
+            spec["config"] = config;
+        }
+
+        return new
+        {
+            apiVersion = "flownodes.io/v1alpha1",
+            kind = "Device",
+            metadata = new { name = Printer.Text(discovery, "suggestedName"), @namespace },
+            spec
+        };
+    }
+
+    private static JsonElement ParseJsonOrText(string text)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(text);
+
+            return document.RootElement.Clone();
+        }
+        catch (JsonException)
+        {
+            return JsonSerializer.SerializeToElement(text);
+        }
+    }
+
+    private Task DataPointTableAsync(JsonElement body)
+    {
+        var rows = body.GetProperty("items")
+            .EnumerateArray()
+            .Select(item => (IReadOnlyList<string>)
+            [
+                Printer.Text(item, "name")!,
+                item.TryGetProperty("value", out var value) && value.ValueKind != JsonValueKind.Null
+                    ? value.GetRawText()
+                    : "-",
+                Printer.Text(item, "unit") ?? "-",
+                Printer.Text(item, "quality")!,
+                item.TryGetProperty("sourceTimestamp", out var timestamp) && timestamp.ValueKind == JsonValueKind.String
+                    ? timestamp.GetDateTimeOffset().ToString("u")
+                    : "-",
+                item.GetProperty("writable").GetBoolean() ? "rw" : "r"
+            ])
+            .ToList();
+
+        return _printer.TableAsync(["NAME", "VALUE", "UNIT", "QUALITY", "SOURCE TIMESTAMP", "ACCESS"], rows);
     }
 
     private async Task<int> BatchAsync(
