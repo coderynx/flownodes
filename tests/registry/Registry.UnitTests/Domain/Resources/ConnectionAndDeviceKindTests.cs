@@ -92,6 +92,52 @@ public sealed class ConnectionAndDeviceKindTests
         references.ShouldBe([new SpecReference("Connection", "hub", "spec.connection")]);
     }
 
+    [Fact]
+    public void DeviceReferences_ShouldNameTheAsset_WhenTheDeviceIsAttached()
+    {
+        // Arrange
+        var kind = new DeviceKind(new Catalog());
+        var spec = Widgets.Json("""{"connection": "hub", "type": "Bulb", "address": {"id": 3}, "asset": "train-1"}""");
+
+        // Act
+        var references = kind.References(spec).ToList();
+
+        // Assert
+        references.ShouldBe(
+        [
+            new SpecReference("Connection", "hub", "spec.connection"),
+            new SpecReference("Asset", "train-1", "spec.asset")
+        ]);
+    }
+
+    [Fact]
+    public void DeviceValidate_ShouldAcceptTheSpec_WhenItIsAttachedToAnAsset()
+    {
+        // Arrange
+        var kind = new DeviceKind(new Catalog());
+        var spec = Widgets.Json("""{"connection": "hub", "type": "Bulb", "address": {"id": 3}, "asset": "train-1"}""");
+
+        // Act
+        var errors = kind.Validate(spec, Snapshot(Hub()));
+
+        // Assert
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void DeviceValidate_ShouldReportThePath_WhenTheAssetIsNotAName()
+    {
+        // Arrange
+        var kind = new DeviceKind(new Catalog());
+        var spec = Widgets.Json("""{"connection": "hub", "type": "Bulb", "address": {"id": 3}, "asset": 3}""");
+
+        // Act
+        var errors = kind.Validate(spec, Snapshot(Hub())).ToList();
+
+        // Assert
+        errors.ShouldContain(error => error.Path == "spec.asset");
+    }
+
     private static SnapshotResource Hub() =>
         new(
             "Connection",

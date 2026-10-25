@@ -1,3 +1,4 @@
+using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.Devices;
 using Microsoft.Extensions.Options;
@@ -11,6 +12,8 @@ internal sealed class NamespaceGrain(
 {
     private const string ReminderName = "keep-alive";
     private const string ConnectionKind = "Connection";
+    private const string AssetTypeKind = "AssetType";
+    private const string AssetKind = "Asset";
     private IDisposable? _resyncTimer;
     private IDisposable? _pingTimer;
 
@@ -123,13 +126,20 @@ internal sealed class NamespaceGrain(
             await state.WriteStateAsync();
         }
 
-        if (kind == ConnectionKind)
+        switch (kind)
         {
-            await Connection(name).ApplyAsync(uid, generation, seq, spec);
-        }
-        else
-        {
-            await Device(name).ApplyAsync(uid, generation, seq, spec);
+            case ConnectionKind:
+                await Connection(name).ApplyAsync(uid, generation, seq, spec);
+                break;
+            case AssetTypeKind:
+                await AssetType(name).ApplyAsync(uid, generation, seq, spec);
+                break;
+            case AssetKind:
+                await Asset(name).ApplyAsync(uid, generation, seq, spec);
+                break;
+            default:
+                await Device(name).ApplyAsync(uid, generation, seq, spec);
+                break;
         }
     }
 
@@ -146,13 +156,20 @@ internal sealed class NamespaceGrain(
             await state.WriteStateAsync();
         }
 
-        if (kind == ConnectionKind)
+        switch (kind)
         {
-            await Connection(name).DeleteAsync(uid, seq);
-        }
-        else
-        {
-            await Device(name).DeleteAsync(uid, seq);
+            case ConnectionKind:
+                await Connection(name).DeleteAsync(uid, seq);
+                break;
+            case AssetTypeKind:
+                await AssetType(name).DeleteAsync(uid, seq);
+                break;
+            case AssetKind:
+                await Asset(name).DeleteAsync(uid, seq);
+                break;
+            default:
+                await Device(name).DeleteAsync(uid, seq);
+                break;
         }
     }
 
@@ -169,6 +186,12 @@ internal sealed class NamespaceGrain(
     private IConnectionGrain Connection(string name) =>
         GrainFactory.GetGrain<IConnectionGrain>($"{this.GetPrimaryKeyString()}/{name}");
 
+    private IAssetTypeGrain AssetType(string name) =>
+        GrainFactory.GetGrain<IAssetTypeGrain>($"{this.GetPrimaryKeyString()}/{name}");
+
+    private IAssetGrain Asset(string name) =>
+        GrainFactory.GetGrain<IAssetGrain>($"{this.GetPrimaryKeyString()}/{name}");
+
     private IDeviceGrain Device(string name) =>
         GrainFactory.GetGrain<IDeviceGrain>($"{this.GetPrimaryKeyString()}/{name}");
 
@@ -177,17 +200,24 @@ internal sealed class NamespaceGrain(
 
     private async Task PingMembersAsync()
     {
-        foreach (var member in state.State.Members.OrderBy(member => member.Kind != ConnectionKind).ToList())
+        foreach (var member in state.State.Members.OrderBy(member => PingOrder(member.Kind)).ToList())
         {
             try
             {
-                if (member.Kind == ConnectionKind)
+                switch (member.Kind)
                 {
-                    await Connection(member.Name).PingAsync();
-                }
-                else
-                {
-                    await Device(member.Name).PingAsync();
+                    case ConnectionKind:
+                        await Connection(member.Name).PingAsync();
+                        break;
+                    case AssetTypeKind:
+                        await AssetType(member.Name).PingAsync();
+                        break;
+                    case AssetKind:
+                        await Asset(member.Name).PingAsync();
+                        break;
+                    default:
+                        await Device(member.Name).PingAsync();
+                        break;
                 }
             }
             catch (Exception exception) when (exception is not OutOfMemoryException)
@@ -196,4 +226,11 @@ internal sealed class NamespaceGrain(
             }
         }
     }
+
+    private static int PingOrder(string kind) =>
+        kind switch
+        {
+            ConnectionKind or AssetTypeKind => 0,
+            _ => 1
+        };
 }
