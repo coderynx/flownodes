@@ -112,7 +112,8 @@ internal sealed class IntegrationLoader(ILoggerFactory loggers, TimeProvider tim
                     candidate.EntryVersion!,
                     candidate.SdkVersion!,
                     deviceTypes),
-                provider);
+                provider,
+                instance);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -172,4 +173,7 @@ internal sealed class IntegrationLoader(ILoggerFactory loggers, TimeProvider tim
 /// <summary>
 /// What loading one Integration folder produced: its description and, when it loaded, its private container.
 /// </summary>
-internal sealed record IntegrationLoad(InstalledIntegration Installed, IServiceProvider? Services);
+internal sealed record IntegrationLoad(
+    InstalledIntegration Installed,
+    IServiceProvider? Services,
+    IIntegration? Integration = null);

@@ -1,8 +1,13 @@
+using Core.Application.Integrations;
 using Core.Contracts.Resources;
+using Engine.Application.Devices;
 using Engine.Application.Integrations;
+using Engine.Infrastructure.Connections;
+using Engine.Infrastructure.Devices;
 using Engine.Infrastructure.Integrations;
 using Engine.Infrastructure.Namespaces;
 using Engine.Infrastructure.Orleans;
+using Engine.Infrastructure.Resources;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -46,6 +51,10 @@ public static class DependencyInjection
         builder.Services.AddSingleton<InstalledIntegrations>();
         builder.Services.AddSingleton<IInstalledIntegrations>(services =>
             services.GetRequiredService<InstalledIntegrations>());
+        builder.Services.AddSingleton<IIntegrationCatalog>(services =>
+            services.GetRequiredService<InstalledIntegrations>());
+        builder.Services.AddSingleton<IIntegrationSchemas>(services =>
+            services.GetRequiredService<InstalledIntegrations>());
         builder.Services.AddHostedService(services => services.GetRequiredService<InstalledIntegrations>());
     }
 
@@ -87,6 +96,11 @@ public static class DependencyInjection
         builder.Services.Configure<NamespaceGrainOptions>(
             builder.Configuration.GetSection(NamespaceGrainOptions.Section));
         builder.Services.AddSingleton<IRegistryRequests, WolverineRegistryRequests>();
+        builder.Services.Configure<ConnectionGrainOptions>(
+            builder.Configuration.GetSection(ConnectionGrainOptions.Section));
+        builder.Services.Configure<DeviceGrainOptions>(builder.Configuration.GetSection(DeviceGrainOptions.Section));
+        builder.Services.AddSingleton<IStatusReporter, WolverineStatusReporter>();
+        builder.Services.AddSingleton<IDeviceRuntime, GrainDeviceRuntime>();
     }
 
     private static void AddMessaging(IHostApplicationBuilder builder)

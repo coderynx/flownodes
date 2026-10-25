@@ -1,5 +1,8 @@
+using System.Text.Json;
+using Core.Application.Integrations;
 using Engine.Application.Integrations;
 using Engine.Domain.Integrations;
+using Flownodes.Sdk;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,15 +15,35 @@ namespace Engine.Infrastructure.Integrations;
 internal sealed class InstalledIntegrations(
     IntegrationLoader loader,
     IOptions<IntegrationOptions> options,
-    ILogger<InstalledIntegrations> logger) : IHostedService, IInstalledIntegrations
+    ILogger<InstalledIntegrations> logger)
+    : IHostedService, IInstalledIntegrations, IIntegrationCatalog, IIntegrationSchemas
 {
     private IReadOnlyList<InstalledIntegration> _all = [];
+    private IReadOnlyDictionary<string, LoadedIntegration> _loaded = new Dictionary<string, LoadedIntegration>();
     public IReadOnlyList<InstalledIntegration> All => _all;
+    public LoadedIntegration? Find(string id) => _loaded.GetValueOrDefault(id);
+
+    IntegrationSchema? IIntegrationSchemas.Find(string id) =>
+        Find(id) is { } loaded
+            ? new IntegrationSchema(
+                config => Problems(loaded.Integration.ConnectionConfig, config),
+                [
+                    .. loaded.Integration.DeviceTypes.Select(deviceType => new DeviceTypeSchema(
+                        deviceType.Name,
+                        address => Problems(deviceType.Address, address),
+                        config => Problems(deviceType.Config, config)))
+                ])
+            : null;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
         var directory = options.Value.Directory ?? Path.Combine(AppContext.BaseDirectory, "integrations");
-        _all = [.. loader.Load(directory).Select(load => load.Installed)];
+        var loads = loader.Load(directory);
+        _all = [.. loads.Select(load => load.Installed)];
+        _loaded = loads.Where(load => load is { Integration: not null, Services: not null })
+            .ToDictionary(
+                load => load.Installed.Id!.Value,
+                load => new LoadedIntegration(load.Integration!, load.Services!));
 
         foreach (var integration in _all)
         {
@@ -44,6 +67,9 @@ internal sealed class InstalledIntegrations(
 
         return Task.CompletedTask;
     }
+
+    private static IReadOnlyList<SchemaProblem> Problems(ConfigSchema schema, JsonElement value) =>
+        [.. schema.Validate(value).Select(problem => new SchemaProblem(problem.Path, problem.Message))];
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
