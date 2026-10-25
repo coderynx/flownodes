@@ -6,13 +6,18 @@ using Registry.Application.Namespaces.SeedDefaultNamespace;
 
 namespace Registry.Infrastructure.Database;
 
-internal sealed class RegistryInitializer(IServiceScopeFactory scopeFactory) : IHostedService
+internal sealed class RegistryInitializer(IServiceScopeFactory scopeFactory) : IHostedLifecycleService
 {
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartingAsync(CancellationToken cancellationToken)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
 
         await scope.ServiceProvider.GetRequiredService<RegistryDbContext>().Database.MigrateAsync(cancellationToken);
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        await using var scope = scopeFactory.CreateAsyncScope();
 
         var sender = scope.ServiceProvider.GetRequiredService<ISender>();
         var result = await sender.SendAsync(new Command(), cancellationToken);
@@ -22,5 +27,8 @@ internal sealed class RegistryInitializer(IServiceScopeFactory scopeFactory) : I
         }
     }
 
+    public Task StartedAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task StoppingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task StoppedAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

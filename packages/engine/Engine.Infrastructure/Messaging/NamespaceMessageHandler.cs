@@ -1,5 +1,6 @@
 using Core.Contracts.Resources;
 using Engine.Infrastructure.Namespaces;
+using Wolverine.Attributes;
 
 namespace Engine.Infrastructure.Messaging;
 
@@ -7,6 +8,7 @@ namespace Engine.Infrastructure.Messaging;
 /// <summary>
 /// Hands the Registry's Namespace messages to the Namespace's grain (ADR-0014).
 /// </summary>
+[StickyHandler("engine-resources")]
 public static class NamespaceMessageHandler
 {
     private const string NamespaceKind = "Namespace";

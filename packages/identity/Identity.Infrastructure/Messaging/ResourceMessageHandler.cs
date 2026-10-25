@@ -1,6 +1,7 @@
 using Coderynx.MediatorKit.Abstractions;
 using Core.Contracts.Resources;
 using Identity.Domain.Namespaces;
+using Wolverine.Attributes;
 
 namespace Identity.Infrastructure.Messaging;
 
@@ -8,6 +9,7 @@ namespace Identity.Infrastructure.Messaging;
 /// <summary>
 /// Hands the Registry's Namespace messages to the use cases that record them (ADR-0026).
 /// </summary>
+[StickyHandler("identity-resources")]
 public static class ResourceMessageHandler
 {
     /// <summary>

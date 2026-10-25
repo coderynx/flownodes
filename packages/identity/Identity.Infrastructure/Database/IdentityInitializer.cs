@@ -14,16 +14,22 @@ internal sealed partial class IdentityInitializer(
     InstallationKey installationKey,
     SigningKeyProvider signingKeys,
     SetupTokenService setupToken,
-    ILogger<IdentityInitializer> logger) : IHostedService
+    ILogger<IdentityInitializer> logger) : IHostedLifecycleService
 {
     public const string ClientId = "flowctl";
+
+    public async Task StartingAsync(CancellationToken cancellationToken)
+    {
+        await using var scope = scopeFactory.CreateAsyncScope();
+
+        await scope.ServiceProvider.GetRequiredService<IdentityDbContext>().Database.MigrateAsync(cancellationToken);
+    }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var database = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
 
-        await database.Database.MigrateAsync(cancellationToken);
         await signingKeys.LoadAsync(database, installationKey, cancellationToken);
         await SeedClientAsync(
             scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>(),
@@ -35,7 +41,10 @@ internal sealed partial class IdentityInitializer(
         }
     }
 
+    public Task StartedAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task StoppingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task StoppedAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     private static async Task SeedClientAsync(IOpenIddictApplicationManager applications, CancellationToken ct)
     {
