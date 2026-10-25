@@ -38,7 +38,6 @@ internal sealed class Handler(IApplicationDbContext database, KindCatalog catalo
     : IRequestHandler<Query, Result<ResourcePage>>
 {
     private const string NameKey = "name";
-    private const int MaxLimit = 200;
 
     public async Task<Result<ResourcePage>> HandleAsync(Query request, CancellationToken cancellationToken = default)
     {
@@ -69,7 +68,7 @@ internal sealed class Handler(IApplicationDbContext database, KindCatalog catalo
         var ordered = request.Desc
             ? matching.OrderByDescending(resource => resource.Name.Value, StringComparer.Ordinal)
             : matching.OrderBy(resource => resource.Name.Value, StringComparer.Ordinal);
-        var items = ordered.Skip(Math.Max(request.Offset, 0)).Take(Math.Clamp(request.Limit, 1, MaxLimit)).ToList();
+        var items = ordered.Page(request.Offset, request.Limit).ToList();
 
         return Result.Found(new ResourcePage(items, matching.Count));
     }

@@ -72,7 +72,7 @@ internal sealed class Handler(
         CancellationToken cancellationToken = default)
     {
         var reading = ManifestReader.ForApply(request.Documents, request.Namespace, catalog);
-        var access = await database.AuthoriseChangesAsync(request.CallerId, reading.Entries, cancellationToken);
+        var access = await database.AuthoriseChangesAsync(request.CallerId, reading, cancellationToken);
         if (access.IsFailure)
         {
             return access.Error;
@@ -88,14 +88,14 @@ internal sealed class Handler(
             return new ManifestRejected(reading.Problems);
         }
 
-        var state = await ManifestState.LoadAsync(database, reading.Entries, cancellationToken);
+        var state = await ManifestState.LoadAsync(database, catalog, reading.Entries, cancellationToken);
         if (state.IsFailure)
         {
             return state.Error;
         }
 
-        var problems = reading.Problems.Concat(state.Value.UnresolvedReferences(reading.Entries))
-            .OrderBy(problem => problem.Document)
+        var problems = reading.Problems.Concat(state.Value.Problems(reading.Entries))
+            .OrderBy(problem => problem.Document ?? int.MaxValue)
             .ToList();
         if (problems.Count > 0)
         {
@@ -168,10 +168,9 @@ internal sealed class Handler(
         }
 
         var action = existing is null ? ApplyAction.Created : ApplyAction.Configured;
-        var generation = existing is null ? 1 : existing.Generation + 1;
         if (dryRun)
         {
-            return Outcome(entry, action, generation, changes);
+            return Outcome(entry, action, existing?.GenerationAfter(entry.Spec) ?? 1, changes);
         }
 
         var seq = state.FindNamespace(entry.Namespace)!.NextSeq();

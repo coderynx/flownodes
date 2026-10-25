@@ -2,6 +2,7 @@ using Coderynx.Functional.Results;
 using Coderynx.Functional.Results.Errors;
 using Registry.Application.Database;
 using Registry.Application.Namespaces;
+using Registry.Domain.Namespaces;
 using Registry.Domain.Resources;
 
 namespace Registry.Application.Resources;
@@ -23,7 +24,7 @@ internal sealed class ResourceDeletion(IApplicationDbContext database, KindCatal
         bool dryRun,
         CancellationToken cancellationToken)
     {
-        var access = await database.AuthoriseChangesAsync(callerId, reading.Entries, cancellationToken);
+        var access = await database.AuthoriseChangesAsync(callerId, reading, cancellationToken);
         if (access.IsFailure)
         {
             return access.Error;
@@ -39,7 +40,7 @@ internal sealed class ResourceDeletion(IApplicationDbContext database, KindCatal
             return new ManifestRejected(reading.Problems);
         }
 
-        var state = await ManifestState.LoadAsync(database, reading.Entries, cancellationToken);
+        var state = await ManifestState.LoadAsync(database, catalog, reading.Entries, cancellationToken);
         if (state.IsFailure)
         {
             return state.Error;
@@ -53,11 +54,8 @@ internal sealed class ResourceDeletion(IApplicationDbContext database, KindCatal
 
         if (!dryRun)
         {
-            await RemoveAsync(
-                reading.Entries,
-                state.Value,
-                new RevisionAuthor(callerId, access.Value!.Username),
-                cancellationToken);
+            var author = new RevisionAuthor(callerId, access.Value!.Username);
+            await RemoveAsync(reading.Entries, state.Value, author, cancellationToken);
         }
 
         return Result.Found<IReadOnlyList<DeletedResource>>(
@@ -68,52 +66,49 @@ internal sealed class ResourceDeletion(IApplicationDbContext database, KindCatal
 
     private Error? Refuse(IReadOnlyList<ManifestEntry> entries, ManifestState state)
     {
-        foreach (var entry in entries)
+        var missing = entries.FirstOrDefault(entry =>
+            entry.IsNamespace ? state.FindNamespace(entry.Namespace) is null : state.FindResource(entry) is null);
+        if (missing is not null)
         {
-            if (entry.IsNamespace ? state.FindNamespace(entry.Namespace) is null : state.FindResource(entry) is null)
-            {
-                return entry.IsNamespace
-                    ? Errors.NamespaceNotFound(entry.Name.Value)
-                    : Errors.NotFound(entry.Kind, entry.Name.Value);
-            }
+            return missing.IsNamespace
+                ? Errors.NamespaceNotFound(missing.Name.Value)
+                : Errors.NotFound(missing.Kind, missing.Name.Value);
         }
 
         var remaining = state.Resources.Where(resource => !entries.Any(entry => entry.Is(resource))).ToList();
+        var problems = entries.Select(entry => Problem(entry, state, remaining)).OfType<ManifestProblem>().ToList();
 
-        foreach (var entry in entries)
-        {
-            if (entry.IsNamespace)
-            {
-                if (entry.Namespace.IsDefault)
-                {
-                    return Errors.DefaultNamespace();
-                }
-
-                if (remaining.Exists(resource => resource.Namespace == entry.Namespace))
-                {
-                    return Errors.NamespaceHoldsResources(entry.Name.Value);
-                }
-
-                continue;
-            }
-
-            var referrers = remaining
-                .Where(resource => resource.Namespace == entry.Namespace && References(resource, entry))
-                .Select(resource => $"{resource.Kind} '{resource.Name}'")
-                .ToList();
-            if (referrers.Count > 0)
-            {
-                return Errors.Referenced(entry.Kind, entry.Name.Value, referrers);
-            }
-        }
-
-        return null;
+        return problems.Count > 0 ? new DeletionRefused(problems) : null;
     }
 
-    private bool References(Resource resource, ManifestEntry entry) =>
-        catalog.Find(resource.Kind)
-            ?.References(resource.Spec)
-            .Any(reference => reference.Kind == entry.Kind && reference.Name == entry.Name.Value) == true;
+    private ManifestProblem? Problem(ManifestEntry entry, ManifestState state, List<Resource> remaining)
+    {
+        if (entry.IsNamespace)
+        {
+            var deletion = state.FindNamespace(entry.Namespace)!.CheckDeletion(
+                remaining.Exists(resource => resource.Namespace == entry.Namespace));
+
+            return deletion switch
+            {
+                NamespaceDeletion.Default => Refusal(entry, "The default Namespace cannot be deleted."),
+                NamespaceDeletion.HoldsResources => Refusal(
+                    entry,
+                    "The Namespace still holds Resources. Delete them first."),
+                _ => null
+            };
+        }
+
+        var referrers = catalog.Referrers(entry.Namespace, entry.Kind, entry.Name, remaining)
+            .Select(resource => $"{resource.Kind} '{resource.Name}'")
+            .ToList();
+
+        return referrers.Count == 0
+            ? null
+            : Refusal(entry, $"Still referenced by {string.Join(", ", referrers)}. Delete or change those first.");
+    }
+
+    private static ManifestProblem Refusal(ManifestEntry entry, string message) =>
+        new(entry.Document, entry.Kind, entry.Name.Value, "metadata.name", message);
 
     private async Task RemoveAsync(
         IReadOnlyList<ManifestEntry> entries,

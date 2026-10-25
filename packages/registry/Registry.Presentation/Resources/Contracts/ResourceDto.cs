@@ -28,11 +28,9 @@ internal sealed record RevisionAuthorDto(Guid UserId, string? Username);
 
 internal static class ResourceMappings
 {
-    public const string ApiVersion = "flownodes.io/v1alpha1";
-
     public static ResourceDto ToDto(this Resource resource) =>
         new(
-            ApiVersion,
+            Resource.ApiVersion,
             resource.Kind,
             new ResourceMetadataDto(resource.Name.Value, resource.Namespace.Value, resource.Generation, resource.Uid),
             resource.Spec,
@@ -40,7 +38,7 @@ internal static class ResourceMappings
 
     public static ResourceDto ToDto(this Namespace @namespace) =>
         new(
-            ApiVersion,
+            Resource.ApiVersion,
             Namespace.Kind,
             new ResourceMetadataDto(@namespace.Name.Value, null, @namespace.Generation, @namespace.Uid),
             Namespace.Spec,

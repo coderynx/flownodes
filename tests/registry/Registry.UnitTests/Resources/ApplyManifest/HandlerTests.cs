@@ -3,7 +3,6 @@ using Coderynx.Functional.Results.Errors;
 using Core.Application.Authorization;
 using Core.Contracts.Resources;
 using Core.Domain.Authorization;
-using Microsoft.Extensions.Options;
 using Registry.Application.Database;
 using Registry.Application.Resources;
 using Registry.Application.Resources.ApplyManifest;
@@ -218,6 +217,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Engineer();
+        caller.GrantRole("globex", NamespaceRole.Engineer, caller.LastSeq + 1);
         var database = TestDatabase.Create([Acme()], users: [caller]);
         var command = new Command(caller.Id, [Widgets.Document("w-1", @namespace: "globex")], "acme", false);
 
@@ -347,6 +347,80 @@ public sealed class HandlerTests
         await ShouldNotHaveSavedAsync(database);
     }
 
+    [Fact]
+    public async Task HandleAsync_ShouldReturnNamespaceNotFound_WhenAnUnreadableResourceTargetsANamespaceWithoutARole()
+    {
+        // Arrange
+        var caller = Engineer();
+        var database = TestDatabase.Create([Acme()], users: [caller]);
+        var command = new Command(caller.Id, [Widgets.Document("Bad_Name", @namespace: "globex")], null, false);
+
+        // Act
+        var result = await Handler(database).HandleAsync(command, Ct);
+
+        // Assert
+        result.Error.Code.ShouldBe("namespace.not_found");
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldRejectAResource_WhenItBreaksARuleAgainstAnotherResource()
+    {
+        // Arrange
+        var caller = Engineer();
+        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "root", """{"size": 2}""")], [caller]);
+
+        // Act
+        var result = await Handler(database)
+            .HandleAsync(Apply(caller.Id, Widgets.Document("child", """{"parent": "root", "size": 5}""")), Ct);
+
+        // Assert
+        var problem = result.Error.ShouldBeOfType<ManifestRejected>().Problems.ShouldHaveSingleItem();
+        (problem.Document, problem.Path).ShouldBe((0, "spec.size"));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldRejectTheManifest_WhenItBreaksAResourceItDoesNotList()
+    {
+        // Arrange
+        var caller = Engineer();
+        var database = TestDatabase.Create(
+            [Acme()],
+            [
+                Widgets.Stored("acme", "root", """{"size": 5}"""),
+                Widgets.Stored("acme", "child", """{"parent": "root", "size": 4}""")
+            ],
+            [caller]);
+
+        // Act
+        var result = await Handler(database)
+            .HandleAsync(Apply(caller.Id, Widgets.Document("root", """{"size": 1}""")), Ct);
+
+        // Assert
+        var problem = result.Error.ShouldBeOfType<ManifestRejected>().Problems.ShouldHaveSingleItem();
+        (problem.Document, problem.Name, problem.Path).ShouldBe((null, "child", "spec.size"));
+        await ShouldNotHaveSavedAsync(database);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldNotBlameTheManifest_WhenAResourceItDoesNotListWasAlreadyInvalid()
+    {
+        // Arrange
+        var caller = Engineer();
+        var database = TestDatabase.Create(
+            [Acme()],
+            [
+                Widgets.Stored("acme", "root", """{"size": 1}"""),
+                Widgets.Stored("acme", "child", """{"parent": "root", "size": 4}""")
+            ],
+            [caller]);
+
+        // Act
+        var result = await Handler(database).HandleAsync(Apply(caller.Id, Widgets.Document("other")), Ct);
+
+        // Assert
+        result.Value.ShouldHaveSingleItem().Action.ShouldBe(ApplyAction.Created);
+    }
+
     private static UserAccess Engineer() => Callers.Named(Callers.Member("acme", NamespaceRole.Engineer), "erin");
     private static Namespace Acme() => Namespace.Create(NamespaceName.Create("acme"));
 
@@ -359,10 +433,7 @@ public sealed class HandlerTests
 
     private static Handler Handler(IApplicationDbContext database, int keep = 50)
     {
-        var time = Substitute.For<TimeProvider>();
-        time.GetUtcNow().Returns(Now);
-
-        return new Handler(database, WidgetKind.Catalog, time, Options.Create(new RevisionRetention { Keep = keep }));
+        return new Handler(database, WidgetKind.Catalog, ResourceHandlers.Time(), ResourceHandlers.Retention(keep));
     }
 
     private static async Task ShouldNotHaveSavedAsync(IApplicationDbContext database)

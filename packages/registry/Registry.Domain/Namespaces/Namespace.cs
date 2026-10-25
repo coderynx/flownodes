@@ -65,6 +65,21 @@ public sealed class Namespace
     public long NextSeq() => ++Seq;
 
     /// <summary>
+    /// Tells whether the Namespace may be deleted: never the <c>default</c> one, and only once it is empty.
+    /// </summary>
+    /// <param name="holdsResources">Whether any Resource would remain in the Namespace after the delete.</param>
+    /// <returns>Whether the delete is allowed, or why not.</returns>
+    public NamespaceDeletion CheckDeletion(bool holdsResources)
+    {
+        if (Name.IsDefault)
+        {
+            return NamespaceDeletion.Default;
+        }
+
+        return holdsResources ? NamespaceDeletion.HoldsResources : NamespaceDeletion.Allowed;
+    }
+
+    /// <summary>
     /// Advances the sequence number to the one the deletion message carries.
     /// </summary>
     /// <exception cref="InvalidOperationException">The Namespace is the <c>default</c> Namespace.</exception>

@@ -6,8 +6,7 @@ namespace Flowctl;
 
 internal sealed class Cli
 {
-    private const string Yaml = "application/yaml";
-    private const string Json = "application/json";
+    private const int PageSize = 200;
     private const string Table = "table";
     private readonly CliContext _context;
     private readonly Printer _printer;
@@ -40,6 +39,8 @@ internal sealed class Cli
     {
         Description = "Run every check and show what would change, without changing anything."
     };
+
+    private static readonly JsonSerializerOptions Indented = new() { WriteIndented = true };
 
     private Cli(CliContext context)
     {
@@ -157,7 +158,9 @@ internal sealed class Cli
                 ? Routes.Collection(parse.GetValue(kind)!, @namespace)
                 : Routes.Item(parse.GetValue(kind)!, @namespace, one);
 
-            return await ShowAsync(http, path, output, ResourceTableAsync, cancellationToken);
+            return one is null
+                ? await ShowPagesAsync(http, path, output, ResourceTableAsync, cancellationToken)
+                : await ShowAsync(http, path, output, ResourceTableAsync, cancellationToken);
         });
 
         return command;
@@ -202,9 +205,8 @@ internal sealed class Cli
                 return await _printer.ProblemAsync(response, cancellationToken);
             }
 
-            var singular = Routes.Plural(kindText)[..^1];
-            await _context.Output.WriteLineAsync(
-                $"{singular}/{nameText} deleted{(dryRun ? " (dry run)" : string.Empty)}");
+            using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
+            await _printer.ChangesAsync(body.RootElement, false);
 
             return 0;
         });
@@ -227,7 +229,12 @@ internal sealed class Cli
 
             var path = Routes.Revisions(parse.GetValue(kind)!, Namespace(parse), parse.GetValue(name)!);
 
-            return await ShowAsync(http, path, parse.GetValue(_output) ?? Table, RevisionTableAsync, cancellationToken);
+            return await ShowPagesAsync(
+                http,
+                path,
+                parse.GetValue(_output) ?? Table,
+                RevisionTableAsync,
+                cancellationToken);
         });
 
         return command;
@@ -280,6 +287,81 @@ internal sealed class Cli
         return 0;
     }
 
+    private async Task<int> ShowPagesAsync(
+        HttpClient http,
+        string path,
+        string output,
+        Func<JsonElement, Task> table,
+        CancellationToken cancellationToken)
+    {
+        var items = new List<JsonElement>();
+        var total = 0;
+        var yamlPages = new List<string>();
+
+        do
+        {
+            var page = $"{path}?offset={items.Count}&limit={PageSize}";
+            var response = await GetAsync(http, page, MediaTypes.Json, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                return await _printer.ProblemAsync(response, cancellationToken);
+            }
+
+            using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
+            total = body.RootElement.GetProperty("total").GetInt32();
+            var pageItems = body.RootElement.GetProperty("items")
+                .EnumerateArray()
+                .Select(item => item.Clone())
+                .ToList();
+            if (output == "yaml")
+            {
+                var yaml = await GetAsync(http, page, MediaTypes.Yaml, cancellationToken);
+                yamlPages.Add((await yaml.Content.ReadAsStringAsync(cancellationToken)).TrimEnd());
+            }
+
+            items.AddRange(pageItems);
+            if (pageItems.Count == 0)
+            {
+                break;
+            }
+        } while (items.Count < total);
+
+        var merged = JsonSerializer.SerializeToElement(new { items, total });
+
+        return output switch
+        {
+            "yaml" => await WriteAsync(string.Join($"{Environment.NewLine}---{Environment.NewLine}", yamlPages)),
+            "json" => await WriteAsync(JsonSerializer.Serialize(merged, Indented)),
+            _ => await TableAsync(table, merged)
+        };
+    }
+
+    private async Task<int> WriteAsync(string text)
+    {
+        await _context.Output.WriteLineAsync(text);
+
+        return 0;
+    }
+
+    private static async Task<int> TableAsync(Func<JsonElement, Task> table, JsonElement body)
+    {
+        await table(body);
+
+        return 0;
+    }
+
+    private static async Task<HttpResponseMessage> GetAsync(
+        HttpClient http,
+        string path,
+        string accept,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(accept));
+
+        return await http.SendAsync(request, cancellationToken);
+    }
+
     private async Task<int> ShowAsync(
         HttpClient http,
         string path,
@@ -287,9 +369,11 @@ internal sealed class Cli
         Func<JsonElement, Task> table,
         CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, path);
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(output == "yaml" ? Yaml : Json));
-        var response = await http.SendAsync(request, cancellationToken);
+        var response = await GetAsync(
+            http,
+            path,
+            output == "yaml" ? MediaTypes.Yaml : MediaTypes.Json,
+            cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
             return await _printer.ProblemAsync(response, cancellationToken);

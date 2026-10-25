@@ -24,17 +24,6 @@ internal static class Errors
                 : $"{kind} '{name}' was applied at Generation {expected}, but it is now at Generation {actual}. " +
                   "Read it again and reapply.");
 
-    public static Error Referenced(string kind, string name, IEnumerable<string> referrers) =>
-        Error.Conflict(
-            "resource.referenced",
-            $"{kind} '{name}' is still referenced by {string.Join(", ", referrers)}. Delete or change those first.");
-
-    public static Error DefaultNamespace() =>
-        Error.Conflict("namespace.default_cannot_be_deleted", "The default Namespace cannot be deleted.");
-
-    public static Error NamespaceHoldsResources(string name) =>
-        Error.Conflict("namespace.holds_resources", $"Namespace '{name}' still holds Resources. Delete them first.");
-
     public static Error UnknownSortKey(string key) =>
         Error.InvalidInput("resource.unknown_sort_key", $"Cannot sort Resources by '{key}'. Use: name.");
 }

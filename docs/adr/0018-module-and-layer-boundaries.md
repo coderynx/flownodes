@@ -6,8 +6,8 @@ Core holds only what more than one module needs. A type one module uses alone st
 
 The host (`apps/Flownodes`) composes the monolith through each module's `Bootstrap` namespace and touches nothing else in a module. Anything the host needs from a module is a method on its `Bootstrap` classes.
 
-A test project named for one module (`<Module>.*.Tests`) references only that module's projects and Core. A test project named for an app under `apps/`, such as `Flowctl.IntegrationTests`, references only that app. Tests that cross modules belong in a project of their own.
+A test project named for one module (`<Module>.*.Tests`) references only that module's projects and Core. A test project named for an app under `apps/`, such as `Flowctl.IntegrationTests`, references that app and may also reference the modules the app talks to, so it runs the app against them for real. Tests that cross modules belong in a project of their own.
 
 ## Consequences
 
-Architecture tests fail the build on a module project that is misnamed or references outside its inner layers and Core's counterpart, on host code that reaches past a module's `Bootstrap`, and on a module's test project that references another module. Whether something belongs in Core is held by review.
+Architecture tests fail the build on a module project that is misnamed or references outside its inner layers and Core's counterpart, on host code that reaches past a module's `Bootstrap`, and on a module's test project that references another module or an app. Whether something belongs in Core is held by review.

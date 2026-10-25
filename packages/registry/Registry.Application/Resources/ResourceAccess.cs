@@ -10,7 +10,7 @@ internal static class ResourceAccess
     public static async Task<Result<UserAccess?>> AuthoriseChangesAsync(
         this IApplicationDbContext database,
         Guid callerId,
-        IReadOnlyList<ManifestEntry> entries,
+        ManifestReading reading,
         CancellationToken cancellationToken)
     {
         var scope = await database.ScopeAsync(callerId, cancellationToken);
@@ -20,7 +20,7 @@ internal static class ResourceAccess
         }
 
         UserAccess? caller = null;
-        if (entries.Any(entry => entry.IsNamespace))
+        if (reading.TouchesNamespaces)
         {
             var administrator = await database.RequireAdministratorAsync(callerId, cancellationToken);
             if (administrator.IsFailure)
@@ -31,12 +31,7 @@ internal static class ResourceAccess
             caller = administrator.Value;
         }
 
-        var namespaces = entries.Where(entry => !entry.IsNamespace)
-            .Select(entry => entry.Namespace.Value)
-            .Distinct()
-            .Order(StringComparer.Ordinal);
-
-        foreach (var @namespace in namespaces)
+        foreach (var @namespace in reading.Namespaces)
         {
             var engineer = await database.RequireRoleAsync(
                 callerId,
@@ -53,7 +48,4 @@ internal static class ResourceAccess
 
         return Result.Found(caller);
     }
-
-    public static IReadOnlyList<string> LockOrder(IEnumerable<ManifestEntry> entries) =>
-        entries.Select(entry => entry.Namespace.Value).Distinct().Order(StringComparer.Ordinal).ToList();
 }

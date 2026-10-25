@@ -31,14 +31,14 @@ internal sealed class Handler(
         var target = Target(request);
         if (target.IsFailure)
         {
-            var access = await database.AuthoriseChangesAsync(request.CallerId, [], cancellationToken);
+            var access = await database.AuthoriseChangesAsync(request.CallerId, Scope(request), cancellationToken);
 
             return access.IsFailure ? access.Error : target.Error;
         }
 
         var deleted = await new ResourceDeletion(database, catalog, time, retention.Value.Keep).DeleteAsync(
             request.CallerId,
-            new ManifestReading([target.Value], []),
+            ManifestReading.Of(target.Value),
             1,
             request.DryRun,
             cancellationToken);
@@ -48,14 +48,14 @@ internal sealed class Handler(
 
     private Result<ManifestEntry> Target(Command request)
     {
-        if (request is { Namespace: null, Kinds: Namespace.Plural })
+        if (request.Namespace is null && KindRoutes.IsNamespace(request.Kinds))
         {
             return ResourceName.TryCreate(request.Name, out var name)
                 ? Result.Found(Entry(Namespace.Kind, name, NamespaceName.Create(name.Value), null))
                 : Errors.NamespaceNotFound(request.Name);
         }
 
-        var rules = catalog.FindByPlural(request.Kinds);
+        var rules = catalog.FindByRoute(request.Kinds);
         if (rules is null || request.Namespace is null)
         {
             return Errors.KindNotFound(request.Kinds);
@@ -69,6 +69,16 @@ internal sealed class Handler(
         return ResourceName.TryCreate(request.Name, out var resourceName)
             ? Result.Found(Entry(rules.Name, resourceName, @namespace, rules))
             : Errors.NotFound(rules.Name, request.Name);
+    }
+
+    private static ManifestReading Scope(Command request)
+    {
+        var isNamespace = request.Namespace is null && KindRoutes.IsNamespace(request.Kinds);
+        var namespaces = NamespaceName.TryCreate(request.Namespace, out var name)
+            ? [name.Value]
+            : Array.Empty<string>();
+
+        return new ManifestReading([], [], namespaces, isNamespace);
     }
 
     private static ManifestEntry Entry(

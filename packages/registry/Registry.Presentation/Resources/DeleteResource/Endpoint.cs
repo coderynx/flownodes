@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Registry.Application.Resources.DeleteResource;
 using Registry.Domain.Namespaces;
+using Registry.Presentation.Resources.Contracts;
+using Registry.Presentation.Resources.Http;
 
 namespace Registry.Presentation.Resources.DeleteResource;
 
@@ -19,14 +21,15 @@ internal sealed class Endpoint : IEndpoint
         app.MapDelete(
                 "/registry/namespaces/{namespace}/{kinds}/{name}",
                 (
-                        [AsParameters] Request request, ClaimsPrincipal caller, ISender sender,
+                        [AsParameters] Request request, ClaimsPrincipal caller, ISender sender, HttpContext http,
                         CancellationToken cancellationToken) =>
                     DeleteAsync(
                         new Command(caller.CallerId(), request.Namespace, request.Kinds, request.Name, request.DryRun),
                         sender,
+                        http,
                         cancellationToken))
             .WithName("DeleteResource")
-            .Produces(StatusCodes.Status204NoContent)
+            .Produces<DeleteResponse>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
@@ -36,24 +39,32 @@ internal sealed class Endpoint : IEndpoint
                 "/registry/namespaces/{name}",
                 (
                         [AsParameters] NamespaceRequest request, ClaimsPrincipal caller, ISender sender,
+                        HttpContext http,
                         CancellationToken cancellationToken) =>
                     DeleteAsync(
                         new Command(caller.CallerId(), null, Namespace.Plural, request.Name, request.DryRun),
                         sender,
+                        http,
                         cancellationToken))
             .WithName("DeleteNamespace")
-            .Produces(StatusCodes.Status204NoContent)
+            .Produces<DeleteResponse>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
     }
 
-    private static async Task<IResult> DeleteAsync(Command command, ISender sender, CancellationToken cancellationToken)
+    private static async Task<IResult> DeleteAsync(
+        Command command,
+        ISender sender,
+        HttpContext http,
+        CancellationToken cancellationToken)
     {
         var result = await sender.SendAsync(command, cancellationToken);
 
-        return result.Match(_ => Results.NoContent(), error => error.ToProblem());
+        return result.Match(
+            deleted => ManifestFormat.Negotiate(http, new DeleteResponse(command.DryRun, [deleted.ToDto()])),
+            error => error.ToResourceProblem());
     }
 
     internal sealed record Request(

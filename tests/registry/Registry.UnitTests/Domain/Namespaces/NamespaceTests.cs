@@ -78,4 +78,23 @@ public sealed class NamespaceTests
         second.ShouldBe(3);
         @namespace.Seq.ShouldBe(3);
     }
+
+    [Theory]
+    [InlineData("acme", false, NamespaceDeletion.Allowed)]
+    [InlineData("acme", true, NamespaceDeletion.HoldsResources)]
+    [InlineData(NamespaceName.Default, false, NamespaceDeletion.Default)]
+    public void CheckDeletion_ShouldAllowOnlyAnEmptyNamespaceThatIsNotDefault(
+        string name,
+        bool holdsResources,
+        NamespaceDeletion expected)
+    {
+        // Arrange
+        var @namespace = Namespace.Create(NamespaceName.Create(name));
+
+        // Act
+        var deletion = @namespace.CheckDeletion(holdsResources);
+
+        // Assert
+        deletion.ShouldBe(expected);
+    }
 }

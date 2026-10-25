@@ -72,6 +72,37 @@ public sealed class HandlerTests
         result.Error.Code.ShouldBe("resource.not_found");
     }
 
+    [Fact]
+    public async Task HandleAsync_ShouldReturnForbidden_WhenAnOperatorDeletesAnInvalidName()
+    {
+        // Arrange
+        var caller = Callers.Member("acme");
+        var database = TestDatabase.Create([Namespace.Create(NamespaceName.Create("acme"))], users: [caller]);
+
+        // Act
+        var result = await Handler(database).HandleAsync(new Command(caller.Id, "acme", "widgets", "W 1", false), Ct);
+
+        // Assert
+        result.Error.Code.ShouldBe(Core.Application.Authorization.AccessErrors.ForbiddenCode);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldDeleteTheResource_WhenItsKindIsGivenInTheSingular()
+    {
+        // Arrange
+        var caller = Callers.Member("acme", NamespaceRole.Engineer);
+        var database = TestDatabase.Create(
+            [Namespace.Create(NamespaceName.Create("acme"))],
+            [Widgets.Stored("acme", "w-1")],
+            [caller]);
+
+        // Act
+        var result = await Handler(database).HandleAsync(new Command(caller.Id, "acme", "widget", "w-1", false), Ct);
+
+        // Assert
+        result.Value.Kind.ShouldBe(WidgetKind.Kind);
+    }
+
     private static Handler Handler(IApplicationDbContext database) =>
         new(database, WidgetKind.Catalog, ResourceHandlers.Time(), ResourceHandlers.Retention());
 

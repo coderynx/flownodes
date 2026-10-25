@@ -24,9 +24,12 @@ internal sealed class Printer(CliContext context)
             foreach (var error in errors.EnumerateArray())
             {
                 var subject = Text(error, "kind") is { } kind ? $"{kind}/{Text(error, "name") ?? "?"}" : "?";
+                var document = error.GetProperty("document");
+                var where = document.ValueKind == JsonValueKind.Number
+                    ? $"document {document.GetInt32()}"
+                    : "not in the Manifest";
                 await context.Error.WriteLineAsync(
-                    $"  document {error.GetProperty("document").GetInt32()} {subject} {Text(error, "path")}: " +
-                    Text(error, "message"));
+                    $"  {where} {subject} {Text(error, "path")}: {Text(error, "message")}");
             }
         }
 

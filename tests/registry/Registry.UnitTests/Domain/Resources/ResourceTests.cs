@@ -136,4 +136,19 @@ public sealed class ResourceTests
         Resource.Create(NamespaceName.Create("acme"), "Widget", ResourceName.Create("w-1"), Json(spec), 1);
 
     private static JsonElement Json(string json) => JsonDocument.Parse(json).RootElement.Clone();
+
+    [Theory]
+    [InlineData("""{"size": 1.0}""", 1)]
+    [InlineData("""{"size": 2}""", 2)]
+    public void GenerationAfter_ShouldTellTheGenerationApplyingASpecWouldReach(string spec, long expected)
+    {
+        // Arrange
+        var resource = Widget("""{"size": 1}""");
+
+        // Act
+        var generation = resource.GenerationAfter(Json(spec));
+
+        // Assert
+        generation.ShouldBe(expected);
+    }
 }

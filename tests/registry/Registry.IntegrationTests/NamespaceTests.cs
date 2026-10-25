@@ -189,7 +189,7 @@ public sealed class NamespaceTests(PostgresFixture postgres)
         var response = await app.Client.DeleteAsync($"{Route}/acme", Ct);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await app.Client.GetAsync($"{Route}/acme", Ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 

@@ -278,7 +278,7 @@ public sealed class ResourceTests(PostgresFixture postgres)
         var response = await engineer.DeleteAsync($"{Widgets}/child", Ct);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await engineer.GetAsync($"{Widgets}/child", Ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         var deleted = await app.Messages.WaitForDeletedAsync("child", Ct);
         deleted.Seq.ShouldBe(4);
@@ -318,6 +318,59 @@ public sealed class ResourceTests(PostgresFixture postgres)
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var list = await engineer.GetFromJsonAsync<ListBody>(Widgets, Ct);
         list!.Total.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task DeleteManifest_ShouldListEveryRefusedResource_WhenSeveralAreStillReferenced()
+    {
+        // Arrange
+        await using var app = await StartAsync();
+        var engineer = await EngineerAsync(app);
+        var manifest = $"""
+                        {Widget("a", "size: 1")}
+                        ---
+                        {Widget("b", "size: 1")}
+                        ---
+                        {Widget("uses-a", "parent: a")}
+                        ---
+                        {Widget("uses-b", "parent: b")}
+                        """;
+        await RegistryApp.ApplyAsync(engineer, manifest, Ct, "?namespace=acme");
+        var targets = $"""
+                       {Widget("a", "size: 1")}
+                       ---
+                       {Widget("b", "size: 1")}
+                       """;
+
+        // Act
+        var response = await RegistryApp.DeleteManifestAsync(engineer, targets, Ct, "?namespace=acme");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemBody>(Ct);
+        problem!.Errors.Select(error => error.Name).ShouldBe(["a", "b"]);
+    }
+
+    [Fact]
+    public async Task Apply_ShouldRejectTheManifest_WhenItBreaksAResourceItDoesNotList()
+    {
+        // Arrange
+        await using var app = await StartAsync();
+        var engineer = await EngineerAsync(app);
+        var manifest = $"""
+                        {Widget("root", "size: 5")}
+                        ---
+                        {Widget("child", "parent: root\n  size: 4")}
+                        """;
+        await RegistryApp.ApplyAsync(engineer, manifest, Ct, "?namespace=acme");
+
+        // Act
+        var response = await RegistryApp.ApplyAsync(engineer, Widget("root", "size: 1"), Ct, "?namespace=acme");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        var error = (await response.Content.ReadFromJsonAsync<ProblemBody>(Ct))!.Errors.ShouldHaveSingleItem();
+        (error.Document, error.Name, error.Path).ShouldBe((null, "child", "spec.size"));
     }
 
     [Fact]
@@ -462,7 +515,7 @@ public sealed class ResourceTests(PostgresFixture postgres)
 
     private sealed record RevisionsBody(IReadOnlyList<RevisionBody> Items, int Total);
 
-    private sealed record ErrorBody(int Document, string? Kind, string? Name, string Path, string Message);
+    private sealed record ErrorBody(int? Document, string? Kind, string? Name, string Path, string Message);
 
     private sealed record ProblemBody(IReadOnlyList<ErrorBody> Errors);
 }

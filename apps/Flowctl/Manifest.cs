@@ -6,9 +6,6 @@ namespace Flowctl;
 
 internal static class Manifest
 {
-    private const string Yaml = "application/yaml";
-    private const string Json = "application/json";
-
     public static async Task<StringContent> ReadAsync(
         IReadOnlyList<string> files,
         TextReader input,
@@ -36,7 +33,7 @@ internal static class Manifest
                 }
             }
 
-            return new StringContent(resources.ToJsonString(), Encoding.UTF8, Json);
+            return new StringContent(resources.ToJsonString(), Encoding.UTF8, MediaTypes.Json);
         }
 
         if (parts.Exists(part => part.IsJson))
@@ -44,7 +41,19 @@ internal static class Manifest
             throw new InvalidDataException("Give either YAML files or JSON files, not both.");
         }
 
-        return new StringContent(string.Join("\n---\n", parts.Select(part => part.Text)), Encoding.UTF8, Yaml);
+        return new StringContent(
+            string.Join(DocumentEnd, parts.Select(part => WithoutDocumentEnd(part.Text))),
+            Encoding.UTF8,
+            MediaTypes.Yaml);
+    }
+
+    private const string DocumentEnd = "\n...\n";
+
+    private static string WithoutDocumentEnd(string yaml)
+    {
+        var trimmed = yaml.TrimEnd();
+
+        return trimmed.EndsWith("\n...", StringComparison.Ordinal) ? trimmed[..^4] : trimmed;
     }
 
     public static bool IsJson(string text)

@@ -9,11 +9,13 @@ namespace Registry.Application.Resources;
 
 internal sealed class ManifestState
 {
+    private readonly KindCatalog _catalog;
     private readonly List<Namespace> _namespaces;
     private readonly List<Resource> _resources;
 
-    private ManifestState(List<Namespace> namespaces, List<Resource> resources)
+    private ManifestState(KindCatalog catalog, List<Namespace> namespaces, List<Resource> resources)
     {
+        _catalog = catalog;
         _namespaces = namespaces;
         _resources = resources;
     }
@@ -22,10 +24,11 @@ internal sealed class ManifestState
 
     public static async Task<Result<ManifestState>> LoadAsync(
         IApplicationDbContext database,
+        KindCatalog catalog,
         IReadOnlyList<ManifestEntry> entries,
         CancellationToken cancellationToken)
     {
-        var names = ResourceAccess.LockOrder(entries);
+        var names = entries.Select(entry => entry.Namespace.Value).Distinct().Order(StringComparer.Ordinal).ToList();
         await database.LockNamespacesAsync(names, cancellationToken);
 
         var namespaceNames = names.Select(NamespaceName.Create).ToList();
@@ -41,7 +44,7 @@ internal sealed class ManifestState
         var resources = await database.Resources.Where(resource => namespaceNames.Contains(resource.Namespace))
             .ToListAsync(cancellationToken);
 
-        return Result.Found(new ManifestState(namespaces, resources));
+        return Result.Found(new ManifestState(catalog, namespaces, resources));
     }
 
     public Namespace? FindNamespace(NamespaceName name) =>
@@ -49,20 +52,33 @@ internal sealed class ManifestState
 
     public Resource? FindResource(ManifestEntry entry) => _resources.Find(entry.Is);
 
-    public IEnumerable<ManifestProblem> UnresolvedReferences(IReadOnlyList<ManifestEntry> entries) =>
-        from entry in entries
-        where !entry.IsNamespace
-        from reference in entry.Rules!.References(entry.Spec)
-        where !entries.Any(other => Names(other, entry.Namespace, reference)) && !_resources.Exists(resource =>
-            resource.Namespace == entry.Namespace && resource.Kind == reference.Kind &&
-            resource.Name.Value == reference.Name)
-        select new ManifestProblem(
-            entry.Document,
-            entry.Kind,
-            entry.Name.Value,
-            reference.Path,
-            $"References {reference.Kind} '{reference.Name}', which does not exist in Namespace " +
-            $"'{entry.Namespace}'.");
+    public IEnumerable<ManifestProblem> Problems(IReadOnlyList<ManifestEntry> entries)
+    {
+        var problems = new List<ManifestProblem>();
+
+        foreach (var group in entries.Where(entry => !entry.IsNamespace).GroupBy(entry => entry.Namespace))
+        {
+            var stored = _resources.Where(resource => resource.Namespace == group.Key).ToList();
+            var before = new NamespaceSnapshot(group.Key, stored.Select(Snapshot));
+            var untouched = stored.Where(resource => !group.Any(entry => entry.Is(resource))).ToList();
+            var after = new NamespaceSnapshot(
+                group.Key,
+                untouched.Select(Snapshot)
+                    .Concat(group.Select(entry => new SnapshotResource(entry.Kind, entry.Name, entry.Spec))));
+
+            foreach (var entry in group)
+            {
+                problems.AddRange(EntryProblems(entry, after));
+            }
+
+            foreach (var resource in untouched)
+            {
+                problems.AddRange(NewProblems(resource, before, after));
+            }
+        }
+
+        return problems;
+    }
 
     public Error? FirstStalePrecondition(IReadOnlyList<ManifestEntry> entries)
     {
@@ -80,7 +96,47 @@ internal sealed class ManifestState
         return null;
     }
 
-    private static bool Names(ManifestEntry entry, NamespaceName @namespace, SpecReference reference) =>
-        !entry.IsNamespace && entry.Namespace == @namespace && entry.Kind == reference.Kind &&
-        entry.Name.Value == reference.Name;
+    private static SnapshotResource Snapshot(Resource resource) => new(resource.Kind, resource.Name, resource.Spec);
+
+    private static IEnumerable<ManifestProblem> EntryProblems(ManifestEntry entry, NamespaceSnapshot after)
+    {
+        var errors = entry.Rules!.Validate(entry.Spec, after).ToList();
+        if (errors.Count > 0)
+        {
+            return errors.Select(error => Problem(entry, error.Path, error.Message));
+        }
+
+        return entry.Rules.References(entry.Spec)
+            .Where(reference => after.Find(reference.Kind, reference.Name) is null)
+            .Select(reference => Problem(
+                entry,
+                reference.Path,
+                $"References {reference.Kind} '{reference.Name}', which does not exist in Namespace " +
+                $"'{entry.Namespace}'."));
+    }
+
+    private IEnumerable<ManifestProblem> NewProblems(
+        Resource resource,
+        NamespaceSnapshot before,
+        NamespaceSnapshot after)
+    {
+        if (_catalog.Find(resource.Kind) is not { } rules)
+        {
+            return [];
+        }
+
+        var existing = rules.Validate(resource.Spec, before).ToHashSet();
+
+        return rules.Validate(resource.Spec, after)
+            .Where(error => !existing.Contains(error))
+            .Select(error => new ManifestProblem(
+                null,
+                resource.Kind,
+                resource.Name.Value,
+                error.Path,
+                $"{error.Message} This Resource is not in the Manifest, but the Manifest changes its meaning."));
+    }
+
+    private static ManifestProblem Problem(ManifestEntry entry, string path, string message) =>
+        new(entry.Document, entry.Kind, entry.Name.Value, path, message);
 }

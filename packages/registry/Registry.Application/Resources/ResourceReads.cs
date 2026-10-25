@@ -22,7 +22,7 @@ internal static class ResourceReads
             return caller.Error;
         }
 
-        var kind = catalog.FindByPlural(kinds);
+        var kind = catalog.FindByRoute(kinds);
         if (kind is null)
         {
             return Errors.KindNotFound(kinds);

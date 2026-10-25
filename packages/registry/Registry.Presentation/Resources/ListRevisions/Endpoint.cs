@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Routing;
 using Registry.Application.Resources.ListRevisions;
 using Registry.Domain.Namespaces;
 using Registry.Presentation.Resources.Contracts;
+using Registry.Presentation.Resources.Http;
 
 namespace Registry.Presentation.Resources.ListRevisions;
 

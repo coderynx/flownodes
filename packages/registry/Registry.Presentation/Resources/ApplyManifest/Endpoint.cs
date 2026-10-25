@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Registry.Application.Resources.ApplyManifest;
 using Registry.Domain.Resources;
-using Registry.Presentation.Resources.Contracts;
+using Registry.Presentation.Resources.Http;
 
 namespace Registry.Presentation.Resources.ApplyManifest;
 

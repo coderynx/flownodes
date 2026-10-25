@@ -13,18 +13,25 @@ internal sealed record ManifestEntry(
     JsonElement Spec,
     IResourceKind? Rules)
 {
-    public bool IsNamespace => Rules is null;
+    public bool IsNamespace => Kind == Domain.Namespaces.Namespace.Kind;
     public string? NamespaceOrNull => IsNamespace ? null : Namespace.Value;
 
     public bool Is(Resource resource) =>
         resource.Namespace == Namespace && resource.Kind == Kind && resource.Name == Name;
 }
 
-internal sealed record ManifestReading(IReadOnlyList<ManifestEntry> Entries, IReadOnlyList<ManifestProblem> Problems);
+internal sealed record ManifestReading(
+    IReadOnlyList<ManifestEntry> Entries,
+    IReadOnlyList<ManifestProblem> Problems,
+    IReadOnlyList<string> Namespaces,
+    bool TouchesNamespaces)
+{
+    public static ManifestReading Of(ManifestEntry entry) =>
+        new([entry], [], entry.IsNamespace ? [] : [entry.Namespace.Value], entry.IsNamespace);
+}
 
 internal static class ManifestReader
 {
-    public const string ApiVersion = "flownodes.io/v1alpha1";
     private static readonly string[] TopLevelFields = ["apiVersion", "kind", "metadata", "spec", "status"];
     private static readonly string[] MetadataFields = ["name", "namespace", "generation", "uid"];
 
@@ -48,16 +55,24 @@ internal static class ManifestReader
     {
         var entries = new List<ManifestEntry>();
         var problems = new List<ManifestProblem>();
+        var namespaces = new SortedSet<string>(StringComparer.Ordinal);
+        var touchesNamespaces = false;
 
         for (var index = 0; index < documents.Count; index++)
         {
             var document = new DocumentReader(index, documents[index], requestedNamespace, catalog, withSpec);
             var entry = document.ReadEntry();
-            if (entry is not null && entries.Any(other =>
+            if (entry is not null && entries.Exists(other =>
                     other.Kind == entry.Kind && other.Name == entry.Name && other.Namespace == entry.Namespace))
             {
                 document.Problem("metadata.name", $"{entry.Kind} '{entry.Name}' is listed more than once.");
                 entry = null;
+            }
+
+            touchesNamespaces |= document.IsNamespace;
+            if (document.Target is { } target)
+            {
+                namespaces.Add(target);
             }
 
             problems.AddRange(document.Problems);
@@ -67,7 +82,7 @@ internal static class ManifestReader
             }
         }
 
-        return new ManifestReading(entries, problems);
+        return new ManifestReading(entries, problems, [.. namespaces], touchesNamespaces);
     }
 
     private sealed class DocumentReader(
@@ -80,6 +95,8 @@ internal static class ManifestReader
         private string? _kind;
         private string? _name;
         public List<ManifestProblem> Problems { get; } = [];
+        public bool IsNamespace => _kind == Namespace.Kind;
+        public string? Target { get; private set; }
 
         public void Problem(string path, string message) =>
             Problems.Add(new ManifestProblem(index, _kind, _name, path, message));
@@ -107,7 +124,7 @@ internal static class ManifestReader
             ReadApiVersion();
             var rules = ReadKind();
             var (name, @namespace, generation) = ReadMetadata(metadata);
-            var spec = withSpec ? ReadSpec(rules) : Namespace.Spec;
+            var spec = withSpec ? ReadSpec() : Namespace.Spec;
 
             return Problems.Count == 0 && name is not null && @namespace is not null
                 ? new ManifestEntry(index, _kind!, name, @namespace, generation, spec, rules)
@@ -122,11 +139,11 @@ internal static class ManifestReader
         private void ReadApiVersion()
         {
             var present = document.TryGetProperty("apiVersion", out var value);
-            var matches = value.ValueKind == JsonValueKind.String && value.GetString() == ApiVersion;
+            var matches = value.ValueKind == JsonValueKind.String && value.GetString() == Resource.ApiVersion;
             var required = withSpec || present;
             if (required && !matches)
             {
-                Problem("apiVersion", $"Must be '{ApiVersion}'.");
+                Problem("apiVersion", $"Must be '{Resource.ApiVersion}'.");
             }
         }
 
@@ -140,7 +157,7 @@ internal static class ManifestReader
             }
 
             var rules = catalog.Find(_kind);
-            if (rules is null && _kind != Namespace.Kind)
+            if (rules is null && !IsNamespace)
             {
                 Problem("kind", $"There is no Kind called '{_kind}'.");
             }
@@ -152,6 +169,7 @@ internal static class ManifestReader
         {
             if (metadata.ValueKind != JsonValueKind.Object)
             {
+                Target = IsNamespace ? null : requestedNamespace ?? NamespaceName.Default;
                 Problem("metadata", "Required, with at least a name.");
 
                 return (null, null, null);
@@ -176,7 +194,7 @@ internal static class ManifestReader
         private NamespaceName? ReadNamespace(JsonElement metadata, ResourceName? name)
         {
             var present = metadata.TryGetProperty("namespace", out var value);
-            if (_kind == Namespace.Kind)
+            if (IsNamespace)
             {
                 if (present)
                 {
@@ -188,18 +206,20 @@ internal static class ManifestReader
 
             if (!present)
             {
-                return NamespaceName.Create(requestedNamespace ?? NamespaceName.Default);
+                Target = requestedNamespace ?? NamespaceName.Default;
+
+                return NamespaceName.TryCreate(Target, out var defaulted) ? defaulted : null;
             }
 
-            if (!NamespaceName.TryCreate(
-                    value.ValueKind == JsonValueKind.String ? value.GetString() : null,
-                    out var own))
+            var text = value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+            if (!NamespaceName.TryCreate(text, out var own))
             {
                 Problem("metadata.namespace", "Must be the name of a Namespace.");
 
                 return null;
             }
 
+            Target = own.Value;
             if (requestedNamespace is not null && own.Value != requestedNamespace)
             {
                 Problem("metadata.namespace", $"Is '{own}', but the request is for Namespace '{requestedNamespace}'.");
@@ -228,10 +248,10 @@ internal static class ManifestReader
             return null;
         }
 
-        private JsonElement ReadSpec(IResourceKind? rules)
+        private JsonElement ReadSpec()
         {
             var present = document.TryGetProperty("spec", out var spec);
-            if (_kind == Namespace.Kind)
+            if (IsNamespace)
             {
                 var isEmpty = spec.ValueKind == JsonValueKind.Object && !spec.EnumerateObject().Any();
                 if (present && !isEmpty)
@@ -245,13 +265,6 @@ internal static class ManifestReader
             if (!present || spec.ValueKind != JsonValueKind.Object)
             {
                 Problem("spec", "Required, as an object.");
-
-                return spec;
-            }
-
-            foreach (var error in rules?.Validate(spec) ?? [])
-            {
-                Problem(error.Path, error.Message);
             }
 
             return spec;

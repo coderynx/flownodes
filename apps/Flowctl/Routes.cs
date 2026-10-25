@@ -5,20 +5,13 @@ internal static class Routes
     private const string Registry = "api/v1/registry";
     private const string Namespaces = "namespaces";
 
-    public static string Plural(string kind)
-    {
-        var lower = kind.ToLowerInvariant();
-
-        return lower.EndsWith('s') ? lower : $"{lower}s";
-    }
-
     public static string Collection(string kind, string @namespace)
     {
-        var plural = Plural(kind);
+        var route = kind.ToLowerInvariant();
 
-        return plural == Namespaces
+        return route is Namespaces or "namespace"
             ? $"{Registry}/{Namespaces}"
-            : $"{Registry}/{Namespaces}/{Escape(@namespace)}/{Escape(plural)}";
+            : $"{Registry}/{Namespaces}/{Escape(@namespace)}/{Escape(route)}";
     }
 
     public static string Item(string kind, string @namespace, string name) =>

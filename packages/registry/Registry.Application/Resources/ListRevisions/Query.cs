@@ -32,11 +32,9 @@ public sealed record RevisionPage(IReadOnlyList<Revision> Items, int Total);
 internal sealed class Handler(IApplicationDbContext database, KindCatalog catalog)
     : IRequestHandler<Query, Result<RevisionPage>>
 {
-    private const int MaxLimit = 200;
-
     public async Task<Result<RevisionPage>> HandleAsync(Query request, CancellationToken cancellationToken = default)
     {
-        var subject = request is { Namespace: null, Kinds: Namespace.Plural }
+        var subject = request.Namespace is null && KindRoutes.IsNamespace(request.Kinds)
             ? await NamespaceSubjectAsync(request, cancellationToken)
             : await ResourceSubjectAsync(request, cancellationToken);
         if (subject.IsFailure)
@@ -60,8 +58,7 @@ internal sealed class Handler(IApplicationDbContext database, KindCatalog catalo
 
         var items = await revisions.OrderByDescending(revision => revision.AppliedAt)
             .ThenByDescending(revision => revision.Id)
-            .Skip(Math.Max(request.Offset, 0))
-            .Take(Math.Clamp(request.Limit, 1, MaxLimit))
+            .Page(request.Offset, request.Limit)
             .ToListAsync(cancellationToken);
 
         return Result.Found(new RevisionPage(items, total));

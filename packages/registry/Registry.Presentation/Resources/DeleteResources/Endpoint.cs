@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Registry.Application.Resources.DeleteResources;
 using Registry.Presentation.Resources.Contracts;
+using Registry.Presentation.Resources.Http;
 
 namespace Registry.Presentation.Resources.DeleteResources;
 
@@ -36,19 +37,12 @@ internal sealed class Endpoint : IEndpoint
                     return result.Match(
                         deleted => ManifestFormat.Negotiate(
                             http,
-                            new Response(
-                                request.DryRun,
-                                [
-                                    .. deleted.Select(resource => new DeletedDto(
-                                        resource.Kind,
-                                        resource.Namespace,
-                                        resource.Name))
-                                ])),
+                            new DeleteResponse(request.DryRun, [.. deleted.Select(resource => resource.ToDto())])),
                         error => error.ToResourceProblem());
                 })
             .WithName("DeleteResources")
             .Accepts<JsonElement>("application/json", ManifestFormat.Yaml)
-            .Produces<Response>()
+            .Produces<DeleteResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
@@ -58,8 +52,4 @@ internal sealed class Endpoint : IEndpoint
     }
 
     internal sealed record Request([FromQuery] string? Namespace, [FromQuery] bool DryRun = false);
-
-    internal sealed record Response(bool DryRun, IReadOnlyList<DeletedDto> Resources);
-
-    internal sealed record DeletedDto(string Kind, string? Namespace, string Name);
 }

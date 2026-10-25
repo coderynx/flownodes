@@ -14,6 +14,11 @@ public sealed class Resource
     }
 
     /// <summary>
+    /// The <c>apiVersion</c> every Resource is written with in a Manifest.
+    /// </summary>
+    public const string ApiVersion = "flownodes.io/v1alpha1";
+
+    /// <summary>
     /// Gets the Namespace the Resource lives in.
     /// </summary>
     public required NamespaceName Namespace { get; init; }
@@ -86,6 +91,13 @@ public sealed class Resource
     /// <param name="spec">The Spec being applied.</param>
     /// <returns><see langword="true"/> when applying <paramref name="spec"/> is a no-op.</returns>
     public bool Matches(JsonElement spec) => SpecDiff.AreEquivalent(Spec, spec);
+
+    /// <summary>
+    /// Tells which Generation applying a Spec would leave the Resource at, without applying it.
+    /// </summary>
+    /// <param name="spec">The Spec being applied.</param>
+    /// <returns>The current Generation when the Spec means the same, otherwise the next one.</returns>
+    public long GenerationAfter(JsonElement spec) => Matches(spec) ? Generation : Generation + 1;
 
     /// <summary>
     /// Replaces the whole Spec, which starts a new Generation.

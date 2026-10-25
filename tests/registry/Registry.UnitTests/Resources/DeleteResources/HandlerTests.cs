@@ -70,8 +70,9 @@ public sealed class HandlerTests
 
         // Assert
         result.Error.Kind.ShouldBe(ErrorKind.Conflict);
-        result.Error.Code.ShouldBe("resource.referenced");
-        result.Error.Message.ShouldContain("Widget 'child'");
+        var refusal = result.Error.ShouldBeOfType<DeletionRefused>().Problems.ShouldHaveSingleItem();
+        refusal.Name.ShouldBe("root");
+        refusal.Message.ShouldContain("Widget 'child'");
         await ShouldNotHaveDeletedAsync(database);
     }
 
@@ -155,7 +156,9 @@ public sealed class HandlerTests
         var result = await Handler(database).HandleAsync(Delete(caller.Id, NamespaceTarget("acme")), Ct);
 
         // Assert
-        result.Error.Code.ShouldBe("namespace.holds_resources");
+        result.Error.ShouldBeOfType<DeletionRefused>()
+            .Problems.ShouldHaveSingleItem()
+            .Message.ShouldContain("still holds Resources");
         await ShouldNotHaveDeletedAsync(database);
     }
 
@@ -170,7 +173,9 @@ public sealed class HandlerTests
         var result = await Handler(database).HandleAsync(Delete(caller.Id, NamespaceTarget("default")), Ct);
 
         // Assert
-        result.Error.Code.ShouldBe("namespace.default_cannot_be_deleted");
+        result.Error.ShouldBeOfType<DeletionRefused>()
+            .Problems.ShouldHaveSingleItem()
+            .Message.ShouldContain("default Namespace cannot be deleted");
         await ShouldNotHaveDeletedAsync(database);
     }
 
@@ -209,6 +214,30 @@ public sealed class HandlerTests
         database.Namespaces.DidNotReceive().Remove(Arg.Any<Namespace>());
         await database.DidNotReceive().PublishAsync(Arg.Any<ResourceDeleted>());
         await database.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldListEveryRefusedResource_WhenSeveralTargetsAreStillReferenced()
+    {
+        // Arrange
+        var caller = Engineer();
+        var database = TestDatabase.Create(
+            [Acme()],
+            [
+                Widgets.Stored("acme", "a"), Widgets.Stored("acme", "b"),
+                Widgets.Stored("acme", "uses-a", """{"parent": "a"}"""),
+                Widgets.Stored("acme", "uses-b", """{"parent": "b"}""")
+            ],
+            [caller]);
+
+        // Act
+        var result = await Handler(database).HandleAsync(Delete(caller.Id, Target("a"), Target("b")), Ct);
+
+        // Assert
+        result.Error.ShouldBeOfType<DeletionRefused>()
+            .Problems.Select(problem => (problem.Document, problem.Name))
+            .ShouldBe([(0, "a"), (1, "b")]);
+        await ShouldNotHaveDeletedAsync(database);
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

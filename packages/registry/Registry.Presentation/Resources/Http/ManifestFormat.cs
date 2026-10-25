@@ -7,7 +7,7 @@ using Microsoft.Net.Http.Headers;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
-namespace Registry.Presentation.Resources.Contracts;
+namespace Registry.Presentation.Resources.Http;
 
 internal static partial class ManifestFormat
 {

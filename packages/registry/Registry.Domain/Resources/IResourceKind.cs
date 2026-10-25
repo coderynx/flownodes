@@ -16,16 +16,19 @@ public interface IResourceKind
     /// </summary>
     string Name { get; }
     /// <summary>
-    /// Gets the Kind as written in a route and in <c>flowctl</c>: lowercase and plural, such as <c>connections</c>.
+    /// Gets the Kind as a route usually writes it: lowercase and plural, such as <c>connections</c>. A route may also
+    /// give the lowercase singular.
     /// </summary>
     string Plural { get; }
 
     /// <summary>
-    /// Checks a Spec against the Kind's schema and rules, without looking at other Resources.
+    /// Checks a Spec against the Kind's schema and rules, which may look across the Namespace as the apply would leave
+    /// it. References are checked separately, through <see cref="References"/>.
     /// </summary>
-    /// <param name="spec">The Spec as applied.</param>
+    /// <param name="spec">The Spec as applied, or as stored for a Resource the apply leaves alone.</param>
+    /// <param name="namespace">Every namespaced Resource of the Namespace as the apply would leave them.</param>
     /// <returns>Every problem found; empty when the Spec is valid.</returns>
-    IEnumerable<SpecError> Validate(JsonElement spec);
+    IEnumerable<SpecError> Validate(JsonElement spec, NamespaceSnapshot @namespace);
 
     /// <summary>
     /// Lists the Resources a valid Spec references, each of which must exist in the same Namespace.
