@@ -1,4 +1,5 @@
 using Engine.Application.Devices;
+using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.Devices;
 using Engine.Infrastructure.Integrations;
@@ -113,6 +114,10 @@ public sealed class EngineCluster : IAsyncDisposable
                     options.ResyncPeriod = resyncPeriod;
                     options.PingPeriod = TimeSpan.FromMilliseconds(200);
                 });
+                services.Configure<AssetGrainOptions>(options =>
+                    options.StatusInterval = TimeSpan.FromMilliseconds(50));
+                services.Configure<AssetTypeGrainOptions>(options =>
+                    options.StatusInterval = TimeSpan.FromMilliseconds(50));
                 services.Configure<DeviceGrainOptions>(options =>
                     options.StatusInterval = TimeSpan.FromMilliseconds(50));
                 services.Configure<ConnectionGrainOptions>(options =>

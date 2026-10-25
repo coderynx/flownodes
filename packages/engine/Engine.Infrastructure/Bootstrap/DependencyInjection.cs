@@ -2,6 +2,7 @@ using Core.Application.Integrations;
 using Core.Contracts.Resources;
 using Engine.Application.Devices;
 using Engine.Application.Integrations;
+using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.Devices;
 using Engine.Infrastructure.Integrations;
@@ -98,6 +99,9 @@ public static class DependencyInjection
         builder.Services.AddSingleton<IRegistryRequests, WolverineRegistryRequests>();
         builder.Services.Configure<ConnectionGrainOptions>(
             builder.Configuration.GetSection(ConnectionGrainOptions.Section));
+        builder.Services.Configure<AssetGrainOptions>(builder.Configuration.GetSection(AssetGrainOptions.Section));
+        builder.Services.Configure<AssetTypeGrainOptions>(
+            builder.Configuration.GetSection(AssetTypeGrainOptions.Section));
         builder.Services.Configure<DeviceGrainOptions>(builder.Configuration.GetSection(DeviceGrainOptions.Section));
         builder.Services.AddSingleton<IStatusReporter, WolverineStatusReporter>();
         builder.Services.AddSingleton<IDeviceRuntime, GrainDeviceRuntime>();

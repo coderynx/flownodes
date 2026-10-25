@@ -6,7 +6,8 @@ namespace Registry.Application.Resources;
 
 /// <summary>
 /// The Device Kind: a Device declared on a Connection at an Integration-defined address (ADR-0008). Its <c>address</c>
-/// and <c>config</c> are checked against its Device Type (ADR-0010).
+/// and <c>config</c> are checked against its Device Type (ADR-0010), and its optional <c>asset</c> attaches it to at
+/// most one Asset (ADR-0008).
 /// </summary>
 internal sealed class DeviceKind(IIntegrationSchemas integrations) : IResourceKind
 {
@@ -17,7 +18,7 @@ internal sealed class DeviceKind(IIntegrationSchemas integrations) : IResourceKi
     public IEnumerable<SpecError> Validate(JsonElement spec, NamespaceSnapshot @namespace)
     {
         foreach (var field in spec.EnumerateObject()
-                     .Where(field => field.Name is not ("connection" or "type" or "address" or "config")))
+                     .Where(field => field.Name is not ("connection" or "type" or "address" or "config" or "asset")))
         {
             yield return new SpecError($"spec.{field.Name}", "Unknown field.");
         }
@@ -37,6 +38,11 @@ internal sealed class DeviceKind(IIntegrationSchemas integrations) : IResourceKi
         if (!spec.TryGetProperty("address", out var address))
         {
             yield return new SpecError("spec.address", "Required.");
+        }
+
+        if (spec.TryGetProperty("asset", out var asset) && asset.ValueKind != JsonValueKind.String)
+        {
+            yield return new SpecError("spec.asset", "Must be the name of an Asset.");
         }
 
         var connection = connectionName is null ? null : @namespace.Find(ConnectionKind.KindName, connectionName);
@@ -86,6 +92,11 @@ internal sealed class DeviceKind(IIntegrationSchemas integrations) : IResourceKi
         if (Text(spec, "connection") is { } connection)
         {
             yield return new SpecReference(ConnectionKind.KindName, connection, "spec.connection");
+        }
+
+        if (Text(spec, "asset") is { } asset)
+        {
+            yield return new SpecReference(AssetKind.KindName, asset, "spec.asset");
         }
     }
 
