@@ -79,12 +79,16 @@ The setting on a Flow that decides what happens when it is triggered while one o
 _Avoid_: Concurrency mode, concurrency policy, run mode
 
 **Alarm**:
-An abnormal situation on an Asset that requires an Operator's attention, with a lifecycle of active, acknowledged and cleared. Raised by an Alarm Condition or by a Flow.
+One occurrence of an abnormal situation on an Asset that requires an Operator's attention. It is active while its cause holds and cleared once it stops, acknowledged or not independently of that, and ends once it is both cleared and acknowledged, or is retired unacknowledged when the Alarm Condition that raised it changes or goes away. Raised by an Alarm Condition or by a Flow.
 _Avoid_: Alert, notification, incident
 
 **Alarm Condition**:
-A declarative rule on an Asset Type's Data Points, such as a brake pressure staying below 3 bar for 10 seconds, that raises an Alarm while it holds.
+A declarative rule on one of an Asset's Data Points, declared on the Asset or its Asset Type, such as a brake pressure staying below 3 bar for 10 seconds, that raises an Alarm while it holds.
 _Avoid_: Alarm rule, trigger, threshold
+
+**Alarm Priority**:
+How urgently an Alarm needs an Operator's attention: low, medium, high or critical.
+_Avoid_: Severity, level, urgency
 
 ### Configuration
 
