@@ -25,14 +25,15 @@ public sealed record Query(Guid CallerId, string? Q, string? Sort, bool Desc, in
 /// <param name="Total">How many Users match the filter, across all pages.</param>
 public sealed record UserPage(IReadOnlyList<User> Items, int Total);
 
-internal sealed class Handler(IIdentityDbContext database) : IRequestHandler<Query, Result<UserPage>>
+internal sealed class Handler(IIdentityDbContext database, ICallerChecks checks)
+    : IRequestHandler<Query, Result<UserPage>>
 {
     private const string UsernameKey = "username";
     private const int MaxLimit = 200;
 
     public async Task<Result<UserPage>> HandleAsync(Query request, CancellationToken cancellationToken = default)
     {
-        var caller = await CallerChecks.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
+        var caller = await checks.RequireAdministratorAsync(request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;

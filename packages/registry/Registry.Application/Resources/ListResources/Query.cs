@@ -34,15 +34,14 @@ public sealed record Query(
 /// <param name="Total">How many Resources match the filter, across all pages.</param>
 public sealed record ResourcePage(IReadOnlyList<Resource> Items, int Total);
 
-internal sealed class Handler(IApplicationDbContext database, KindCatalog catalog)
+internal sealed class Handler(IApplicationDbContext database, IResourceAccess access)
     : IRequestHandler<Query, Result<ResourcePage>>
 {
     private const string NameKey = "name";
 
     public async Task<Result<ResourcePage>> HandleAsync(Query request, CancellationToken cancellationToken = default)
     {
-        var read = await database.AuthoriseReadAsync(
-            catalog,
+        var read = await access.AuthoriseReadAsync(
             request.CallerId,
             request.Namespace,
             request.Kinds,

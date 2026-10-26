@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
-using Microsoft.Extensions.Options;
 using Registry.Application.Database;
 using Registry.Application.Namespaces;
 using Registry.Application.Secrets;
@@ -67,14 +66,16 @@ internal sealed class Handler(
     KindCatalog catalog,
     TimeProvider time,
     ISecretVault vault,
-    IOptions<RevisionRetention> retention) : IRequestHandler<Command, Result<IReadOnlyList<AppliedResource>>>
+    IResourceAccess resourceAccess,
+    ISecretStorage secrets,
+    IRevisionLog revisions) : IRequestHandler<Command, Result<IReadOnlyList<AppliedResource>>>
 {
     public async Task<Result<IReadOnlyList<AppliedResource>>> HandleAsync(
         Command request,
         CancellationToken cancellationToken = default)
     {
         var reading = ManifestReader.ForApply(request.Documents, request.Namespace, catalog);
-        var access = await database.AuthoriseChangesAsync(request.CallerId, reading, cancellationToken);
+        var access = await resourceAccess.AuthoriseChangesAsync(request.CallerId, reading, cancellationToken);
         if (access.IsFailure)
         {
             return access.Error;
@@ -146,10 +147,7 @@ internal sealed class Handler(
         {
             database.Namespaces.Add(created);
             await database.PublishAsync(created.ToApplied());
-            await database.RecordAsync(
-                Revision.Applied(created, author, time.GetUtcNow()),
-                retention.Value.Keep,
-                cancellationToken);
+            await revisions.RecordAsync(Revision.Applied(created, author, time.GetUtcNow()), cancellationToken);
         }
 
         return Outcome(entry, ApplyAction.Created, created.Generation, SpecDiff.Between(null, Namespace.Spec));
@@ -193,14 +191,11 @@ internal sealed class Handler(
 
         if (entry.Values is not null)
         {
-            await database.StoreAsync(vault, entry, cancellationToken);
+            await secrets.StoreAsync(entry, cancellationToken);
         }
 
         await database.PublishAsync(resource.ToApplied());
-        await database.RecordAsync(
-            Revision.Applied(resource, author, time.GetUtcNow()),
-            retention.Value.Keep,
-            cancellationToken);
+        await revisions.RecordAsync(Revision.Applied(resource, author, time.GetUtcNow()), cancellationToken);
 
         return Outcome(entry, action, resource.Generation, changes);
     }

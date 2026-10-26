@@ -16,12 +16,12 @@ namespace Identity.Application.Users.UpdateUser;
 public sealed record Command(Guid CallerId, Guid UserId, string? Username, string? DisplayName)
     : IRequest<Result<User>>;
 
-internal sealed class Handler(IIdentityDbContext database) : IRequestHandler<Command, Result<User>>
+internal sealed class Handler(IIdentityDbContext database, ICallerChecks checks)
+    : IRequestHandler<Command, Result<User>>
 {
     public async Task<Result<User>> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var found = await CallerChecks.RequireAdministratorAndFindUserAsync(
-            database,
+        var found = await checks.RequireAdministratorAndFindUserAsync(
             request.CallerId,
             request.UserId,
             cancellationToken);

@@ -8,7 +8,7 @@ namespace Registry.Application.Resources;
 /// The rules for where an Asset Data Point gets its value (ADR-0002, ADR-0010): mapped from a Device Data Point,
 /// computed from other Data Points of the Asset, or, without a source, written by a Flow.
 /// </summary>
-internal static class AssetSources
+internal sealed class AssetSources(IIntegrationSchemas integrations)
 {
     private static readonly string[] Operations = ["sum", "min", "max", "average"];
 
@@ -41,11 +41,7 @@ internal static class AssetSources
         }
     }
 
-    public static IEnumerable<SpecError> ValidateAsset(
-        JsonElement spec,
-        JsonElement? assetType,
-        NamespaceSnapshot @namespace,
-        IIntegrationSchemas integrations)
+    public IEnumerable<SpecError> ValidateAsset(JsonElement spec, JsonElement? assetType, NamespaceSnapshot @namespace)
     {
         var inherited = assetType is { } type ? DataPointDeclarations.Declarations(type) : [];
         var own = DataPointDeclarations.Declarations(spec);

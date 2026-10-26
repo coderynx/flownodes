@@ -12,11 +12,12 @@ namespace Identity.Application.Tokens.ExchangePersonalAccessToken;
 /// <param name="Secret">The secret as the User presented it.</param>
 public sealed record Command(string Secret) : IRequest<Result<User>>;
 
-internal sealed class Handler(IIdentityDbContext database, TimeProvider time) : IRequestHandler<Command, Result<User>>
+internal sealed class Handler(IIdentityDbContext database, IPersonalAccessTokenSecrets secrets, TimeProvider time)
+    : IRequestHandler<Command, Result<User>>
 {
     public async Task<Result<User>> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var hash = PersonalAccessTokenSecrets.Hash(request.Secret);
+        var hash = secrets.Hash(request.Secret);
         var token = await database.PersonalAccessTokens.SingleOrDefaultAsync(
             candidate => candidate.SecretHash == hash,
             cancellationToken);

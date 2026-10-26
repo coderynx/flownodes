@@ -14,11 +14,12 @@ namespace Registry.Application.Namespaces.GetNamespace;
 /// <param name="Name">The name of the Namespace. A name that is not valid names no Namespace.</param>
 public sealed record Query(Guid CallerId, string Name) : IRequest<Result<Namespace>>;
 
-internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<Query, Result<Namespace>>
+internal sealed class Handler(IApplicationDbContext database, IAccessChecks access)
+    : IRequestHandler<Query, Result<Namespace>>
 {
     public async Task<Result<Namespace>> HandleAsync(Query request, CancellationToken cancellationToken = default)
     {
-        var caller = await database.RequireMemberAsync(request.CallerId, request.Name, cancellationToken);
+        var caller = await access.RequireMemberAsync(request.CallerId, request.Name, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;

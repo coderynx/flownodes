@@ -11,12 +11,11 @@ namespace Identity.Application.Users.EnableUser;
 /// <param name="UserId">The id of the User to enable.</param>
 public sealed record Command(Guid CallerId, Guid UserId) : IRequest<Result>;
 
-internal sealed class Handler(IIdentityDbContext database) : IRequestHandler<Command, Result>
+internal sealed class Handler(IIdentityDbContext database, ICallerChecks checks) : IRequestHandler<Command, Result>
 {
     public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var found = await CallerChecks.RequireAdministratorAndFindUserAsync(
-            database,
+        var found = await checks.RequireAdministratorAndFindUserAsync(
             request.CallerId,
             request.UserId,
             cancellationToken);

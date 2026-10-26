@@ -17,11 +17,12 @@ namespace Identity.Application.Grants.GrantRole;
 /// <param name="Namespace">The Namespace of an Engineer or Operator role; none for Administrator.</param>
 public sealed record Command(Guid CallerId, Guid UserId, string? Role, string? Namespace) : IRequest<Result<User>>;
 
-internal sealed class Handler(IIdentityDbContext database) : IRequestHandler<Command, Result<User>>
+internal sealed class Handler(IIdentityDbContext database, ICallerChecks checks)
+    : IRequestHandler<Command, Result<User>>
 {
     public async Task<Result<User>> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await CallerChecks.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
+        var caller = await checks.RequireAdministratorAsync(request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;
@@ -33,7 +34,7 @@ internal sealed class Handler(IIdentityDbContext database) : IRequestHandler<Com
             return spec.Error;
         }
 
-        var found = await CallerChecks.FindUserAsync(database, request.UserId, cancellationToken);
+        var found = await checks.FindUserAsync(request.UserId, cancellationToken);
         if (found.IsFailure)
         {
             return found.Error;

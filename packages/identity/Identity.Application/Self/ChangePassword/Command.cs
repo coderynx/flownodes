@@ -14,11 +14,15 @@ namespace Identity.Application.Self.ChangePassword;
 /// <param name="NewPassword">The new password, validated against the password policy.</param>
 public sealed record Command(Guid CallerId, string CurrentPassword, string NewPassword) : IRequest<Result>;
 
-internal sealed class Handler(IIdentityDbContext database, UserManager<User> users) : IRequestHandler<Command, Result>
+internal sealed class Handler(
+    IIdentityDbContext database,
+    ICallerChecks checks,
+    UserManager<User> users,
+    IPasswordPolicy policy) : IRequestHandler<Command, Result>
 {
     public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await CallerChecks.RequireActiveAsync(database, request.CallerId, cancellationToken);
+        var caller = await checks.RequireActiveAsync(request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;
@@ -30,7 +34,7 @@ internal sealed class Handler(IIdentityDbContext database, UserManager<User> use
             return Errors.WrongCurrentPassword();
         }
 
-        var validation = await PasswordPolicy.ValidateAsync(users, user, request.NewPassword);
+        var validation = await policy.ValidateAsync(user, request.NewPassword);
         if (validation is not null)
         {
             return validation;

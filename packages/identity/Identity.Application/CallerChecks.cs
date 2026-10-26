@@ -5,12 +5,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Application;
 
-internal static class CallerChecks
+internal interface ICallerChecks
 {
-    public static async Task<Result<User>> RequireActiveAsync(
-        IIdentityDbContext database,
+    Task<Result<User>> RequireActiveAsync(Guid callerId, CancellationToken cancellationToken);
+    Task<Result<User>> RequireAdministratorAsync(Guid callerId, CancellationToken cancellationToken);
+    Task<Result<User>> FindUserAsync(Guid userId, CancellationToken cancellationToken);
+
+    Task<Result<User>> RequireAdministratorAndFindUserAsync(
         Guid callerId,
-        CancellationToken cancellationToken)
+        Guid userId,
+        CancellationToken cancellationToken);
+
+    Task<bool> AnotherActiveAdministratorExistsAsync(Guid userId, CancellationToken cancellationToken);
+}
+
+internal sealed class CallerChecks(IIdentityDbContext database) : ICallerChecks
+{
+    public async Task<Result<User>> RequireActiveAsync(Guid callerId, CancellationToken cancellationToken)
     {
         var caller = await database.Users.Include(user => user.RoleGrants)
             .SingleOrDefaultAsync(user => user.Id == callerId, cancellationToken);
@@ -18,20 +29,14 @@ internal static class CallerChecks
         return caller is { IsDisabled: false } ? Result.Found(caller) : Errors.Unauthenticated();
     }
 
-    public static async Task<Result<User>> RequireAdministratorAsync(
-        IIdentityDbContext database,
-        Guid callerId,
-        CancellationToken cancellationToken)
+    public async Task<Result<User>> RequireAdministratorAsync(Guid callerId, CancellationToken cancellationToken)
     {
-        var caller = await RequireActiveAsync(database, callerId, cancellationToken);
+        var caller = await RequireActiveAsync(callerId, cancellationToken);
 
         return caller.IsSuccess && !caller.Value.IsAdministrator ? Errors.Forbidden() : caller;
     }
 
-    public static async Task<Result<User>> FindUserAsync(
-        IIdentityDbContext database,
-        Guid userId,
-        CancellationToken cancellationToken)
+    public async Task<Result<User>> FindUserAsync(Guid userId, CancellationToken cancellationToken)
     {
         var user = await database.Users.Include(candidate => candidate.RoleGrants)
             .SingleOrDefaultAsync(candidate => candidate.Id == userId, cancellationToken);
@@ -39,21 +44,17 @@ internal static class CallerChecks
         return user is null ? Errors.UserNotFound() : Result.Found(user);
     }
 
-    public static async Task<Result<User>> RequireAdministratorAndFindUserAsync(
-        IIdentityDbContext database,
+    public async Task<Result<User>> RequireAdministratorAndFindUserAsync(
         Guid callerId,
         Guid userId,
         CancellationToken cancellationToken)
     {
-        var caller = await RequireAdministratorAsync(database, callerId, cancellationToken);
+        var caller = await RequireAdministratorAsync(callerId, cancellationToken);
 
-        return caller.IsFailure ? caller.Error : await FindUserAsync(database, userId, cancellationToken);
+        return caller.IsFailure ? caller.Error : await FindUserAsync(userId, cancellationToken);
     }
 
-    public static Task<bool> AnotherActiveAdministratorExistsAsync(
-        IIdentityDbContext database,
-        Guid userId,
-        CancellationToken cancellationToken) =>
+    public Task<bool> AnotherActiveAdministratorExistsAsync(Guid userId, CancellationToken cancellationToken) =>
         database.Users.AnyAsync(
             user => user.Id != userId && user.IsAdministrator && !user.IsDisabled,
             cancellationToken);

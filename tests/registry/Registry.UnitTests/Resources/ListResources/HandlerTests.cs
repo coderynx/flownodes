@@ -17,11 +17,10 @@ public sealed class HandlerTests
             [
                 Widgets.Stored("acme", "b"), Widgets.Stored("acme", "a"), Widgets.Stored("globex", "c"),
                 Resource.Create(NamespaceName.Create("acme"), "Gizmo", ResourceName.Create("z"), Widgets.Json("{}"), 2)
-            ],
-            [caller]);
+            ]);
 
         // Act
-        var result = await new Handler(database, WidgetKind.Catalog).HandleAsync(
+        var result = await new Handler(database, AccessDoubles.ReadsFor("acme")).HandleAsync(
             new Query(caller.Id, "acme", "widgets", null, null, false, 0, 50),
             Ct);
 
@@ -40,11 +39,10 @@ public sealed class HandlerTests
             [
                 Widgets.Stored("acme", "pump-1"), Widgets.Stored("acme", "pump-2"), Widgets.Stored("acme", "pump-3"),
                 Widgets.Stored("acme", "valve")
-            ],
-            [caller]);
+            ]);
 
         // Act
-        var result = await new Handler(database, WidgetKind.Catalog).HandleAsync(
+        var result = await new Handler(database, AccessDoubles.ReadsFor("acme")).HandleAsync(
             new Query(caller.Id, "acme", "widgets", "pump", "name", true, 1, 1),
             Ct);
 
@@ -58,10 +56,10 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Member("acme");
-        var database = TestDatabase.Create([Namespace.Create(NamespaceName.Create("acme"))], users: [caller]);
+        var database = TestDatabase.Create([Namespace.Create(NamespaceName.Create("acme"))]);
 
         // Act
-        var result = await new Handler(database, WidgetKind.Catalog).HandleAsync(
+        var result = await new Handler(database, AccessDoubles.ReadsFor("acme")).HandleAsync(
             new Query(caller.Id, "acme", "widgets", null, "size", false, 0, 50),
             Ct);
 
@@ -70,15 +68,15 @@ public sealed class HandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldReturnNamespaceNotFound_WhenCallerHoldsNoRoleInTheNamespace()
+    public async Task HandleAsync_ShouldReturnTheError_WhenTheAccessCheckFails()
     {
         // Arrange
-        var caller = Callers.Member("globex");
-        var database = TestDatabase.Create([Namespace.Create(NamespaceName.Create("acme"))], users: [caller]);
+        var database = TestDatabase.Create([Namespace.Create(NamespaceName.Create("acme"))]);
+        var access = AccessDoubles.ReadsFailingWith(AccessDoubles.NamespaceNotFound());
 
         // Act
-        var result = await new Handler(database, WidgetKind.Catalog).HandleAsync(
-            new Query(caller.Id, "acme", "widgets", null, null, false, 0, 50),
+        var result = await new Handler(database, access).HandleAsync(
+            new Query(Guid.NewGuid(), "acme", "widgets", null, null, false, 0, 50),
             Ct);
 
         // Assert

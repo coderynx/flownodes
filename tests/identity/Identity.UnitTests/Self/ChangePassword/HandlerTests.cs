@@ -27,7 +27,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var database = TestDoubles.Database([TestDoubles.Member("alice")]);
-        var handler = new Handler(database, _users);
+        var handler = new Handler(database, TestDoubles.Checks(database), _users, new PasswordPolicy(_users));
 
         // Act
         var result = await handler.HandleAsync(new Command(Guid.NewGuid(), Current, New), Ct);
@@ -43,7 +43,7 @@ public sealed class HandlerTests
         // Arrange
         var alice = TestDoubles.Disabled(TestDoubles.Member("alice"));
         var database = TestDoubles.Database([alice]);
-        var handler = new Handler(database, _users);
+        var handler = new Handler(database, TestDoubles.Checks(database), _users, new PasswordPolicy(_users));
 
         // Act
         var result = await handler.HandleAsync(new Command(alice.Id, Current, New), Ct);
@@ -61,7 +61,7 @@ public sealed class HandlerTests
         var alice = TestDoubles.Member("alice");
         alice.SetPasswordHash("old hash");
         var database = TestDoubles.Database([alice]);
-        var handler = new Handler(database, _users);
+        var handler = new Handler(database, TestDoubles.Checks(database), _users, new PasswordPolicy(_users));
 
         // Act
         var result = await handler.HandleAsync(new Command(alice.Id, "not the password", New), Ct);
@@ -80,7 +80,7 @@ public sealed class HandlerTests
         alice.SetPasswordHash("old hash");
         var database = TestDoubles.Database([alice]);
         _users.PasswordValidators.Add(TestDoubles.RejectingValidator("Too short."));
-        var handler = new Handler(database, _users);
+        var handler = new Handler(database, TestDoubles.Checks(database), _users, new PasswordPolicy(_users));
 
         // Act
         var result = await handler.HandleAsync(new Command(alice.Id, Current, "short"), Ct);
@@ -100,7 +100,7 @@ public sealed class HandlerTests
         var database = TestDoubles.Database([alice]);
         _users.PasswordValidators.Add(TestDoubles.AcceptingValidator());
         _hasher.HashPassword(alice, New).Returns("new hash");
-        var handler = new Handler(database, _users);
+        var handler = new Handler(database, TestDoubles.Checks(database), _users, new PasswordPolicy(_users));
 
         // Act
         var result = await handler.HandleAsync(new Command(alice.Id, Current, New), Ct);

@@ -17,12 +17,12 @@ namespace Identity.Application.Users.CreateUser;
 public sealed record Command(Guid CallerId, string Username, string? DisplayName, string Password)
     : IRequest<Result<User>>;
 
-internal sealed class Handler(IIdentityDbContext database, UserManager<User> users)
+internal sealed class Handler(IIdentityDbContext database, ICallerChecks checks, UserManager<User> users)
     : IRequestHandler<Command, Result<User>>
 {
     public async Task<Result<User>> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await CallerChecks.RequireAdministratorAsync(database, request.CallerId, cancellationToken);
+        var caller = await checks.RequireAdministratorAsync(request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;

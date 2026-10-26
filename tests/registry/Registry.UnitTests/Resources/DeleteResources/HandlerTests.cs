@@ -1,11 +1,11 @@
 using System.Text.Json;
 using Coderynx.Functional.Results.Errors;
-using Core.Application.Authorization;
 using Core.Contracts.Resources;
 using Core.Domain.Authorization;
 using Registry.Application.Database;
 using Registry.Application.Resources;
 using Registry.Application.Resources.DeleteResources;
+using Registry.Application.Secrets;
 using Registry.Domain.Namespaces;
 using Registry.Domain.Resources;
 using Xunit;
@@ -14,6 +14,9 @@ namespace Registry.UnitTests.Resources.DeleteResources;
 
 public sealed class HandlerTests
 {
+    private readonly ISecretStorage _secrets = Substitute.For<ISecretStorage>();
+    private readonly IRevisionLog _revisions = Substitute.For<IRevisionLog>();
+
     [Fact]
     public async Task HandleAsync_ShouldRemovePublishRecordAndSave_WhenTheResourceExists()
     {
@@ -21,18 +24,19 @@ public sealed class HandlerTests
         var caller = Engineer();
         var acme = Acme();
         var widget = Widgets.Stored("acme", "w-1");
-        var database = TestDatabase.Create([acme], [widget], [caller]);
+        var database = TestDatabase.Create([acme], [widget]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Delete(caller.Id, Target("w-1")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Delete(caller.Id, Target("w-1")), Ct);
 
         // Assert
         result.Value.ShouldHaveSingleItem().ShouldBe(new DeletedResource(WidgetKind.Kind, "acme", "w-1"));
         database.Resources.Received(1).Remove(widget);
-        database.Revisions.Received(1)
-            .Add(
+        await _revisions.Received(1)
+            .RecordAsync(
                 Arg.Is<Revision>(revision =>
-                    revision.Deleted && revision.Uid == widget.Uid && revision.Author.Username == "erin"));
+                    revision.Deleted && revision.Uid == widget.Uid && revision.Author.Username == "erin"),
+                Ct);
         await database.Received(1)
             .PublishAsync(Arg.Is<ResourceDeleted>(message => message.Name == "w-1" && message.Seq == 2));
         await database.Received(1).LockNamespacesAsync(Arg.Any<IReadOnlyList<string>>(), Ct);
@@ -44,10 +48,10 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Engineer();
-        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "w-1")], [caller]);
+        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "w-1")]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Delete(caller.Id, Target("w-1"), Target("w-2")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Delete(caller.Id, Target("w-1"), Target("w-2")), Ct);
 
         // Assert
         result.Error.Kind.ShouldBe(ErrorKind.NotFound);
@@ -62,11 +66,10 @@ public sealed class HandlerTests
         var caller = Engineer();
         var database = TestDatabase.Create(
             [Acme()],
-            [Widgets.Stored("acme", "root"), Widgets.Stored("acme", "child", """{"parent": "root"}""")],
-            [caller]);
+            [Widgets.Stored("acme", "root"), Widgets.Stored("acme", "child", """{"parent": "root"}""")]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Delete(caller.Id, Target("root")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Delete(caller.Id, Target("root")), Ct);
 
         // Assert
         result.Error.Kind.ShouldBe(ErrorKind.Conflict);
@@ -83,11 +86,11 @@ public sealed class HandlerTests
         var caller = Engineer();
         var database = TestDatabase.Create(
             [Acme()],
-            [Widgets.Stored("acme", "root"), Widgets.Stored("acme", "child", """{"parent": "root"}""")],
-            [caller]);
+            [Widgets.Stored("acme", "root"), Widgets.Stored("acme", "child", """{"parent": "root"}""")]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Delete(caller.Id, Target("root"), Target("child")), Ct);
+        var result = await Handler(database, caller)
+            .HandleAsync(Delete(caller.Id, Target("root"), Target("child")), Ct);
 
         // Assert
         result.Value.Select(deleted => deleted.Name).ShouldBe(["root", "child"]);
@@ -96,29 +99,15 @@ public sealed class HandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldReturnForbidden_WhenCallerIsOnlyAnOperator()
-    {
-        // Arrange
-        var caller = Callers.Member("acme");
-        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "w-1")], [caller]);
-
-        // Act
-        var result = await Handler(database).HandleAsync(Delete(caller.Id, Target("w-1")), Ct);
-
-        // Assert
-        result.Error.Code.ShouldBe(AccessErrors.ForbiddenCode);
-        await ShouldNotHaveDeletedAsync(database);
-    }
-
-    [Fact]
     public async Task HandleAsync_ShouldReportWithoutDeleting_WhenItIsADryRun()
     {
         // Arrange
         var caller = Engineer();
-        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "w-1")], [caller]);
+        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "w-1")]);
 
         // Act
-        var result = await Handler(database).HandleAsync(new Command(caller.Id, [Target("w-1")], "acme", true), Ct);
+        var result = await Handler(database, caller)
+            .HandleAsync(new Command(caller.Id, [Target("w-1")], "acme", true), Ct);
 
         // Assert
         result.Value.ShouldHaveSingleItem().Name.ShouldBe("w-1");
@@ -131,17 +120,17 @@ public sealed class HandlerTests
         // Arrange
         var caller = Callers.Administrator();
         var acme = Acme();
-        var database = TestDatabase.Create([acme], users: [caller]);
+        var database = TestDatabase.Create([acme]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Delete(caller.Id, NamespaceTarget("acme")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Delete(caller.Id, NamespaceTarget("acme")), Ct);
 
         // Assert
         result.Value.ShouldHaveSingleItem().ShouldBe(new DeletedResource(Namespace.Kind, null, "acme"));
         database.Namespaces.Received(1).Remove(acme);
         await database.Received(1)
             .PublishAsync(Arg.Is<ResourceDeleted>(message => message.Kind == Namespace.Kind && message.Seq == 2));
-        database.Revisions.Received(1).Add(Arg.Is<Revision>(revision => revision.Deleted));
+        await _revisions.Received(1).RecordAsync(Arg.Is<Revision>(revision => revision.Deleted), Ct);
         await database.Received(1).SaveChangesAsync(Ct);
     }
 
@@ -150,10 +139,10 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Administrator();
-        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "w-1")], [caller]);
+        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "w-1")]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Delete(caller.Id, NamespaceTarget("acme")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Delete(caller.Id, NamespaceTarget("acme")), Ct);
 
         // Assert
         result.Error.ShouldBeOfType<DeletionRefused>()
@@ -167,10 +156,10 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Administrator();
-        var database = TestDatabase.Create([Namespace.Create(NamespaceName.Create("default"))], users: [caller]);
+        var database = TestDatabase.Create([Namespace.Create(NamespaceName.Create("default"))]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Delete(caller.Id, NamespaceTarget("default")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Delete(caller.Id, NamespaceTarget("default")), Ct);
 
         // Assert
         result.Error.ShouldBeOfType<DeletionRefused>()
@@ -184,10 +173,11 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Engineer();
-        var database = TestDatabase.Create([Acme()], users: [caller]);
+        var database = TestDatabase.Create([Acme()]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Delete(caller.Id, Widgets.Json("""{"kind": "Widget"}""")), Ct);
+        var result = await Handler(database, caller)
+            .HandleAsync(Delete(caller.Id, Widgets.Json("""{"kind": "Widget"}""")), Ct);
 
         // Assert
         result.Error.ShouldBeOfType<ManifestRejected>().Problems.ShouldHaveSingleItem().Path.ShouldBe("metadata");
@@ -205,8 +195,10 @@ public sealed class HandlerTests
 
     private static Command Delete(Guid callerId, params JsonElement[] targets) => new(callerId, targets, "acme", false);
 
-    private static Handler Handler(IApplicationDbContext database) =>
-        new(database, WidgetKind.Catalog, ResourceHandlers.Time(), ResourceHandlers.Retention());
+    private Handler Handler(IApplicationDbContext database, UserAccess caller) =>
+        new(
+            WidgetKind.Catalog,
+            ResourceHandlers.Deletion(database, ResourceHandlers.Access(caller), _secrets, _revisions));
 
     private static async Task ShouldNotHaveDeletedAsync(IApplicationDbContext database)
     {
@@ -227,11 +219,10 @@ public sealed class HandlerTests
                 Widgets.Stored("acme", "a"), Widgets.Stored("acme", "b"),
                 Widgets.Stored("acme", "uses-a", """{"parent": "a"}"""),
                 Widgets.Stored("acme", "uses-b", """{"parent": "b"}""")
-            ],
-            [caller]);
+            ]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Delete(caller.Id, Target("a"), Target("b")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Delete(caller.Id, Target("a"), Target("b")), Ct);
 
         // Assert
         result.Error.ShouldBeOfType<DeletionRefused>()

@@ -14,7 +14,7 @@ public sealed class HandlerTests
         var caller = TestDoubles.Member("alice");
         var token = TokenDoubles.TokenOf(caller);
         var database = TestDoubles.Database([caller], [token]);
-        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
+        var handler = new Handler(database, TestDoubles.Checks(database), TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -34,7 +34,8 @@ public sealed class HandlerTests
         var caller = TestDoubles.Member("alice");
         var token = TokenDoubles.TokenOf(caller);
         token.Revoke(TokenDoubles.Now.AddHours(-1));
-        var handler = new Handler(TestDoubles.Database([caller], [token]), TestDoubles.Clock(TokenDoubles.Now));
+        var database = TestDoubles.Database([caller], [token]);
+        var handler = new Handler(database, TestDoubles.Checks(database), TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -52,7 +53,7 @@ public sealed class HandlerTests
         // Arrange
         var caller = TestDoubles.Member("alice");
         var database = TestDoubles.Database([caller], []);
-        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
+        var handler = new Handler(database, TestDoubles.Checks(database), TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -72,7 +73,7 @@ public sealed class HandlerTests
         var other = TestDoubles.Disabled(TestDoubles.Member("bob"));
         var othersToken = TokenDoubles.TokenOf(other);
         var database = TestDoubles.Database([caller, other], [othersToken]);
-        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
+        var handler = new Handler(database, TestDoubles.Checks(database), TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -92,7 +93,7 @@ public sealed class HandlerTests
         var other = TestDoubles.Disabled(TestDoubles.Member("bob"));
         var othersToken = TokenDoubles.TokenOf(other);
         var database = TestDoubles.Database([caller, other], [othersToken]);
-        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
+        var handler = new Handler(database, TestDoubles.Checks(database), TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -112,7 +113,7 @@ public sealed class HandlerTests
         var caller = TestDoubles.Disabled(TestDoubles.Member("bob"));
         var token = TokenDoubles.TokenOf(caller);
         var database = TestDoubles.Database([caller], [token]);
-        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
+        var handler = new Handler(database, TestDoubles.Checks(database), TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(

@@ -3,7 +3,6 @@ using Coderynx.MediatorKit.Abstractions;
 using Core.Application.Authorization;
 using Core.Contracts.Identity;
 using Core.Domain.Authorization;
-using Registry.Application.Database;
 
 namespace Registry.Application.Access.ApplyIdentityMessage;
 
@@ -14,7 +13,7 @@ namespace Registry.Application.Access.ApplyIdentityMessage;
 /// <param name="Message">One of the <c>Core.Contracts.Identity</c> messages.</param>
 public sealed record Command(object Message) : IRequest<Result>;
 
-internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<Command, Result>
+internal sealed class Handler(IUserAccessProjection projection) : IRequestHandler<Command, Result>
 {
     public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
@@ -50,7 +49,7 @@ internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<
 
         return Result.Updated();
 
-        Task Apply(Guid userId, Action<UserAccess> change) => database.ApplyAsync(userId, change, cancellationToken);
+        Task Apply(Guid userId, Action<UserAccess> change) => projection.ApplyAsync(userId, change, cancellationToken);
     }
 
     private static NamespaceRole Role(string role) => Enum.Parse<NamespaceRole>(role);

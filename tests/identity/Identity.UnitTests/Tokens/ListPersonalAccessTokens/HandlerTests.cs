@@ -25,7 +25,7 @@ public sealed class HandlerTests
         revoked.Revoke(TokenDoubles.Now);
         var othersToken = PersonalAccessToken.Create(other.Id, "theirs", "hash-5", TokenDoubles.Now, null);
         var database = TestDoubles.Database([caller, other], [newer, revoked, othersToken, older, expired]);
-        var handler = new Handler(database);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Query(caller.Id, caller.Id), TestContext.Current.CancellationToken);
@@ -39,7 +39,8 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = TestDoubles.Member("alice");
-        var handler = new Handler(TestDoubles.Database([caller], []));
+        var database = TestDoubles.Database([caller], []);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Query(caller.Id, caller.Id), TestContext.Current.CancellationToken);
@@ -55,7 +56,8 @@ public sealed class HandlerTests
         // Arrange
         var caller = TestDoubles.Member("alice");
         var other = TestDoubles.Disabled(TestDoubles.Member("bob"));
-        var handler = new Handler(TestDoubles.Database([caller, other], [TokenDoubles.TokenOf(other)]));
+        var database = TestDoubles.Database([caller, other], [TokenDoubles.TokenOf(other)]);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Query(caller.Id, other.Id), TestContext.Current.CancellationToken);
@@ -69,7 +71,8 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = TestDoubles.Disabled(TestDoubles.Member("bob"));
-        var handler = new Handler(TestDoubles.Database([caller], [TokenDoubles.TokenOf(caller)]));
+        var database = TestDoubles.Database([caller], [TokenDoubles.TokenOf(caller)]);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Query(caller.Id, caller.Id), TestContext.Current.CancellationToken);
@@ -82,7 +85,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldRefuse_WhenTheCallerIsUnknown()
     {
         // Arrange
-        var handler = new Handler(TestDoubles.Database([], []));
+        var database = TestDoubles.Database([], []);
+        var handler = new Handler(database, TestDoubles.Checks(database));
         var callerId = Guid.NewGuid();
 
         // Act

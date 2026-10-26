@@ -13,14 +13,14 @@ namespace Identity.Application.Tokens.ListPersonalAccessTokens;
 /// <param name="UserId">The User whose tokens are listed; it must be the caller.</param>
 public sealed record Query(Guid CallerId, Guid UserId) : IRequest<Result<IReadOnlyList<PersonalAccessToken>>>;
 
-internal sealed class Handler(IIdentityDbContext database)
+internal sealed class Handler(IIdentityDbContext database, ICallerChecks checks)
     : IRequestHandler<Query, Result<IReadOnlyList<PersonalAccessToken>>>
 {
     public async Task<Result<IReadOnlyList<PersonalAccessToken>>> HandleAsync(
         Query request,
         CancellationToken cancellationToken = default)
     {
-        var caller = await CallerChecks.RequireActiveAsync(database, request.CallerId, cancellationToken);
+        var caller = await checks.RequireActiveAsync(request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;

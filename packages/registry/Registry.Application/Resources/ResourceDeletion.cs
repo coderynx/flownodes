@@ -16,7 +16,13 @@ namespace Registry.Application.Resources;
 /// <param name="Name">The name of the Resource.</param>
 public sealed record DeletedResource(string Kind, string? Namespace, string Name);
 
-internal sealed class ResourceDeletion(IApplicationDbContext database, KindCatalog catalog, TimeProvider time, int keep)
+internal sealed class ResourceDeletion(
+    IApplicationDbContext database,
+    KindCatalog catalog,
+    TimeProvider time,
+    IResourceAccess access,
+    ISecretStorage secrets,
+    IRevisionLog revisions)
 {
     public async Task<Result<IReadOnlyList<DeletedResource>>> DeleteAsync(
         Guid callerId,
@@ -25,10 +31,10 @@ internal sealed class ResourceDeletion(IApplicationDbContext database, KindCatal
         bool dryRun,
         CancellationToken cancellationToken)
     {
-        var access = await database.AuthoriseChangesAsync(callerId, reading, cancellationToken);
-        if (access.IsFailure)
+        var changes = await access.AuthoriseChangesAsync(callerId, reading, cancellationToken);
+        if (changes.IsFailure)
         {
-            return access.Error;
+            return changes.Error;
         }
 
         if (documentCount == 0)
@@ -55,7 +61,7 @@ internal sealed class ResourceDeletion(IApplicationDbContext database, KindCatal
 
         if (!dryRun)
         {
-            var author = new RevisionAuthor(callerId, access.Value!.Username);
+            var author = new RevisionAuthor(callerId, changes.Value!.Username);
             await RemoveAsync(reading.Entries, state.Value, author, cancellationToken);
         }
 
@@ -126,11 +132,11 @@ internal sealed class ResourceDeletion(IApplicationDbContext database, KindCatal
             database.Resources.Remove(resource);
             if (entry.Kind == SecretKind.KindName)
             {
-                await database.ForgetAsync(entry, cancellationToken);
+                await secrets.ForgetAsync(entry, cancellationToken);
             }
 
             await database.PublishAsync(resource.ToDeleted());
-            await database.RecordAsync(Revision.Tombstone(resource, author, now), keep, cancellationToken);
+            await revisions.RecordAsync(Revision.Tombstone(resource, author, now), cancellationToken);
         }
 
         foreach (var entry in entries.Where(entry => entry.IsNamespace))
@@ -139,7 +145,7 @@ internal sealed class ResourceDeletion(IApplicationDbContext database, KindCatal
             @namespace.Delete();
             database.Namespaces.Remove(@namespace);
             await database.PublishAsync(@namespace.ToDeleted());
-            await database.RecordAsync(Revision.Tombstone(@namespace, author, now), keep, cancellationToken);
+            await revisions.RecordAsync(Revision.Tombstone(@namespace, author, now), cancellationToken);
         }
 
         await database.SaveChangesAsync(cancellationToken);

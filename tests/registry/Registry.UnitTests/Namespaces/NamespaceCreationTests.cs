@@ -17,7 +17,7 @@ public sealed class NamespaceCreationTests
         var database = TestDatabase.Create();
 
         // Act
-        var result = await NamespaceCreation.EnsureAsync(database, "Acme", Ct);
+        var result = await new NamespaceCreation(database).EnsureAsync("Acme", Ct);
 
         // Assert
         result.Error.Kind.ShouldBe(ErrorKind.InvalidInput);
@@ -35,7 +35,7 @@ public sealed class NamespaceCreationTests
         var database = TestDatabase.Create([existing]);
 
         // Act
-        var result = await NamespaceCreation.EnsureAsync(database, "acme", Ct);
+        var result = await new NamespaceCreation(database).EnsureAsync("acme", Ct);
 
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Found);
@@ -52,7 +52,7 @@ public sealed class NamespaceCreationTests
         var database = TestDatabase.Create();
 
         // Act
-        var result = await NamespaceCreation.EnsureAsync(database, "acme", Ct);
+        var result = await new NamespaceCreation(database).EnsureAsync("acme", Ct);
 
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Created);
@@ -82,7 +82,7 @@ public sealed class NamespaceCreationTests
             });
 
         // Act
-        var result = await NamespaceCreation.EnsureAsync(database, "acme", Ct);
+        var result = await new NamespaceCreation(database).EnsureAsync("acme", Ct);
 
         // Assert
         result.Success.Kind.ShouldBe(SuccessKind.Found);
@@ -98,7 +98,7 @@ public sealed class NamespaceCreationTests
         database.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(Task.FromException(new DbUpdateException()));
 
         // Act
-        var act = () => NamespaceCreation.EnsureAsync(database, "acme", Ct);
+        var act = () => new NamespaceCreation(database).EnsureAsync("acme", Ct);
 
         // Assert
         await act.ShouldThrowAsync<DbUpdateException>();

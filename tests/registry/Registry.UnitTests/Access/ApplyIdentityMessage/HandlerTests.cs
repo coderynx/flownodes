@@ -15,7 +15,7 @@ public sealed class HandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var database = TestDatabase.Create();
-        var handler = new Handler(database);
+        var handler = new Handler(new UserAccessProjection(database));
 
         // Act
         var result = await handler.HandleAsync(new Command(new RoleGranted(userId, "acme", "Engineer", 1)), Ct);
@@ -33,7 +33,7 @@ public sealed class HandlerTests
         // Arrange
         var user = UserAccess.Create(Guid.NewGuid());
         var database = TestDatabase.Create(users: [user]);
-        var handler = new Handler(database);
+        var handler = new Handler(new UserAccessProjection(database));
 
         // Act
         await handler.HandleAsync(new Command(new RoleGranted(user.Id, "acme", "Operator", 1)), Ct);
@@ -52,7 +52,7 @@ public sealed class HandlerTests
         user.GrantRole("acme", NamespaceRole.Operator, 1);
         user.GrantRole("acme", NamespaceRole.Engineer, 2);
         var database = TestDatabase.Create(users: [user]);
-        var handler = new Handler(database);
+        var handler = new Handler(new UserAccessProjection(database));
 
         // Act
         await handler.HandleAsync(new Command(new RoleRevoked(user.Id, "acme", "Engineer", 3)), Ct);
@@ -69,7 +69,7 @@ public sealed class HandlerTests
         // Arrange
         var user = UserAccess.Create(Guid.NewGuid());
         var database = TestDatabase.Create(users: [user]);
-        var handler = new Handler(database);
+        var handler = new Handler(new UserAccessProjection(database));
 
         // Act
         await handler.HandleAsync(new Command(new AdministratorGranted(user.Id, 1)), Ct);
@@ -85,7 +85,7 @@ public sealed class HandlerTests
         // Arrange
         var user = Callers.Administrator();
         var database = TestDatabase.Create(users: [user]);
-        var handler = new Handler(database);
+        var handler = new Handler(new UserAccessProjection(database));
 
         // Act
         await handler.HandleAsync(new Command(new AdministratorRevoked(user.Id, 2)), Ct);
@@ -101,7 +101,7 @@ public sealed class HandlerTests
         // Arrange
         var user = UserAccess.Create(Guid.NewGuid());
         var database = TestDatabase.Create(users: [user]);
-        var handler = new Handler(database);
+        var handler = new Handler(new UserAccessProjection(database));
 
         // Act
         await handler.HandleAsync(new Command(new UserDisabled(user.Id, 1)), Ct);
@@ -118,7 +118,7 @@ public sealed class HandlerTests
         var user = UserAccess.Create(Guid.NewGuid());
         user.Disable(1);
         var database = TestDatabase.Create(users: [user]);
-        var handler = new Handler(database);
+        var handler = new Handler(new UserAccessProjection(database));
 
         // Act
         await handler.HandleAsync(new Command(new UserEnabled(user.Id, 2)), Ct);
@@ -135,7 +135,7 @@ public sealed class HandlerTests
         var user = Callers.Administrator();
         user.GrantRole("acme", NamespaceRole.Operator, 2);
         var database = TestDatabase.Create(users: [user]);
-        var handler = new Handler(database);
+        var handler = new Handler(new UserAccessProjection(database));
 
         // Act
         await handler.HandleAsync(new Command(new UserDeleted(user.Id, 3)), Ct);
@@ -153,7 +153,7 @@ public sealed class HandlerTests
         // Arrange
         var user = UserAccess.Create(Guid.NewGuid());
         var database = TestDatabase.Create(users: [user]);
-        var handler = new Handler(database);
+        var handler = new Handler(new UserAccessProjection(database));
 
         // Act
         await handler.HandleAsync(new Command(new UserRenamed(user.Id, "olive", 1)), Ct);
@@ -170,7 +170,7 @@ public sealed class HandlerTests
         var user = UserAccess.Create(Guid.NewGuid());
         user.Disable(5);
         var database = TestDatabase.Create(users: [user]);
-        var handler = new Handler(database);
+        var handler = new Handler(new UserAccessProjection(database));
 
         // Act
         await handler.HandleAsync(new Command(new UserEnabled(user.Id, 5)), Ct);
@@ -185,7 +185,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var database = TestDatabase.Create();
-        var handler = new Handler(database);
+        var handler = new Handler(new UserAccessProjection(database));
 
         // Act
         var result = await handler.HandleAsync(new Command("not a message"), Ct);
@@ -202,7 +202,7 @@ public sealed class HandlerTests
         // Arrange
         var user = UserAccess.Create(Guid.NewGuid());
         var database = TestDatabase.Create(users: [user]);
-        var handler = new Handler(database);
+        var handler = new Handler(new UserAccessProjection(database));
 
         // Act
         var act = () => handler.HandleAsync(new Command(new RoleGranted(user.Id, "acme", "Owner", 1)), Ct);

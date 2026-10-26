@@ -1,8 +1,6 @@
 using System.Text.Json;
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
-using Microsoft.Extensions.Options;
-using Registry.Application.Database;
 using Registry.Domain.Resources;
 
 namespace Registry.Application.Resources.DeleteResources;
@@ -23,16 +21,13 @@ namespace Registry.Application.Resources.DeleteResources;
 public sealed record Command(Guid CallerId, IReadOnlyList<JsonElement> Documents, string? Namespace, bool DryRun)
     : IRequest<Result<IReadOnlyList<DeletedResource>>>;
 
-internal sealed class Handler(
-    IApplicationDbContext database,
-    KindCatalog catalog,
-    TimeProvider time,
-    IOptions<RevisionRetention> retention) : IRequestHandler<Command, Result<IReadOnlyList<DeletedResource>>>
+internal sealed class Handler(KindCatalog catalog, ResourceDeletion deletion)
+    : IRequestHandler<Command, Result<IReadOnlyList<DeletedResource>>>
 {
     public Task<Result<IReadOnlyList<DeletedResource>>> HandleAsync(
         Command request,
         CancellationToken cancellationToken = default) =>
-        new ResourceDeletion(database, catalog, time, retention.Value.Keep).DeleteAsync(
+        deletion.DeleteAsync(
             request.CallerId,
             ManifestReader.ForDelete(request.Documents, request.Namespace, catalog),
             request.Documents.Count,

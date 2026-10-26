@@ -1,4 +1,3 @@
-using Core.Application.Authorization;
 using Core.Domain.Authorization;
 using Registry.Application.Resources.GetResource;
 using Registry.Domain.Namespaces;
@@ -16,31 +15,15 @@ public sealed class HandlerTests
         // Arrange
         var caller = Callers.Member("acme", role);
         var widget = Widgets.Stored("acme", "w-1", """{"size": 1}""");
-        var database = TestDatabase.Create([Acme()], [widget, Widgets.Stored("globex", "w-1")], [caller]);
+        var database = TestDatabase.Create([Acme()], [widget, Widgets.Stored("globex", "w-1")]);
 
         // Act
-        var result = await new Handler(database, WidgetKind.Catalog).HandleAsync(
+        var result = await new Handler(database, AccessDoubles.ReadsFor("acme")).HandleAsync(
             new Query(caller.Id, "acme", "widgets", "w-1"),
             Ct);
 
         // Assert
         result.Value.ShouldBeSameAs(widget);
-    }
-
-    [Fact]
-    public async Task HandleAsync_ShouldReturnNamespaceNotFound_WhenCallerHoldsNoRoleInTheNamespace()
-    {
-        // Arrange
-        var caller = Callers.Member("globex", NamespaceRole.Engineer);
-        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "w-1")], [caller]);
-
-        // Act
-        var result = await new Handler(database, WidgetKind.Catalog).HandleAsync(
-            new Query(caller.Id, "acme", "widgets", "w-1"),
-            Ct);
-
-        // Assert
-        result.Error.Code.ShouldBe("namespace.not_found");
     }
 
     [Theory]
@@ -54,10 +37,10 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Member("acme");
-        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "w-1")], [caller]);
+        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "w-1")]);
 
         // Act
-        var result = await new Handler(database, WidgetKind.Catalog).HandleAsync(
+        var result = await new Handler(database, AccessDoubles.ReadsFor("acme")).HandleAsync(
             new Query(caller.Id, "acme", kinds, name),
             Ct);
 
@@ -66,18 +49,19 @@ public sealed class HandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldReturnUnauthenticated_WhenCallerIsUnknown()
+    public async Task HandleAsync_ShouldReturnTheError_WhenTheAccessCheckFails()
     {
         // Arrange
         var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "w-1")]);
+        var access = AccessDoubles.ReadsFailingWith(AccessDoubles.NamespaceNotFound());
 
         // Act
-        var result = await new Handler(database, WidgetKind.Catalog).HandleAsync(
+        var result = await new Handler(database, access).HandleAsync(
             new Query(Guid.NewGuid(), "acme", "widgets", "w-1"),
             Ct);
 
         // Assert
-        result.Error.Code.ShouldBe(AccessErrors.UnauthenticatedCode);
+        result.Error.Code.ShouldBe("namespace.not_found");
     }
 
     private static Namespace Acme() => Namespace.Create(NamespaceName.Create("acme"));

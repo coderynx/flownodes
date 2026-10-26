@@ -14,7 +14,8 @@ public sealed class HandlerTests
     public async Task HandleAsync_ShouldReturnUnauthenticated_WhenTheCallerIsUnknown()
     {
         // Arrange
-        var handler = new Handler(TestDoubles.Database([TestDoubles.Member("alice")]));
+        var database = TestDoubles.Database([TestDoubles.Member("alice")]);
+        var handler = new Handler(TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Query(Guid.NewGuid()), Ct);
@@ -28,7 +29,8 @@ public sealed class HandlerTests
     {
         // Arrange
         var alice = TestDoubles.Disabled(TestDoubles.Member("alice"));
-        var handler = new Handler(TestDoubles.Database([alice]));
+        var database = TestDoubles.Database([alice]);
+        var handler = new Handler(TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Query(alice.Id), Ct);
@@ -43,7 +45,8 @@ public sealed class HandlerTests
         // Arrange
         var alice = TestDoubles.Member("alice");
         alice.Grant("default", Role.Engineer);
-        var handler = new Handler(TestDoubles.Database([TestDoubles.Administrator(), alice]));
+        var database = TestDoubles.Database([TestDoubles.Administrator(), alice]);
+        var handler = new Handler(TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Query(alice.Id), Ct);

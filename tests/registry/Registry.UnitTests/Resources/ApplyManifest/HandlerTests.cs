@@ -1,11 +1,12 @@
 using System.Text.Json;
+using Coderynx.Functional.Results;
 using Coderynx.Functional.Results.Errors;
-using Core.Application.Authorization;
 using Core.Contracts.Resources;
 using Core.Domain.Authorization;
 using Registry.Application.Database;
 using Registry.Application.Resources;
 using Registry.Application.Resources.ApplyManifest;
+using Registry.Application.Secrets;
 using Registry.Domain.Namespaces;
 using Registry.Domain.Resources;
 using Xunit;
@@ -15,49 +16,24 @@ namespace Registry.UnitTests.Resources.ApplyManifest;
 public sealed class HandlerTests
 {
     private static readonly DateTimeOffset Now = new(2026, 10, 25, 12, 0, 0, TimeSpan.Zero);
+    private readonly IResourceAccess _access = Substitute.For<IResourceAccess>();
+    private readonly ISecretStorage _secrets = Substitute.For<ISecretStorage>();
+    private readonly IRevisionLog _revisions = Substitute.For<IRevisionLog>();
 
     [Fact]
-    public async Task HandleAsync_ShouldReturnUnauthenticated_WhenCallerIsUnknown()
+    public async Task HandleAsync_ShouldReturnTheAccessError_WhenTheCallerMayNotChangeTheManifest()
     {
         // Arrange
         var database = TestDatabase.Create([Acme()]);
+        var handler = Handler(database);
+        _access.AuthoriseChangesAsync(Arg.Any<Guid>(), Arg.Any<ManifestReading>(), Ct)
+            .Returns(Errors.NamespaceNotFound("acme"));
 
         // Act
-        var result = await Handler(database).HandleAsync(Apply(Guid.NewGuid(), Widgets.Document("w-1")), Ct);
+        var result = await handler.HandleAsync(Apply(Guid.NewGuid(), Widgets.Document("w-1")), Ct);
 
         // Assert
-        result.Error.Code.ShouldBe(AccessErrors.UnauthenticatedCode);
-        await ShouldNotHaveSavedAsync(database);
-    }
-
-    [Fact]
-    public async Task HandleAsync_ShouldReturnNotFound_WhenCallerHoldsNoRoleInTheNamespace()
-    {
-        // Arrange
-        var caller = Callers.Member("globex", NamespaceRole.Engineer);
-        var database = TestDatabase.Create([Acme()], users: [caller]);
-
-        // Act
-        var result = await Handler(database).HandleAsync(Apply(caller.Id, Widgets.Document("w-1")), Ct);
-
-        // Assert
-        result.Error.Kind.ShouldBe(ErrorKind.NotFound);
         result.Error.Code.ShouldBe("namespace.not_found");
-        await ShouldNotHaveSavedAsync(database);
-    }
-
-    [Fact]
-    public async Task HandleAsync_ShouldReturnForbidden_WhenCallerIsOnlyAnOperator()
-    {
-        // Arrange
-        var caller = Callers.Member("acme");
-        var database = TestDatabase.Create([Acme()], users: [caller]);
-
-        // Act
-        var result = await Handler(database).HandleAsync(Apply(caller.Id, Widgets.Document("w-1")), Ct);
-
-        // Assert
-        result.Error.Code.ShouldBe(AccessErrors.ForbiddenCode);
         await ShouldNotHaveSavedAsync(database);
     }
 
@@ -67,10 +43,10 @@ public sealed class HandlerTests
         // Arrange
         var caller = Engineer();
         var acme = Acme();
-        var database = TestDatabase.Create([acme], users: [caller]);
+        var database = TestDatabase.Create([acme]);
 
         // Act
-        var result = await Handler(database)
+        var result = await Handler(database, caller)
             .HandleAsync(Apply(caller.Id, Widgets.Document("w-1", """{"size": 3}""")), Ct);
 
         // Assert
@@ -84,11 +60,12 @@ public sealed class HandlerTests
             .LockNamespacesAsync(Arg.Is<IReadOnlyList<string>>(names => names.SequenceEqual(new[] { "acme" })), Ct);
         database.Resources.Received(1)
             .Add(Arg.Is<Resource>(resource => resource.Name.Value == "w-1" && resource.Generation == 1));
-        database.Revisions.Received(1)
-            .Add(
+        await _revisions.Received(1)
+            .RecordAsync(
                 Arg.Is<Revision>(revision =>
                     revision.Name.Value == "w-1" && revision.Author == new RevisionAuthor(caller.Id, "erin") &&
-                    revision.AppliedAt == Now));
+                    revision.AppliedAt == Now),
+                Ct);
         await database.Received(1)
             .PublishAsync(
                 Arg.Is<ResourceApplied>(message =>
@@ -105,10 +82,10 @@ public sealed class HandlerTests
         var acme = Acme();
         var existing = Widgets.Stored("acme", "w-1", """{"size": 3, "parent": "w-0"}""");
         var parent = Widgets.Stored("acme", "w-0");
-        var database = TestDatabase.Create([acme], [existing, parent], [caller]);
+        var database = TestDatabase.Create([acme], [existing, parent]);
 
         // Act
-        var result = await Handler(database)
+        var result = await Handler(database, caller)
             .HandleAsync(Apply(caller.Id, Widgets.Document("w-1", """{"parent": "w-0", "size": 3.0}""")), Ct);
 
         // Assert
@@ -127,10 +104,10 @@ public sealed class HandlerTests
         var caller = Engineer();
         var acme = Acme();
         var existing = Widgets.Stored("acme", "w-1", """{"size": 3}""");
-        var database = TestDatabase.Create([acme], [existing], [caller]);
+        var database = TestDatabase.Create([acme], [existing]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Apply(caller.Id, Widgets.Document("w-1", "{}")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Apply(caller.Id, Widgets.Document("w-1", "{}")), Ct);
 
         // Assert
         var applied = result.Value.ShouldHaveSingleItem();
@@ -149,7 +126,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Engineer();
-        var database = TestDatabase.Create([Acme()], users: [caller]);
+        var database = TestDatabase.Create([Acme()]);
         var gizmo = Widgets.Json(
             """
             {"apiVersion": "flownodes.io/v1alpha1", "kind": "Gizmo", "metadata": {"name": "g"},
@@ -157,7 +134,7 @@ public sealed class HandlerTests
             """);
 
         // Act
-        var result = await Handler(database)
+        var result = await Handler(database, caller)
             .HandleAsync(
                 Apply(
                     caller.Id,
@@ -182,10 +159,10 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Engineer();
-        var database = TestDatabase.Create([Acme()], users: [caller]);
+        var database = TestDatabase.Create([Acme()]);
 
         // Act
-        var result = await Handler(database)
+        var result = await Handler(database, caller)
             .HandleAsync(
                 Apply(caller.Id, Widgets.Document("child", """{"parent": "root"}"""), Widgets.Document("root")),
                 Ct);
@@ -200,10 +177,10 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Engineer();
-        var database = TestDatabase.Create([Acme()], users: [caller]);
+        var database = TestDatabase.Create([Acme()]);
 
         // Act
-        var result = await Handler(database)
+        var result = await Handler(database, caller)
             .HandleAsync(Apply(caller.Id, Widgets.Document("w-1"), Widgets.Document("w-1")), Ct);
 
         // Assert
@@ -218,11 +195,11 @@ public sealed class HandlerTests
         // Arrange
         var caller = Engineer();
         caller.GrantRole("globex", NamespaceRole.Engineer, caller.LastSeq + 1);
-        var database = TestDatabase.Create([Acme()], users: [caller]);
+        var database = TestDatabase.Create([Acme()]);
         var command = new Command(caller.Id, [Widgets.Document("w-1", @namespace: "globex")], "acme", false);
 
         // Act
-        var result = await Handler(database).HandleAsync(command, Ct);
+        var result = await Handler(database, caller).HandleAsync(command, Ct);
 
         // Assert
         result.Error.ShouldBeOfType<ManifestRejected>()
@@ -237,10 +214,10 @@ public sealed class HandlerTests
         var caller = Engineer();
         var existing = Widgets.Stored("acme", "w-1", """{"size": 3}""");
         existing.Apply(Widgets.Json("""{"size": 4}"""), 3);
-        var database = TestDatabase.Create([Acme()], [existing], [caller]);
+        var database = TestDatabase.Create([Acme()], [existing]);
 
         // Act
-        var result = await Handler(database)
+        var result = await Handler(database, caller)
             .HandleAsync(Apply(caller.Id, Widgets.Document("w-1", """{"size": 5}""", generation: 1)), Ct);
 
         // Assert
@@ -257,7 +234,7 @@ public sealed class HandlerTests
         var caller = Engineer();
         var acme = Acme();
         var existing = Widgets.Stored("acme", "w-1", """{"size": 3}""");
-        var database = TestDatabase.Create([acme], [existing], [caller]);
+        var database = TestDatabase.Create([acme], [existing]);
         var command = new Command(
             caller.Id,
             [Widgets.Document("w-1", """{"size": 4}"""), Widgets.Document("w-2")],
@@ -265,7 +242,7 @@ public sealed class HandlerTests
             true);
 
         // Act
-        var result = await Handler(database).HandleAsync(command, Ct);
+        var result = await Handler(database, caller).HandleAsync(command, Ct);
 
         // Assert
         result.Value.Select(applied => (applied.Action, applied.Generation))
@@ -277,32 +254,14 @@ public sealed class HandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldDropTheOldestRevisions_WhenAResourceKeepsMoreThanTheRetention()
-    {
-        // Arrange
-        var caller = Engineer();
-        var existing = Widgets.Stored("acme", "w-1", """{"size": 3}""");
-        var history = Enumerable.Range(0, 3)
-            .Select(_ => Revision.Applied(existing, new RevisionAuthor(caller.Id, "erin"), Now))
-            .ToList();
-        var database = TestDatabase.Create([Acme()], [existing], [caller], history);
-
-        // Act
-        await Handler(database, keep: 2).HandleAsync(Apply(caller.Id, Widgets.Document("w-1", """{"size": 4}""")), Ct);
-
-        // Assert
-        database.Revisions.Received(1).RemoveRange(Arg.Is<IEnumerable<Revision>>(removed => removed.Count() == 2));
-    }
-
-    [Fact]
     public async Task HandleAsync_ShouldCreateANamespace_WhenAnAdministratorAppliesOne()
     {
         // Arrange
         var caller = Callers.Administrator();
-        var database = TestDatabase.Create([Acme()], users: [caller]);
+        var database = TestDatabase.Create([Acme()]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Apply(caller.Id, NamespaceDocument("globex")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Apply(caller.Id, NamespaceDocument("globex")), Ct);
 
         // Assert
         var applied = result.Value.ShouldHaveSingleItem();
@@ -313,7 +272,7 @@ public sealed class HandlerTests
         await database.Received(1)
             .PublishAsync(
                 Arg.Is<ResourceApplied>(message => message.Kind == Namespace.Kind && message.Name == "globex"));
-        database.Revisions.Received(1).Add(Arg.Is<Revision>(revision => revision.Kind == Namespace.Kind));
+        await _revisions.Received(1).RecordAsync(Arg.Is<Revision>(revision => revision.Kind == Namespace.Kind), Ct);
         await database.Received(1).SaveChangesAsync(Ct);
     }
 
@@ -322,10 +281,10 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Administrator();
-        var database = TestDatabase.Create([Acme()], users: [caller]);
+        var database = TestDatabase.Create([Acme()]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Apply(caller.Id, NamespaceDocument("acme")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Apply(caller.Id, NamespaceDocument("acme")), Ct);
 
         // Assert
         result.Value.ShouldHaveSingleItem().Action.ShouldBe(ApplyAction.Unchanged);
@@ -333,44 +292,14 @@ public sealed class HandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldReturnForbidden_WhenANonAdministratorAppliesANamespace()
-    {
-        // Arrange
-        var caller = Engineer();
-        var database = TestDatabase.Create([Acme()], users: [caller]);
-
-        // Act
-        var result = await Handler(database).HandleAsync(Apply(caller.Id, NamespaceDocument("globex")), Ct);
-
-        // Assert
-        result.Error.Code.ShouldBe(AccessErrors.ForbiddenCode);
-        await ShouldNotHaveSavedAsync(database);
-    }
-
-    [Fact]
-    public async Task HandleAsync_ShouldReturnNamespaceNotFound_WhenAnUnreadableResourceTargetsANamespaceWithoutARole()
-    {
-        // Arrange
-        var caller = Engineer();
-        var database = TestDatabase.Create([Acme()], users: [caller]);
-        var command = new Command(caller.Id, [Widgets.Document("Bad_Name", @namespace: "globex")], null, false);
-
-        // Act
-        var result = await Handler(database).HandleAsync(command, Ct);
-
-        // Assert
-        result.Error.Code.ShouldBe("namespace.not_found");
-    }
-
-    [Fact]
     public async Task HandleAsync_ShouldRejectAResource_WhenItBreaksARuleAgainstAnotherResource()
     {
         // Arrange
         var caller = Engineer();
-        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "root", """{"size": 2}""")], [caller]);
+        var database = TestDatabase.Create([Acme()], [Widgets.Stored("acme", "root", """{"size": 2}""")]);
 
         // Act
-        var result = await Handler(database)
+        var result = await Handler(database, caller)
             .HandleAsync(Apply(caller.Id, Widgets.Document("child", """{"parent": "root", "size": 5}""")), Ct);
 
         // Assert
@@ -388,11 +317,10 @@ public sealed class HandlerTests
             [
                 Widgets.Stored("acme", "root", """{"size": 5}"""),
                 Widgets.Stored("acme", "child", """{"parent": "root", "size": 4}""")
-            ],
-            [caller]);
+            ]);
 
         // Act
-        var result = await Handler(database)
+        var result = await Handler(database, caller)
             .HandleAsync(Apply(caller.Id, Widgets.Document("root", """{"size": 1}""")), Ct);
 
         // Assert
@@ -411,11 +339,10 @@ public sealed class HandlerTests
             [
                 Widgets.Stored("acme", "root", """{"size": 1}"""),
                 Widgets.Stored("acme", "child", """{"parent": "root", "size": 4}""")
-            ],
-            [caller]);
+            ]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Apply(caller.Id, Widgets.Document("other")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Apply(caller.Id, Widgets.Document("other")), Ct);
 
         // Assert
         result.Value.ShouldHaveSingleItem().Action.ShouldBe(ApplyAction.Created);
@@ -427,10 +354,10 @@ public sealed class HandlerTests
         // Arrange
         var caller = Engineer();
         var resources = new List<Resource>();
-        var database = TestDatabase.Create([Acme()], resources, [caller]);
+        var database = TestDatabase.Create([Acme()], resources);
 
         // Act
-        var result = await Handler(database).HandleAsync(Apply(caller.Id, SecretDocument("db", "hunter2")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Apply(caller.Id, SecretDocument("db", "hunter2")), Ct);
 
         // Assert
         var applied = result.Value.ShouldHaveSingleItem();
@@ -438,7 +365,10 @@ public sealed class HandlerTests
         applied.Changes.ShouldAllBe(change => change.To!.Value.GetString() == SecretKind.Hidden);
         database.Resources.Received(1)
             .Add(Arg.Is<Resource>(resource => !resource.Spec.GetRawText().Contains("hunter2")));
-        database.SecretValues.Received(1).Add(Arg.Is<SecretValue>(value => value.Key == "password"));
+        await _secrets.Received(1)
+            .StoreAsync(
+                Arg.Is<ManifestEntry>(entry => entry.Values!.Count == 1 && entry.Values["password"] == "hunter2"),
+                Ct);
         await database.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
@@ -454,18 +384,17 @@ public sealed class HandlerTests
             ResourceName.Create("db"),
             SecretKind.Seal(Widgets.Json("""{"data": {"password": "old"}}"""), vault.Fingerprint),
             2);
-        var held = SecretValue.Create(NamespaceName.Create("acme"), stored.Name, "password", [1]);
-        var database = TestDatabase.Create([Acme()], [stored], [caller], secretValues: [held]);
+        var database = TestDatabase.Create([Acme()], [stored]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Apply(caller.Id, SecretDocument("db", "new")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Apply(caller.Id, SecretDocument("db", "new")), Ct);
 
         // Assert
         var applied = result.Value.ShouldHaveSingleItem();
         applied.Action.ShouldBe(ApplyAction.Configured);
         applied.Changes.Single().Path.ShouldBe("spec.data.password");
         applied.Changes.Single().To!.Value.GetString().ShouldBe(SecretKind.Hidden);
-        held.Encrypted.ShouldBe(System.Text.Encoding.UTF8.GetBytes("encrypted-new"));
+        await _secrets.Received(1).StoreAsync(Arg.Is<ManifestEntry>(entry => entry.Values!["password"] == "new"), Ct);
     }
 
     [Fact]
@@ -480,14 +409,14 @@ public sealed class HandlerTests
             ResourceName.Create("db"),
             SecretKind.Seal(Widgets.Json("""{"data": {"password": "same"}}"""), vault.Fingerprint),
             2);
-        var database = TestDatabase.Create([Acme()], [stored], [caller]);
+        var database = TestDatabase.Create([Acme()], [stored]);
 
         // Act
-        var result = await Handler(database).HandleAsync(Apply(caller.Id, SecretDocument("db", "same")), Ct);
+        var result = await Handler(database, caller).HandleAsync(Apply(caller.Id, SecretDocument("db", "same")), Ct);
 
         // Assert
         result.Value.ShouldHaveSingleItem().Action.ShouldBe(ApplyAction.Unchanged);
-        database.SecretValues.DidNotReceive().Add(Arg.Any<SecretValue>());
+        await _secrets.DidNotReceive().StoreAsync(Arg.Any<ManifestEntry>(), Arg.Any<CancellationToken>());
         await database.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
@@ -496,10 +425,10 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Engineer();
-        var database = TestDatabase.Create([Acme()], users: [caller]);
+        var database = TestDatabase.Create([Acme()]);
 
         // Act
-        var result = await Handler(database)
+        var result = await Handler(database, caller)
             .HandleAsync(Apply(caller.Id, Widgets.Document("w-1", """{"secret": "db"}""")), Ct);
 
         // Assert
@@ -513,10 +442,10 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Engineer();
-        var database = TestDatabase.Create([Acme()], users: [caller]);
+        var database = TestDatabase.Create([Acme()]);
 
         // Act
-        var result = await Handler(database)
+        var result = await Handler(database, caller)
             .HandleAsync(
                 Apply(caller.Id, SecretDocument("db", "hunter2"), Widgets.Document("w-1", """{"secret": "db"}""")),
                 Ct);
@@ -546,14 +475,19 @@ public sealed class HandlerTests
         Widgets.Json(
             $$$"""{"apiVersion": "flownodes.io/v1alpha1", "kind": "Namespace", "metadata": {"name": "{{{name}}}"}}""");
 
-    private static Handler Handler(IApplicationDbContext database, int keep = 50)
+    private Handler Handler(IApplicationDbContext database, UserAccess? caller = null)
     {
+        _access.AuthoriseChangesAsync(Arg.Any<Guid>(), Arg.Any<ManifestReading>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Found(caller));
+
         return new Handler(
             database,
             WidgetKind.Catalog,
             ResourceHandlers.Time(),
             ResourceHandlers.Vault(),
-            ResourceHandlers.Retention(keep));
+            _access,
+            _secrets,
+            _revisions);
     }
 
     private static async Task ShouldNotHaveSavedAsync(IApplicationDbContext database)

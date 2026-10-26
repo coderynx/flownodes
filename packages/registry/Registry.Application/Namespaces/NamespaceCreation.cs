@@ -5,19 +5,16 @@ using Registry.Domain.Namespaces;
 
 namespace Registry.Application.Namespaces;
 
-internal static class NamespaceCreation
+internal sealed class NamespaceCreation(IApplicationDbContext database) : INamespaceCreation
 {
-    public static async Task<Result<Namespace>> EnsureAsync(
-        IApplicationDbContext database,
-        string rawName,
-        CancellationToken cancellationToken)
+    public async Task<Result<Namespace>> EnsureAsync(string rawName, CancellationToken cancellationToken)
     {
         if (!NamespaceName.TryCreate(rawName, out var name))
         {
             return Errors.InvalidName(rawName);
         }
 
-        var existing = await FindAsync(database, name, cancellationToken);
+        var existing = await FindAsync(name, cancellationToken);
         if (existing is not null)
         {
             return Result.Found(existing);
@@ -35,7 +32,7 @@ internal static class NamespaceCreation
         {
             database.Namespaces.Remove(created);
 
-            var winner = await FindAsync(database, name, cancellationToken);
+            var winner = await FindAsync(name, cancellationToken);
             if (winner is null)
             {
                 throw;
@@ -47,9 +44,6 @@ internal static class NamespaceCreation
         return Result.Created(created);
     }
 
-    private static Task<Namespace?> FindAsync(
-        IApplicationDbContext database,
-        NamespaceName name,
-        CancellationToken cancellationToken) =>
+    private Task<Namespace?> FindAsync(NamespaceName name, CancellationToken cancellationToken) =>
         database.Namespaces.SingleOrDefaultAsync(@namespace => @namespace.Name == name, cancellationToken);
 }
