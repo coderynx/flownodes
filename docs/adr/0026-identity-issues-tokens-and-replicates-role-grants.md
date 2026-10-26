@@ -11,3 +11,4 @@ Users, their credentials and their Role Grants belong to a third module, Identit
 - Identity consumes the Registry's Namespace messages to reject grants in unknown Namespaces and to drop grants when a Namespace is deleted. `default` is always known, so first-run setup never waits for the Registry.
 - A new Role Grant can take a few seconds to reach the Registry and Engine. Disabling a User revokes their refresh tokens and Personal Access Tokens at once, and reaches the other modules as a message.
 - Administrator is installation management only: it gives no access inside a Namespace. A caller with no role in a Namespace gets 404 for anything in it, so its existence is not leaked; a member lacking the role gets 403.
+- Each module keeps its replica in the storage it already has: the Registry in its EF Core database, the Engine in Orleans grain storage (ADR-0004). The Engine gains no relational database just for authorisation.
