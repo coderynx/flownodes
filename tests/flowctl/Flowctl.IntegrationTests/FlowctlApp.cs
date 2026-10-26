@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Core.Contracts.Identity;
+using Engine.Application.Authorization;
 using Engine.Application.Integrations;
 using JasperFx.CodeGeneration;
 using Microsoft.AspNetCore.Builder;
@@ -56,6 +57,7 @@ public sealed class FlowctlApp : IAsyncDisposable
 
         builder.Services.AddSingleton<IResourceKind, WidgetKind>();
         builder.Services.AddSingleton<IInstalledIntegrations, InstalledIntegrationsStub>();
+        builder.Services.AddSingleton<IRoleGrants, RoleGrantsStub>();
         builder.Services.ConfigureWolverine(options => options.CodeGeneration.TypeLoadMode = TypeLoadMode.Dynamic);
 
         var app = builder.Build();

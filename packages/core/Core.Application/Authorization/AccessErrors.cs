@@ -26,6 +26,9 @@ public static class AccessErrors
     internal static Error MissingRole(string @namespace, string role) =>
         Error.Custom(ForbiddenCode, $"This needs the {role} role in Namespace '{@namespace}'.");
 
+    internal static Error NoRole() =>
+        Error.Custom(ForbiddenCode, "This needs a role in at least one Namespace.");
+
     internal static Error NamespaceNotFound(string @namespace) =>
         Error.NotFound("namespace.not_found", $"Namespace '{@namespace}' does not exist.");
 }

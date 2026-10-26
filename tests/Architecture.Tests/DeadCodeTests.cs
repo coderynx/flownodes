@@ -39,6 +39,22 @@ public sealed class DeadCodeTests
     }
 
     [Fact]
+    public void Find_ShouldNotReport_WhenTheTypeIsAGrainOrleansActivates()
+    {
+        // Arrange
+        var sources = new Dictionary<string, string>
+        {
+            ["a/CounterGrain.cs"] = "public sealed class CounterGrain(State state) : Grain, ICounterGrain\n{\n}\n"
+        };
+
+        // Act
+        var dead = DeadCode.Find(sources);
+
+        // Assert
+        dead.ShouldNotContain(entry => entry.Contains("CounterGrain"));
+    }
+
+    [Fact]
     public void Find_ShouldNotReport_WhenAnotherFileReferencesTheType()
     {
         // Arrange

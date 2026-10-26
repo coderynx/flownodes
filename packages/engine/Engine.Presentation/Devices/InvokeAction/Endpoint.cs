@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.Json;
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
@@ -18,12 +19,12 @@ internal sealed class Endpoint : IEndpoint
         app.MapPost(
                 "/engine/namespaces/{namespace}/devices/{name}/actions/{action}",
                 async (
-                    [AsParameters] Request request, [FromBody] Body? body, ISender sender,
+                    [AsParameters] Request request, [FromBody] Body? body, ClaimsPrincipal caller, ISender sender,
                     CancellationToken cancellationToken) =>
                 {
                     var parameters = body?.Parameters ?? JsonSerializer.SerializeToElement(new { });
                     var result = await sender.SendAsync(
-                        new Command(request.Namespace, request.Name, request.Action, parameters),
+                        new Command(caller.CallerId(), request.Namespace, request.Name, request.Action, parameters),
                         cancellationToken);
 
                     return result.Match(value => Results.Ok(new Response(value)), error => error.ToProblem());
@@ -31,6 +32,7 @@ internal sealed class Endpoint : IEndpoint
             .WithName("InvokeAction")
             .Produces<Response>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
     }

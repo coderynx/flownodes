@@ -1,9 +1,12 @@
 using Core.Application.Integrations;
+using Core.Contracts.Identity;
 using Core.Contracts.Resources;
 using Engine.Application.Assets;
+using Engine.Application.Authorization;
 using Engine.Application.Devices;
 using Engine.Application.Integrations;
 using Engine.Infrastructure.Assets;
+using Engine.Infrastructure.Authorization;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.Devices;
 using Engine.Infrastructure.Integrations;
@@ -25,6 +28,7 @@ public static class DependencyInjection
 {
     private const string AdoNetInvariant = "Npgsql";
     private const string ResourceQueue = "engine-resources";
+    private const string IdentityQueue = "engine-identity";
 
     /// <summary>
     /// Registers the shared infrastructure, makes this Silo a member of the Orleans cluster, clustered, persisted and
@@ -105,6 +109,7 @@ public static class DependencyInjection
             builder.Configuration.GetSection(AssetTypeGrainOptions.Section));
         builder.Services.Configure<DeviceGrainOptions>(builder.Configuration.GetSection(DeviceGrainOptions.Section));
         builder.Services.AddSingleton<IStatusReporter, WolverineStatusReporter>();
+        builder.Services.AddSingleton<IRoleGrants, GrainRoleGrants>();
         builder.Services.AddSingleton<IDeviceRuntime, GrainDeviceRuntime>();
         builder.Services.AddSingleton<IAssetRuntime, GrainAssetRuntime>();
     }
@@ -124,6 +129,13 @@ public static class DependencyInjection
                 options.PublishMessage<ResourceApplied>().ToPostgresqlQueue(ResourceQueue);
                 options.PublishMessage<ResourceDeleted>().ToPostgresqlQueue(ResourceQueue);
                 options.ListenToPostgresqlQueue(ResourceQueue).Sequential();
+
+                options.PublishMessage<RoleGranted>().ToPostgresqlQueue(IdentityQueue);
+                options.PublishMessage<RoleRevoked>().ToPostgresqlQueue(IdentityQueue);
+                options.PublishMessage<UserDisabled>().ToPostgresqlQueue(IdentityQueue);
+                options.PublishMessage<UserEnabled>().ToPostgresqlQueue(IdentityQueue);
+                options.PublishMessage<UserDeleted>().ToPostgresqlQueue(IdentityQueue);
+                options.ListenToPostgresqlQueue(IdentityQueue).Sequential();
             });
 
         builder.Services.AddHostedService<ResyncOnStart>();

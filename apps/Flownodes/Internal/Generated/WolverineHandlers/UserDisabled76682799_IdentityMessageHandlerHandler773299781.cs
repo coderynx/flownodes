@@ -4,13 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Internal.Generated.WolverineHandlers
 {
-    // START: UserEnabledHandler100489586
+    // START: UserDisabled76682799_IdentityMessageHandlerHandler773299781
     [global::System.CodeDom.Compiler.GeneratedCode("JasperFx", "1.0.0")]
-    public sealed class UserEnabledHandler100489586 : Wolverine.Runtime.Handlers.MessageHandler
+    public sealed class UserDisabled76682799_IdentityMessageHandlerHandler773299781 : Wolverine.Runtime.Handlers.MessageHandler
     {
         private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _serviceScopeFactory;
 
-        public UserEnabledHandler100489586(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory serviceScopeFactory)
+        public UserDisabled76682799_IdentityMessageHandlerHandler773299781(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory serviceScopeFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
         }
@@ -22,17 +22,17 @@ namespace Internal.Generated.WolverineHandlers
             // This service has been marked as requiring service location independent of Wolverine's ability to use constructor injection of everything else
             var sender = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Coderynx.MediatorKit.Abstractions.ISender>(serviceScope.ServiceProvider);
             // The actual message body
-            var userEnabled = (Core.Contracts.Identity.UserEnabled)context.Envelope.Message;
+            var userDisabled = (Core.Contracts.Identity.UserDisabled)context.Envelope.Message;
 
             System.Diagnostics.Activity.Current?.SetTag("message.handler", "Registry.Infrastructure.Messaging.IdentityMessageHandler");
             System.Diagnostics.Activity.Current?.SetTag("handler.type", "Registry.Infrastructure.Messaging.IdentityMessageHandler");
             
             // The actual message execution
-            await Registry.Infrastructure.Messaging.IdentityMessageHandler.Handle(userEnabled, sender, cancellation).ConfigureAwait(false);
+            await Registry.Infrastructure.Messaging.IdentityMessageHandler.Handle(userDisabled, sender, cancellation).ConfigureAwait(false);
         }
     }
 
-    // END: UserEnabledHandler100489586
+    // END: UserDisabled76682799_IdentityMessageHandlerHandler773299781
     
     
 }

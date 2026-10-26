@@ -1,6 +1,7 @@
 using Coderynx.MediatorKit.Abstractions;
 using Core.Contracts.Identity;
 using Registry.Application.Access.ApplyIdentityMessage;
+using Wolverine.Attributes;
 
 namespace Registry.Infrastructure.Messaging;
 
@@ -8,6 +9,7 @@ namespace Registry.Infrastructure.Messaging;
 /// <summary>
 /// Hands Identity's messages to the use case that records them (ADR-0026).
 /// </summary>
+[StickyHandler("registry-identity")]
 public static class IdentityMessageHandler
 {
     /// <summary>

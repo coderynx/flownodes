@@ -99,6 +99,52 @@ public static class Access
         return Result.Found(new NamespaceScope(caller.Value.IsAdministrator, names));
     }
 
+    /// <summary>
+    /// Decides a request from a replica that is not a database, such as the Engine's grains: the caller's state and the
+    /// roles they hold in the Namespace.
+    /// </summary>
+    /// <param name="isActive">Whether the caller is a known, enabled User.</param>
+    /// <param name="namespace">The name of the Namespace.</param>
+    /// <param name="rolesHeld">The roles the caller holds in the Namespace.</param>
+    /// <param name="required">The role the request needs; any role when <see langword="null"/>.</param>
+    /// <returns>Success, or an error carrying <see cref="AccessErrors"/> codes.</returns>
+    public static Result Authorise(
+        bool isActive,
+        string @namespace,
+        IReadOnlyCollection<NamespaceRole> rolesHeld,
+        NamespaceRole? required)
+    {
+        if (!isActive)
+        {
+            return AccessErrors.Unauthenticated();
+        }
+
+        if (rolesHeld.Count == 0)
+        {
+            return AccessErrors.NamespaceNotFound(@namespace);
+        }
+
+        return required is { } role && !rolesHeld.Contains(role)
+            ? AccessErrors.MissingRole(@namespace, role.ToString())
+            : Result.Updated();
+    }
+
+    /// <summary>
+    /// Decides a request that belongs to no Namespace, which any member of some Namespace may make.
+    /// </summary>
+    /// <param name="isActive">Whether the caller is a known, enabled User.</param>
+    /// <param name="roleCount">The number of Role Grants the caller holds.</param>
+    /// <returns>Success, or an error carrying <see cref="AccessErrors"/> codes.</returns>
+    public static Result AuthoriseMember(bool isActive, int roleCount)
+    {
+        if (!isActive)
+        {
+            return AccessErrors.Unauthenticated();
+        }
+
+        return roleCount == 0 ? AccessErrors.NoRole() : Result.Updated();
+    }
+
     private static async Task<Result<UserAccess>> FindActiveAsync(
         IUserAccessSource source,
         Guid callerId,
