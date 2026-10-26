@@ -9,9 +9,9 @@ if grep -nE 'claude\.ai/code/session_[A-Za-z0-9]{8,}' "$1" >&2; then
     exit 1
 fi
 
-# Conventional Commits (ADR-0027). Git writes merge, fixup, squash and amend subjects itself.
+# Conventional Commits (ADR-0027). Git writes merge, revert, fixup, squash and amend subjects itself.
 subject=$(head -n 1 "$1")
 case "$subject" in
-    "Merge "* | "fixup! "* | "squash! "* | "amend! "*) ;;
+    "Merge "* | "Revert \""* | "fixup! "* | "squash! "* | "amend! "*) ;;
     *) scripts/check-commit-subject.sh "$subject" ;;
 esac

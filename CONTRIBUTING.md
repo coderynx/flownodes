@@ -41,7 +41,7 @@ The standards are listed in [`AGENTS.md`](AGENTS.md), and each one points to the
 
 ## Commit messages
 
-A commit subject is a [Conventional Commit](https://www.conventionalcommits.org): `<type>[(scope)][!]: <description>`, for example `feat(engine): enforce Namespace roles`. The `commit-msg` hook checks it, and `scripts/check-commit-subject.sh` lists the allowed types and scopes. Pull requests are squash-merged, so the pull request title must follow the same format; a CI check verifies it. Before the first public release, breaking changes need no `!`. [ADR-0027](docs/adr/0027-conventional-commits.md) has the reasoning.
+A commit subject is a [Conventional Commit](https://www.conventionalcommits.org): `<type>[(scope)][!]: <description>`, for example `feat(engine): enforce Namespace roles`. The `commit-msg` hook checks it, and `scripts/check-commit-subject.sh` lists the allowed types and scopes. Squash is the only merge mode, so the pull request title must follow the same format; a CI check verifies it. Before the first public release, breaking changes need neither `!` nor a `BREAKING CHANGE:` footer, though both are valid. `git revert` writes `Revert "…"`, which the hook lets through; type `revert: …` yourself for the pull request title. [ADR-0027](docs/adr/0027-conventional-commits.md) has the reasoning.
 
 ## Before you open a pull request
 
