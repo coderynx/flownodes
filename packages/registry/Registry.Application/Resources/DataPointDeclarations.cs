@@ -6,7 +6,7 @@ namespace Registry.Application.Resources;
 internal static class DataPointDeclarations
 {
     private static readonly string[] Types = ["bool", "integer", "number", "string", "enum"];
-    private static readonly string[] Fields = ["name", "type", "writable", "unit", "min", "max", "values"];
+    private static readonly string[] Fields = ["name", "type", "writable", "unit", "min", "max", "values", "source"];
 
     public static IEnumerable<SpecError> Validate(JsonElement spec)
     {
@@ -48,6 +48,34 @@ internal static class DataPointDeclarations
                 .Select(dataPoint => Text(dataPoint, "name"))
                 .OfType<string>()
             : [];
+
+    public static IReadOnlyList<Declaration> Declarations(JsonElement spec)
+    {
+        if (!spec.TryGetProperty("dataPoints", out var list) || list.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        var declarations = new List<Declaration>();
+        var index = 0;
+        foreach (var dataPoint in list.EnumerateArray())
+        {
+            var path = $"spec.dataPoints[{index++}]";
+            if (dataPoint.ValueKind == JsonValueKind.Object && Text(dataPoint, "name") is { } name)
+            {
+                declarations.Add(
+                    new Declaration(
+                        name,
+                        Text(dataPoint, "type"),
+                        dataPoint.TryGetProperty("writable", out var writable) &&
+                        writable.ValueKind == JsonValueKind.True,
+                        dataPoint.TryGetProperty("source", out var source) ? source : null,
+                        path));
+            }
+        }
+
+        return declarations;
+    }
 
     private static IEnumerable<SpecError> ValidateOne(JsonElement dataPoint, string path, HashSet<string> seen)
     {
@@ -135,3 +163,5 @@ internal static class DataPointDeclarations
     private static string? Text(JsonElement spec, string name) =>
         spec.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
 }
+
+internal sealed record Declaration(string Name, string? Type, bool Writable, JsonElement? Source, string Path);

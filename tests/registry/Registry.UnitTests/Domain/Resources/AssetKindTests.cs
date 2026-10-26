@@ -61,7 +61,7 @@ public sealed class AssetKindTests
             Resource("Asset", "fleet", "{}"));
 
         // Act
-        var errors = new AssetKind().Validate(spec, snapshot);
+        var errors = new AssetKind(new LampCatalog()).Validate(spec, snapshot);
 
         // Assert
         errors.ShouldBeEmpty();
@@ -76,7 +76,7 @@ public sealed class AssetKindTests
             Resource("AssetType", "train", """{"dataPoints": [{"name": "speed", "type": "number"}]}"""));
 
         // Act
-        var errors = new AssetKind().Validate(spec, snapshot).ToList();
+        var errors = new AssetKind(new LampCatalog()).Validate(spec, snapshot).ToList();
 
         // Assert
         errors.ShouldContain(error => error.Path == "spec.dataPoints[0].name");
@@ -89,7 +89,7 @@ public sealed class AssetKindTests
         var spec = Widgets.Json("""{"assetType": "ghost"}""");
 
         // Act
-        var errors = new AssetKind().Validate(spec, Snapshot());
+        var errors = new AssetKind(new LampCatalog()).Validate(spec, Snapshot());
 
         // Assert
         errors.ShouldBeEmpty();
@@ -103,7 +103,7 @@ public sealed class AssetKindTests
     public void AssetValidate_ShouldReportThePath_WhenTheSpecIsInvalid(string json, string path)
     {
         // Act
-        var errors = new AssetKind().Validate(Widgets.Json(json), Snapshot()).ToList();
+        var errors = new AssetKind(new LampCatalog()).Validate(Widgets.Json(json), Snapshot()).ToList();
 
         // Assert
         errors.ShouldContain(error => error.Path == path);
@@ -119,7 +119,7 @@ public sealed class AssetKindTests
             Resource("Asset", "b", """{"parent": "a"}"""));
 
         // Act
-        var errors = new AssetKind().Validate(spec, snapshot).ToList();
+        var errors = new AssetKind(new LampCatalog()).Validate(spec, snapshot).ToList();
 
         // Assert
         errors.ShouldContain(error => error.Path == "spec.parent");
@@ -133,7 +133,7 @@ public sealed class AssetKindTests
         var snapshot = Snapshot(Resource("Asset", "b", """{"parent": "c"}"""), Resource("Asset", "c", "{}"));
 
         // Act
-        var errors = new AssetKind().Validate(spec, snapshot);
+        var errors = new AssetKind(new LampCatalog()).Validate(spec, snapshot);
 
         // Assert
         errors.ShouldBeEmpty();
@@ -146,7 +146,7 @@ public sealed class AssetKindTests
         var spec = Widgets.Json("""{"assetType": "train", "parent": "fleet"}""");
 
         // Act
-        var references = new AssetKind().References(spec).ToList();
+        var references = new AssetKind(new LampCatalog()).References(spec).ToList();
 
         // Assert
         references.ShouldBe(

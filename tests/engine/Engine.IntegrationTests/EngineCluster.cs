@@ -1,3 +1,4 @@
+using Engine.Application.Assets;
 using Engine.Application.Devices;
 using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Connections;
@@ -28,6 +29,7 @@ public sealed class EngineCluster : IAsyncDisposable
 
     public RecordingStatus Status => _cluster.GetSiloServiceProvider().GetRequiredService<RecordingStatus>();
     public IDeviceRuntime Devices => _cluster.GetSiloServiceProvider().GetRequiredService<IDeviceRuntime>();
+    public IAssetRuntime Assets => _cluster.GetSiloServiceProvider().GetRequiredService<IAssetRuntime>();
     public RecordingRegistry Registry => _cluster.GetSiloServiceProvider().GetRequiredService<RecordingRegistry>();
 
     public static async Task<EngineCluster> StartAsync(TimeSpan? resyncPeriod = null)
@@ -131,6 +133,7 @@ public sealed class EngineCluster : IAsyncDisposable
                 services.AddSingleton<IStatusReporter>(provider => provider.GetRequiredService<RecordingStatus>());
                 services.AddSingleton<IIntegrationCatalog>(_ => SimulatorCatalog());
                 services.AddSingleton<IDeviceRuntime, GrainDeviceRuntime>();
+                services.AddSingleton<IAssetRuntime, GrainAssetRuntime>();
                 services.AddSingleton<RecordingRegistry>();
                 services.AddSingleton<IRegistryRequests>(provider => provider.GetRequiredService<RecordingRegistry>());
             });

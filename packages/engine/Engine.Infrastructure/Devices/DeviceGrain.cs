@@ -1,5 +1,7 @@
 using System.Text.Json;
+using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Connections;
+using Engine.Infrastructure.DataPoints;
 using Engine.Infrastructure.Integrations;
 using Engine.Infrastructure.Resources;
 using Flownodes.Sdk;
@@ -23,6 +25,7 @@ internal sealed class DeviceGrain(
     private DeviceSurface? _surface;
     private string? _problem;
     private DeviceState? _deviceState;
+    private readonly HashSet<string> _subscribers = [];
     private string? _registeredWith;
 
     public override async Task OnActivateAsync(CancellationToken cancellationToken)
@@ -51,6 +54,7 @@ internal sealed class DeviceGrain(
 
         await RegisterAsync();
         await ReportStatusAsync();
+        Notify();
     }
 
     public async Task DeleteAsync(Guid uid, long seq)
@@ -66,6 +70,7 @@ internal sealed class DeviceGrain(
             await Connection(connection).UnregisterDeviceAsync(ResourceName);
         }
 
+        Notify();
         DeactivateOnIdle();
     }
 
@@ -86,6 +91,21 @@ internal sealed class DeviceGrain(
 
         Adopt(connection);
         await ReportStatusAsync();
+        Notify();
+    }
+
+    public Task<DeviceFeed> SubscribeAsync(string asset)
+    {
+        _subscribers.Add(asset);
+
+        return Task.FromResult(Feed());
+    }
+
+    public Task UnsubscribeAsync(string asset)
+    {
+        _subscribers.Remove(asset);
+
+        return Task.CompletedTask;
     }
 
     public Task ValueReportedAsync(string dataPoint, string value, DateTimeOffset timestamp, int quality)
@@ -94,6 +114,7 @@ internal sealed class DeviceGrain(
         if (IsLive && isNewer)
         {
             _readings[dataPoint] = new Reading(value, (Quality)quality, timestamp);
+            Notify();
         }
 
         return Task.CompletedTask;
@@ -108,36 +129,8 @@ internal sealed class DeviceGrain(
         }
     }
 
-    public Task<IReadOnlyList<DataPointSnapshot>?> GetDataPointsAsync()
-    {
-        if (!IsLive)
-        {
-            return Task.FromResult<IReadOnlyList<DataPointSnapshot>?>(null);
-        }
-
-        var up = _connection?.IsUp == true;
-        IReadOnlyList<DataPointSnapshot> snapshots =
-        [
-            .. (_surface?.DataPoints ?? []).Select(definition =>
-            {
-                var reading = _readings.GetValueOrDefault(definition.Name);
-
-                return new DataPointSnapshot(
-                    definition.Name,
-                    definition.Type.ToString().ToLowerInvariant(),
-                    definition.Writable,
-                    definition.Unit,
-                    definition.Min,
-                    definition.Max,
-                    definition.Values,
-                    reading?.Value,
-                    up && reading is not null ? (int)reading.Quality : (int)Quality.Bad,
-                    reading?.Timestamp);
-            })
-        ];
-
-        return Task.FromResult<IReadOnlyList<DataPointSnapshot>?>(snapshots);
-    }
+    public Task<IReadOnlyList<DataPointSnapshot>?> GetDataPointsAsync() =>
+        Task.FromResult<IReadOnlyList<DataPointSnapshot>?>(IsLive ? Snapshots() : null);
 
     public async Task<CallResult> WriteAsync(string dataPoint, string value)
     {
@@ -192,34 +185,57 @@ internal sealed class DeviceGrain(
             Web);
     }
 
+    private DeviceFeed Feed() => new(IsLive, IsLive && _surface is not null, IsLive ? Snapshots() : []);
+
+    private void Notify()
+    {
+        if (_subscribers.Count == 0)
+        {
+            return;
+        }
+
+        var feed = Feed();
+        foreach (var asset in _subscribers)
+        {
+            GrainFactory.GetGrain<IAssetGrain>($"{Namespace}/{asset}").DeviceChangedAsync(ResourceName, feed).Ignore();
+        }
+    }
+
+    private List<DataPointSnapshot> Snapshots()
+    {
+        var up = _connection?.IsUp == true;
+
+        return
+        [
+            .. (_surface?.DataPoints ?? []).Select(definition =>
+            {
+                var reading = _readings.GetValueOrDefault(definition.Name);
+
+                return new DataPointSnapshot(
+                    definition.Name,
+                    definition.Type.ToString().ToLowerInvariant(),
+                    definition.Writable,
+                    definition.Unit,
+                    definition.Min,
+                    definition.Max,
+                    definition.Values,
+                    reading?.Value,
+                    up && reading is not null ? (int)reading.Quality : (int)Quality.Bad,
+                    reading?.Timestamp);
+            })
+        ];
+    }
+
     private static string? Check(DataPointDefinition definition, string value)
     {
         using var document = JsonDocument.Parse(value);
-        var json = document.RootElement;
-        var type = definition.Type;
-        var fits = type switch
-        {
-            DataPointType.Bool => json.ValueKind is JsonValueKind.True or JsonValueKind.False,
-            DataPointType.Integer => json.ValueKind == JsonValueKind.Number && json.TryGetInt64(out _),
-            DataPointType.Number => json.ValueKind == JsonValueKind.Number,
-            DataPointType.String => json.ValueKind == JsonValueKind.String,
-            _ => json.ValueKind == JsonValueKind.String && definition.Values?.Contains(json.GetString()!) == true
-        };
-        if (!fits)
-        {
-            return $"Must be a {type.ToString().ToLowerInvariant()}.";
-        }
 
-        if (json.ValueKind == JsonValueKind.Number)
-        {
-            var number = json.GetDouble();
-            if (number < definition.Min || number > definition.Max)
-            {
-                return $"Must be between {definition.Min} and {definition.Max}.";
-            }
-        }
-
-        return null;
+        return ValueCheck.Problem(
+            definition.Type.ToString().ToLowerInvariant(),
+            definition.Min,
+            definition.Max,
+            definition.Values,
+            document.RootElement);
     }
 
     private string ConnectionName => Spec.GetProperty("connection").GetString()!;

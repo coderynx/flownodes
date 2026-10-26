@@ -17,6 +17,8 @@ internal interface IDeviceGrain : IGrainWithStringKey
     Task StateReportedAsync(int deviceState);
 
     Task<IReadOnlyList<DataPointSnapshot>?> GetDataPointsAsync();
+    Task<DeviceFeed> SubscribeAsync(string asset);
+    Task UnsubscribeAsync(string asset);
     Task<CallResult> WriteAsync(string dataPoint, string value);
     Task<CallResult> InvokeAsync(string action, string parameters, string invocationId);
 }

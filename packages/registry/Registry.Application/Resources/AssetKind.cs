@@ -1,9 +1,10 @@
 using System.Text.Json;
+using Core.Application.Integrations;
 using Registry.Domain.Resources;
 
 namespace Registry.Application.Resources;
 
-internal sealed class AssetKind : IResourceKind
+internal sealed class AssetKind(IIntegrationSchemas integrations) : IResourceKind
 {
     public const string KindName = "Asset";
     public string Name => KindName;
@@ -12,7 +13,7 @@ internal sealed class AssetKind : IResourceKind
     public IEnumerable<SpecError> Validate(JsonElement spec, NamespaceSnapshot @namespace)
     {
         foreach (var field in spec.EnumerateObject()
-                     .Where(field => field.Name is not ("assetType" or "parent" or "dataPoints")))
+                     .Where(field => field.Name is not ("assetType" or "parent" or "dataPoints" or "sources")))
         {
             yield return new SpecError($"spec.{field.Name}", "Unknown field.");
         }
@@ -24,6 +25,14 @@ internal sealed class AssetKind : IResourceKind
         }
 
         foreach (var error in DataPointDeclarations.Validate(spec))
+        {
+            yield return error;
+        }
+
+        var assetType = Text(spec, "assetType") is { } typeName
+            ? @namespace.Find(AssetTypeKind.KindName, typeName)
+            : null;
+        foreach (var error in AssetSources.ValidateAsset(spec, assetType, @namespace, integrations))
         {
             yield return error;
         }
@@ -49,6 +58,11 @@ internal sealed class AssetKind : IResourceKind
         if (Text(spec, "parent") is { } parent)
         {
             yield return new SpecReference(KindName, parent, "spec.parent");
+        }
+
+        foreach (var reference in AssetSources.References(spec))
+        {
+            yield return reference;
         }
     }
 

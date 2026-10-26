@@ -20,6 +20,11 @@ internal sealed class AssetTypeKind : IResourceKind
         {
             yield return error;
         }
+
+        foreach (var error in AssetSources.ValidateAssetType(spec))
+        {
+            yield return error;
+        }
     }
 
     public IEnumerable<SpecReference> References(JsonElement spec) => [];

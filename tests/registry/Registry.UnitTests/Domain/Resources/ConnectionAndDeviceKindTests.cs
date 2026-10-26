@@ -1,5 +1,3 @@
-using System.Text.Json;
-using Core.Application.Integrations;
 using Registry.Application.Resources;
 using Registry.Domain.Namespaces;
 using Registry.Domain.Resources;
@@ -15,7 +13,7 @@ public sealed class ConnectionAndDeviceKindTests
     public void ConnectionValidate_ShouldAcceptTheSpec_WhenTheIntegrationIsInstalledAndConfigIsValid()
     {
         // Arrange
-        var kind = new ConnectionKind(new Catalog());
+        var kind = new ConnectionKind(new LampCatalog());
         var spec = Widgets.Json("""{"integration": "acme.lamp", "config": {"host": "10.0.0.1"}}""");
 
         // Act
@@ -35,7 +33,7 @@ public sealed class ConnectionAndDeviceKindTests
     public void ConnectionValidate_ShouldReportThePath_WhenTheSpecIsInvalid(string json, string path)
     {
         // Arrange
-        var kind = new ConnectionKind(new Catalog());
+        var kind = new ConnectionKind(new LampCatalog());
 
         // Act
         var errors = kind.Validate(Widgets.Json(json), Snapshot()).ToList();
@@ -48,7 +46,7 @@ public sealed class ConnectionAndDeviceKindTests
     public void DeviceValidate_ShouldAcceptTheSpec_WhenTheAddressFitsTheDeviceType()
     {
         // Arrange
-        var kind = new DeviceKind(new Catalog());
+        var kind = new DeviceKind(new LampCatalog());
         var spec = Widgets.Json("""{"connection": "hub", "type": "Bulb", "address": {"id": 3}}""");
 
         // Act
@@ -69,7 +67,7 @@ public sealed class ConnectionAndDeviceKindTests
     public void DeviceValidate_ShouldReportThePath_WhenTheSpecIsInvalid(string json, string path)
     {
         // Arrange
-        var kind = new DeviceKind(new Catalog());
+        var kind = new DeviceKind(new LampCatalog());
 
         // Act
         var errors = kind.Validate(Widgets.Json(json), Snapshot(Hub())).ToList();
@@ -82,7 +80,7 @@ public sealed class ConnectionAndDeviceKindTests
     public void DeviceReferences_ShouldNameTheConnection_WhenTheSpecHasOne()
     {
         // Arrange
-        var kind = new DeviceKind(new Catalog());
+        var kind = new DeviceKind(new LampCatalog());
         var spec = Widgets.Json("""{"connection": "hub", "type": "Bulb", "address": {"id": 3}}""");
 
         // Act
@@ -96,7 +94,7 @@ public sealed class ConnectionAndDeviceKindTests
     public void DeviceReferences_ShouldNameTheAsset_WhenTheDeviceIsAttached()
     {
         // Arrange
-        var kind = new DeviceKind(new Catalog());
+        var kind = new DeviceKind(new LampCatalog());
         var spec = Widgets.Json("""{"connection": "hub", "type": "Bulb", "address": {"id": 3}, "asset": "train-1"}""");
 
         // Act
@@ -114,7 +112,7 @@ public sealed class ConnectionAndDeviceKindTests
     public void DeviceValidate_ShouldAcceptTheSpec_WhenItIsAttachedToAnAsset()
     {
         // Arrange
-        var kind = new DeviceKind(new Catalog());
+        var kind = new DeviceKind(new LampCatalog());
         var spec = Widgets.Json("""{"connection": "hub", "type": "Bulb", "address": {"id": 3}, "asset": "train-1"}""");
 
         // Act
@@ -128,7 +126,7 @@ public sealed class ConnectionAndDeviceKindTests
     public void DeviceValidate_ShouldReportThePath_WhenTheAssetIsNotAName()
     {
         // Arrange
-        var kind = new DeviceKind(new Catalog());
+        var kind = new DeviceKind(new LampCatalog());
         var spec = Widgets.Json("""{"connection": "hub", "type": "Bulb", "address": {"id": 3}, "asset": 3}""");
 
         // Act
@@ -145,42 +143,4 @@ public sealed class ConnectionAndDeviceKindTests
             Widgets.Json("""{"integration": "acme.lamp", "config": {"host": "x"}}"""));
 
     private static NamespaceSnapshot Snapshot(params SnapshotResource[] resources) => new(Acme, resources);
-
-    private sealed class Catalog : IIntegrationSchemas
-    {
-        public IntegrationSchema? Find(string id) =>
-            id == "acme.lamp"
-                ? new IntegrationSchema(
-                    config => Check(config, "host", JsonValueKind.String),
-                    [
-                        new DeviceTypeSchema(
-                            "Bulb",
-                            address => Check(address, "id", JsonValueKind.Number),
-                            config => Check(config, null, JsonValueKind.Undefined))
-                    ])
-                : null;
-
-        private static List<SchemaProblem> Check(JsonElement value, string? required, JsonValueKind kind)
-        {
-            var problems = value.EnumerateObject()
-                .Where(property => property.Name != required)
-                .Select(property => new SchemaProblem(property.Name, "Unknown field."))
-                .ToList();
-            if (required is null)
-            {
-                return problems;
-            }
-
-            if (!value.TryGetProperty(required, out var found))
-            {
-                problems.Add(new SchemaProblem(required, "Required."));
-            }
-            else if (found.ValueKind != kind)
-            {
-                problems.Add(new SchemaProblem(required, "Wrong type."));
-            }
-
-            return problems;
-        }
-    }
 }
