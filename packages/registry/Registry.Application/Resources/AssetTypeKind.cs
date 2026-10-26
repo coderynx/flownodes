@@ -11,7 +11,7 @@ internal sealed class AssetTypeKind : IResourceKind
 
     public IEnumerable<SpecError> Validate(JsonElement spec, NamespaceSnapshot @namespace)
     {
-        foreach (var field in spec.EnumerateObject().Where(field => field.Name != "dataPoints"))
+        foreach (var field in spec.EnumerateObject().Where(field => field.Name is not ("dataPoints" or "alarms")))
         {
             yield return new SpecError($"spec.{field.Name}", "Unknown field.");
         }
@@ -22,6 +22,11 @@ internal sealed class AssetTypeKind : IResourceKind
         }
 
         foreach (var error in AssetSources.ValidateAssetType(spec))
+        {
+            yield return error;
+        }
+
+        foreach (var error in AlarmDeclarations.Validate(spec, DataPointDeclarations.Declarations(spec), []))
         {
             yield return error;
         }

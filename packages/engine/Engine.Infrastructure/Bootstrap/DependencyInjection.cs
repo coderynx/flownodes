@@ -1,10 +1,12 @@
 using Core.Application.Integrations;
 using Core.Contracts.Identity;
 using Core.Contracts.Resources;
+using Engine.Application.Alarms;
 using Engine.Application.Assets;
 using Engine.Application.Authorization;
 using Engine.Application.Devices;
 using Engine.Application.Integrations;
+using Engine.Infrastructure.Alarms;
 using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Authorization;
 using Engine.Infrastructure.Connections;
@@ -16,6 +18,7 @@ using Engine.Infrastructure.Resources;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Npgsql;
 using Orleans.Dashboard;
 using Wolverine.Postgresql;
 
@@ -75,6 +78,10 @@ public static class DependencyInjection
                                 throw new InvalidOperationException($"Connection string '{storageKey}' not found.");
 
         builder.Services.AddHostedService(_ => new OrleansSchemaInitializer(clusteringConnection));
+        builder.Services.AddSingleton(NpgsqlDataSource.Create(storageConnection));
+        builder.Services.AddHostedService<AlarmSchema>();
+        builder.Services.AddHostedService<AlarmRetention>();
+        builder.Services.AddSingleton<IAlarmHistory, PostgresAlarmHistory>();
 
         builder.UseOrleans(silo =>
         {
@@ -112,6 +119,7 @@ public static class DependencyInjection
         builder.Services.AddSingleton<IRoleGrants, GrainRoleGrants>();
         builder.Services.AddSingleton<IDeviceRuntime, GrainDeviceRuntime>();
         builder.Services.AddSingleton<IAssetRuntime, GrainAssetRuntime>();
+        builder.Services.AddSingleton<IAlarmRuntime, GrainAlarmRuntime>();
     }
 
     private static void AddMessaging(IHostApplicationBuilder builder)

@@ -130,6 +130,27 @@ public static class Access
     }
 
     /// <summary>
+    /// Decides a request from a replica that is not a database, when any one of several roles is enough.
+    /// </summary>
+    /// <param name="isActive">Whether the caller is a known, enabled User.</param>
+    /// <param name="namespace">The name of the Namespace.</param>
+    /// <param name="rolesHeld">The roles the caller holds in the Namespace.</param>
+    /// <param name="anyOf">The roles of which the request needs one.</param>
+    /// <returns>Success, or an error carrying <see cref="AccessErrors"/> codes.</returns>
+    public static Result AuthoriseAnyOf(
+        bool isActive,
+        string @namespace,
+        IReadOnlyCollection<NamespaceRole> rolesHeld,
+        IReadOnlyCollection<NamespaceRole> anyOf)
+    {
+        var member = Authorise(isActive, @namespace, rolesHeld, null);
+
+        return member.IsSuccess && !rolesHeld.Intersect(anyOf).Any()
+            ? AccessErrors.MissingRole(@namespace, string.Join(" or ", anyOf))
+            : member;
+    }
+
+    /// <summary>
     /// Decides a request that belongs to no Namespace, which any member of some Namespace may make.
     /// </summary>
     /// <param name="isActive">Whether the caller is a known, enabled User.</param>

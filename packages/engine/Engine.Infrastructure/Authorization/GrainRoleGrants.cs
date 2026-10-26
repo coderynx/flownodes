@@ -18,6 +18,17 @@ internal sealed class GrainRoleGrants(IGrainFactory grains) : IRoleGrants
         return Access.Authorise(caller.IsActive, @namespace, RolesIn(caller, @namespace), role);
     }
 
+    public async Task<Result> RequireAnyRoleAsync(
+        Guid callerId,
+        string @namespace,
+        IReadOnlyCollection<NamespaceRole> roles,
+        CancellationToken cancellationToken)
+    {
+        var caller = await grains.GetGrain<IUserAccessGrain>(callerId).GetAsync();
+
+        return Access.AuthoriseAnyOf(caller.IsActive, @namespace, RolesIn(caller, @namespace), roles);
+    }
+
     public async Task<Result> RequireMemberAsync(Guid callerId, string @namespace, CancellationToken cancellationToken)
     {
         var caller = await grains.GetGrain<IUserAccessGrain>(callerId).GetAsync();
