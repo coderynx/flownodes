@@ -4,9 +4,6 @@ using Engine.Infrastructure.Alarms;
 
 namespace Engine.IntegrationTests;
 
-/// <summary>
-/// Stands in for the Alarm history in tests that raise no Alarms and have no database.
-/// </summary>
 internal sealed class DiscardingAlarmHistory : IAlarmHistory
 {
     public Task UpsertAsync(

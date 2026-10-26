@@ -119,6 +119,29 @@ public sealed class AssetAlarmsTests
         past.ShouldHaveSingleItem().IsCleared.ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData("<=", "3", 0.2, 3.1, false)]
+    [InlineData("<=", "3", 0.2, 3.2, true)]
+    [InlineData(">", "9", 0.5, 8.6, false)]
+    [InlineData(">", "9", 0.5, 8.5, true)]
+    [InlineData(">=", "9", 0.5, 8.5, true)]
+    public void Clears_ShouldRequireTheDeadbandMargin_WhenTheConditionHasOne(
+        string op,
+        string threshold,
+        double deadband,
+        double value,
+        bool expected)
+    {
+        // Arrange
+        var condition = Low(op: op, value: threshold, deadband: deadband);
+
+        // Act
+        var clears = condition.Clears(Json(value.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+
+        // Assert
+        clears.ShouldBe(expected);
+    }
+
     [Fact]
     public void Evaluate_ShouldReactivateTheSameAlarm_WhenAClearedUnacknowledgedAlarmHoldsAgain()
     {

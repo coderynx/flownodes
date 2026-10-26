@@ -82,10 +82,8 @@ public sealed record AlarmCondition(
 
         return Operator switch
         {
-            "<" => distance >= margin,
-            "<=" => distance > margin,
-            ">" => distance <= -margin,
-            _ => distance < -margin
+            "<" or "<=" => distance >= margin,
+            _ => distance <= -margin
         };
     }
 

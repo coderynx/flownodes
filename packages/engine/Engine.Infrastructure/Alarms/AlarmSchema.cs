@@ -3,9 +3,6 @@ using Npgsql;
 
 namespace Engine.Infrastructure.Alarms;
 
-/// <summary>
-/// Creates the Alarm history table at start, where it is missing.
-/// </summary>
 internal sealed class AlarmSchema(NpgsqlDataSource database) : IHostedService
 {
     private const string Sql = """

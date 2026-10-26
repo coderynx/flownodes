@@ -3,9 +3,6 @@ using Engine.Domain.Alarms;
 
 namespace Engine.Infrastructure.Alarms;
 
-/// <summary>
-/// The Engine's record of every Alarm: one row per Alarm, updated at each transition and kept for 30 days once ended.
-/// </summary>
 internal interface IAlarmHistory
 {
     Task UpsertAsync(string @namespace, IReadOnlyList<Alarm> alarms, CancellationToken cancellationToken = default);
