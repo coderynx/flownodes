@@ -9,7 +9,7 @@ namespace Internal.Generated.WolverineHandlers
     {
         public override System.Type[] HandlerTypes()
         {
-            return new System.Type[] { typeof(Engine.Infrastructure.Messaging.NamespaceMessageHandler), typeof(Identity.Infrastructure.Messaging.ResourceMessageHandler), typeof(Registry.Infrastructure.Messaging.EngineMessageHandler), typeof(Registry.Infrastructure.Messaging.IdentityMessageHandler) };
+            return new System.Type[] { typeof(Engine.Infrastructure.Messaging.IdentityMessageHandler), typeof(Engine.Infrastructure.Messaging.NamespaceMessageHandler), typeof(Identity.Infrastructure.Messaging.ResourceMessageHandler), typeof(Registry.Infrastructure.Messaging.EngineMessageHandler), typeof(Registry.Infrastructure.Messaging.IdentityMessageHandler) };
         }
 
         public override System.Type[] MessageTypes()
@@ -35,13 +35,19 @@ namespace Internal.Generated.WolverineHandlers
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.ResourceApplied862460264_ResourceMessageHandlerHandler638199430))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.ResourceDeleted1845495848_NamespaceMessageHandlerHandler2147129457))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.ResourceDeleted1845495848_ResourceMessageHandlerHandler638199430))]
-        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RoleGrantedHandler443699331))]
-        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RoleRevokedHandler1823564040))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RoleGranted443699331_IdentityMessageHandlerHandler2075360552))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RoleGranted443699331_IdentityMessageHandlerHandler773299781))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RoleRevoked1823564040_IdentityMessageHandlerHandler2075360552))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.RoleRevoked1823564040_IdentityMessageHandlerHandler773299781))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.StatusReportedHandler1741691186))]
-        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserDeletedHandler1589093158))]
-        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserDisabledHandler76682799))]
-        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserEnabledHandler100489586))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserDeleted1589093158_IdentityMessageHandlerHandler2075360552))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserDeleted1589093158_IdentityMessageHandlerHandler773299781))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserDisabled76682799_IdentityMessageHandlerHandler2075360552))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserDisabled76682799_IdentityMessageHandlerHandler773299781))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserEnabled100489586_IdentityMessageHandlerHandler2075360552))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserEnabled100489586_IdentityMessageHandlerHandler773299781))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Internal.Generated.WolverineHandlers.UserRenamedHandler1785498833))]
+        [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Engine.Infrastructure.Messaging.IdentityMessageHandler))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Engine.Infrastructure.Messaging.NamespaceMessageHandler))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Identity.Infrastructure.Messaging.ResourceMessageHandler))]
         [global::System.Diagnostics.CodeAnalysis.DynamicDependency(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All, typeof(global::Registry.Infrastructure.Messaging.EngineMessageHandler))]

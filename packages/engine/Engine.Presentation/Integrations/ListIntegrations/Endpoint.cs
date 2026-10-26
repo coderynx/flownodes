@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
 using Core.Presentation.Abstraction;
@@ -16,9 +17,9 @@ internal sealed class Endpoint : IEndpoint
     {
         app.MapGet(
                 "/engine/integrations",
-                async (ISender sender, CancellationToken cancellationToken) =>
+                async (ClaimsPrincipal caller, ISender sender, CancellationToken cancellationToken) =>
                 {
-                    var result = await sender.SendAsync(new Query(), cancellationToken);
+                    var result = await sender.SendAsync(new Query(caller.CallerId()), cancellationToken);
 
                     return result.Match(
                         integrations => Results.Ok(
@@ -29,7 +30,8 @@ internal sealed class Endpoint : IEndpoint
                 })
             .WithName("ListIntegrations")
             .Produces<Response>()
-            .ProducesProblem(StatusCodes.Status401Unauthorized);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
     }
 
     internal sealed record Response(IReadOnlyList<IntegrationDto> Items, int Total);

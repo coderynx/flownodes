@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
 using Core.Presentation.Abstraction;
@@ -17,9 +18,13 @@ internal sealed class Endpoint : IEndpoint
     {
         app.MapGet(
                 "/engine/namespaces/{namespace}/devices/{name}/datapoints",
-                async ([AsParameters] Request request, ISender sender, CancellationToken cancellationToken) =>
+                async (
+                    [AsParameters] Request request, ClaimsPrincipal caller, ISender sender,
+                    CancellationToken cancellationToken) =>
                 {
-                    var result = await sender.SendAsync(new Query(request.Namespace, request.Name), cancellationToken);
+                    var result = await sender.SendAsync(
+                        new Query(caller.CallerId(), request.Namespace, request.Name),
+                        cancellationToken);
 
                     return result.Match(
                         readings => Results.Ok(

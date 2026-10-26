@@ -66,10 +66,11 @@ internal static partial class DeadCode
         var isEntryPoint = EntryPoint().IsMatch(body);
         var holdsExtensionMethods = Regex.IsMatch(body, @"\(\s*this\s+");
         var isPageModel = body.Contains(": PageModel", StringComparison.Ordinal);
+        var isGrain = Regex.IsMatch(body, @":\s*Grain\b");
         var isMessageHandler = Regex.IsMatch(body, @"static\s+(async\s+)?(void|Task)\s+Handle\s*\(");
 
         return isEntityConfiguration || isRequestHandler || isEndpoint || isEntryPoint || holdsExtensionMethods ||
-               isPageModel || isMessageHandler;
+               isPageModel || isMessageHandler || isGrain;
     }
 
     private static int DeclarationEnd(string text, int start)

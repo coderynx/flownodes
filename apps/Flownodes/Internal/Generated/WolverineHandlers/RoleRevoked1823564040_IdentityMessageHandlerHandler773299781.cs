@@ -4,13 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Internal.Generated.WolverineHandlers
 {
-    // START: RoleRevokedHandler1823564040
+    // START: RoleRevoked1823564040_IdentityMessageHandlerHandler773299781
     [global::System.CodeDom.Compiler.GeneratedCode("JasperFx", "1.0.0")]
-    public sealed class RoleRevokedHandler1823564040 : Wolverine.Runtime.Handlers.MessageHandler
+    public sealed class RoleRevoked1823564040_IdentityMessageHandlerHandler773299781 : Wolverine.Runtime.Handlers.MessageHandler
     {
         private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _serviceScopeFactory;
 
-        public RoleRevokedHandler1823564040(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory serviceScopeFactory)
+        public RoleRevoked1823564040_IdentityMessageHandlerHandler773299781(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory serviceScopeFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
         }
@@ -32,7 +32,7 @@ namespace Internal.Generated.WolverineHandlers
         }
     }
 
-    // END: RoleRevokedHandler1823564040
+    // END: RoleRevoked1823564040_IdentityMessageHandlerHandler773299781
     
     
 }

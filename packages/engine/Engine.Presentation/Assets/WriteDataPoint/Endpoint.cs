@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.Json;
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
@@ -18,11 +19,11 @@ internal sealed class Endpoint : IEndpoint
         app.MapPut(
                 "/engine/namespaces/{namespace}/assets/{name}/datapoints/{dataPoint}",
                 async (
-                    [AsParameters] Request request, [FromBody] Body body, ISender sender,
+                    [AsParameters] Request request, [FromBody] Body body, ClaimsPrincipal caller, ISender sender,
                     CancellationToken cancellationToken) =>
                 {
                     var result = await sender.SendAsync(
-                        new Command(request.Namespace, request.Name, request.DataPoint, body.Value),
+                        new Command(caller.CallerId(), request.Namespace, request.Name, request.DataPoint, body.Value),
                         cancellationToken);
 
                     return result.Match(() => Results.NoContent(), error => error.ToProblem());
@@ -31,6 +32,7 @@ internal sealed class Endpoint : IEndpoint
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
     }
