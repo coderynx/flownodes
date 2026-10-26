@@ -1,0 +1,22 @@
+name: PR title
+
+# The squash merge makes the pull request title the commit on main (ADR-0027). Editing the title re-runs this check
+# without re-running CI.
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  conventional-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Title follows Conventional Commits
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: scripts/check-commit-subject.sh "$TITLE"

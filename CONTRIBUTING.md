@@ -33,11 +33,15 @@ flowctl login --server https://localhost:7076
 
 The .NET SDK installs tools into `~/.dotnet/tools`; add it to your `PATH` if `flowctl` is not found.
 
-The first build sets `core.hooksPath` to `.githooks`: a pre-commit hook formats your staged C# files, and a commit-msg hook rejects messages that link an agent session.
+The first build sets `core.hooksPath` to `.githooks`: a pre-commit hook formats your staged C# files, and a commit-msg hook rejects messages that link an agent session or that are not Conventional Commits.
 
 ## Coding standards
 
 The standards are listed in [`AGENTS.md`](AGENTS.md), and each one points to the ADR behind it. The build and the architecture tests enforce most of them: analyzer warnings fail the build, and `#pragma` and `[SuppressMessage]` are not allowed. After changing C#, run `scripts/format.sh` instead of laying out code by hand.
+
+## Commit messages
+
+A commit subject is a [Conventional Commit](https://www.conventionalcommits.org): `<type>[(scope)][!]: <description>`, for example `feat(engine): enforce Namespace roles`. The `commit-msg` hook checks it, and `scripts/check-commit-subject.sh` lists the allowed types and scopes. Pull requests are squash-merged, so the pull request title must follow the same format; a CI check verifies it. Before the first public release, breaking changes need no `!`. [ADR-0027](docs/adr/0027-conventional-commits.md) has the reasoning.
 
 ## Before you open a pull request
 
