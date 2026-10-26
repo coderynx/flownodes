@@ -1,7 +1,6 @@
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
 using Identity.Application.Database;
-using Identity.Application.Security;
 
 namespace Identity.Application.Users.DisableUser;
 
@@ -13,13 +12,12 @@ namespace Identity.Application.Users.DisableUser;
 /// <param name="UserId">The id of the User to disable.</param>
 public sealed record Command(Guid CallerId, Guid UserId) : IRequest<Result>;
 
-internal sealed class Handler(IIdentityDbContext database, IUserTokenRevoker revoker, TimeProvider time)
+internal sealed class Handler(IIdentityDbContext database, ICallerChecks checks, IUserTokens tokens)
     : IRequestHandler<Command, Result>
 {
     public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var found = await CallerChecks.RequireAdministratorAndFindUserAsync(
-            database,
+        var found = await checks.RequireAdministratorAndFindUserAsync(
             request.CallerId,
             request.UserId,
             cancellationToken);
@@ -31,16 +29,13 @@ internal sealed class Handler(IIdentityDbContext database, IUserTokenRevoker rev
         var user = found.Value;
 
         var isLastActiveAdministrator = user.IsAdministrator && !user.IsDisabled &&
-                                        !await CallerChecks.AnotherActiveAdministratorExistsAsync(
-                                            database,
-                                            user.Id,
-                                            cancellationToken);
+                                        !await checks.AnotherActiveAdministratorExistsAsync(user.Id, cancellationToken);
         if (isLastActiveAdministrator)
         {
             return Errors.LastAdministrator();
         }
 
-        await UserTokens.RevokeAllAsync(database, revoker, time, user.Id, cancellationToken);
+        await tokens.RevokeAllAsync(user.Id, cancellationToken);
 
         if (user.Disable())
         {

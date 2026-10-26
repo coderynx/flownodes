@@ -4,10 +4,16 @@ using Microsoft.AspNetCore.WebUtilities;
 
 namespace Identity.Application.Tokens;
 
-internal static class PersonalAccessTokenSecrets
+internal interface IPersonalAccessTokenSecrets
 {
-    public static string Generate() => "fnpat_" + WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
+    string Generate();
+    string Hash(string secret);
+}
 
-    public static string Hash(string secret) =>
+internal sealed class PersonalAccessTokenSecrets : IPersonalAccessTokenSecrets
+{
+    public string Generate() => "fnpat_" + WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
+
+    public string Hash(string secret) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(secret))).ToLowerInvariant();
 }

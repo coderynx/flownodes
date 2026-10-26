@@ -1,3 +1,4 @@
+using Identity.Application;
 using Identity.Application.Database;
 using Identity.Domain.Namespaces;
 using Identity.Domain.Tokens;
@@ -41,6 +42,29 @@ internal static class TestDoubles
         database.KnownNamespaces.Returns(namespaceSet);
 
         return database;
+    }
+
+    public static ICallerChecks Checks(IIdentityDbContext database)
+    {
+        var real = new CallerChecks(database);
+        var checks = Substitute.For<ICallerChecks>();
+        checks.RequireActiveAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(call => real.RequireActiveAsync(call.ArgAt<Guid>(0), call.ArgAt<CancellationToken>(1)));
+        checks.RequireAdministratorAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(call => real.RequireAdministratorAsync(call.ArgAt<Guid>(0), call.ArgAt<CancellationToken>(1)));
+        checks.FindUserAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(call => real.FindUserAsync(call.ArgAt<Guid>(0), call.ArgAt<CancellationToken>(1)));
+        checks.RequireAdministratorAndFindUserAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(call => real.RequireAdministratorAndFindUserAsync(
+                call.ArgAt<Guid>(0),
+                call.ArgAt<Guid>(1),
+                call.ArgAt<CancellationToken>(2)));
+        checks.AnotherActiveAdministratorExistsAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(call => real.AnotherActiveAdministratorExistsAsync(
+                call.ArgAt<Guid>(0),
+                call.ArgAt<CancellationToken>(1)));
+
+        return checks;
     }
 
     public static IReadOnlyList<object?> Published(IIdentityDbContext database) =>

@@ -1,19 +1,19 @@
 using Coderynx.Functional.Results;
 using Core.Application.Authorization;
 using Core.Domain.Authorization;
-using Registry.Application.Database;
+using Registry.Domain.Namespaces;
+using Registry.Domain.Resources;
 
 namespace Registry.Application.Resources;
 
-internal static class ResourceAccess
+internal sealed class ResourceAccess(IAccessChecks access, KindCatalog catalog) : IResourceAccess
 {
-    public static async Task<Result<UserAccess?>> AuthoriseChangesAsync(
-        this IApplicationDbContext database,
+    public async Task<Result<UserAccess?>> AuthoriseChangesAsync(
         Guid callerId,
         ManifestReading reading,
         CancellationToken cancellationToken)
     {
-        var scope = await database.ScopeAsync(callerId, cancellationToken);
+        var scope = await access.ScopeAsync(callerId, cancellationToken);
         if (scope.IsFailure)
         {
             return scope.Error;
@@ -22,7 +22,7 @@ internal static class ResourceAccess
         UserAccess? caller = null;
         if (reading.TouchesNamespaces)
         {
-            var administrator = await database.RequireAdministratorAsync(callerId, cancellationToken);
+            var administrator = await access.RequireAdministratorAsync(callerId, cancellationToken);
             if (administrator.IsFailure)
             {
                 return administrator.Error;
@@ -33,7 +33,7 @@ internal static class ResourceAccess
 
         foreach (var @namespace in reading.Namespaces)
         {
-            var engineer = await database.RequireRoleAsync(
+            var engineer = await access.RequireRoleAsync(
                 callerId,
                 @namespace,
                 NamespaceRole.Engineer,
@@ -47,5 +47,28 @@ internal static class ResourceAccess
         }
 
         return Result.Found(caller);
+    }
+
+    public async Task<Result<(IResourceKind Kind, NamespaceName Namespace)>> AuthoriseReadAsync(
+        Guid callerId,
+        string @namespace,
+        string kinds,
+        CancellationToken cancellationToken)
+    {
+        var caller = await access.RequireMemberAsync(callerId, @namespace, cancellationToken);
+        if (caller.IsFailure)
+        {
+            return caller.Error;
+        }
+
+        var kind = catalog.FindByRoute(kinds);
+        if (kind is null)
+        {
+            return Errors.KindNotFound(kinds);
+        }
+
+        return NamespaceName.TryCreate(@namespace, out var name)
+            ? Result.Found((kind, name))
+            : Errors.NamespaceNotFound(@namespace);
     }
 }

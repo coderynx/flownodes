@@ -29,7 +29,7 @@ public sealed record Query(Guid CallerId, string? Namespace, string Kinds, strin
 /// <param name="Total">How many Revisions the Resource has, across all pages.</param>
 public sealed record RevisionPage(IReadOnlyList<Revision> Items, int Total);
 
-internal sealed class Handler(IApplicationDbContext database, KindCatalog catalog)
+internal sealed class Handler(IApplicationDbContext database, IAccessChecks access, IResourceAccess resourceAccess)
     : IRequestHandler<Query, Result<RevisionPage>>
 {
     public async Task<Result<RevisionPage>> HandleAsync(Query request, CancellationToken cancellationToken = default)
@@ -68,7 +68,7 @@ internal sealed class Handler(IApplicationDbContext database, KindCatalog catalo
         Query request,
         CancellationToken cancellationToken)
     {
-        var scope = await database.ScopeAsync(request.CallerId, cancellationToken);
+        var scope = await access.ScopeAsync(request.CallerId, cancellationToken);
         if (scope.IsFailure)
         {
             return scope.Error;
@@ -85,13 +85,12 @@ internal sealed class Handler(IApplicationDbContext database, KindCatalog catalo
     {
         if (request.Namespace is null)
         {
-            var scope = await database.ScopeAsync(request.CallerId, cancellationToken);
+            var scope = await access.ScopeAsync(request.CallerId, cancellationToken);
 
             return scope.IsFailure ? scope.Error : Errors.KindNotFound(request.Kinds);
         }
 
-        var read = await database.AuthoriseReadAsync(
-            catalog,
+        var read = await resourceAccess.AuthoriseReadAsync(
             request.CallerId,
             request.Namespace,
             request.Kinds,

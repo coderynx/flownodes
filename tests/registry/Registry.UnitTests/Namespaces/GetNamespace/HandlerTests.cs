@@ -11,11 +11,11 @@ namespace Registry.UnitTests.Namespaces.GetNamespace;
 public sealed class HandlerTests
 {
     [Fact]
-    public async Task HandleAsync_ShouldReturnUnauthenticated_WhenCallerIsUnknown()
+    public async Task HandleAsync_ShouldReturnTheError_WhenTheAccessCheckFails()
     {
         // Arrange
         var database = TestDatabase.Create([Namespace.Create(NamespaceName.Create("acme"))]);
-        var handler = new Handler(database);
+        var handler = new Handler(database, AccessDoubles.ChecksFailingWith(AccessDoubles.Unauthenticated()));
 
         // Act
         var result = await handler.HandleAsync(new Query(Guid.NewGuid(), "acme"), Ct);
@@ -25,59 +25,12 @@ public sealed class HandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldReturnUnauthenticated_WhenCallerIsDeleted()
-    {
-        // Arrange
-        var caller = Callers.Member("acme");
-        caller.Delete(2);
-        var database = TestDatabase.Create([Namespace.Create(NamespaceName.Create("acme"))], users: [caller]);
-        var handler = new Handler(database);
-
-        // Act
-        var result = await handler.HandleAsync(new Query(caller.Id, "acme"), Ct);
-
-        // Assert
-        result.Error.Code.ShouldBe(AccessErrors.UnauthenticatedCode);
-    }
-
-    [Fact]
-    public async Task HandleAsync_ShouldReturnNotFound_WhenCallerHoldsNoRoleInNamespace()
-    {
-        // Arrange
-        var caller = Callers.Member("plant-7");
-        var database = TestDatabase.Create([Namespace.Create(NamespaceName.Create("acme"))], users: [caller]);
-        var handler = new Handler(database);
-
-        // Act
-        var result = await handler.HandleAsync(new Query(caller.Id, "acme"), Ct);
-
-        // Assert
-        result.Error.Kind.ShouldBe(ErrorKind.NotFound);
-        result.Error.Code.ShouldBe("namespace.not_found");
-    }
-
-    [Fact]
-    public async Task HandleAsync_ShouldReturnNotFound_WhenCallerIsAnAdministratorWithoutARole()
-    {
-        // Arrange
-        var caller = Callers.Administrator();
-        var database = TestDatabase.Create([Namespace.Create(NamespaceName.Create("acme"))], users: [caller]);
-        var handler = new Handler(database);
-
-        // Act
-        var result = await handler.HandleAsync(new Query(caller.Id, "acme"), Ct);
-
-        // Assert
-        result.Error.Kind.ShouldBe(ErrorKind.NotFound);
-    }
-
-    [Fact]
     public async Task HandleAsync_ShouldReturnNotFound_WhenNameIsNotADnsLabel()
     {
         // Arrange
         var caller = Callers.Member("Acme");
-        var database = TestDatabase.Create(users: [caller]);
-        var handler = new Handler(database);
+        var database = TestDatabase.Create();
+        var handler = new Handler(database, AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(new Query(caller.Id, "Acme"), Ct);
@@ -92,8 +45,8 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Member("acme");
-        var database = TestDatabase.Create(users: [caller]);
-        var handler = new Handler(database);
+        var database = TestDatabase.Create();
+        var handler = new Handler(database, AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(new Query(caller.Id, "acme"), Ct);
@@ -112,8 +65,8 @@ public sealed class HandlerTests
         var caller = Callers.Member("acme", role);
         var acme = Namespace.Create(NamespaceName.Create("acme"));
         var other = Namespace.Create(NamespaceName.Create("plant-7"));
-        var database = TestDatabase.Create([other, acme], users: [caller]);
-        var handler = new Handler(database);
+        var database = TestDatabase.Create([other, acme]);
+        var handler = new Handler(database, AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(new Query(caller.Id, "acme"), Ct);

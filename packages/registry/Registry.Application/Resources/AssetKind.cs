@@ -6,6 +6,7 @@ namespace Registry.Application.Resources;
 
 internal sealed class AssetKind(IIntegrationSchemas integrations) : IResourceKind
 {
+    private readonly AssetSources _sources = new(integrations);
     public const string KindName = "Asset";
     public string Name => KindName;
     public string Plural => "assets";
@@ -33,7 +34,7 @@ internal sealed class AssetKind(IIntegrationSchemas integrations) : IResourceKin
         var assetType = Text(spec, "assetType") is { } typeName
             ? @namespace.Find(AssetTypeKind.KindName, typeName)
             : null;
-        foreach (var error in AssetSources.ValidateAsset(spec, assetType, @namespace, integrations))
+        foreach (var error in _sources.ValidateAsset(spec, assetType, @namespace))
         {
             yield return error;
         }

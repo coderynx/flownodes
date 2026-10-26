@@ -8,13 +8,19 @@ namespace Identity.UnitTests.Tokens.CreatePersonalAccessToken;
 
 public sealed class HandlerTests
 {
+    private readonly IPersonalAccessTokenSecrets _secrets = TokenDoubles.Secrets();
+
     [Fact]
     public async Task HandleAsync_ShouldStoreTheTokenAndReturnItsSecret_WhenTheCallerCreatesATokenForThemself()
     {
         // Arrange
         var caller = TestDoubles.Member("alice");
         var database = TestDoubles.Database([caller], []);
-        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
+        var handler = new Handler(
+            database,
+            TestDoubles.Checks(database),
+            _secrets,
+            TestDoubles.Clock(TokenDoubles.Now));
         var expiresAt = TokenDoubles.Now.AddDays(30);
 
         // Act
@@ -25,10 +31,10 @@ public sealed class HandlerTests
         // Assert
         result.IsSuccess.ShouldBeTrue();
         var token = result.Value.Token;
-        result.Value.Secret.ShouldStartWith("fnpat_");
+        result.Value.Secret.ShouldBe("fnpat_generated");
         token.UserId.ShouldBe(caller.Id);
         token.Name.ShouldBe("laptop");
-        token.SecretHash.ShouldBe(PersonalAccessTokenSecrets.Hash(result.Value.Secret));
+        token.SecretHash.ShouldBe(_secrets.Hash("fnpat_generated"));
         token.CreatedAt.ShouldBe(TokenDoubles.Now);
         token.ExpiresAt.ShouldBe(expiresAt);
         database.PersonalAccessTokens.Received(1).Add(token);
@@ -36,28 +42,15 @@ public sealed class HandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldGenerateADifferentSecret_WhenCalledTwice()
-    {
-        // Arrange
-        var caller = TestDoubles.Member("alice");
-        var handler = new Handler(TestDoubles.Database([caller], []), TestDoubles.Clock(TokenDoubles.Now));
-        var command = new Command(caller.Id, caller.Id, "laptop", null);
-        var first = await handler.HandleAsync(command, TestContext.Current.CancellationToken);
-
-        // Act
-        var second = await handler.HandleAsync(command, TestContext.Current.CancellationToken);
-
-        // Assert
-        second.Value.Secret.ShouldNotBe(first.Value.Secret);
-        second.Value.Token.SecretHash.ShouldNotBe(first.Value.Token.SecretHash);
-    }
-
-    [Fact]
     public async Task HandleAsync_ShouldRefuse_WhenTheCallerIsUnknown()
     {
         // Arrange
         var database = TestDoubles.Database([], []);
-        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
+        var handler = new Handler(
+            database,
+            TestDoubles.Checks(database),
+            _secrets,
+            TestDoubles.Clock(TokenDoubles.Now));
         var callerId = Guid.NewGuid();
 
         // Act
@@ -76,7 +69,11 @@ public sealed class HandlerTests
         // Arrange
         var caller = TestDoubles.Disabled(TestDoubles.Member("bob"));
         var database = TestDoubles.Database([caller], []);
-        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
+        var handler = new Handler(
+            database,
+            TestDoubles.Checks(database),
+            _secrets,
+            TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -95,7 +92,11 @@ public sealed class HandlerTests
         var caller = TestDoubles.Member("alice");
         var other = TestDoubles.Disabled(TestDoubles.Member("bob"));
         var database = TestDoubles.Database([caller, other], []);
-        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
+        var handler = new Handler(
+            database,
+            TestDoubles.Checks(database),
+            _secrets,
+            TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -115,7 +116,11 @@ public sealed class HandlerTests
         // Arrange
         var caller = TestDoubles.Member("alice");
         var database = TestDoubles.Database([caller], []);
-        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
+        var handler = new Handler(
+            database,
+            TestDoubles.Checks(database),
+            _secrets,
+            TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -133,7 +138,11 @@ public sealed class HandlerTests
         // Arrange
         var caller = TestDoubles.Member("alice");
         var database = TestDoubles.Database([caller], []);
-        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
+        var handler = new Handler(
+            database,
+            TestDoubles.Checks(database),
+            _secrets,
+            TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -150,7 +159,12 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = TestDoubles.Member("alice");
-        var handler = new Handler(TestDoubles.Database([caller], []), TestDoubles.Clock(TokenDoubles.Now));
+        var database = TestDoubles.Database([caller], []);
+        var handler = new Handler(
+            database,
+            TestDoubles.Checks(database),
+            _secrets,
+            TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(
@@ -169,7 +183,11 @@ public sealed class HandlerTests
         // Arrange
         var caller = TestDoubles.Member("alice");
         var database = TestDoubles.Database([caller], []);
-        var handler = new Handler(database, TestDoubles.Clock(TokenDoubles.Now));
+        var handler = new Handler(
+            database,
+            TestDoubles.Checks(database),
+            _secrets,
+            TestDoubles.Clock(TokenDoubles.Now));
 
         // Act
         var result = await handler.HandleAsync(

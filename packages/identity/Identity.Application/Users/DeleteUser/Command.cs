@@ -14,12 +14,12 @@ namespace Identity.Application.Users.DeleteUser;
 /// <param name="UserId">The id of the User to delete.</param>
 public sealed record Command(Guid CallerId, Guid UserId) : IRequest<Result>;
 
-internal sealed class Handler(IIdentityDbContext database, IUserTokenRevoker revoker) : IRequestHandler<Command, Result>
+internal sealed class Handler(IIdentityDbContext database, ICallerChecks checks, IUserTokenRevoker revoker)
+    : IRequestHandler<Command, Result>
 {
     public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var found = await CallerChecks.RequireAdministratorAndFindUserAsync(
-            database,
+        var found = await checks.RequireAdministratorAndFindUserAsync(
             request.CallerId,
             request.UserId,
             cancellationToken);
@@ -31,10 +31,7 @@ internal sealed class Handler(IIdentityDbContext database, IUserTokenRevoker rev
         var user = found.Value;
 
         var isLastActiveAdministrator = user.IsAdministrator && !user.IsDisabled &&
-                                        !await CallerChecks.AnotherActiveAdministratorExistsAsync(
-                                            database,
-                                            user.Id,
-                                            cancellationToken);
+                                        !await checks.AnotherActiveAdministratorExistsAsync(user.Id, cancellationToken);
         if (isLastActiveAdministrator)
         {
             return Errors.LastAdministrator();

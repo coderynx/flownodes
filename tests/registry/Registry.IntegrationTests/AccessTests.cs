@@ -170,12 +170,12 @@ public sealed class AccessTests(PostgresFixture postgres)
             async () => (await member.GetAsync($"{Route}/default", Ct)).IsSuccessStatusCode,
             Ct);
         await using var scope = app.Services.CreateAsyncScope();
-        var database = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
+        var access = scope.ServiceProvider.GetRequiredService<IAccessChecks>();
 
         // Act
-        var engineer = await database.RequireRoleAsync(userId, "default", NamespaceRole.Engineer, Ct);
-        var operatorRole = await database.RequireRoleAsync(userId, "default", NamespaceRole.Operator, Ct);
-        var stranger = await database.RequireRoleAsync(userId, "acme", NamespaceRole.Operator, Ct);
+        var engineer = await access.RequireRoleAsync(userId, "default", NamespaceRole.Engineer, Ct);
+        var operatorRole = await access.RequireRoleAsync(userId, "default", NamespaceRole.Operator, Ct);
+        var stranger = await access.RequireRoleAsync(userId, "acme", NamespaceRole.Operator, Ct);
 
         // Assert
         engineer.Error.Code.ShouldBe(AccessErrors.ForbiddenCode);

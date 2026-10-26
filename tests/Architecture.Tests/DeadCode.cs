@@ -73,7 +73,7 @@ internal static partial class DeadCode
                isPageModel || isMessageHandler || isGrain;
     }
 
-    private static int DeclarationEnd(string text, int start)
+    public static int DeclarationEnd(string text, int start)
     {
         var open = text.IndexOfAny(['{', ';'], start);
         if (open < 0 || text[open] == ';')

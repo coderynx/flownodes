@@ -1,22 +1,19 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Registry.Application.Database;
 using Registry.Domain.Resources;
 
 namespace Registry.Application.Resources;
 
-internal static class RevisionLog
+internal sealed class RevisionLog(IApplicationDbContext database, IOptions<RevisionRetention> retention) : IRevisionLog
 {
-    public static async Task RecordAsync(
-        this IApplicationDbContext database,
-        Revision revision,
-        int keep,
-        CancellationToken cancellationToken)
+    public async Task RecordAsync(Revision revision, CancellationToken cancellationToken)
     {
         var expired = await database.Revisions
             .Where(older => older.Namespace == revision.Namespace && older.Kind == revision.Kind &&
                             older.Name == revision.Name)
             .OrderByDescending(older => older.Id)
-            .Skip(Math.Max(keep - 1, 0))
+            .Skip(Math.Max(retention.Value.Keep - 1, 0))
             .ToListAsync(cancellationToken);
         if (expired.Count > 0)
         {

@@ -23,6 +23,7 @@ Each rule below is an ADR; read the ADR before changing code in its area. The bu
 - **Layout**: run `scripts/format.sh` after changing C#; never lay code out by hand. ADR-0022.
 - **Comments**: a comment flags a hack and opens with `// HACK:`. ADR-0023.
 - **Dead code**: delete what nothing references, Core contracts included. ADR-0024.
+- **Static classes**: code that needs a service gets it through its constructor from DI. A static class stays pure: it takes no service as a parameter and reads no clock or random source on its own. `Bootstrap` and framework-injected handlers are exempt. ADR-0028.
 - **Tests**: unit tests substitute every handler dependency; integration tests use a real host and Postgres. ADR-0025.
 - **Commits**: a subject is a Conventional Commit, and a pull request is squash-merged under its title. `scripts/check-commit-subject.sh` checks it. ADR-0027.
 

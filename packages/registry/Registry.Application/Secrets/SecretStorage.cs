@@ -5,15 +5,11 @@ using Registry.Domain.Resources;
 
 namespace Registry.Application.Secrets;
 
-internal static class SecretStorage
+internal sealed class SecretStorage(IApplicationDbContext database, ISecretVault vault) : ISecretStorage
 {
-    public static async Task StoreAsync(
-        this IApplicationDbContext database,
-        ISecretVault vault,
-        ManifestEntry entry,
-        CancellationToken cancellationToken)
+    public async Task StoreAsync(ManifestEntry entry, CancellationToken cancellationToken)
     {
-        var held = await HeldAsync(database, entry, cancellationToken);
+        var held = await HeldAsync(entry, cancellationToken);
         var values = entry.Values!;
 
         database.SecretValues.RemoveRange(held.Where(value => !values.ContainsKey(value.Key)));
@@ -31,16 +27,10 @@ internal static class SecretStorage
         }
     }
 
-    public static async Task ForgetAsync(
-        this IApplicationDbContext database,
-        ManifestEntry entry,
-        CancellationToken cancellationToken) =>
-        database.SecretValues.RemoveRange(await HeldAsync(database, entry, cancellationToken));
+    public async Task ForgetAsync(ManifestEntry entry, CancellationToken cancellationToken) =>
+        database.SecretValues.RemoveRange(await HeldAsync(entry, cancellationToken));
 
-    private static Task<List<SecretValue>> HeldAsync(
-        IApplicationDbContext database,
-        ManifestEntry entry,
-        CancellationToken cancellationToken) =>
+    private Task<List<SecretValue>> HeldAsync(ManifestEntry entry, CancellationToken cancellationToken) =>
         database.SecretValues.Where(value => value.Namespace == entry.Namespace && value.Secret == entry.Name)
             .ToListAsync(cancellationToken);
 }

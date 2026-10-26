@@ -27,7 +27,8 @@ public sealed record Query(Guid CallerId, string? Q, string? Sort, bool Desc, in
 /// <param name="Total">How many Namespaces match the filter, across all pages.</param>
 public sealed record NamespacePage(IReadOnlyList<Namespace> Items, int Total);
 
-internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<Query, Result<NamespacePage>>
+internal sealed class Handler(IApplicationDbContext database, IAccessChecks access)
+    : IRequestHandler<Query, Result<NamespacePage>>
 {
     private const string NameKey = "name";
 
@@ -38,7 +39,7 @@ internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<
             return Errors.UnknownSortKey(request.Sort);
         }
 
-        var scope = await database.ScopeAsync(request.CallerId, cancellationToken);
+        var scope = await access.ScopeAsync(request.CallerId, cancellationToken);
         if (scope.IsFailure)
         {
             return scope.Error;

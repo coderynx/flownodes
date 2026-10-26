@@ -1,5 +1,6 @@
 using Coderynx.Functional.Results.Successes;
 using Core.Contracts.Resources;
+using Registry.Application.Namespaces;
 using Registry.Application.Namespaces.SeedDefaultNamespace;
 using Registry.Domain.Namespaces;
 using Xunit;
@@ -13,7 +14,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var database = TestDatabase.Create();
-        var handler = new Handler(database);
+        var handler = new Handler(new NamespaceCreation(database));
 
         // Act
         var result = await handler.HandleAsync(new Command(), Ct);
@@ -33,7 +34,7 @@ public sealed class HandlerTests
         // Arrange
         var existing = Namespace.Create(NamespaceName.Create(NamespaceName.Default));
         var database = TestDatabase.Create([existing]);
-        var handler = new Handler(database);
+        var handler = new Handler(new NamespaceCreation(database));
 
         // Act
         var result = await handler.HandleAsync(new Command(), Ct);

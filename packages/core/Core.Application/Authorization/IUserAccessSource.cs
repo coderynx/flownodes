@@ -5,8 +5,8 @@ namespace Core.Application.Authorization;
 
 /// <summary>
 /// A module's database as far as authorisation goes: its replica of Users and their Role Grants. A module's own
-/// database abstraction implements it, so the checks in <see cref="Access"/> run against that module's replica and no
-/// other.
+/// database abstraction implements it, so the checks in <see cref="IAccessChecks"/> run against that module's replica
+/// and no other.
 /// </summary>
 public interface IUserAccessSource
 {

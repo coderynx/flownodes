@@ -1,6 +1,5 @@
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
-using Registry.Application.Database;
 using Registry.Domain.Namespaces;
 
 namespace Registry.Application.Namespaces.SeedDefaultNamespace;
@@ -11,8 +10,8 @@ namespace Registry.Application.Namespaces.SeedDefaultNamespace;
 /// </summary>
 public sealed record Command : IRequest<Result<Namespace>>;
 
-internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<Command, Result<Namespace>>
+internal sealed class Handler(INamespaceCreation creation) : IRequestHandler<Command, Result<Namespace>>
 {
     public async Task<Result<Namespace>> HandleAsync(Command request, CancellationToken cancellationToken = default) =>
-        await NamespaceCreation.EnsureAsync(database, NamespaceName.Default, cancellationToken);
+        await creation.EnsureAsync(NamespaceName.Default, cancellationToken);
 }

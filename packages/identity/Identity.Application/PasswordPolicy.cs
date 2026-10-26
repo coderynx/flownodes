@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Identity.Application;
 
-internal static class PasswordPolicy
+internal sealed class PasswordPolicy(UserManager<User> users) : IPasswordPolicy
 {
-    public static async Task<Error?> ValidateAsync(UserManager<User> users, User user, string password)
+    public async Task<Error?> ValidateAsync(User user, string password)
     {
         foreach (var validator in users.PasswordValidators)
         {

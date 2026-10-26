@@ -17,7 +17,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Administrator();
-        var handler = new Handler(TestDatabase.Create(Stored("acme"), users: [caller]));
+        var handler = new Handler(TestDatabase.Create(Stored("acme")), AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(caller.Id, sort: "uid"), Ct);
@@ -28,27 +28,15 @@ public sealed class HandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldReturnUnauthenticated_WhenCallerIsUnknown()
+    public async Task HandleAsync_ShouldReturnTheError_WhenTheAccessCheckFails()
     {
         // Arrange
-        var handler = new Handler(TestDatabase.Create(Stored("acme")));
+        var handler = new Handler(
+            TestDatabase.Create(Stored("acme")),
+            AccessDoubles.ChecksFailingWith(AccessDoubles.Unauthenticated()));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(Guid.NewGuid()), Ct);
-
-        // Assert
-        result.Error.Code.ShouldBe(AccessErrors.UnauthenticatedCode);
-    }
-
-    [Fact]
-    public async Task HandleAsync_ShouldReturnUnauthenticated_WhenCallerIsDisabled()
-    {
-        // Arrange
-        var caller = Callers.DisabledAdministrator();
-        var handler = new Handler(TestDatabase.Create(Stored("acme"), users: [caller]));
-
-        // Act
-        var result = await handler.HandleAsync(ListQuery(caller.Id), Ct);
 
         // Assert
         result.Error.Code.ShouldBe(AccessErrors.UnauthenticatedCode);
@@ -61,7 +49,9 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Administrator();
-        var handler = new Handler(TestDatabase.Create(Stored("plant-7", "acme", "default"), users: [caller]));
+        var handler = new Handler(
+            TestDatabase.Create(Stored("plant-7", "acme", "default")),
+            AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(caller.Id, sort: sort), Ct);
@@ -78,7 +68,9 @@ public sealed class HandlerTests
         // Arrange
         var caller = Callers.Member("plant-7");
         caller.GrantRole("acme", NamespaceRole.Engineer, 2);
-        var handler = new Handler(TestDatabase.Create(Stored("plant-7", "acme", "default"), users: [caller]));
+        var handler = new Handler(
+            TestDatabase.Create(Stored("plant-7", "acme", "default")),
+            AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(caller.Id), Ct);
@@ -93,7 +85,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = UserAccess.Create(Guid.NewGuid());
-        var handler = new Handler(TestDatabase.Create(Stored("acme", "default"), users: [caller]));
+        var handler = new Handler(TestDatabase.Create(Stored("acme", "default")), AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(caller.Id), Ct);
@@ -110,7 +102,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Administrator();
-        var handler = new Handler(TestDatabase.Create(Stored("acme", "default"), users: [caller]));
+        var handler = new Handler(TestDatabase.Create(Stored("acme", "default")), AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(caller.Id, q), Ct);
@@ -124,7 +116,9 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Administrator();
-        var handler = new Handler(TestDatabase.Create(Stored("plant-7", "plant-8", "acme"), users: [caller]));
+        var handler = new Handler(
+            TestDatabase.Create(Stored("plant-7", "plant-8", "acme")),
+            AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(caller.Id, "ant"), Ct);
@@ -139,7 +133,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Administrator();
-        var handler = new Handler(TestDatabase.Create(Stored("acme"), users: [caller]));
+        var handler = new Handler(TestDatabase.Create(Stored("acme")), AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(caller.Id, "ACME"), Ct);
@@ -153,7 +147,9 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Administrator();
-        var handler = new Handler(TestDatabase.Create(Stored("acme", "plant-7", "default"), users: [caller]));
+        var handler = new Handler(
+            TestDatabase.Create(Stored("acme", "plant-7", "default")),
+            AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(caller.Id, desc: true), Ct);
@@ -167,7 +163,9 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Administrator();
-        var handler = new Handler(TestDatabase.Create(Stored("a", "b", "c", "d", "e"), users: [caller]));
+        var handler = new Handler(
+            TestDatabase.Create(Stored("a", "b", "c", "d", "e")),
+            AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(caller.Id, offset: 1, limit: 2), Ct);
@@ -182,7 +180,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Administrator();
-        var handler = new Handler(TestDatabase.Create(Stored("a", "b", "c"), users: [caller]));
+        var handler = new Handler(TestDatabase.Create(Stored("a", "b", "c")), AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(caller.Id, offset: -5, limit: 2), Ct);
@@ -198,7 +196,7 @@ public sealed class HandlerTests
     {
         // Arrange
         var caller = Callers.Administrator();
-        var handler = new Handler(TestDatabase.Create(Stored("a", "b", "c"), users: [caller]));
+        var handler = new Handler(TestDatabase.Create(Stored("a", "b", "c")), AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(caller.Id, limit: limit), Ct);
@@ -214,7 +212,7 @@ public sealed class HandlerTests
         // Arrange
         var caller = Callers.Administrator();
         var names = Enumerable.Range(0, 250).Select(index => $"ns-{index:D3}").ToArray();
-        var handler = new Handler(TestDatabase.Create(Stored(names), users: [caller]));
+        var handler = new Handler(TestDatabase.Create(Stored(names)), AccessDoubles.ChecksFor(caller));
 
         // Act
         var result = await handler.HandleAsync(ListQuery(caller.Id, limit: 1000), Ct);

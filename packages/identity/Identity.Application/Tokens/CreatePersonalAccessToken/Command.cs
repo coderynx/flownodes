@@ -22,14 +22,17 @@ public sealed record Command(Guid CallerId, Guid UserId, string Name, DateTimeOf
 /// <param name="Secret">The secret the User presents to exchange the token.</param>
 public sealed record CreatedToken(PersonalAccessToken Token, string Secret);
 
-internal sealed class Handler(IIdentityDbContext database, TimeProvider time)
-    : IRequestHandler<Command, Result<CreatedToken>>
+internal sealed class Handler(
+    IIdentityDbContext database,
+    ICallerChecks checks,
+    IPersonalAccessTokenSecrets secrets,
+    TimeProvider time) : IRequestHandler<Command, Result<CreatedToken>>
 {
     private const int MaxNameLength = 100;
 
     public async Task<Result<CreatedToken>> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await CallerChecks.RequireActiveAsync(database, request.CallerId, cancellationToken);
+        var caller = await checks.RequireActiveAsync(request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;
@@ -52,13 +55,8 @@ internal sealed class Handler(IIdentityDbContext database, TimeProvider time)
             return Errors.ExpiryInThePast();
         }
 
-        var secret = PersonalAccessTokenSecrets.Generate();
-        var token = PersonalAccessToken.Create(
-            request.UserId,
-            name,
-            PersonalAccessTokenSecrets.Hash(secret),
-            now,
-            request.ExpiresAt);
+        var secret = secrets.Generate();
+        var token = PersonalAccessToken.Create(request.UserId, name, secrets.Hash(secret), now, request.ExpiresAt);
         database.PersonalAccessTokens.Add(token);
         await database.SaveChangesAsync(cancellationToken);
 

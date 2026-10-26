@@ -1,6 +1,9 @@
 using System.Reflection;
 using Coderynx.MediatorKit;
+using Core.Application.Authorization;
 using Core.Application.Behaviors;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace Core.Application.Bootstrap;
@@ -37,5 +40,23 @@ public static class DependencyInjection
                 mediator.AddRequestHandlersFromAssembly(assembly);
             }
         });
+    }
+
+    /// <summary>
+    /// Registers the authorisation checks and the projection of Identity's messages, which run against the replica of
+    /// Role Grants in the module's database.
+    /// </summary>
+    /// <remarks>
+    /// The host has one set of checks, so only one module registers them.
+    /// </remarks>
+    /// <typeparam name="TSource">The module's database, which holds its replica of Role Grants.</typeparam>
+    /// <param name="builder">The host the module is being added to.</param>
+    public static void AddAccessChecks<TSource>(this IHostApplicationBuilder builder)
+        where TSource : class, IUserAccessSource
+    {
+        builder.Services.TryAddScoped<IAccessChecks>(services => new AccessChecks(
+            services.GetRequiredService<TSource>()));
+        builder.Services.TryAddScoped<IUserAccessProjection>(services => new UserAccessProjection(
+            services.GetRequiredService<TSource>()));
     }
 }

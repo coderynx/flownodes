@@ -1,7 +1,5 @@
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
-using Microsoft.Extensions.Options;
-using Registry.Application.Database;
 using Registry.Domain.Namespaces;
 using Registry.Domain.Resources;
 
@@ -18,11 +16,8 @@ namespace Registry.Application.Resources.DeleteResource;
 public sealed record Command(Guid CallerId, string? Namespace, string Kinds, string Name, bool DryRun)
     : IRequest<Result<DeletedResource>>;
 
-internal sealed class Handler(
-    IApplicationDbContext database,
-    KindCatalog catalog,
-    TimeProvider time,
-    IOptions<RevisionRetention> retention) : IRequestHandler<Command, Result<DeletedResource>>
+internal sealed class Handler(KindCatalog catalog, IResourceAccess access, ResourceDeletion deletion)
+    : IRequestHandler<Command, Result<DeletedResource>>
 {
     public async Task<Result<DeletedResource>> HandleAsync(
         Command request,
@@ -31,12 +26,12 @@ internal sealed class Handler(
         var target = Target(request);
         if (target.IsFailure)
         {
-            var access = await database.AuthoriseChangesAsync(request.CallerId, Scope(request), cancellationToken);
+            var changes = await access.AuthoriseChangesAsync(request.CallerId, Scope(request), cancellationToken);
 
-            return access.IsFailure ? access.Error : target.Error;
+            return changes.IsFailure ? changes.Error : target.Error;
         }
 
-        var deleted = await new ResourceDeletion(database, catalog, time, retention.Value.Keep).DeleteAsync(
+        var deleted = await deletion.DeleteAsync(
             request.CallerId,
             ManifestReading.Of(target.Value),
             1,

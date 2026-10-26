@@ -1,7 +1,6 @@
 using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
 using Identity.Application.Database;
-using Identity.Application.Security;
 using Identity.Domain.Users;
 using Microsoft.AspNetCore.Identity;
 
@@ -18,14 +17,14 @@ public sealed record Command(Guid CallerId, Guid UserId, string Password) : IReq
 
 internal sealed class Handler(
     IIdentityDbContext database,
+    ICallerChecks checks,
     UserManager<User> users,
-    IUserTokenRevoker revoker,
-    TimeProvider time) : IRequestHandler<Command, Result>
+    IUserTokens tokens,
+    IPasswordPolicy policy) : IRequestHandler<Command, Result>
 {
     public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var found = await CallerChecks.RequireAdministratorAndFindUserAsync(
-            database,
+        var found = await checks.RequireAdministratorAndFindUserAsync(
             request.CallerId,
             request.UserId,
             cancellationToken);
@@ -36,13 +35,13 @@ internal sealed class Handler(
 
         var user = found.Value;
 
-        var validation = await PasswordPolicy.ValidateAsync(users, user, request.Password);
+        var validation = await policy.ValidateAsync(user, request.Password);
         if (validation is not null)
         {
             return validation;
         }
 
-        await UserTokens.RevokeAllAsync(database, revoker, time, user.Id, cancellationToken);
+        await tokens.RevokeAllAsync(user.Id, cancellationToken);
 
         user.SetPasswordHash(users.PasswordHasher.HashPassword(user, request.Password));
         user.ResetFailedAccess();

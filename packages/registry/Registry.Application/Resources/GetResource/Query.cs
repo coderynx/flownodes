@@ -16,13 +16,12 @@ namespace Registry.Application.Resources.GetResource;
 /// <param name="Name">The name of the Resource. A name that is not valid names no Resource.</param>
 public sealed record Query(Guid CallerId, string Namespace, string Kinds, string Name) : IRequest<Result<Resource>>;
 
-internal sealed class Handler(IApplicationDbContext database, KindCatalog catalog)
+internal sealed class Handler(IApplicationDbContext database, IResourceAccess access)
     : IRequestHandler<Query, Result<Resource>>
 {
     public async Task<Result<Resource>> HandleAsync(Query request, CancellationToken cancellationToken = default)
     {
-        var read = await database.AuthoriseReadAsync(
-            catalog,
+        var read = await access.AuthoriseReadAsync(
             request.CallerId,
             request.Namespace,
             request.Kinds,

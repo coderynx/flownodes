@@ -4,14 +4,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Application;
 
-internal static class UserTokens
+internal interface IUserTokens
 {
-    public static async Task RevokeAllAsync(
-        IIdentityDbContext database,
-        IUserTokenRevoker revoker,
-        TimeProvider time,
-        Guid userId,
-        CancellationToken cancellationToken)
+    Task RevokeAllAsync(Guid userId, CancellationToken cancellationToken);
+}
+
+internal sealed class UserTokens(IIdentityDbContext database, IUserTokenRevoker revoker, TimeProvider time)
+    : IUserTokens
+{
+    public async Task RevokeAllAsync(Guid userId, CancellationToken cancellationToken)
     {
         await revoker.RevokeAllAsync(userId, cancellationToken);
 

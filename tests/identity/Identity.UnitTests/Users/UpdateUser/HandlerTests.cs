@@ -17,7 +17,7 @@ public sealed class HandlerTests
         var bob = TestDoubles.Member("bob");
         var alice = TestDoubles.Member("alice");
         var database = TestDoubles.Database([bob, alice]);
-        var handler = new Handler(database);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Command(bob.Id, alice.Id, "alicia", "Alicia"), Ct);
@@ -35,7 +35,8 @@ public sealed class HandlerTests
         // Arrange
         var administrator = TestDoubles.Disabled(TestDoubles.Administrator());
         var alice = TestDoubles.Member("alice");
-        var handler = new Handler(TestDoubles.Database([administrator, alice]));
+        var database = TestDoubles.Database([administrator, alice]);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, alice.Id, "alicia", null), Ct);
@@ -50,7 +51,7 @@ public sealed class HandlerTests
         // Arrange
         var administrator = TestDoubles.Administrator();
         var database = TestDoubles.Database([administrator]);
-        var handler = new Handler(database);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, Guid.NewGuid(), "alicia", null), Ct);
@@ -67,7 +68,7 @@ public sealed class HandlerTests
         var administrator = TestDoubles.Administrator();
         var alice = TestDoubles.Member("alice");
         var database = TestDoubles.Database([administrator, alice]);
-        var handler = new Handler(database);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, alice.Id, "alice smith", null), Ct);
@@ -86,7 +87,7 @@ public sealed class HandlerTests
         var administrator = TestDoubles.Administrator();
         var alice = TestDoubles.Member("alice");
         var database = TestDoubles.Database([administrator, alice, TestDoubles.Member("bob")]);
-        var handler = new Handler(database);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, alice.Id, "bob", null), Ct);
@@ -105,7 +106,7 @@ public sealed class HandlerTests
         var administrator = TestDoubles.Administrator();
         var alice = TestDoubles.Member("alice");
         var database = TestDoubles.Database([administrator, alice]);
-        var handler = new Handler(database);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, alice.Id, "alicia", null), Ct);
@@ -125,7 +126,7 @@ public sealed class HandlerTests
         var administrator = TestDoubles.Administrator();
         var alice = TestDoubles.Member("alice");
         var database = TestDoubles.Database([administrator, alice]);
-        var handler = new Handler(database);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, alice.Id, "alice", null), Ct);
@@ -144,7 +145,7 @@ public sealed class HandlerTests
         var administrator = TestDoubles.Administrator();
         var alice = TestDoubles.Member("alice");
         var database = TestDoubles.Database([administrator, alice]);
-        var handler = new Handler(database);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         var result = await handler.HandleAsync(new Command(administrator.Id, alice.Id, null, " Alice A. "), Ct);
@@ -163,7 +164,8 @@ public sealed class HandlerTests
         // Arrange
         var administrator = TestDoubles.Administrator();
         var alice = TestDoubles.Member("alice", "Alice A.");
-        var handler = new Handler(TestDoubles.Database([administrator, alice]));
+        var database = TestDoubles.Database([administrator, alice]);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         await handler.HandleAsync(new Command(administrator.Id, alice.Id, null, string.Empty), Ct);
@@ -178,7 +180,8 @@ public sealed class HandlerTests
         // Arrange
         var administrator = TestDoubles.Administrator();
         var alice = TestDoubles.Member("alice", "Alice A.");
-        var handler = new Handler(TestDoubles.Database([administrator, alice]));
+        var database = TestDoubles.Database([administrator, alice]);
+        var handler = new Handler(database, TestDoubles.Checks(database));
 
         // Act
         await handler.HandleAsync(new Command(administrator.Id, alice.Id, "alicia", null), Ct);

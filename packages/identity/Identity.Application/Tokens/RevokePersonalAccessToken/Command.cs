@@ -13,11 +13,12 @@ namespace Identity.Application.Tokens.RevokePersonalAccessToken;
 /// <param name="TokenId">The id of the token.</param>
 public sealed record Command(Guid CallerId, Guid UserId, Guid TokenId) : IRequest<Result>;
 
-internal sealed class Handler(IIdentityDbContext database, TimeProvider time) : IRequestHandler<Command, Result>
+internal sealed class Handler(IIdentityDbContext database, ICallerChecks checks, TimeProvider time)
+    : IRequestHandler<Command, Result>
 {
     public async Task<Result> HandleAsync(Command request, CancellationToken cancellationToken = default)
     {
-        var caller = await CallerChecks.RequireActiveAsync(database, request.CallerId, cancellationToken);
+        var caller = await checks.RequireActiveAsync(request.CallerId, cancellationToken);
         if (caller.IsFailure)
         {
             return caller.Error;

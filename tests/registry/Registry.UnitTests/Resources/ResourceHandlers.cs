@@ -1,5 +1,8 @@
 using System.Security.Cryptography;
+using Coderynx.Functional.Results;
+using Core.Domain.Authorization;
 using Microsoft.Extensions.Options;
+using Registry.Application.Database;
 using Registry.Application.Resources;
 using Registry.Application.Secrets;
 
@@ -31,4 +34,20 @@ internal static class ResourceHandlers
 
     public static IOptions<RevisionRetention> Retention(int keep = 50) =>
         Options.Create(new RevisionRetention { Keep = keep });
+
+    public static IResourceAccess Access(UserAccess? caller = null)
+    {
+        var access = Substitute.For<IResourceAccess>();
+        access.AuthoriseChangesAsync(Arg.Any<Guid>(), Arg.Any<ManifestReading>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Found(caller));
+
+        return access;
+    }
+
+    public static ResourceDeletion Deletion(
+        IApplicationDbContext database,
+        IResourceAccess access,
+        ISecretStorage secrets,
+        IRevisionLog revisions) =>
+        new(database, WidgetKind.Catalog, Time(), access, secrets, revisions);
 }
