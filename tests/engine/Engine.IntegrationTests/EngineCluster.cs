@@ -1,5 +1,7 @@
+using Engine.Application.Alarms;
 using Engine.Application.Assets;
 using Engine.Application.Devices;
+using Engine.Infrastructure.Alarms;
 using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.Devices;
@@ -8,6 +10,7 @@ using Engine.Infrastructure.Namespaces;
 using Engine.Infrastructure.Resources;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Npgsql;
 using Orleans.TestingHost;
 
 namespace Engine.IntegrationTests;
@@ -30,11 +33,17 @@ public sealed class EngineCluster : IAsyncDisposable
     public RecordingStatus Status => _cluster.GetSiloServiceProvider().GetRequiredService<RecordingStatus>();
     public IDeviceRuntime Devices => _cluster.GetSiloServiceProvider().GetRequiredService<IDeviceRuntime>();
     public IAssetRuntime Assets => _cluster.GetSiloServiceProvider().GetRequiredService<IAssetRuntime>();
+    public IAlarmRuntime Alarms => _cluster.GetSiloServiceProvider().GetRequiredService<IAlarmRuntime>();
     public RecordingRegistry Registry => _cluster.GetSiloServiceProvider().GetRequiredService<RecordingRegistry>();
 
-    public static async Task<EngineCluster> StartAsync(TimeSpan? resyncPeriod = null)
+    public static async Task<EngineCluster> StartAsync(TimeSpan? resyncPeriod = null, string? alarmDatabase = null)
     {
         var builder = new TestClusterBuilder(1);
+        if (alarmDatabase is not null)
+        {
+            builder.Properties["AlarmDatabase"] = alarmDatabase;
+        }
+
         builder.Properties["ResyncPeriod"] = (resyncPeriod ?? TimeSpan.FromMinutes(15)).ToString();
         builder.AddSiloBuilderConfigurator<SiloConfigurator>();
         var cluster = builder.Build();
@@ -99,6 +108,19 @@ public sealed class EngineCluster : IAsyncDisposable
             return new CatalogOf(loads);
         }
 
+        private static IAlarmHistory AlarmHistoryFor(string? connectionString)
+        {
+            if (connectionString is null)
+            {
+                return new DiscardingAlarmHistory();
+            }
+
+            var database = NpgsqlDataSource.Create(connectionString);
+            new AlarmSchema(database).StartAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            return new PostgresAlarmHistory(database);
+        }
+
         public void Configure(ISiloBuilder siloBuilder)
         {
             var resyncPeriod = TimeSpan.Parse(
@@ -134,6 +156,8 @@ public sealed class EngineCluster : IAsyncDisposable
                 services.AddSingleton<IIntegrationCatalog>(_ => SimulatorCatalog());
                 services.AddSingleton<IDeviceRuntime, GrainDeviceRuntime>();
                 services.AddSingleton<IAssetRuntime, GrainAssetRuntime>();
+                services.AddSingleton<IAlarmRuntime, GrainAlarmRuntime>();
+                services.AddSingleton<IAlarmHistory>(AlarmHistoryFor(siloBuilder.Configuration["AlarmDatabase"]));
                 services.AddSingleton<RecordingRegistry>();
                 services.AddSingleton<IRegistryRequests>(provider => provider.GetRequiredService<RecordingRegistry>());
             });

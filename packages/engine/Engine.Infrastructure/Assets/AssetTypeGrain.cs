@@ -69,7 +69,13 @@ internal sealed class AssetTypeGrain(
             },
             Web);
 
-    private AssetTypeInfo Info() => new(IsLive, IsLive ? AssetDataPoint.DeclarationTexts(Spec) : []);
+    private AssetTypeInfo Info() =>
+        new(IsLive, IsLive ? AssetDataPoint.DeclarationTexts(Spec) : [], IsLive ? AlarmDeclarationTexts() : []);
+
+    private List<string> AlarmDeclarationTexts() =>
+        Spec.TryGetProperty("alarms", out var list) && list.ValueKind == JsonValueKind.Array
+            ? [.. list.EnumerateArray().Select(declaration => declaration.GetRawText())]
+            : [];
 
     private async Task NotifyInstancesAsync()
     {

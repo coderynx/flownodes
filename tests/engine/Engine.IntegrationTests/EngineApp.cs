@@ -36,13 +36,17 @@ public sealed class EngineApp : IAsyncDisposable
 
     public HttpClient Anonymous { get; }
 
-    public static async Task<EngineApp> StartAsync()
+    public static async Task<EngineApp> StartAsync(string? alarmDatabase = null)
     {
         var identity = await TestIdentity.StartAsync();
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
         builder.Configuration["Flownodes:Identity:Authority"] = identity.Address.ToString();
         builder.Configuration["ResyncPeriod"] = TimeSpan.FromMinutes(15).ToString();
+        if (alarmDatabase is not null)
+        {
+            builder.Configuration["AlarmDatabase"] = alarmDatabase;
+        }
 
         builder.AddApplication();
         builder.AddPresentation();
@@ -76,9 +80,12 @@ public sealed class EngineApp : IAsyncDisposable
     public Task DeleteAsync(Guid userId) =>
         IdentityMessageHandler.Handle(new UserDeleted(userId, NextSeq(userId)), Grains);
 
-    public Task ApplyAsync(string @namespace, string kind, string name, string spec, long seq) =>
-        Grains.GetGrain<Infrastructure.Namespaces.INamespaceGrain>(@namespace)
-            .ResourceAppliedAsync(kind, name, EngineCluster.ResourceUid(kind, name), 1, seq, spec);
+    public async Task ApplyAsync(string @namespace, string kind, string name, string spec, long seq)
+    {
+        var grain = Grains.GetGrain<Infrastructure.Namespaces.INamespaceGrain>(@namespace);
+        await grain.ApplyAsync(EngineCluster.NamespaceUid, 1);
+        await grain.ResourceAppliedAsync(kind, name, EngineCluster.ResourceUid(kind, name), 1, seq, spec);
+    }
 
     public async Task<(Guid Id, HttpClient Client)> MemberAsync(string role, string @namespace)
     {

@@ -17,6 +17,10 @@ public sealed class RoleAccessTests
     [InlineData("POST", $"{Api}/namespaces/acme/devices/t1/actions/set")]
     [InlineData("GET", $"{Api}/namespaces/acme/assets/room/datapoints")]
     [InlineData("PUT", $"{Api}/namespaces/acme/assets/room/datapoints/target")]
+    [InlineData("GET", $"{Api}/namespaces/acme/alarms")]
+    [InlineData("GET", $"{Api}/namespaces/acme/alarms/history")]
+    [InlineData("GET", $"{Api}/namespaces/acme/assets/room/alarms")]
+    [InlineData("POST", $"{Api}/namespaces/acme/alarms/6b3f0e2a-0f0e-4f0e-8f0e-0f0e0f0e0f0e/acknowledge")]
     public async Task Request_ShouldReturnUnauthorized_WhenThereIsNoAccessToken(string method, string route)
     {
         // Arrange
@@ -35,6 +39,10 @@ public sealed class RoleAccessTests
     [InlineData("POST", "devices/t1/actions/set")]
     [InlineData("GET", "assets/room/datapoints")]
     [InlineData("PUT", "assets/room/datapoints/target")]
+    [InlineData("GET", "alarms")]
+    [InlineData("GET", "alarms/history")]
+    [InlineData("GET", "assets/room/alarms")]
+    [InlineData("POST", "alarms/6b3f0e2a-0f0e-4f0e-8f0e-0f0e0f0e0f0e/acknowledge")]
     public async Task Request_ShouldReturnNotFound_WhenTheCallerHoldsNoRoleInTheNamespace(string method, string route)
     {
         // Arrange

@@ -1,4 +1,6 @@
 using System.Text.Json;
+using Engine.Domain.Alarms;
+using Engine.Infrastructure.Alarms;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.DataPoints;
 using Engine.Infrastructure.Devices;
@@ -14,6 +16,8 @@ namespace Engine.Infrastructure.Assets;
 internal sealed class AssetGrain(
     [PersistentState("asset")] IPersistentState<ResourceState> state,
     [PersistentState("assetvalues")] IPersistentState<AssetValues> values,
+    [PersistentState("assetalarms")] IPersistentState<AlarmState> alarmState,
+    IAlarmHistory history,
     IStatusReporter reporter,
     IOptions<AssetGrainOptions> options,
     ILogger<AssetGrain> logger) : ResourceGrain(state, reporter, options.Value.StatusInterval, "Asset"), IAssetGrain
@@ -23,6 +27,12 @@ internal sealed class AssetGrain(
     private IReadOnlyList<AssetDataPoint> _points = [];
     private AssetTypeInfo? _assetType;
     private string? _registeredWith;
+    private AssetAlarms? _alarms;
+    private readonly Dictionary<Guid, Alarm> _unrecorded = [];
+    private readonly SemaphoreSlim _alarmWrite = new(1, 1);
+    private IDisposable? _alarmTimer;
+    private string _persistedPending = "";
+    private bool _alarmsAnnounced;
 
     public override async Task OnActivateAsync(CancellationToken cancellationToken)
     {
@@ -44,6 +54,7 @@ internal sealed class AssetGrain(
         if (!sameIncarnation)
         {
             await ClearWrittenAsync();
+            await CommitAlarmsAsync(Alarms.RetireAll(DateTimeOffset.UtcNow));
         }
 
         if (previousType is not null && previousType != AssetTypeName)
@@ -73,6 +84,8 @@ internal sealed class AssetGrain(
         }
 
         await ClearWrittenAsync();
+        _alarmTimer?.Dispose();
+        await RetireAlarmsAsync();
         DeactivateOnIdle();
     }
 
@@ -94,17 +107,35 @@ internal sealed class AssetGrain(
         _assetType = assetType;
         Refresh();
         await SyncDevicesAsync();
+        await SyncAlarmsAsync(true);
         await ReportStatusAsync();
     }
 
-    public Task DeviceChangedAsync(string device, DeviceFeed feed)
+    public async Task DeviceChangedAsync(string device, DeviceFeed feed)
     {
         if (IsLive && _feeds.ContainsKey(device))
         {
             _feeds[device] = feed;
+            await SyncAlarmsAsync(false);
         }
 
-        return ReportStatusAsync();
+        await ReportStatusAsync();
+    }
+
+    public Task<IReadOnlyList<AlarmSnapshot>?> GetAlarmsAsync() =>
+        Task.FromResult<IReadOnlyList<AlarmSnapshot>?>(IsLive ? [.. Alarms.Live.Select(AlarmSnapshot.From)] : null);
+
+    public async Task<bool> AcknowledgeAsync(Guid id, Guid by, string? comment)
+    {
+        var alarm = IsLive ? Alarms.Acknowledge(id, by, comment, DateTimeOffset.UtcNow) : null;
+        if (alarm is null)
+        {
+            return false;
+        }
+
+        await CommitAlarmsAsync([alarm]);
+
+        return true;
     }
 
     public Task<IReadOnlyList<DataPointSnapshot>?> GetDataPointsAsync() =>
@@ -137,6 +168,7 @@ internal sealed class AssetGrain(
 
         values.State.Written[dataPoint] = new WrittenValue(document.RootElement.GetRawText(), DateTimeOffset.UtcNow);
         await values.WriteStateAsync();
+        await SyncAlarmsAsync(false);
 
         return CallResult.Success();
     }
@@ -149,7 +181,14 @@ internal sealed class AssetGrain(
             new
             {
                 conditions = new[] { new { type = "Ready", status = ready ? "True" : "False", reason, message } },
-                dataPoints = ready ? _points.Select(point => point.Name).ToArray() : []
+                dataPoints = ready ? _points.Select(point => point.Name).ToArray() : [],
+                alarms = new
+                {
+                    low = AlarmCount(AlarmPriority.Low),
+                    medium = AlarmCount(AlarmPriority.Medium),
+                    high = AlarmCount(AlarmPriority.High),
+                    critical = AlarmCount(AlarmPriority.Critical)
+                }
             },
             Web);
     }
@@ -276,7 +315,155 @@ internal sealed class AssetGrain(
         _assetType = AssetTypeName is { } name ? await AssetType(name).RegisterInstanceAsync(ResourceName) : null;
         Refresh();
         await SyncDevicesAsync();
+        await SyncAlarmsAsync(true);
         await ReportStatusAsync();
+    }
+
+    private AssetAlarms Alarms => _alarms ??= alarmState.State.ToAlarms(ResourceName);
+    private int AlarmCount(AlarmPriority priority) => Alarms.Live.Count(alarm => alarm.Priority == priority);
+
+    private async Task SyncAlarmsAsync(bool conditionsChanged)
+    {
+        if (!IsLive)
+        {
+            return;
+        }
+
+        if (!_alarmsAnnounced)
+        {
+            _alarmsAnnounced = true;
+            foreach (var alarm in Alarms.Live)
+            {
+                _unrecorded[alarm.Id] = alarm;
+            }
+        }
+
+        if (AssetTypeName is not null && _assetType is not { Exists: true })
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var changed = new List<Alarm>();
+        if (conditionsChanged)
+        {
+            changed.AddRange(Alarms.Reconcile(Conditions(), now));
+        }
+
+        changed.AddRange(Alarms.Evaluate(ReadForAlarm, now));
+        await CommitAlarmsAsync(changed);
+    }
+
+    private List<AlarmCondition> Conditions()
+    {
+        var own = Spec.TryGetProperty("alarms", out var list) && list.ValueKind == JsonValueKind.Array
+            ? list.EnumerateArray().Select(declaration => declaration.GetRawText())
+            : [];
+
+        return
+        [
+            .. (_assetType?.Alarms ?? []).Concat(own)
+            .Select(text =>
+            {
+                using var document = JsonDocument.Parse(text);
+
+                return AlarmCondition.Create(document.RootElement);
+            })
+        ];
+    }
+
+    private JsonElement? ReadForAlarm(string dataPoint)
+    {
+        var point = _points.FirstOrDefault(candidate => candidate.Name == dataPoint);
+        if (point is null)
+        {
+            return null;
+        }
+
+        var evaluated = Evaluate(point, []);
+        if (evaluated.Value is null || evaluated.Quality == (int)Quality.Bad)
+        {
+            return null;
+        }
+
+        var value = JsonDocument.Parse(evaluated.Value).RootElement.Clone();
+        var fits = point.Type switch
+        {
+            "bool" => value.ValueKind is JsonValueKind.True or JsonValueKind.False,
+            "integer" or "number" => value.ValueKind == JsonValueKind.Number,
+            _ => value.ValueKind == JsonValueKind.String
+        };
+
+        return fits ? value : null;
+    }
+
+    private async Task CommitAlarmsAsync(IReadOnlyList<Alarm> changed)
+    {
+        foreach (var alarm in changed)
+        {
+            _unrecorded[alarm.Id] = alarm;
+        }
+
+        ScheduleAlarmTimer();
+        var pending = string.Join(
+            ';',
+            Alarms.Pending.Select(entry => $"{entry.Key}@{entry.Value.Since.UtcTicks}:{entry.Value.Trigger}"));
+        if (_unrecorded.Count == 0 && pending == _persistedPending)
+        {
+            return;
+        }
+
+        await _alarmWrite.WaitAsync();
+        try
+        {
+            alarmState.State = AlarmState.From(Alarms);
+            _persistedPending = pending;
+            var rows = _unrecorded.Values.ToList();
+            _unrecorded.Clear();
+            await alarmState.WriteStateAsync();
+            try
+            {
+                await history.UpsertAsync(Namespace, rows);
+            }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                logger.LogWarning(exception, "Asset {Name} could not record its Alarms in the history", ResourceName);
+                foreach (var row in rows)
+                {
+                    _unrecorded.TryAdd(row.Id, row);
+                }
+            }
+        }
+        finally
+        {
+            _alarmWrite.Release();
+        }
+
+        await ReportStatusAsync();
+    }
+
+    private async Task RetireAlarmsAsync()
+    {
+        var retired = Alarms.RetireAll(DateTimeOffset.UtcNow);
+        await CommitAlarmsAsync(retired);
+        _alarms = null;
+        await alarmState.ClearStateAsync();
+    }
+
+    private void ScheduleAlarmTimer()
+    {
+        _alarmTimer?.Dispose();
+        _alarmTimer = null;
+        if (Alarms.NextDeadline is not { } deadline)
+        {
+            return;
+        }
+
+        var wait = deadline - DateTimeOffset.UtcNow;
+        _alarmTimer = this.RegisterGrainTimer(
+            () => SyncAlarmsAsync(false),
+            wait > TimeSpan.Zero ? wait : TimeSpan.FromMilliseconds(1),
+            Timeout.InfiniteTimeSpan);
     }
 
     private async Task SyncDevicesAsync()

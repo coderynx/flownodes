@@ -13,7 +13,8 @@ internal sealed class AssetKind(IIntegrationSchemas integrations) : IResourceKin
     public IEnumerable<SpecError> Validate(JsonElement spec, NamespaceSnapshot @namespace)
     {
         foreach (var field in spec.EnumerateObject()
-                     .Where(field => field.Name is not ("assetType" or "parent" or "dataPoints" or "sources")))
+                     .Where(field =>
+                         field.Name is not ("assetType" or "parent" or "dataPoints" or "sources" or "alarms")))
         {
             yield return new SpecError($"spec.{field.Name}", "Unknown field.");
         }
@@ -33,6 +34,17 @@ internal sealed class AssetKind(IIntegrationSchemas integrations) : IResourceKin
             ? @namespace.Find(AssetTypeKind.KindName, typeName)
             : null;
         foreach (var error in AssetSources.ValidateAsset(spec, assetType, @namespace, integrations))
+        {
+            yield return error;
+        }
+
+        foreach (var error in AlarmDeclarations.Validate(
+                     spec,
+                     [
+                         .. assetType is { } type ? DataPointDeclarations.Declarations(type) : [],
+                         .. DataPointDeclarations.Declarations(spec)
+                     ],
+                     assetType is { } declaring ? AlarmDeclarations.Names(declaring).ToHashSet() : []))
         {
             yield return error;
         }

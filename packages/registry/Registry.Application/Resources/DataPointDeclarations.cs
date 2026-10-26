@@ -70,7 +70,8 @@ internal static class DataPointDeclarations
                         dataPoint.TryGetProperty("writable", out var writable) &&
                         writable.ValueKind == JsonValueKind.True,
                         dataPoint.TryGetProperty("source", out var source) ? source : null,
-                        path));
+                        path,
+                        Values(dataPoint)));
             }
         }
 
@@ -137,6 +138,16 @@ internal static class DataPointDeclarations
         }
     }
 
+    private static IReadOnlyList<string> Values(JsonElement dataPoint) =>
+        dataPoint.TryGetProperty("values", out var values) && values.ValueKind == JsonValueKind.Array
+            ?
+            [
+                .. values.EnumerateArray()
+                    .Where(value => value.ValueKind == JsonValueKind.String)
+                    .Select(value => value.GetString()!)
+            ]
+            : [];
+
     private static bool BoundsCross(JsonElement dataPoint) =>
         dataPoint.TryGetProperty("min", out var min) && dataPoint.TryGetProperty("max", out var max) &&
         min.ValueKind == JsonValueKind.Number && max.ValueKind == JsonValueKind.Number &&
@@ -164,4 +175,10 @@ internal static class DataPointDeclarations
         spec.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
 }
 
-internal sealed record Declaration(string Name, string? Type, bool Writable, JsonElement? Source, string Path);
+internal sealed record Declaration(
+    string Name,
+    string? Type,
+    bool Writable,
+    JsonElement? Source,
+    string Path,
+    IReadOnlyList<string> Values);

@@ -1,3 +1,4 @@
+using Engine.Infrastructure.Alarms;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.Devices;
 using Orleans.Concurrency;
@@ -16,4 +17,6 @@ internal interface IAssetGrain : IGrainWithStringKey
 
     Task<IReadOnlyList<DataPointSnapshot>?> GetDataPointsAsync();
     Task<CallResult> WriteAsync(string dataPoint, string value);
+    Task<IReadOnlyList<AlarmSnapshot>?> GetAlarmsAsync();
+    Task<bool> AcknowledgeAsync(Guid id, Guid by, string? comment);
 }

@@ -17,6 +17,13 @@ public sealed class RoleGrantsStub : IRoleGrants
         CancellationToken cancellationToken) =>
         Task.FromResult(Result.Updated());
 
+    public Task<Result> RequireAnyRoleAsync(
+        Guid callerId,
+        string @namespace,
+        IReadOnlyCollection<NamespaceRole> roles,
+        CancellationToken cancellationToken) =>
+        Task.FromResult(Result.Updated());
+
     public Task<Result> RequireMemberAsync(Guid callerId, string @namespace, CancellationToken cancellationToken) =>
         Task.FromResult(Result.Updated());
 
