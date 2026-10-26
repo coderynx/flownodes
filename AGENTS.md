@@ -24,6 +24,7 @@ Each rule below is an ADR; read the ADR before changing code in its area. The bu
 - **Comments**: a comment flags a hack and opens with `// HACK:`. ADR-0023.
 - **Dead code**: delete what nothing references, Core contracts included. ADR-0024.
 - **Tests**: unit tests substitute every handler dependency; integration tests use a real host and Postgres. ADR-0025.
+- **Commits**: a subject is a Conventional Commit, and a pull request is squash-merged under its title. `scripts/check-commit-subject.sh` checks it. ADR-0027.
 
 Before each commit, build the solution and run the unit and architecture tests:
 

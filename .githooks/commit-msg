@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
-# Rejects a commit message that links an agent session: session links are private and must stay out of the public
-# history. CI applies the same check to pull request bodies (.github/workflows/pr-body.yml).
+# Rejects a commit message that links an agent session (session links are private and must stay out of the public
+# history; CI applies the same check to pull request bodies, .github/workflows/pr-body.yml) or whose subject is not a
+# Conventional Commit.
 set -euo pipefail
 
 if grep -nE 'claude\.ai/code/session_[A-Za-z0-9]{8,}' "$1" >&2; then
     echo "Remove the agent session link from the commit message." >&2
     exit 1
 fi
+
+# Conventional Commits (ADR-0027). Git writes merge, revert, fixup, squash and amend subjects itself.
+subject=$(head -n 1 "$1")
+case "$subject" in
+    "Merge "* | "Revert \""* | "fixup! "* | "squash! "* | "amend! "*) ;;
+    *) scripts/check-commit-subject.sh "$subject" ;;
+esac
