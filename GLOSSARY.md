@@ -163,11 +163,11 @@ A long-lived secret a User creates to sign in without a browser, such as from a 
 _Avoid_: API key, API token, service account
 
 **Operator**:
-A role within a Namespace whose holder watches live state, acknowledges Alarms, and may invoke Actions, without changing configuration.
+A role within a Namespace whose holder watches live state, acknowledges Alarms, writes Data Points and invokes Actions, without changing configuration.
 _Avoid_: User, viewer
 
 **Engineer**:
-A role within a Namespace whose holder configures its Connections, Secrets, Asset Types, Assets, Device attachments and Flows.
+A role within a Namespace whose holder configures its Connections, Secrets, Asset Types, Assets, Device attachments and Flows. It does not include the Operator's rights: a User who needs both holds both Role Grants.
 _Avoid_: Developer, user
 
 **Administrator**:
