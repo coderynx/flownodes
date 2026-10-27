@@ -12,6 +12,7 @@ public sealed class RoleAccessTests
 
     [Theory]
     [InlineData("GET", $"{Api}/integrations")]
+    [InlineData("GET", $"{Api}/installation")]
     [InlineData("GET", $"{Api}/namespaces/acme/devices/t1/datapoints")]
     [InlineData("PUT", $"{Api}/namespaces/acme/devices/t1/datapoints/target")]
     [InlineData("POST", $"{Api}/namespaces/acme/devices/t1/actions/set")]
@@ -115,6 +116,39 @@ public sealed class RoleAccessTests
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Theory]
+    [InlineData("Operator")]
+    [InlineData("Engineer")]
+    public async Task GetInstallation_ShouldReturnTheIdentifier_WhenTheCallerHoldsAnyRole(string role)
+    {
+        // Arrange
+        await using var app = await EngineApp.StartAsync();
+        var (_, member) = await app.MemberAsync(role, "acme");
+
+        // Act
+        var response = await member.GetAsync($"{Api}/installation", Ct);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync(Ct);
+        body.ShouldContain(EngineApp.InstallationId.ToString());
+    }
+
+    [Fact]
+    public async Task GetInstallation_ShouldReturnForbidden_WhenTheCallerHoldsNoRole()
+    {
+        // Arrange
+        await using var app = await EngineApp.StartAsync();
+        var (userId, client) = await app.MemberAsync("Operator", "acme");
+        await app.RevokeAsync(userId, "Operator", "acme");
+
+        // Act
+        var response = await client.GetAsync($"{Api}/installation", Ct);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]

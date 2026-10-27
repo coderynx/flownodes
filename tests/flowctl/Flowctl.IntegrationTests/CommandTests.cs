@@ -97,6 +97,55 @@ public sealed class CommandTests(PostgresFixture postgres)
                 "flownodes.simulator   0.1.0     0.1.0   Thermometer, Switch   loaded"));
     }
 
+    [Theory]
+    [InlineData("installation")]
+    [InlineData("installations")]
+    public async Task Get_ShouldPrintTheIdentifierAndVersion_WhenAskedForTheInstallation(string kind)
+    {
+        // Arrange
+        await using var app = await FlowctlApp.StartAsync(postgres);
+        await app.EngineerAsync();
+
+        // Act
+        var run = await app.RunAsync("get", kind);
+
+        // Assert
+        run.ExitCode.ShouldBe(0, run.Error);
+        run.Output.ShouldBe(
+            Lines("ID                                     VERSION", $"{InstallationIdentityStub.Id}   0.1.0"));
+    }
+
+    [Fact]
+    public async Task Get_ShouldPrintTheInstallationAsJson_WhenOutputIsJson()
+    {
+        // Arrange
+        await using var app = await FlowctlApp.StartAsync(postgres);
+        await app.EngineerAsync();
+
+        // Act
+        var run = await app.RunAsync("get", "installation", "-o", "json");
+
+        // Assert
+        run.ExitCode.ShouldBe(0, run.Error);
+        run.Output.ShouldContain($"\"id\":\"{InstallationIdentityStub.Id}\"");
+        run.Output.ShouldContain("\"version\":\"0.1.0\"");
+    }
+
+    [Fact]
+    public async Task Get_ShouldPrintTheInstallationAsYaml_WhenOutputIsYaml()
+    {
+        // Arrange
+        await using var app = await FlowctlApp.StartAsync(postgres);
+        await app.EngineerAsync();
+
+        // Act
+        var run = await app.RunAsync("get", "installation", "-o", "yaml");
+
+        // Assert
+        run.ExitCode.ShouldBe(0, run.Error);
+        run.Output.ShouldBe(Lines($"id: {InstallationIdentityStub.Id}", "version: \"0.1.0\""));
+    }
+
     [Fact]
     public async Task Get_ShouldRefuse_WhenIntegrationsAreAskedForByName()
     {
