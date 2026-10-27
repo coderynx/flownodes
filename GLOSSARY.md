@@ -147,7 +147,7 @@ _Avoid_: Auth, IAM, accounts
 ### Operation
 
 **Installation**:
-One Flownodes deployment, made of one or more Silos that share a Registry, an Engine and an Identity. Each Installation has a permanent identifier that it generates when it first starts.
+One Flownodes deployment, made of one or more Silos that share a Registry, an Engine and an Identity. Each Installation has a permanent identifier that it generates when it first starts and keeps as long as its stored state; an Installation rebuilt from its Manifests is a new Installation.
 _Avoid_: Cluster, host, instance, site
 
 **Control Center**:
