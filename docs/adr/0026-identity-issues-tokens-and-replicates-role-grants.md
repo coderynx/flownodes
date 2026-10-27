@@ -6,7 +6,7 @@ Users, their credentials and their Role Grants belong to a third module, Identit
 
 - Resource servers fetch Identity's OIDC discovery document and signing keys over HTTP. This is the one sanctioned module-to-module HTTP call, allowed because it is the public OIDC protocol any client uses, not private coupling, and it works unchanged when a module is detached.
 - Identity generates its signing key on first start and stores it encrypted with the installation key (ADR-0014), so every Silo signs with the same key and the deployment supplies nothing new.
-- External OIDC providers are added later by federating them into Identity, which keeps issuing its own tokens; the Registry and Engine never notice.
+- Identity signs in only its own Users. Federating external OIDC providers belongs to the Control Center (ADR-0029), not to Identity.
 - Login never depends on the web UI. Identity hosts a small server-rendered sign-in page, used for first-run setup with a one-time token from the Silo log, for `flowctl login` through the device authorization grant, and later for the web UI through authorization code with PKCE. There is no password grant. Personal Access Tokens are exchanged for access tokens.
 - Identity consumes the Registry's Namespace messages to reject grants in unknown Namespaces and to drop grants when a Namespace is deleted. `default` is always known, so first-run setup never waits for the Registry.
 - A new Role Grant can take a few seconds to reach the Registry and Engine. Disabling a User revokes their refresh tokens and Personal Access Tokens at once, and reaches the other modules as a message.
