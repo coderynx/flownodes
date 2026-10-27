@@ -146,6 +146,14 @@ _Avoid_: Auth, IAM, accounts
 
 ### Operation
 
+**Installation**:
+One Flownodes deployment, made of one or more Silos that share a Registry, an Engine and an Identity. Each Installation has a permanent identifier that it generates when it first starts.
+_Avoid_: Cluster, host, instance, site
+
+**Control Center**:
+A separate, optional application that manages one or more Installations from one place and hosts the apps built for a domain. An Installation works fully without it.
+_Avoid_: Fleet manager, console, portal, hub
+
 **Silo**:
 One running Flownodes server process. A Raspberry Pi deployment has one Silo; an HA deployment has several.
 _Avoid_: Node, instance, server
@@ -154,22 +162,30 @@ _Avoid_: Node, instance, server
 A person who can sign in to an installation and hold roles in it.
 _Avoid_: Account, principal, member, login
 
+**Service Account**:
+An identity for a program, such as a Control Center, that signs in to an Installation and holds roles in it. It never signs in through a browser and never holds the Administrator role.
+_Avoid_: Bot, machine user, client, API user
+
 **Role Grant**:
-A User holding the Operator or Engineer role in one Namespace, or the Administrator role installation-wide.
+A User or Service Account holding the Viewer, Operator or Engineer role in one Namespace, or a User holding the Administrator role installation-wide.
 _Avoid_: Role binding, membership, permission
 
 **Personal Access Token**:
 A long-lived secret a User creates to sign in without a browser, such as from a script, with an optional expiry. It is exchanged for short-lived access tokens, shown once when created, and revoked at once when its User is disabled or deleted.
-_Avoid_: API key, API token, service account
+_Avoid_: API key, API token
 
 **Operator**:
 A role within a Namespace whose holder watches live state, acknowledges Alarms, writes Data Points and invokes Actions, without changing configuration.
-_Avoid_: User, viewer
+_Avoid_: User
+
+**Viewer**:
+A role within a Namespace whose holder sees its configuration, live state and Alarms but changes nothing.
+_Avoid_: Reader, observer, guest
 
 **Engineer**:
 A role within a Namespace whose holder configures its Connections, Secrets, Asset Types, Assets, Device attachments and Flows. It does not include the Operator's rights: a User who needs both holds both Role Grants.
 _Avoid_: Developer, user
 
 **Administrator**:
-An installation-wide role whose holder creates Namespaces and grants Operator and Engineer roles in them.
+An installation-wide role whose holder creates Namespaces and grants Viewer, Operator and Engineer roles in them.
 _Avoid_: Admin, superuser, root
