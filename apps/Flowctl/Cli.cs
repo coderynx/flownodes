@@ -140,7 +140,8 @@ internal sealed class Cli
 
     private Command Get()
     {
-        var kind = new Argument<string>("kind") { Description = "The Kind, such as namespace, or integrations." };
+        var kind = new Argument<string>("kind")
+            { Description = "The Kind, such as namespace, integrations or installation." };
         var name = new Argument<string?>("name")
         {
             Description = "The name of one Resource; every Resource of the Kind when omitted.",
@@ -156,6 +157,11 @@ internal sealed class Cli
             }
 
             var one = parse.GetValue(name);
+            if (Routes.IsInstallation(parse.GetValue(kind)!))
+            {
+                return await ShowInstallationAsync(http, one, parse.GetValue(_output) ?? Table, cancellationToken);
+            }
+
             if (Routes.IsIntegrations(parse.GetValue(kind)!))
             {
                 return await ShowIntegrationsAsync(http, one, parse.GetValue(_output) ?? Table, cancellationToken);
@@ -576,6 +582,38 @@ internal sealed class Cli
             "yaml" => await WriteAsync(string.Join($"{Environment.NewLine}---{Environment.NewLine}", yamlPages)),
             "json" => await WriteAsync(JsonSerializer.Serialize(merged, Indented)),
             _ => await TableAsync(table, merged)
+        };
+    }
+
+    private async Task<int> ShowInstallationAsync(
+        HttpClient http,
+        string? name,
+        string output,
+        CancellationToken cancellationToken)
+    {
+        if (name is not null)
+        {
+            await _context.Error.WriteLineAsync("error: The Installation has no name; give none.");
+
+            return 1;
+        }
+
+        var response = await GetAsync(http, Routes.Installation, MediaTypes.Json, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return await _printer.ProblemAsync(response, cancellationToken);
+        }
+
+        var text = await response.Content.ReadAsStringAsync(cancellationToken);
+        using var body = JsonDocument.Parse(text);
+        var id = Printer.Text(body.RootElement, "id")!;
+        var version = Printer.Text(body.RootElement, "version")!;
+
+        return output switch
+        {
+            "json" => await WriteAsync(text.TrimEnd()),
+            "yaml" => await WriteAsync($"id: {id}{Environment.NewLine}version: {JsonSerializer.Serialize(version)}"),
+            _ => await TableAsync(_ => _printer.TableAsync(["ID", "VERSION"], [[id, version]]), body.RootElement)
         };
     }
 

@@ -6,6 +6,8 @@ internal static class Routes
     private const string Engine = "api/v1/engine";
     private const string Namespaces = "namespaces";
     public static string Integrations => "api/v1/engine/integrations";
+    public static string Installation => "api/v1/engine/installation";
+    public static bool IsInstallation(string kind) => kind.ToLowerInvariant() is "installation" or "installations";
     public static bool IsIntegrations(string kind) => kind.ToLowerInvariant() is "integration" or "integrations";
 
     public static string Collection(string kind, string @namespace)

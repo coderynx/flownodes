@@ -5,12 +5,14 @@ using Engine.Application.Alarms;
 using Engine.Application.Assets;
 using Engine.Application.Authorization;
 using Engine.Application.Devices;
+using Engine.Application.Installations;
 using Engine.Application.Integrations;
 using Engine.Infrastructure.Alarms;
 using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Authorization;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.Devices;
+using Engine.Infrastructure.Installations;
 using Engine.Infrastructure.Integrations;
 using Engine.Infrastructure.Namespaces;
 using Engine.Infrastructure.Orleans;
@@ -79,6 +81,10 @@ public static class DependencyInjection
 
         builder.Services.AddHostedService(_ => new OrleansSchemaInitializer(clusteringConnection));
         builder.Services.AddSingleton(NpgsqlDataSource.Create(storageConnection));
+        builder.Services.AddSingleton<StoredInstallation>();
+        builder.Services.AddSingleton<IInstallationIdentity>(services =>
+            services.GetRequiredService<StoredInstallation>());
+        builder.Services.AddHostedService(services => services.GetRequiredService<StoredInstallation>());
         builder.Services.AddHostedService<AlarmSchema>();
         builder.Services.AddHostedService<AlarmRetention>();
         builder.Services.AddSingleton<IAlarmHistory, PostgresAlarmHistory>();

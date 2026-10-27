@@ -6,7 +6,9 @@ using Core.Contracts.Identity;
 using Core.Contracts.Resources;
 using Engine.Application.Authorization;
 using Engine.Application.Bootstrap;
+using Engine.Application.Installations;
 using Engine.Application.Integrations;
+using Engine.Domain.Installations;
 using Engine.Domain.Integrations;
 using Engine.Infrastructure.Authorization;
 using Engine.Infrastructure.Messaging;
@@ -25,6 +27,7 @@ namespace Engine.IntegrationTests;
 /// </summary>
 public sealed class EngineApp : IAsyncDisposable
 {
+    public static readonly Guid InstallationId = Guid.NewGuid();
     private readonly WebApplication _app;
     private readonly TestIdentity _identity;
     private readonly Dictionary<Guid, long> _seqs = [];
@@ -60,6 +63,7 @@ public sealed class EngineApp : IAsyncDisposable
             {
                 services.AddSingleton<IRoleGrants, GrainRoleGrants>();
                 services.AddSingleton<IInstalledIntegrations, NoIntegrations>();
+                services.AddSingleton<IInstallationIdentity, FixedInstallation>();
             });
         });
 
@@ -117,9 +121,8 @@ public sealed class EngineApp : IAsyncDisposable
     public HttpClient SignedIn(Guid userId)
     {
         var client = _app.GetTestClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-            "Bearer",
-            _identity.IssueToken(userId));
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", _identity.IssueToken(userId));
 
         return client;
     }
@@ -149,6 +152,11 @@ public sealed class EngineApp : IAsyncDisposable
         listener.Stop();
 
         return port;
+    }
+
+    private sealed class FixedInstallation : IInstallationIdentity
+    {
+        public Installation Current { get; } = new(InstallationId, "0.1.0");
     }
 
     private sealed class NoIntegrations : IInstalledIntegrations
