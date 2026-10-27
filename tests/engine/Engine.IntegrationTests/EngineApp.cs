@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
+using System.Text.Json;
 using Core.Contracts.Identity;
+using Core.Contracts.Resources;
 using Engine.Application.Authorization;
 using Engine.Application.Bootstrap;
 using Engine.Application.Integrations;
@@ -82,9 +84,26 @@ public sealed class EngineApp : IAsyncDisposable
 
     public async Task ApplyAsync(string @namespace, string kind, string name, string spec, long seq)
     {
-        var grain = Grains.GetGrain<Infrastructure.Namespaces.INamespaceGrain>(@namespace);
-        await grain.ApplyAsync(EngineCluster.NamespaceUid, 1);
-        await grain.ResourceAppliedAsync(kind, name, EngineCluster.ResourceUid(kind, name), 1, seq, spec);
+        await NamespaceMessageHandler.Handle(
+            new ResourceApplied(
+                @namespace,
+                "Namespace",
+                @namespace,
+                EngineCluster.NamespaceUid,
+                1,
+                1,
+                JsonDocument.Parse("{}").RootElement),
+            Grains);
+        await NamespaceMessageHandler.Handle(
+            new ResourceApplied(
+                @namespace,
+                kind,
+                name,
+                EngineCluster.ResourceUid(kind, name),
+                1,
+                seq,
+                JsonDocument.Parse(spec).RootElement),
+            Grains);
     }
 
     public async Task<(Guid Id, HttpClient Client)> MemberAsync(string role, string @namespace)

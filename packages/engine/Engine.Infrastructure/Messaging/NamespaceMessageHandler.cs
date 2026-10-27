@@ -14,10 +14,13 @@ public static class NamespaceMessageHandler
     private const string NamespaceKind = "Namespace";
     private const string ConnectionKind = "Connection";
     private const string DeviceKind = "Device";
+    private const string AssetTypeKind = "AssetType";
+    private const string AssetKind = "Asset";
 
     /// <summary>
-    /// Handles a Resource applied. A Namespace is applied to its grain; a Connection or Device goes through
-    /// its Namespace grain to its own grain; any other Resource only advances the Namespace grain's sequence number.
+    /// Handles a Resource applied. A Namespace is applied to its grain; a Connection, Device, Asset Type or Asset goes
+    /// through its Namespace grain to its own grain; any other Resource only advances the Namespace grain's sequence
+    /// number.
     /// </summary>
     /// <param name="message">The Registry's message.</param>
     /// <param name="grains">Orleans' grain factory.</param>
@@ -26,7 +29,8 @@ public static class NamespaceMessageHandler
         message.Kind switch
         {
             NamespaceKind => grains.GetGrain<INamespaceGrain>(message.Name).ApplyAsync(message.Uid, message.Seq),
-            ConnectionKind or DeviceKind => grains.GetGrain<INamespaceGrain>(message.Namespace)
+            ConnectionKind or DeviceKind or AssetTypeKind or AssetKind => grains
+                .GetGrain<INamespaceGrain>(message.Namespace)
                 .ResourceAppliedAsync(
                     message.Kind,
                     message.Name,
@@ -38,8 +42,9 @@ public static class NamespaceMessageHandler
         };
 
     /// <summary>
-    /// Handles a Resource deleted. A Namespace is deleted from its grain; any other Resource only advances its
-    /// Namespace grain's sequence number.
+    /// Handles a Resource deleted. A Namespace is deleted from its grain; a Connection, Device, Asset Type or Asset
+    /// goes through its Namespace grain to its own grain; any other Resource only advances its Namespace grain's
+    /// sequence number.
     /// </summary>
     /// <param name="message">The Registry's message.</param>
     /// <param name="grains">Orleans' grain factory.</param>
@@ -48,7 +53,8 @@ public static class NamespaceMessageHandler
         message.Kind switch
         {
             NamespaceKind => grains.GetGrain<INamespaceGrain>(message.Name).DeleteAsync(message.Uid, message.Seq),
-            ConnectionKind or DeviceKind => grains.GetGrain<INamespaceGrain>(message.Namespace)
+            ConnectionKind or DeviceKind or AssetTypeKind or AssetKind => grains
+                .GetGrain<INamespaceGrain>(message.Namespace)
                 .ResourceDeletedAsync(message.Kind, message.Name, message.Uid, message.Seq),
             _ => grains.GetGrain<INamespaceGrain>(message.Namespace).ObserveAsync(message.Seq)
         };

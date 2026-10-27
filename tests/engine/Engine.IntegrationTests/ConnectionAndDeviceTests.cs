@@ -122,7 +122,7 @@ public sealed class ConnectionAndDeviceTests
     public async Task Device_ShouldTurnBadThenRecover_WhenItsConnectionIsLostAndComesBack()
     {
         // Arrange
-        await using var engine = await EngineCluster.StartAsync();
+        await using var engine = await EngineCluster.StartAsync(reconnectBackoff: TimeSpan.FromSeconds(3));
         await engine.ApplyAsync("acme", "Connection", "sim", Simulator, 2);
         await engine.ApplyAsync("acme", "Device", "t1", Thermometer(1), 3);
         await TemperatureAsync(engine, "t1", reading => reading.Quality == "good" && reading.Value is not null);
