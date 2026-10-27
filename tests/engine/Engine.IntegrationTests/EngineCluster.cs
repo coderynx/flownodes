@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Core.Contracts.Resources;
 using Engine.Application.Alarms;
 using Engine.Application.Assets;
 using Engine.Application.Devices;
@@ -6,6 +8,7 @@ using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.Devices;
 using Engine.Infrastructure.Integrations;
+using Engine.Infrastructure.Messaging;
 using Engine.Infrastructure.Namespaces;
 using Engine.Infrastructure.Resources;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +26,7 @@ public sealed class EngineCluster : IAsyncDisposable
 {
     public static readonly Guid NamespaceUid = Guid.NewGuid();
     public static readonly TimeSpan ReminderPeriod = TimeSpan.FromSeconds(1);
+    private static readonly JsonElement Empty = JsonDocument.Parse("{}").RootElement;
     private readonly TestCluster _cluster;
 
     private EngineCluster(TestCluster cluster)
@@ -36,12 +40,20 @@ public sealed class EngineCluster : IAsyncDisposable
     public IAlarmRuntime Alarms => _cluster.GetSiloServiceProvider().GetRequiredService<IAlarmRuntime>();
     public RecordingRegistry Registry => _cluster.GetSiloServiceProvider().GetRequiredService<RecordingRegistry>();
 
-    public static async Task<EngineCluster> StartAsync(TimeSpan? resyncPeriod = null, string? alarmDatabase = null)
+    public static async Task<EngineCluster> StartAsync(
+        TimeSpan? resyncPeriod = null,
+        string? alarmDatabase = null,
+        TimeSpan? reconnectBackoff = null)
     {
         var builder = new TestClusterBuilder(1);
         if (alarmDatabase is not null)
         {
             builder.Properties["AlarmDatabase"] = alarmDatabase;
+        }
+
+        if (reconnectBackoff is not null)
+        {
+            builder.Properties["ReconnectBackoff"] = reconnectBackoff.Value.ToString();
         }
 
         builder.Properties["ResyncPeriod"] = (resyncPeriod ?? TimeSpan.FromMinutes(15)).ToString();
@@ -63,13 +75,25 @@ public sealed class EngineCluster : IAsyncDisposable
         long seq,
         long generation = 1)
     {
-        var grain = Namespace(@namespace);
-        await grain.ApplyAsync(NamespaceUid, 1);
-        await grain.ResourceAppliedAsync(kind, name, ResourceUid(kind, name), generation, seq, spec);
+        await NamespaceMessageHandler.Handle(
+            new ResourceApplied(@namespace, "Namespace", @namespace, NamespaceUid, 1, 1, Empty),
+            _cluster.GrainFactory);
+        await NamespaceMessageHandler.Handle(
+            new ResourceApplied(
+                @namespace,
+                kind,
+                name,
+                ResourceUid(kind, name),
+                generation,
+                seq,
+                JsonDocument.Parse(spec).RootElement),
+            _cluster.GrainFactory);
     }
 
     public Task DeleteAsync(string @namespace, string kind, string name, long seq) =>
-        Namespace(@namespace).ResourceDeletedAsync(kind, name, ResourceUid(kind, name), seq);
+        NamespaceMessageHandler.Handle(
+            new ResourceDeleted(@namespace, kind, name, ResourceUid(kind, name), 1, seq),
+            _cluster.GrainFactory);
 
     public static Guid ResourceUid(string kind, string name) =>
         new(System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes($"{kind}/{name}")));
@@ -126,6 +150,9 @@ public sealed class EngineCluster : IAsyncDisposable
             var resyncPeriod = TimeSpan.Parse(
                 siloBuilder.Configuration["ResyncPeriod"]!,
                 System.Globalization.CultureInfo.InvariantCulture);
+            var reconnectBackoff = siloBuilder.Configuration["ReconnectBackoff"] is { } given
+                ? TimeSpan.Parse(given, System.Globalization.CultureInfo.InvariantCulture)
+                : TimeSpan.FromMilliseconds(100);
 
             siloBuilder.AddMemoryGrainStorageAsDefault();
             siloBuilder.UseInMemoryReminderService();
@@ -147,8 +174,8 @@ public sealed class EngineCluster : IAsyncDisposable
                 services.Configure<ConnectionGrainOptions>(options =>
                 {
                     options.StatusInterval = TimeSpan.FromMilliseconds(50);
-                    options.InitialBackoff = TimeSpan.FromMilliseconds(100);
-                    options.MaxBackoff = TimeSpan.FromMilliseconds(400);
+                    options.InitialBackoff = reconnectBackoff;
+                    options.MaxBackoff = reconnectBackoff * 4;
                     options.CallTimeout = TimeSpan.FromSeconds(5);
                 });
                 services.AddSingleton<RecordingStatus>();
