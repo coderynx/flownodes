@@ -94,7 +94,7 @@ jobs:
           fetch-depth: 0
 
       - name: No secrets in history
-        run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git --redact --verbose /repo
+        run: scripts/gitleaks.sh
 
   # Runs beside the tests: ReSharper reads the project model, so it needs only a restore.
   layout:
