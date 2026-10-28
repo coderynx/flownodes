@@ -1,7 +1,22 @@
 #!/usr/bin/env bash
-# Applies the C# layout standard (ADR-0022) to a commit's staged files. The first build of a clone enables it
-# (Directory.Build.targets sets `core.hooksPath` to `.githooks`).
+# Rejects a commit whose staged changes hold a secret, then applies the C# layout standard (ADR-0022) to its staged
+# files. The first build of a clone enables it (Directory.Build.targets sets `core.hooksPath` to `.githooks`).
 set -euo pipefail
+
+status=0
+scripts/gitleaks.sh --pre-commit --staged || status=$?
+case $status in
+    0) ;;
+    2)
+        echo "Remove the secrets above from the staged changes before committing." >&2
+        exit 1
+        ;;
+    3) echo "Skipping the secret scan: install gitleaks or start Docker to enable it (CONTRIBUTING.md)." >&2 ;;
+    *)
+        echo "The secret scan failed with exit code $status." >&2
+        exit 1
+        ;;
+esac
 
 staged=()
 while IFS= read -r file; do
