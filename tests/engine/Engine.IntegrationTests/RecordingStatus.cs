@@ -6,7 +6,8 @@ namespace Engine.IntegrationTests;
 
 public sealed class RecordingStatus : IStatusReporter
 {
-    private readonly ConcurrentDictionary<string, JsonElement> _latest = new();
+    private readonly ConcurrentDictionary<string, (long Seq, JsonElement Status)> _latest = new();
+    private readonly ConcurrentQueue<(string Key, long Seq, long Generation, JsonElement Status)> _reports = new();
 
     public Task ReportAsync(
         string @namespace,
@@ -17,13 +18,21 @@ public sealed class RecordingStatus : IStatusReporter
         long statusSeq,
         JsonElement status)
     {
-        _latest[$"{@namespace}/{kind}/{name}"] = status.Clone();
+        var key = $"{@namespace}/{kind}/{name}";
+        var report = status.Clone();
+        _reports.Enqueue((key, statusSeq, observedGeneration, report));
+        _latest.AddOrUpdate(key, (statusSeq, report), (_, held) => statusSeq > held.Seq ? (statusSeq, report) : held);
 
         return Task.CompletedTask;
     }
 
     public JsonElement? Latest(string @namespace, string kind, string name) =>
-        _latest.TryGetValue($"{@namespace}/{kind}/{name}", out var status) ? status : null;
+        _latest.TryGetValue($"{@namespace}/{kind}/{name}", out var held) ? held.Status : null;
+
+    public IReadOnlyList<(long Seq, long Generation)> Reports(string @namespace, string kind, string name) =>
+        _reports.Where(report => report.Key == $"{@namespace}/{kind}/{name}")
+            .Select(report => (report.Seq, report.Generation))
+            .ToList();
 
     public Task<JsonElement> WaitForAsync(
         string @namespace,

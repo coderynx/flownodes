@@ -15,6 +15,8 @@ internal abstract class ResourceGrain(
     private string? _lastStatus;
     private DateTimeOffset _lastReport = DateTimeOffset.MinValue;
     private IDisposable? _pendingReport;
+    private bool _flushing;
+    private bool _flushAgain;
     protected ResourceState State => state.State;
     protected string Namespace => this.GetPrimaryKeyString().Split('/', 2)[0];
     protected string ResourceName => this.GetPrimaryKeyString().Split('/', 2)[1];
@@ -90,13 +92,38 @@ internal abstract class ResourceGrain(
 
     private async Task FlushStatusAsync()
     {
+        if (_flushing)
+        {
+            _flushAgain = true;
+
+            return;
+        }
+
+        _flushing = true;
+        try
+        {
+            do
+            {
+                _flushAgain = false;
+                await FlushOnceAsync();
+            } while (_flushAgain);
+        }
+        finally
+        {
+            _flushing = false;
+        }
+    }
+
+    private async Task FlushOnceAsync()
+    {
         if (!IsLive)
         {
             return;
         }
 
         var status = BuildStatus();
-        var text = $"{State.Generation}:{status.GetRawText()}";
+        var generation = State.Generation;
+        var text = $"{generation}:{status.GetRawText()}";
         if (text == _lastStatus)
         {
             return;
@@ -104,8 +131,9 @@ internal abstract class ResourceGrain(
 
         _lastStatus = text;
         _lastReport = DateTimeOffset.UtcNow;
-        State.StatusSeq++;
+        var uid = State.Uid;
+        var statusSeq = ++State.StatusSeq;
         await state.WriteStateAsync();
-        await reporter.ReportAsync(Namespace, kind, ResourceName, State.Uid, State.Generation, State.StatusSeq, status);
+        await reporter.ReportAsync(Namespace, kind, ResourceName, uid, generation, statusSeq, status);
     }
 }
