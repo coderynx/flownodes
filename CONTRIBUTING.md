@@ -35,7 +35,7 @@ The .NET SDK installs tools into `~/.dotnet/tools`; add it to your `PATH` if `fl
 
 The first build sets `core.hooksPath` to `.githooks`: a pre-commit hook rejects staged changes that hold a secret and formats your staged C# files, and a commit-msg hook rejects messages that link an agent session or that are not Conventional Commits.
 
-The secret scan runs [gitleaks](https://github.com/gitleaks/gitleaks) at the version pinned in `scripts/gitleaks.sh`, which CI also uses to scan the whole history. It uses a local `gitleaks` when one is installed and the pinned Docker image otherwise; with neither, it prints a message and skips the scan. To scan without Docker, install gitleaks with `brew install gitleaks` on macOS, or download the release for your platform from [the gitleaks releases](https://github.com/gitleaks/gitleaks/releases) and put it on your `PATH`.
+The secret scan runs [gitleaks](https://github.com/gitleaks/gitleaks) at the version pinned in `scripts/gitleaks.sh`, which CI also uses to scan the whole history. It uses a local `gitleaks` of that version when one is installed and the pinned Docker image otherwise; with neither, it prints a message and skips the scan. To scan without Docker, install gitleaks with `brew install gitleaks` on macOS, or download the release for your platform from [the gitleaks releases](https://github.com/gitleaks/gitleaks/releases) and put it on your `PATH`.
 
 ## Coding standards
 
