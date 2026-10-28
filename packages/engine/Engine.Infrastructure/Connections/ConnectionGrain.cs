@@ -180,6 +180,11 @@ internal sealed class ConnectionGrain(
         return Task.CompletedTask;
     }
 
+    public Task RuntimeEventAsync(long runtime, string device, string name, string payload, DateTimeOffset timestamp) =>
+        runtime == _runtimeId && _devices.ContainsKey(device)
+            ? Grain(device).EventReportedAsync(name, payload, timestamp)
+            : Task.CompletedTask;
+
     public Task RuntimeDeviceStateAsync(long runtime, string device, int deviceState)
     {
         if (runtime != _runtimeId)

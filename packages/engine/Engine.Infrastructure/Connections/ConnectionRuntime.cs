@@ -161,6 +161,14 @@ internal sealed class ConnectionRuntime(
             }
         }
 
+        public void ReportEvent(string device, string name, JsonElement payload, DateTimeOffset timestamp)
+        {
+            if (!Ended)
+            {
+                events.Event(device, name, payload.Clone(), timestamp);
+            }
+        }
+
         public void ReportDeviceState(string device, DeviceState state)
         {
             if (!Ended)

@@ -58,10 +58,18 @@ public sealed record DataPointDefinition(
 public sealed record ActionDefinition(string Name, bool SafeToRepeat = false);
 
 /// <summary>
+/// An Event a Device can report, which can trigger a Flow.
+/// </summary>
+/// <param name="Name">A flat DNS-label name, such as <c>pressed</c>.</param>
+public sealed record EventDefinition(string Name);
+
+/// <summary>
 /// What a Device offers, derived from its Spec by its Device Type (ADR-0010).
 /// </summary>
 /// <param name="DataPoints">Its Data Points.</param>
 /// <param name="Actions">Its Actions.</param>
+/// <param name="Events">Its Events.</param>
 public sealed record DeviceSurface(
     IReadOnlyList<DataPointDefinition> DataPoints,
-    IReadOnlyList<ActionDefinition> Actions);
+    IReadOnlyList<ActionDefinition> Actions,
+    IReadOnlyList<EventDefinition> Events);

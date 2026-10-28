@@ -39,7 +39,7 @@ public sealed record AlarmCondition(
             declaration.GetProperty("dataPoint").GetString()!,
             declaration.GetProperty("operator").GetString()!,
             declaration.GetProperty("value").GetRawText(),
-            declaration.TryGetProperty("for", out var duration) ? Duration(duration.GetString()!) : null,
+            declaration.TryGetProperty("for", out var duration) ? Durations.Parse(duration.GetString()!) : null,
             declaration.TryGetProperty("deadband", out var deadband) ? deadband.GetDouble() : null,
             Enum.Parse<AlarmPriority>(declaration.GetProperty("priority").GetString()!, true),
             declaration.GetProperty("message").GetString()!);
@@ -49,20 +49,7 @@ public sealed record AlarmCondition(
     /// </summary>
     /// <param name="reading">The value of the Data Point.</param>
     /// <returns><see langword="true"/> when the comparison holds.</returns>
-    public bool Holds(JsonElement reading)
-    {
-        using var threshold = JsonDocument.Parse(Value);
-
-        return Operator switch
-        {
-            "==" => Compare(reading, threshold.RootElement) == 0,
-            "!=" => Compare(reading, threshold.RootElement) != 0,
-            "<" => Compare(reading, threshold.RootElement) < 0,
-            "<=" => Compare(reading, threshold.RootElement) <= 0,
-            ">" => Compare(reading, threshold.RootElement) > 0,
-            _ => Compare(reading, threshold.RootElement) >= 0
-        };
-    }
+    public bool Holds(JsonElement reading) => new Comparison(Operator, Value).Holds(reading);
 
     /// <summary>
     /// Tells whether a value has moved far enough from the threshold to clear a live Alarm: out of the comparison
@@ -84,28 +71,6 @@ public sealed record AlarmCondition(
         {
             "<" or "<=" => distance >= margin,
             _ => distance <= -margin
-        };
-    }
-
-    private static int Compare(JsonElement reading, JsonElement threshold) =>
-        threshold.ValueKind switch
-        {
-            JsonValueKind.Number => reading.GetDouble().CompareTo(threshold.GetDouble()),
-            JsonValueKind.String => string.CompareOrdinal(reading.GetString(), threshold.GetString()),
-            _ => reading.GetBoolean() == threshold.GetBoolean() ? 0 : 1
-        };
-
-    private static TimeSpan Duration(string text)
-    {
-        var digits = text.TakeWhile(char.IsDigit).Count();
-        var amount = double.Parse(text[..digits], System.Globalization.CultureInfo.InvariantCulture);
-
-        return text[digits..] switch
-        {
-            "ms" => TimeSpan.FromMilliseconds(amount),
-            "s" => TimeSpan.FromSeconds(amount),
-            "m" => TimeSpan.FromMinutes(amount),
-            _ => TimeSpan.FromHours(amount)
         };
     }
 }

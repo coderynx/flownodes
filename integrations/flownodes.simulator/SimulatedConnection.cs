@@ -8,6 +8,7 @@ internal sealed class SimulatedConnection(TimeProvider time, int units, IConnect
 {
     public const string Thermometer = "Thermometer";
     public const string Switch = "Switch";
+    public const string Toggled = "toggled";
     private const double InitialTemperature = 20;
     private readonly ConcurrentDictionary<string, DeviceBinding> _devices = new();
     private readonly ConcurrentDictionary<string, bool> _switches = new();
@@ -70,6 +71,7 @@ internal sealed class SimulatedConnection(TimeProvider time, int units, IConnect
                 var on = !_switches.GetValueOrDefault(device);
                 _switches[device] = on;
                 Report(device, "on", JsonSerializer.SerializeToElement(on));
+                sink.ReportEvent(device, Toggled, JsonSerializer.SerializeToElement(new { on }), time.GetUtcNow());
 
                 return Task.FromResult(JsonSerializer.SerializeToElement(new { on }));
             default:

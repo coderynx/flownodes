@@ -32,16 +32,20 @@ internal sealed class InstalledIntegrations(
                         deviceType.Name,
                         address => Problems(deviceType.Address, address),
                         config => Problems(deviceType.Config, config),
-                        (address, config) =>
-                        [
-                            .. deviceType.Surface(address, config)
-                                .DataPoints.Select(dataPoint => new DeviceDataPointSchema(
-                                    dataPoint.Name,
-                                    dataPoint.Type.ToString().ToLowerInvariant(),
-                                    dataPoint.Writable))
-                        ]))
+                        (address, config) => Schema(deviceType.Surface(address, config))))
                 ])
             : null;
+
+    private static DeviceSurfaceSchema Schema(DeviceSurface surface) =>
+        new(
+            [
+                .. surface.DataPoints.Select(dataPoint => new DeviceDataPointSchema(
+                    dataPoint.Name,
+                    dataPoint.Type.ToString().ToLowerInvariant(),
+                    dataPoint.Writable))
+            ],
+            [.. surface.Actions.Select(action => action.Name)],
+            [.. surface.Events.Select(@event => @event.Name)]);
 
     public Task StartAsync(CancellationToken cancellationToken)
     {

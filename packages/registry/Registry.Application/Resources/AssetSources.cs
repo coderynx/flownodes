@@ -10,6 +10,8 @@ namespace Registry.Application.Resources;
 /// </summary>
 internal sealed class AssetSources(IIntegrationSchemas integrations)
 {
+    private readonly DeviceSurfaces _surfaces = new(integrations);
+
     private static readonly string[] Operations = ["sum", "min", "max", "average"];
 
     private static Dictionary<string, Declaration> First(IEnumerable<Declaration> declarations) =>
@@ -47,7 +49,7 @@ internal sealed class AssetSources(IIntegrationSchemas integrations)
         var own = DataPointDeclarations.Declarations(spec);
         var effective = First([.. inherited, .. own]);
         var overrides = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
-        var context = new Context(@namespace, integrations);
+        var context = new Context(@namespace, _surfaces);
 
         foreach (var error in ValidateOverrides(spec, inherited, effective, overrides, context))
         {
@@ -380,47 +382,9 @@ internal sealed class AssetSources(IIntegrationSchemas integrations)
     private static string? Text(JsonElement spec, string name) =>
         spec.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
 
-    private sealed record Context(NamespaceSnapshot Namespace, IIntegrationSchemas Integrations)
+    private sealed record Context(NamespaceSnapshot Namespace, DeviceSurfaces Surfaces)
     {
-        public IReadOnlyList<DeviceDataPointSchema>? Surface(string deviceName)
-        {
-            if (Namespace.Find(DeviceKind.KindName, deviceName) is not { } device ||
-                DeviceType(device) is not { } deviceType)
-            {
-                return null;
-            }
-
-            if (!device.TryGetProperty("address", out var address))
-            {
-                return null;
-            }
-
-            var config = device.TryGetProperty("config", out var given) ? given : ConnectionKind.EmptyObject;
-            if (deviceType.ValidateAddress(address).Count > 0 || deviceType.ValidateConfig(config).Count > 0)
-            {
-                return null;
-            }
-
-            return deviceType.DataPoints(address, config);
-        }
-
-        private DeviceTypeSchema? DeviceType(JsonElement device)
-        {
-            if (Text(device, "connection") is not { } connectionName ||
-                Namespace.Find(ConnectionKind.KindName, connectionName) is not { } connection)
-            {
-                return null;
-            }
-
-            if (Text(connection, "integration") is not { } integrationId)
-            {
-                return null;
-            }
-
-            var typeName = Text(device, "type");
-
-            return Integrations.Find(integrationId)
-                ?.DeviceTypes.FirstOrDefault(candidate => candidate.Name == typeName);
-        }
+        public IReadOnlyList<DeviceDataPointSchema>? Surface(string deviceName) =>
+            Surfaces.Find(Namespace, deviceName)?.DataPoints;
     }
 }

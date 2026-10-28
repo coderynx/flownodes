@@ -32,6 +32,7 @@ public static class DependencyInjection
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IResourceKind, DeviceKind>());
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IResourceKind, AssetTypeKind>());
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IResourceKind, AssetKind>());
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IResourceKind, FlowKind>());
         builder.Services.TryAddSingleton(services => new KindCatalog(services.GetServices<IResourceKind>()));
         builder.Services.TryAddSingleton(TimeProvider.System);
         Core.Application.Bootstrap.DependencyInjection.AddAccessChecks<IApplicationDbContext>(builder);
