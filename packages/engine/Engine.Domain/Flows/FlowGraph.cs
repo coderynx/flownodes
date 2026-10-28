@@ -6,20 +6,18 @@ namespace Engine.Domain.Flows;
 /// <summary>
 /// The graph of Nodes a Flow's Spec describes, as one Generation of it runs.
 /// </summary>
-public sealed class FlowDefinition
+public sealed class FlowGraph
 {
-    /// <summary>
-    /// How many Flow Executions may run at once, and how many triggers may wait, in <c>queue</c> and
-    /// <c>parallel</c> mode.
-    /// </summary>
-    public const int MaxConcurrent = 10;
-
+    private const int DefaultConcurrent = 10;
+    private const int DefaultSteps = 1000;
+    private const int DefaultVariableBytes = 64 * 1024;
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
     private readonly Dictionary<string, FlowNode> _nodes;
 
-    private FlowDefinition(ExecutionMode mode, Dictionary<string, FlowNode> nodes)
+    private FlowGraph(ExecutionMode mode, FlowLimits limits, Dictionary<string, FlowNode> nodes)
     {
         Mode = mode;
+        Limits = limits;
         _nodes = nodes;
     }
 
@@ -27,6 +25,11 @@ public sealed class FlowDefinition
     /// Gets the Flow's Execution Mode.
     /// </summary>
     public ExecutionMode Mode { get; }
+
+    /// <summary>
+    /// Gets the Flow's limits, each defaulted when its Spec leaves it out.
+    /// </summary>
+    public FlowLimits Limits { get; }
 
     /// <summary>
     /// Gets the Flow's triggers, in the order the Spec lists them.
@@ -38,30 +41,36 @@ public sealed class FlowDefinition
     /// </summary>
     /// <param name="spec">The Flow's Spec.</param>
     /// <returns>The definition.</returns>
-    public static FlowDefinition Create(JsonElement spec)
+    public static FlowGraph Create(JsonElement spec)
     {
         var mode = spec.TryGetProperty("executionMode", out var given)
             ? Enum.Parse<ExecutionMode>(given.GetString()!, true)
             : ExecutionMode.Single;
         var nodes = spec.GetProperty("nodes").EnumerateArray().Select(Node).ToDictionary(node => node.Id);
+        var limits = spec.TryGetProperty("limits", out var declared) ? declared : default;
 
-        return new FlowDefinition(mode, nodes);
+        return new FlowGraph(
+            mode,
+            new FlowLimits(
+                Limit(limits, "executions") ?? DefaultConcurrent,
+                Limit(limits, "steps") ?? DefaultSteps,
+                Limit(limits, "variableBytes") ?? DefaultVariableBytes),
+            nodes);
     }
 
     /// <summary>
     /// Decides what one trigger does, given the Execution Mode and what is already running.
     /// </summary>
-    /// <param name="mode">The Flow's Execution Mode.</param>
-    /// <param name="running">How many of its Flow Executions are running or waiting.</param>
+    /// <param name="running">How many of the Flow's Executions are running or waiting.</param>
     /// <param name="queued">How many triggers already wait in its queue.</param>
     /// <returns>What to do with the trigger.</returns>
-    public static FlowAdmission Admit(ExecutionMode mode, int running, int queued) =>
-        mode switch
+    public FlowAdmission Admit(int running, int queued) =>
+        Mode switch
         {
             _ when running == 0 => FlowAdmission.Start,
             ExecutionMode.Restart => FlowAdmission.Restart,
-            ExecutionMode.Queue when queued < MaxConcurrent => FlowAdmission.Queue,
-            ExecutionMode.Parallel when running < MaxConcurrent => FlowAdmission.Start,
+            ExecutionMode.Queue when queued < Limits.Executions => FlowAdmission.Queue,
+            ExecutionMode.Parallel when running < Limits.Executions => FlowAdmission.Start,
             _ => FlowAdmission.Drop
         };
 
@@ -131,7 +140,7 @@ public sealed class FlowDefinition
         return new CallPolicy(
             Text(node, "error"),
             Duration(node, "timeout") ?? DefaultTimeout,
-            retry.ValueKind == JsonValueKind.Object ? retry.GetProperty("attempts").GetInt32() : 0,
+            retry.ValueKind == JsonValueKind.Object ? retry.GetProperty("times").GetInt32() : 0,
             retry.ValueKind == JsonValueKind.Object ? Duration(retry, "delay") ?? TimeSpan.Zero : TimeSpan.Zero);
     }
 
@@ -156,7 +165,7 @@ public sealed class FlowDefinition
 
     private static Comparison? Comparison(JsonElement node, string field) =>
         node.TryGetProperty(field, out var comparison)
-            ? new Comparison(
+            ? Domain.Comparison.Create(
                 comparison.GetProperty("operator").GetString()!,
                 comparison.GetProperty("value").GetRawText())
             : null;
@@ -169,9 +178,27 @@ public sealed class FlowDefinition
                 Duration(schedule, "maxLateness"))
             : null;
 
+    private static int? Limit(JsonElement limits, string field) =>
+        limits.ValueKind == JsonValueKind.Object && limits.TryGetProperty(field, out var value)
+            ? value.GetInt32()
+            : null;
+
     private static TimeSpan? Duration(JsonElement node, string field) =>
         Text(node, field) is { } text ? Durations.Parse(text) : null;
 
     private static string? Text(JsonElement node, string name) =>
         node.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
 }
+
+/// <summary>
+/// How far one Flow may go (ADR-0015).
+/// </summary>
+/// <param name="Executions">
+/// How many Flow Executions may run at once in <c>parallel</c> mode, and how many triggers may wait in <c>queue</c>
+/// mode.
+/// </param>
+/// <param name="Steps">How many Nodes one Flow Execution may complete before it fails with <c>StepLimit</c>.</param>
+/// <param name="VariableBytes">
+/// How large one Flow Execution's variables may grow, as UTF-8 JSON, before it fails with <c>VariablesTooLarge</c>.
+/// </param>
+public sealed record FlowLimits(int Executions, int Steps, int VariableBytes);

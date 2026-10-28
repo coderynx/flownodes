@@ -8,7 +8,7 @@ namespace Registry.UnitTests.Domain.Resources;
 public sealed class FlowKindTests
 {
     private const string Valid = """
-                                 {"executionMode": "queue", "nodes": [
+                                 {"executionMode": "queue", "limits": {"executions": 3, "steps": 50, "variableBytes": 4096}, "nodes": [
                                    {"id": "hot", "type": "trigger",
                                     "dataPoint": {"asset": "room", "name": "temperature"},
                                     "when": {"operator": ">", "value": 25}, "next": "read"},
@@ -19,7 +19,7 @@ public sealed class FlowKindTests
                                     "next": "read"},
                                    {"id": "manual", "type": "trigger", "next": "read"},
                                    {"id": "read", "type": "read", "dataPoint": {"device": "fan", "name": "on"},
-                                    "into": "fan", "next": "check", "timeout": "5s", "retry": {"attempts": 2, "delay": "1s"}},
+                                    "into": "fan", "next": "check", "timeout": "5s", "retry": {"times": 2, "delay": "1s"}},
                                    {"id": "check", "type": "branch", "if": {"from": "fan.value", "operator": "==", "value": false},
                                     "then": "start", "else": "settle"},
                                    {"id": "start", "type": "write", "dataPoint": {"device": "fan", "name": "on"}, "value": true,
@@ -42,7 +42,7 @@ public sealed class FlowKindTests
     public void Validate_ShouldAcceptTheSpec_WhenItWiresEveryNodeType()
     {
         // Act
-        var errors = new FlowKind(new LampCatalog()).Validate(Widgets.Json(Valid), Snapshot());
+        var errors = new FlowKind(LampCatalog.Surfaces()).Validate(Widgets.Json(Valid), Snapshot());
 
         // Assert
         errors.ShouldBeEmpty();
@@ -50,6 +50,9 @@ public sealed class FlowKindTests
 
     [Theory]
     [InlineData("""{"nodes": [], "extra": 1}""", "spec.extra")]
+    [InlineData("""{"limits": {"steps": 0}, "nodes": [{"id": "a", "type": "trigger"}]}""", "spec.limits.steps")]
+    [InlineData("""{"limits": {"executions": 101}, "nodes": [{"id": "a", "type": "trigger"}]}""", "spec.limits.executions")]
+    [InlineData("""{"limits": {"forever": 1}, "nodes": [{"id": "a", "type": "trigger"}]}""", "spec.limits.forever")]
     [InlineData("""{"nodes": []}""", "spec.nodes")]
     [InlineData("""{}""", "spec.nodes")]
     [InlineData("""{"executionMode": "burst", "nodes": [{"id": "a", "type": "trigger"}]}""", "spec.executionMode")]
@@ -93,8 +96,8 @@ public sealed class FlowKindTests
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "read", "dataPoint": {"asset": "x", "name": "y"}, "timeout": "0s"}]}""",
         "spec.nodes[1].timeout")]
     [InlineData(
-        """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "read", "dataPoint": {"asset": "x", "name": "y"}, "retry": {"attempts": -1}}]}""",
-        "spec.nodes[1].retry.attempts")]
+        """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "read", "dataPoint": {"asset": "x", "name": "y"}, "retry": {"times": -1}}]}""",
+        "spec.nodes[1].retry.times")]
     [InlineData(
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "write", "dataPoint": {"asset": "x", "name": "y"}}]}""",
         "spec.nodes[1]")]
@@ -127,12 +130,15 @@ public sealed class FlowKindTests
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "wait", "for": "1m", "timeout": "1m"}]}""",
         "spec.nodes[1].timeout")]
     [InlineData(
-        """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "wait", "for": "1m", "retry": {"attempts": 1}}]}""",
+        """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "wait", "for": "1m", "retry": {"times": 1}}]}""",
         "spec.nodes[1].retry")]
     public void Validate_ShouldReportThePath_WhenTheSpecIsInvalid(string json, string path)
     {
+        // Arrange
+        var kind = new FlowKind(LampCatalog.Surfaces());
+
         // Act
-        var errors = new FlowKind(new LampCatalog()).Validate(Widgets.Json(json), Snapshot()).ToList();
+        var errors = kind.Validate(Widgets.Json(json), Snapshot()).ToList();
 
         // Assert
         errors.ShouldContain(error => error.Path == path);
@@ -142,7 +148,7 @@ public sealed class FlowKindTests
     public void References_ShouldListEveryAssetAndDeviceOnce_WhenNodesNameThem()
     {
         // Act
-        var references = new FlowKind(new LampCatalog()).References(Widgets.Json(Valid)).ToList();
+        var references = new FlowKind(LampCatalog.Surfaces()).References(Widgets.Json(Valid)).ToList();
 
         // Assert
         references.Select(reference => (reference.Kind, reference.Name))
@@ -167,7 +173,7 @@ public sealed class FlowKindTests
             """);
 
         // Act
-        var errors = new FlowKind(new LampCatalog()).Validate(spec, Offering());
+        var errors = new FlowKind(LampCatalog.Surfaces()).Validate(spec, Offering());
 
         // Assert
         errors.ShouldBeEmpty();
@@ -189,7 +195,7 @@ public sealed class FlowKindTests
         var spec = Widgets.Json($$"""{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {{node}}]}""");
 
         // Act
-        var errors = new FlowKind(new LampCatalog()).Validate(spec, Offering()).ToList();
+        var errors = new FlowKind(LampCatalog.Surfaces()).Validate(spec, Offering()).ToList();
 
         // Assert
         errors.ShouldContain(error => error.Path == path);

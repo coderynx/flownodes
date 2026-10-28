@@ -4,20 +4,20 @@ using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
 using Core.Presentation.Abstraction;
 using Core.Presentation.Http;
-using Engine.Application.Flows.RunFlow;
+using Engine.Application.Flows.StartFlowExecution;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
-namespace Engine.Presentation.Flows.RunFlow;
+namespace Engine.Presentation.Flows.StartFlowExecution;
 
 internal sealed class Endpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapPost(
-                "/engine/namespaces/{namespace}/flows/{flow}/run",
+                "/engine/namespaces/{namespace}/flows/{flow}/executions",
                 async (
                     [AsParameters] Request request, ClaimsPrincipal caller, ISender sender,
                     CancellationToken cancellationToken, [FromBody] Body? body = null) =>
@@ -31,7 +31,7 @@ internal sealed class Endpoint : IEndpoint
                         run => Results.Accepted(value: new Response(run.Execution, run.Queued)),
                         error => error.ToProblem());
                 })
-            .WithName("RunFlow")
+            .WithName("StartFlowExecution")
             .Produces<Response>(StatusCodes.Status202Accepted)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)

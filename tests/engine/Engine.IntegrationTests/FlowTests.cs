@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Engine.Application.Flows;
 using Engine.Domain.Flows;
 using Xunit;
 
@@ -112,7 +113,7 @@ public sealed class FlowTests(PostgresFixture postgres)
             WriteTarget("cold", "0"));
 
         // Act
-        var run = await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        var run = await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
 
         // Assert
         run.IsSuccess.ShouldBeTrue();
@@ -128,7 +129,7 @@ public sealed class FlowTests(PostgresFixture postgres)
         // Arrange
         await using var engine = await StartAsync();
         await ApplyFlowAsync(engine, Manual, Pause("first", "\"3s\"", "then"), WriteTarget("then", "9"));
-        var run = await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        var run = await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
         await Until(async () => await StateAsync(engine, run.Value.Execution!.Value) == FlowExecutionState.Waiting);
 
         // Act
@@ -147,7 +148,7 @@ public sealed class FlowTests(PostgresFixture postgres)
         // Arrange
         await using var engine = await StartAsync();
         await ApplyFlowAsync(engine, Manual, Pause("first", "\"1s\"", "then"), WriteTarget("then", "1"));
-        await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
 
         // Act
         await ApplyFlowAsync(engine, 7, 2, null, Manual, Pause("first", "\"1s\"", "then"), WriteTarget("then", "2"));
@@ -171,7 +172,7 @@ public sealed class FlowTests(PostgresFixture postgres)
              "until": {"dataPoint": {"asset": "room", "name": "target"}, "operator": ">", "value": 100}}
             """,
             WriteLamp("then", "true"));
-        var run = await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        var run = await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
         await Until(async () => await StateAsync(engine, run.Value.Execution!.Value) == FlowExecutionState.Waiting);
 
         // Act
@@ -197,7 +198,7 @@ public sealed class FlowTests(PostgresFixture postgres)
             WriteTarget("late", "2"));
 
         // Act
-        await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
 
         // Assert
         await Until(async () => await TargetAsync(engine) == 2);
@@ -215,7 +216,7 @@ public sealed class FlowTests(PostgresFixture postgres)
             """{"id": "first", "type": "write", "dataPoint": {"device": "ghost", "name": "on"}, "value": true}""");
 
         // Act
-        await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
 
         // Assert
         var execution = (await FinishedAsync(engine, 1)).Single();
@@ -230,10 +231,10 @@ public sealed class FlowTests(PostgresFixture postgres)
         // Arrange
         await using var engine = await StartAsync();
         await ApplyFlowAsync(engine, Manual, Pause("first", "\"30s\""));
-        await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
 
         // Act
-        var second = await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        var second = await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
 
         // Assert
         second.Error.Code.ShouldBe("flow.busy");
@@ -249,10 +250,10 @@ public sealed class FlowTests(PostgresFixture postgres)
         // Arrange
         await using var engine = await StartAsync();
         await ApplyFlowAsync(engine, 6, 1, "queue", Manual, Pause("first", "\"1s\""));
-        await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
 
         // Act
-        var second = await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        var second = await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
 
         // Assert
         second.Value.Queued.ShouldBeTrue();
@@ -266,10 +267,10 @@ public sealed class FlowTests(PostgresFixture postgres)
         // Arrange
         await using var engine = await StartAsync();
         await ApplyFlowAsync(engine, 6, 1, "restart", Manual, Pause("first", "\"30s\""));
-        var first = await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        var first = await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
 
         // Act
-        var second = await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        var second = await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
 
         // Assert
         second.Value.Execution.ShouldNotBe(first.Value.Execution);
@@ -284,7 +285,7 @@ public sealed class FlowTests(PostgresFixture postgres)
         // Arrange
         await using var engine = await StartAsync();
         await ApplyFlowAsync(engine, Manual, Pause("first", "\"30s\""));
-        var run = await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        var run = await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
         var id = run.Value.Execution!.Value;
         await Until(async () => (await GetAsync(engine, id)).State == FlowExecutionState.Waiting);
 
@@ -303,7 +304,7 @@ public sealed class FlowTests(PostgresFixture postgres)
         // Arrange
         await using var engine = await StartAsync();
         await ApplyFlowAsync(engine, Manual, Pause("first", "\"30s\""));
-        var run = await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        var run = await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
 
         // Act
         await engine.DeleteAsync("acme", "Flow", "cooling", 7);
@@ -322,8 +323,8 @@ public sealed class FlowTests(PostgresFixture postgres)
         await ApplyFlowAsync(engine, 6, 1, "parallel", Manual, Pause("first", "\"1s\""));
 
         // Act
-        await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
-        await engine.Flows.RunAsync("acme", "cooling", null, Json("{}"), Ct);
+        await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
+        await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
 
         // Assert
         await engine.Status.WaitForAsync(
@@ -362,6 +363,65 @@ public sealed class FlowTests(PostgresFixture postgres)
             .Select(execution => (int)Math.Round((now - execution.StartedAt).TotalDays))
             .ToList();
         kept.ShouldBe([1, 10], true);
+    }
+
+    [Fact]
+    public async Task ListAsync_ShouldFilterAndOrderTheExecutions_WhenAskedByStateAndFinish()
+    {
+        // Arrange
+        await using var engine = await StartAsync();
+        var now = DateTimeOffset.UtcNow;
+        var older = Dropped(now.AddMinutes(-2));
+        var newer = Dropped(now.AddMinutes(-1));
+        var waiting = FlowExecution.Start(
+            Guid.NewGuid(),
+            "acme",
+            "cooling",
+            Guid.NewGuid(),
+            1,
+            """{"nodes": [{"id": "start", "type": "trigger", "next": "hold"}, {"id": "hold", "type": "wait", "for": "1h"}]}""",
+            "start",
+            null,
+            now);
+        foreach (var execution in new[] { older, waiting, newer })
+        {
+            await engine.FlowExecutions.SaveAsync(execution, Ct);
+        }
+
+        // Act
+        var dropped = await engine.Flows.ListAsync(
+            "acme",
+            "cooling",
+            "Dropped",
+            FlowExecutionOrder.StartedAt,
+            false,
+            0,
+            10,
+            Ct);
+        var byFinish = await engine.Flows.ListAsync(
+            "acme",
+            "cooling",
+            null,
+            FlowExecutionOrder.FinishedAt,
+            true,
+            0,
+            10,
+            Ct);
+        var atNode = await engine.Flows.ListAsync(
+            "acme",
+            "cooling",
+            "hol",
+            FlowExecutionOrder.StartedAt,
+            false,
+            0,
+            10,
+            Ct);
+
+        // Assert
+        dropped.Items.Select(execution => execution.Id).ShouldBe([older.Id, newer.Id]);
+        dropped.Total.ShouldBe(2);
+        byFinish.Items.Select(execution => execution.Id).ShouldBe([newer.Id, older.Id, waiting.Id]);
+        atNode.Items.ShouldHaveSingleItem().Id.ShouldBe(waiting.Id);
     }
 
     private static FlowExecution Dropped(DateTimeOffset at) =>
@@ -452,7 +512,7 @@ public sealed class FlowTests(PostgresFixture postgres)
         .Value?.GetBoolean();
 
     private static async Task<IReadOnlyList<FlowExecution>> ListAsync(EngineCluster engine) =>
-        (await engine.Flows.ListAsync("acme", "cooling", 0, 200, Ct)).Items;
+        (await engine.Flows.ListAsync("acme", "cooling", null, FlowExecutionOrder.StartedAt, true, 0, 200, Ct)).Items;
 
     private static async Task<FlowExecution> GetAsync(EngineCluster engine, Guid id) =>
         (await engine.Flows.GetAsync("acme", "cooling", id, Ct)).Value;

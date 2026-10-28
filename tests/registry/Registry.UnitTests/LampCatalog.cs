@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Core.Application.Integrations;
+using Registry.Application.Resources;
 
 namespace Registry.UnitTests;
 
@@ -9,6 +10,9 @@ namespace Registry.UnitTests;
 /// </summary>
 internal sealed class LampCatalog : IIntegrationSchemas
 {
+    public static DeviceSurfaces Surfaces() => new(new LampCatalog());
+    public static AssetSources Sources() => new(Surfaces());
+
     public IntegrationSchema? Find(string id) =>
         id == "acme.lamp"
             ? new IntegrationSchema(

@@ -10,10 +10,15 @@ namespace Engine.Application.Flows;
 public interface IFlowRuntime
 {
     /// <summary>
-    /// Lists the Flow Executions of a Flow, newest first.
+    /// Lists the Flow Executions of a Flow in a given order.
     /// </summary>
     /// <param name="namespace">The Namespace of the Flow.</param>
     /// <param name="flow">The name of the Flow.</param>
+    /// <param name="filter">
+    /// Keeps only Flow Executions in this state, or whose trigger or current Node id contains it; none for all.
+    /// </param>
+    /// <param name="order">What to order them by.</param>
+    /// <param name="descending">Whether to reverse the order.</param>
     /// <param name="offset">How many Flow Executions to skip.</param>
     /// <param name="limit">How many Flow Executions to return.</param>
     /// <param name="cancellationToken">Cancels the read.</param>
@@ -21,6 +26,9 @@ public interface IFlowRuntime
     Task<FlowExecutionPage> ListAsync(
         string @namespace,
         string flow,
+        string? filter,
+        FlowExecutionOrder order,
+        bool descending,
         int offset,
         int limit,
         CancellationToken cancellationToken);
@@ -59,7 +67,7 @@ public interface IFlowRuntime
     Task<Result<int>> CancelAllAsync(string @namespace, string flow, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Triggers a Flow by hand, as its Execution Mode allows.
+    /// Starts a Flow Execution by hand, from one of the Flow's triggers, as its Execution Mode allows.
     /// </summary>
     /// <param name="namespace">The Namespace of the Flow.</param>
     /// <param name="flow">The name of the Flow.</param>
@@ -70,7 +78,7 @@ public interface IFlowRuntime
     /// What became of the trigger, a not-found error when the Engine knows no such Flow, an invalid-input error for an
     /// unknown or ambiguous trigger, or a conflict when the Execution Mode dropped it.
     /// </returns>
-    Task<Result<FlowRun>> RunAsync(
+    Task<Result<ExecutionStart>> StartAsync(
         string @namespace,
         string flow,
         string? trigger,
@@ -86,8 +94,24 @@ public interface IFlowRuntime
 public sealed record FlowExecutionPage(IReadOnlyList<FlowExecution> Items, int Total);
 
 /// <summary>
+/// What to order a list of Flow Executions by.
+/// </summary>
+public enum FlowExecutionOrder
+{
+    /// <summary>
+    /// When each started.
+    /// </summary>
+    StartedAt,
+
+    /// <summary>
+    /// When each finished; those still running or waiting come last.
+    /// </summary>
+    FinishedAt
+}
+
+/// <summary>
 /// What became of a trigger given by hand.
 /// </summary>
 /// <param name="Execution">The Flow Execution it started; none when it was queued.</param>
 /// <param name="Queued">Whether it waits in the Flow's queue.</param>
-public sealed record FlowRun(Guid? Execution, bool Queued);
+public sealed record ExecutionStart(Guid? Execution, bool Queued);

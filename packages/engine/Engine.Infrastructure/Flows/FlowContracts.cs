@@ -12,7 +12,7 @@ internal sealed record WatchResult([property: Id(0)] bool Exists, [property: Id(
 }
 
 [GenerateSerializer]
-internal enum RunOutcome
+internal enum TriggerOutcome
 {
     Started,
     Queued,
@@ -23,7 +23,7 @@ internal enum RunOutcome
 
 [GenerateSerializer]
 [Immutable]
-internal sealed record RunResult([property: Id(0)] RunOutcome Outcome, [property: Id(1)] Guid? Execution);
+internal sealed record TriggerResult([property: Id(0)] TriggerOutcome Outcome, [property: Id(1)] Guid? Execution);
 
 [GenerateSerializer]
 internal sealed class FlowState

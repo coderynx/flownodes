@@ -22,28 +22,51 @@ public sealed class HandlerTests
         var handler = new Handler(grants, flows);
 
         // Act
-        var result = await handler.HandleAsync(new Query(Guid.NewGuid(), "acme", "cooling", 0, 50), Ct);
+        var result = await handler.HandleAsync(
+            new Query(Guid.NewGuid(), "acme", "cooling", null, null, false, 0, 50),
+            Ct);
 
         // Assert
         result.Error.ShouldBe(refusal);
-        await flows.DidNotReceiveWithAnyArgs().ListAsync(default!, default!, 0, 0, Ct);
+        await flows.DidNotReceiveWithAnyArgs().ListAsync(default!, default!, null, default, false, 0, 0, Ct);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldClampTheWindow_WhenTheCallerAsksForTooMuch()
+    public async Task HandleAsync_ShouldPassTheOrderAndClampTheWindow_WhenTheCallerAsksForTooMuch()
     {
         // Arrange
         var grants = Substitute.For<IRoleGrants>();
         grants.RequireMemberAsync(Arg.Any<Guid>(), "acme", Ct).Returns(Result.Updated());
         var page = new FlowExecutionPage([], 0);
         var flows = Substitute.For<IFlowRuntime>();
-        flows.ListAsync("acme", "cooling", 0, 200, Ct).Returns(page);
+        flows.ListAsync("acme", "cooling", "waiting", FlowExecutionOrder.FinishedAt, true, 0, 200, Ct).Returns(page);
         var handler = new Handler(grants, flows);
 
         // Act
-        var result = await handler.HandleAsync(new Query(Guid.NewGuid(), "acme", "cooling", -5, 1000), Ct);
+        var result = await handler.HandleAsync(
+            new Query(Guid.NewGuid(), "acme", "cooling", "waiting", "finishedAt", true, -5, 1000),
+            Ct);
 
         // Assert
         result.Value.ShouldBe(page);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldRefuseTheSort_WhenTheKeyIsUnknown()
+    {
+        // Arrange
+        var grants = Substitute.For<IRoleGrants>();
+        grants.RequireMemberAsync(Arg.Any<Guid>(), "acme", Ct).Returns(Result.Updated());
+        var flows = Substitute.For<IFlowRuntime>();
+        var handler = new Handler(grants, flows);
+
+        // Act
+        var result = await handler.HandleAsync(
+            new Query(Guid.NewGuid(), "acme", "cooling", null, "colour", false, 0, 50),
+            Ct);
+
+        // Assert
+        result.Error.Code.ShouldBe("flow_execution.unknown_sort");
+        await flows.DidNotReceiveWithAnyArgs().ListAsync(default!, default!, null, default, false, 0, 0, Ct);
     }
 }

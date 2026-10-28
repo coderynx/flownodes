@@ -23,8 +23,7 @@ internal sealed class FlowGrain(
     private readonly Dictionary<string, IDisposable> _schedules = [];
     private readonly HashSet<(string Kind, string Name)> _watched = [];
     private readonly List<string> _missing = [];
-    private FlowDefinition? _definition;
-    private bool _loaded;
+    private FlowGraph? _graph;
 
     public override async Task OnActivateAsync(CancellationToken cancellationToken)
     {
@@ -42,7 +41,7 @@ internal sealed class FlowGrain(
             return;
         }
 
-        _definition = null;
+        _graph = null;
         StopSchedules();
         if (previousUid != uid)
         {
@@ -52,7 +51,6 @@ internal sealed class FlowGrain(
             }
 
             _active.Clear();
-            _loaded = false;
             flowState.State = new FlowState();
         }
         else
@@ -100,19 +98,19 @@ internal sealed class FlowGrain(
         }
     }
 
-    public async Task<RunResult> RunAsync(string? trigger, string payload)
+    public async Task<TriggerResult> TriggerAsync(string? trigger, string payload)
     {
         if (!IsLive)
         {
-            return new RunResult(RunOutcome.FlowMissing, null);
+            return new TriggerResult(TriggerOutcome.FlowMissing, null);
         }
 
-        var triggers = Definition.Triggers;
+        var triggers = Graph.Triggers;
         var only = triggers.Count == 1 ? triggers[0] : null;
         var chosen = trigger is null ? only : triggers.FirstOrDefault(candidate => candidate.Id == trigger);
         if (chosen is null)
         {
-            return new RunResult(RunOutcome.TriggerUnknown, null);
+            return new TriggerResult(TriggerOutcome.TriggerUnknown, null);
         }
 
         return await FireAsync(chosen.Id, JsonNode.Parse(payload));
@@ -135,14 +133,18 @@ internal sealed class FlowGrain(
 
     public async Task ExecutionFinishedAsync(Guid flowUid, Guid execution, string state, DateTimeOffset finishedAt)
     {
-        var ours = IsLive && flowUid == State.Uid;
-        if (!ours || !_active.Remove(execution))
+        if (!IsLive || flowUid != State.Uid)
         {
             return;
         }
 
-        flowState.State.Last = new LastResult(execution, state, finishedAt);
-        await flowState.WriteStateAsync();
+        _active.Remove(execution);
+        if (flowState.State.Last is not { } last || last.FinishedAt <= finishedAt)
+        {
+            flowState.State.Last = new LastResult(execution, state, finishedAt);
+            await flowState.WriteStateAsync();
+        }
+
         await StartQueuedAsync();
         await ReportStatusAsync();
     }
@@ -162,7 +164,7 @@ internal sealed class FlowGrain(
             return;
         }
 
-        foreach (var trigger in Definition.Triggers.Where(candidate =>
+        foreach (var trigger in Graph.Triggers.Where(candidate =>
                      candidate.Event is { } wanted && wanted.Device == device && wanted.Name == name))
         {
             await FireAsync(
@@ -194,7 +196,6 @@ internal sealed class FlowGrain(
                     }
                 },
                 activeExecutions = _active.Count,
-                queuedTriggers = flowState.State.Queue.Count,
                 lastResult = flowState.State.Last is { } last
                     ? new { execution = last.Execution, state = last.State.ToLowerInvariant(), last.FinishedAt }
                     : null
@@ -202,23 +203,15 @@ internal sealed class FlowGrain(
             Web);
     }
 
-    private FlowDefinition Definition => _definition ??= FlowDefinition.Create(Spec);
+    private FlowGraph Graph => _graph ??= FlowGraph.Create(Spec);
 
     private IFlowExecutionGrain Execution(Guid id) =>
         GrainFactory.GetGrain<IFlowExecutionGrain>($"{Namespace}/{ResourceName}/{id}");
 
     private async Task SyncAsync()
     {
-        if (!_loaded)
-        {
-            foreach (var id in await executions.ListActiveAsync(Namespace, ResourceName, State.Uid))
-            {
-                _active.Add(id);
-            }
-
-            _loaded = true;
-        }
-
+        _active.Clear();
+        _active.UnionWith(await executions.ListActiveAsync(Namespace, ResourceName, State.Uid));
         await WatchAsync();
         await StartSchedulesAsync();
         await StartQueuedAsync();
@@ -227,7 +220,7 @@ internal sealed class FlowGrain(
 
     private void Forget()
     {
-        var triggers = Definition.Triggers.Select(trigger => trigger.Id).ToHashSet();
+        var triggers = Graph.Triggers.Select(trigger => trigger.Id).ToHashSet();
         foreach (var id in flowState.State.Conditions.Keys.Where(id => !triggers.Contains(id)).ToList())
         {
             flowState.State.Conditions.Remove(id);
@@ -244,7 +237,7 @@ internal sealed class FlowGrain(
         _missing.Clear();
         var wanted = new HashSet<(string Kind, string Name)>();
         var me = this.AsReference<IFlowWatcher>();
-        foreach (var trigger in Definition.Triggers)
+        foreach (var trigger in Graph.Triggers)
         {
             try
             {
@@ -315,7 +308,7 @@ internal sealed class FlowGrain(
 
     private async Task OnReadingAsync(string kind, string resource, DataPointSnapshot snapshot, bool initial)
     {
-        var triggers = Definition.Triggers.Where(trigger =>
+        var triggers = Graph.Triggers.Where(trigger =>
             trigger.DataPoint is { } point && point.Owner.ToString() == kind && point.Resource == resource &&
             point.Name == snapshot.Name);
         foreach (var trigger in triggers)
@@ -352,9 +345,9 @@ internal sealed class FlowGrain(
         }
     }
 
-    private async Task<RunResult> FireAsync(string trigger, JsonNode? payload)
+    private async Task<TriggerResult> FireAsync(string trigger, JsonNode? payload)
     {
-        var admission = FlowDefinition.Admit(Definition.Mode, _active.Count, flowState.State.Queue.Count);
+        var admission = Graph.Admit(_active.Count, flowState.State.Queue.Count);
         switch (admission)
         {
             case FlowAdmission.Queue:
@@ -362,20 +355,20 @@ internal sealed class FlowGrain(
                 await flowState.WriteStateAsync();
                 await ReportStatusAsync();
 
-                return new RunResult(RunOutcome.Queued, null);
+                return new TriggerResult(TriggerOutcome.Queued, null);
             case FlowAdmission.Drop:
                 var dropped = await DropAsync(
                     trigger,
                     "Busy",
-                    $"Execution Mode {Definition.Mode.ToString().ToLowerInvariant()} refused the trigger.");
+                    $"Execution Mode {Graph.Mode.ToString().ToLowerInvariant()} refused the trigger.");
 
-                return new RunResult(RunOutcome.Dropped, dropped);
+                return new TriggerResult(TriggerOutcome.Dropped, dropped);
             case FlowAdmission.Restart:
                 await CancelExecutionsAsync(State.Uid);
                 break;
         }
 
-        return new RunResult(RunOutcome.Started, await StartAsync(trigger, payload));
+        return new TriggerResult(TriggerOutcome.Started, await StartAsync(trigger, payload));
     }
 
     private async Task<Guid> StartAsync(string trigger, JsonNode? payload)
@@ -432,12 +425,12 @@ internal sealed class FlowGrain(
     private async Task StartQueuedAsync()
     {
         while (flowState.State.Queue.Count > 0 &&
-               FlowDefinition.Admit(Definition.Mode, _active.Count, 0) == FlowAdmission.Start)
+               Graph.Admit(_active.Count, 0) == FlowAdmission.Start)
         {
             var next = flowState.State.Queue[0];
             flowState.State.Queue.RemoveAt(0);
             await flowState.WriteStateAsync();
-            if (Definition.Node(next.Trigger) is TriggerNode)
+            if (Graph.Node(next.Trigger) is TriggerNode)
             {
                 await StartAsync(next.Trigger, next.Payload is null ? null : JsonNode.Parse(next.Payload));
             }
@@ -465,7 +458,7 @@ internal sealed class FlowGrain(
     private async Task StartSchedulesAsync()
     {
         var changed = false;
-        foreach (var trigger in Definition.Triggers.Where(trigger => trigger.Schedule is not null))
+        foreach (var trigger in Graph.Triggers.Where(trigger => trigger.Schedule is not null))
         {
             changed |= flowState.State.Scheduled.TryAdd(trigger.Id, DateTimeOffset.UtcNow);
             if (!_schedules.ContainsKey(trigger.Id))
@@ -494,7 +487,7 @@ internal sealed class FlowGrain(
     {
         _schedules.Remove(id, out var timer);
         timer?.Dispose();
-        if (!IsLive || Definition.Node(id) is not TriggerNode { Schedule: { } schedule } trigger)
+        if (!IsLive || Graph.Node(id) is not TriggerNode { Schedule: { } schedule } trigger)
         {
             return;
         }

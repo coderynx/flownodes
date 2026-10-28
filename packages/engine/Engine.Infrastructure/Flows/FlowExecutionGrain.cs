@@ -57,7 +57,7 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
         var matches = watched.Owner.ToString() == kind && watched.Resource == resource && watched.Name == snapshot.Name;
         if (matches && Satisfies(until, snapshot))
         {
-            await ResumeAsync(execution => execution.Satisfy(Readings.From(snapshot), DateTimeOffset.UtcNow));
+            await ResumeAsync(execution => execution.Complete(Readings.From(snapshot), DateTimeOffset.UtcNow));
         }
     }
 
@@ -76,7 +76,7 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
                 ["payload"] = JsonNode.Parse(payload),
                 ["timestamp"] = timestamp
             };
-            await ResumeAsync(execution => execution.Satisfy(arrived, DateTimeOffset.UtcNow));
+            await ResumeAsync(execution => execution.Complete(arrived, DateTimeOffset.UtcNow));
         }
     }
 
@@ -125,7 +125,7 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
                 }
                 else
                 {
-                    await StepAsync(execution);
+                    await ExecuteNodeAsync(execution);
                     await SaveAsync(execution);
                 }
             }
@@ -160,7 +160,7 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
         }
     }
 
-    private async Task StepAsync(FlowExecution execution)
+    private async Task ExecuteNodeAsync(FlowExecution execution)
     {
         switch (execution.Node)
         {
@@ -310,6 +310,17 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
 
     private async Task<Action<FlowExecution>?> WatchAsync(FlowExecution execution)
     {
+        var source = execution.Node switch
+        {
+            WaitNode { Until: { } until } => (until.DataPoint.Owner.ToString(), until.DataPoint.Resource),
+            WaitNode { Event: { } wanted } => (nameof(DataPointOwner.Device), wanted.Device),
+            _ => ((string, string)?)null
+        };
+        if (_watching != source)
+        {
+            await UnwatchAsync();
+        }
+
         var me = this.AsReference<IFlowWatcher>();
         switch (execution.Node)
         {
@@ -325,7 +336,7 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
                 }
 
                 return result.Snapshot is { } snapshot && Satisfies(until, snapshot)
-                    ? waiting => waiting.Satisfy(Readings.From(snapshot), DateTimeOffset.UtcNow)
+                    ? waiting => waiting.Complete(Readings.From(snapshot), DateTimeOffset.UtcNow)
                     : null;
             case WaitNode { Event: { } wanted }:
                 _watching = ("Device", wanted.Device);

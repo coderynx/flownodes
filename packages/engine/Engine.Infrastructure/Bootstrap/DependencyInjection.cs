@@ -92,6 +92,7 @@ public static class DependencyInjection
         builder.Services.AddSingleton<IAlarmHistory, PostgresAlarmHistory>();
         builder.Services.AddHostedService<FlowExecutionSchema>();
         builder.Services.AddHostedService<FlowExecutionRetention>();
+        builder.Services.AddHostedService<FlowCancellationSweep>();
         builder.Services.AddSingleton<IFlowExecutions, PostgresFlowExecutions>();
 
         builder.UseOrleans(silo =>

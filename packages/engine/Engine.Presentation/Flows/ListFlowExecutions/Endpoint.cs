@@ -23,7 +23,15 @@ internal sealed class Endpoint : IEndpoint
                     CancellationToken cancellationToken) =>
                 {
                     var result = await sender.SendAsync(
-                        new Query(caller.CallerId(), request.Namespace, request.Flow, request.Offset, request.Limit),
+                        new Query(
+                            caller.CallerId(),
+                            request.Namespace,
+                            request.Flow,
+                            request.Q,
+                            request.Sort,
+                            request.Desc,
+                            request.Offset,
+                            request.Limit),
                         cancellationToken);
 
                     return result.Match(
@@ -32,6 +40,7 @@ internal sealed class Endpoint : IEndpoint
                 })
             .WithName("ListFlowExecutions")
             .Produces<Response>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
@@ -39,6 +48,9 @@ internal sealed class Endpoint : IEndpoint
     internal sealed record Request(
         [FromRoute] string Namespace,
         [FromRoute] string Flow,
+        [FromQuery] string? Q,
+        [FromQuery] string? Sort,
+        [FromQuery] bool Desc = false,
         [FromQuery] int Offset = 0,
         [FromQuery] int Limit = 50);
 

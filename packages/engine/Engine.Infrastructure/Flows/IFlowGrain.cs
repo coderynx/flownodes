@@ -7,7 +7,7 @@ internal interface IFlowGrain : IFlowWatcher
     Task ApplyAsync(Guid uid, long generation, long seq, string spec);
     Task DeleteAsync(Guid uid, long seq);
     Task PingAsync();
-    Task<RunResult> RunAsync(string? trigger, string payload);
+    Task<TriggerResult> TriggerAsync(string? trigger, string payload);
     Task<int?> CancelAllAsync();
 
     [OneWay]

@@ -11,10 +11,13 @@ internal sealed class GrainFlowRuntime(IGrainFactory grains, IFlowExecutions exe
     public Task<FlowExecutionPage> ListAsync(
         string @namespace,
         string flow,
+        string? filter,
+        FlowExecutionOrder order,
+        bool descending,
         int offset,
         int limit,
         CancellationToken cancellationToken) =>
-        executions.PageAsync(@namespace, flow, offset, limit, cancellationToken);
+        executions.PageAsync(@namespace, flow, filter, order, descending, offset, limit, cancellationToken);
 
     public async Task<Result<FlowExecution>> GetAsync(
         string @namespace,
@@ -55,23 +58,23 @@ internal sealed class GrainFlowRuntime(IGrainFactory grains, IFlowExecutions exe
         return cancelled is { } count ? Result.Found(count) : FlowMissing(flow);
     }
 
-    public async Task<Result<FlowRun>> RunAsync(
+    public async Task<Result<ExecutionStart>> StartAsync(
         string @namespace,
         string flow,
         string? trigger,
         JsonElement payload,
         CancellationToken cancellationToken)
     {
-        var result = await Flow(@namespace, flow).RunAsync(trigger, payload.GetRawText());
+        var result = await Flow(@namespace, flow).TriggerAsync(trigger, payload.GetRawText());
 
         return result.Outcome switch
         {
-            RunOutcome.Started => Result.Found(new FlowRun(result.Execution, false)),
-            RunOutcome.Queued => Result.Found(new FlowRun(null, true)),
-            RunOutcome.Dropped => Error.Conflict(
+            TriggerOutcome.Started => Result.Found(new ExecutionStart(result.Execution, false)),
+            TriggerOutcome.Queued => Result.Found(new ExecutionStart(null, true)),
+            TriggerOutcome.Dropped => Error.Conflict(
                 "flow.busy",
                 $"Flow '{flow}' is running and its Execution Mode dropped the trigger."),
-            RunOutcome.TriggerUnknown => Error.InvalidInput(
+            TriggerOutcome.TriggerUnknown => Error.InvalidInput(
                 "flow.trigger_unknown",
                 trigger is null
                     ? $"Flow '{flow}' has more than one trigger; name the one to start from."

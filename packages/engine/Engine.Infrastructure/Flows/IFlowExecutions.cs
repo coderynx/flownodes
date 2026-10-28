@@ -20,9 +20,14 @@ internal interface IFlowExecutions
         Guid flowUid,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<string>> ListCancellingAsync(CancellationToken cancellationToken = default);
+
     Task<FlowExecutionPage> PageAsync(
         string @namespace,
         string flow,
+        string? filter,
+        FlowExecutionOrder order,
+        bool descending,
         int offset,
         int limit,
         CancellationToken cancellationToken = default);

@@ -11,19 +11,9 @@ namespace Engine.Domain.Flows;
 /// </summary>
 public sealed class FlowExecution
 {
-    /// <summary>
-    /// How many Nodes one Flow Execution may complete before it fails with <c>StepLimit</c>.
-    /// </summary>
-    public const int MaxSteps = 1000;
-
-    /// <summary>
-    /// How large its variables may grow, as UTF-8 JSON, before it fails with <c>VariablesTooLarge</c>.
-    /// </summary>
-    public const int MaxVariableBytes = 64 * 1024;
-
     private Dictionary<string, int> _visits = [];
     private JsonObject _variables = [];
-    private FlowDefinition? _definition;
+    private FlowGraph? _graph;
 
     private FlowExecution()
     {
@@ -130,14 +120,14 @@ public sealed class FlowExecution
     public bool IsFinished => FinishedAt is not null;
 
     /// <summary>
-    /// Gets the Flow definition it runs.
+    /// Gets the graph of Nodes it runs.
     /// </summary>
-    public FlowDefinition Definition => _definition ??= FlowDefinition.Create(JsonDocument.Parse(Spec).RootElement);
+    public FlowGraph Graph => _graph ??= FlowGraph.Create(JsonDocument.Parse(Spec).RootElement);
 
     /// <summary>
     /// Gets the Node it is at; none once it has finished.
     /// </summary>
-    public FlowNode? Node => CurrentNode is { } id ? Definition.Node(id) : null;
+    public FlowNode? Node => CurrentNode is { } id ? Graph.Node(id) : null;
 
     /// <summary>
     /// Gets the id an Action call from the current Node carries, which stays the same until the Node completes, so a
@@ -182,7 +172,7 @@ public sealed class FlowExecution
             CurrentNode = trigger,
             _variables = new JsonObject { ["trigger"] = payload?.DeepClone() }
         };
-        execution.Advance(execution.Definition.Node(trigger)!.Next, now);
+        execution.Advance(execution.Graph.Node(trigger)!.Next, now);
 
         return execution;
     }
@@ -280,9 +270,10 @@ public sealed class FlowExecution
     }
 
     /// <summary>
-    /// Completes the current Node, keeping its value in the Node's variable, and moves on to its next Node.
+    /// Completes the current Node, keeping its value in the Node's variable, and moves on to its next Node. A wait
+    /// for a condition or an Event completes this way when it holds or arrives before its timeout.
     /// </summary>
-    /// <param name="output">The Node's value, such as a reading or an Action's result.</param>
+    /// <param name="output">The Node's value, such as a reading, an Action's result or an Event.</param>
     /// <param name="now">The current time.</param>
     public void Complete(JsonNode? output, DateTimeOffset now)
     {
@@ -390,14 +381,6 @@ public sealed class FlowExecution
     }
 
     /// <summary>
-    /// Ends the current wait for a condition or an Event before its timeout, keeping the Event's payload in the Node's
-    /// variable, and moves on to its next Node.
-    /// </summary>
-    /// <param name="payload">The Event's payload, or the reading that satisfied the condition.</param>
-    /// <param name="now">The current time.</param>
-    public void Satisfy(JsonNode? payload, DateTimeOffset now) => Complete(payload, now);
-
-    /// <summary>
     /// Asks the Flow Execution to stop at its next checkpoint.
     /// </summary>
     public void RequestCancel() => CancelRequested = !IsFinished;
@@ -423,13 +406,14 @@ public sealed class FlowExecution
         _visits[from] = _visits.GetValueOrDefault(from) + 1;
         Steps++;
         Deadline = null;
-        if (Encoding.UTF8.GetByteCount(_variables.ToJsonString()) > MaxVariableBytes)
+        var limits = Graph.Limits;
+        if (Encoding.UTF8.GetByteCount(_variables.ToJsonString()) > limits.VariableBytes)
         {
             Finish(
                 FlowExecutionState.Failed,
                 new FlowExecutionError(
                     "VariablesTooLarge",
-                    $"The variables outgrew {MaxVariableBytes} bytes.",
+                    $"The variables outgrew {limits.VariableBytes} bytes.",
                     from,
                     1),
                 now);
@@ -438,11 +422,11 @@ public sealed class FlowExecution
         {
             Finish(FlowExecutionState.Succeeded, null, now);
         }
-        else if (Steps >= MaxSteps)
+        else if (Steps >= limits.Steps)
         {
             Finish(
                 FlowExecutionState.Failed,
-                new FlowExecutionError("StepLimit", $"The Flow Execution completed {MaxSteps} Nodes.", from, 1),
+                new FlowExecutionError("StepLimit", $"The Flow Execution completed {limits.Steps} Nodes.", from, 1),
                 now);
         }
         else

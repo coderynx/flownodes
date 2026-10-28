@@ -5,10 +5,38 @@ namespace Engine.Domain;
 /// <summary>
 /// A comparison of a value against a constant, as Alarm Conditions and Flows write it.
 /// </summary>
-/// <param name="Operator">One of <c>&lt;</c>, <c>&lt;=</c>, <c>&gt;</c>, <c>&gt;=</c>, <c>==</c> and <c>!=</c>.</param>
-/// <param name="Value">The constant to compare against, as JSON text.</param>
-public sealed record Comparison(string Operator, string Value)
+public sealed record Comparison
 {
+    private static readonly string[] Operators = ["<", "<=", ">", ">=", "==", "!="];
+
+    private Comparison(string op, string value)
+    {
+        Operator = op;
+        Value = value;
+    }
+
+    /// <summary>
+    /// Gets the operator: one of <c>&lt;</c>, <c>&lt;=</c>, <c>&gt;</c>, <c>&gt;=</c>, <c>==</c> and <c>!=</c>.
+    /// </summary>
+    public string Operator { get; }
+
+    /// <summary>
+    /// Gets the constant to compare against, as JSON text.
+    /// </summary>
+    public string Value { get; }
+
+    /// <summary>
+    /// Builds a comparison from an operator and a constant that have already been validated.
+    /// </summary>
+    /// <param name="op">The operator.</param>
+    /// <param name="value">The constant, as JSON text.</param>
+    /// <returns>The comparison.</returns>
+    /// <exception cref="ArgumentException">The operator is not one of the six.</exception>
+    public static Comparison Create(string op, string value) =>
+        Operators.Contains(op)
+            ? new Comparison(op, value)
+            : throw new ArgumentException($"'{op}' is not a comparison operator.", nameof(op));
+
     /// <summary>
     /// Tells whether a value satisfies the comparison. A value of another JSON type than the constant is unequal to
     /// it and never ordered against it.
@@ -27,7 +55,8 @@ public sealed record Comparison(string Operator, string Value)
             "<" => order < 0,
             "<=" => order <= 0,
             ">" => order > 0,
-            _ => order >= 0
+            ">=" => order >= 0,
+            _ => throw new InvalidOperationException($"'{Operator}' is not a comparison operator.")
         };
     }
 

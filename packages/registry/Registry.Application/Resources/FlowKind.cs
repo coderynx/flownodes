@@ -1,12 +1,11 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Core.Application.Integrations;
 using Core.Domain.Scheduling;
 using Registry.Domain.Resources;
 
 namespace Registry.Application.Resources;
 
-internal sealed partial class FlowKind(IIntegrationSchemas integrations) : IResourceKind
+internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
 {
     public const string KindName = "Flow";
     private static readonly string[] Modes = ["single", "restart", "queue", "parallel"];
@@ -25,13 +24,20 @@ internal sealed partial class FlowKind(IIntegrationSchemas integrations) : IReso
         ["wait"] = ["next", "error", "timedOut", "for", "until", "event", "timeout", "maxLateness", "into"]
     };
 
-    private readonly DeviceSurfaces _surfaces = new(integrations);
+    private static readonly Dictionary<string, int> Ceilings = new()
+    {
+        ["executions"] = 100,
+        ["steps"] = 100_000,
+        ["variableBytes"] = 1024 * 1024
+    };
+
     public string Name => KindName;
     public string Plural => "flows";
 
     public IEnumerable<SpecError> Validate(JsonElement spec, NamespaceSnapshot @namespace)
     {
-        foreach (var field in spec.EnumerateObject().Where(field => field.Name is not ("executionMode" or "nodes")))
+        foreach (var field in spec.EnumerateObject()
+                     .Where(field => field.Name is not ("executionMode" or "limits" or "nodes")))
         {
             yield return new SpecError($"spec.{field.Name}", "Unknown field.");
         }
@@ -39,6 +45,11 @@ internal sealed partial class FlowKind(IIntegrationSchemas integrations) : IReso
         if (spec.TryGetProperty("executionMode", out _) && !Modes.Contains(Text(spec, "executionMode")))
         {
             yield return new SpecError("spec.executionMode", $"Must be one of {string.Join(", ", Modes)}.");
+        }
+
+        foreach (var error in Limits(spec))
+        {
+            yield return error;
         }
 
         var nodes = Nodes(spec);
@@ -154,7 +165,7 @@ internal sealed partial class FlowKind(IIntegrationSchemas integrations) : IReso
 
     private HashSet<string>? DeviceMembers(string? device, string member, NamespaceSnapshot @namespace)
     {
-        if (device is null || _surfaces.Find(@namespace, device) is not { } surface)
+        if (device is null || surfaces.Find(@namespace, device) is not { } surface)
         {
             return null;
         }
@@ -221,6 +232,34 @@ internal sealed partial class FlowKind(IIntegrationSchemas integrations) : IReso
         foreach (var error in errors)
         {
             yield return error;
+        }
+    }
+
+    private static IEnumerable<SpecError> Limits(JsonElement spec)
+    {
+        if (!spec.TryGetProperty("limits", out var limits))
+        {
+            yield break;
+        }
+
+        if (limits.ValueKind != JsonValueKind.Object)
+        {
+            yield return new SpecError("spec.limits", "Must be an object of executions, steps and variableBytes.");
+
+            yield break;
+        }
+
+        foreach (var field in limits.EnumerateObject())
+        {
+            var value = field.Value.TryGetInt32(out var given) ? given : 0;
+            if (!Ceilings.TryGetValue(field.Name, out var ceiling))
+            {
+                yield return new SpecError($"spec.limits.{field.Name}", "Unknown field.");
+            }
+            else if (value < 1 || value > ceiling)
+            {
+                yield return new SpecError($"spec.limits.{field.Name}", $"Must be a whole number from 1 to {ceiling}.");
+            }
         }
     }
 
@@ -370,15 +409,15 @@ internal sealed partial class FlowKind(IIntegrationSchemas integrations) : IReso
             yield break;
         }
 
-        foreach (var field in retry.EnumerateObject().Where(field => field.Name is not ("attempts" or "delay")))
+        foreach (var field in retry.EnumerateObject().Where(field => field.Name is not ("times" or "delay")))
         {
             yield return new SpecError($"{path}.retry.{field.Name}", "Unknown field.");
         }
 
-        var attempts = retry.TryGetProperty("attempts", out var given) && given.TryGetInt32(out var count) ? count : -1;
-        if (attempts < 0)
+        var times = retry.TryGetProperty("times", out var given) && given.TryGetInt32(out var count) ? count : -1;
+        if (times < 0)
         {
-            yield return new SpecError($"{path}.retry.attempts", "Required, as how many times to retry, from 0.");
+            yield return new SpecError($"{path}.retry.times", "Required, as how many times to retry, from 0.");
         }
 
         if (retry.TryGetProperty("delay", out var delay) && !Durations.IsPositive(delay))

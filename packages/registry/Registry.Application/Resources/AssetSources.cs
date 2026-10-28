@@ -8,9 +8,8 @@ namespace Registry.Application.Resources;
 /// The rules for where an Asset Data Point gets its value (ADR-0002, ADR-0010): mapped from a Device Data Point,
 /// computed from other Data Points of the Asset, or, without a source, written by a Flow.
 /// </summary>
-internal sealed class AssetSources(IIntegrationSchemas integrations)
+internal sealed class AssetSources(DeviceSurfaces surfaces)
 {
-    private readonly DeviceSurfaces _surfaces = new(integrations);
 
     private static readonly string[] Operations = ["sum", "min", "max", "average"];
 
@@ -49,7 +48,7 @@ internal sealed class AssetSources(IIntegrationSchemas integrations)
         var own = DataPointDeclarations.Declarations(spec);
         var effective = First([.. inherited, .. own]);
         var overrides = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
-        var context = new Context(@namespace, _surfaces);
+        var context = new Context(@namespace, surfaces);
 
         foreach (var error in ValidateOverrides(spec, inherited, effective, overrides, context))
         {

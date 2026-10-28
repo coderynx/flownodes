@@ -49,7 +49,7 @@ public sealed record AlarmCondition(
     /// </summary>
     /// <param name="reading">The value of the Data Point.</param>
     /// <returns><see langword="true"/> when the comparison holds.</returns>
-    public bool Holds(JsonElement reading) => new Comparison(Operator, Value).Holds(reading);
+    public bool Holds(JsonElement reading) => Comparison.Create(Operator, Value).Holds(reading);
 
     /// <summary>
     /// Tells whether a value has moved far enough from the threshold to clear a live Alarm: out of the comparison

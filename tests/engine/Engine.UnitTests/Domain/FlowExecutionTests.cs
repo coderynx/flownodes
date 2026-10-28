@@ -198,7 +198,7 @@ public sealed class FlowExecutionTests
     }
 
     [Fact]
-    public void Satisfy_ShouldKeepTheEventAndContinue_WhenTheEventArrivesBeforeTheTimeout()
+    public void Complete_ShouldKeepTheEventAndContinue_WhenAWaitedEventArrivesBeforeTheTimeout()
     {
         // Arrange
         var execution = Start(
@@ -208,7 +208,7 @@ public sealed class FlowExecutionTests
         execution.Wait(T0);
 
         // Act
-        execution.Satisfy(JsonNode.Parse("""{"count": 2}"""), T0.AddSeconds(10));
+        execution.Complete(JsonNode.Parse("""{"count": 2}"""), T0.AddSeconds(10));
 
         // Assert
         execution.CurrentNode.ShouldBe("end");
@@ -231,7 +231,28 @@ public sealed class FlowExecutionTests
 
         // Assert
         execution.Error!.Code.ShouldBe("StepLimit");
-        execution.Steps.ShouldBe(FlowExecution.MaxSteps);
+        execution.Steps.ShouldBe(1000);
+    }
+
+    [Fact]
+    public void Branch_ShouldFailTheExecution_WhenACycleReachesTheFlowsOwnStepLimit()
+    {
+        // Arrange
+        var execution = Start(
+            """
+            {"limits": {"steps": 5}, "nodes": [{"id": "start", "type": "trigger", "next": "read"},
+              {"id": "read", "type": "branch", "if": {"from": "trigger.value", "operator": ">", "value": 0}, "then": "read"}]}
+            """);
+
+        // Act
+        while (!execution.IsFinished)
+        {
+            execution.Branch(T0);
+        }
+
+        // Assert
+        execution.Error!.Code.ShouldBe("StepLimit");
+        execution.Steps.ShouldBe(5);
     }
 
     [Fact]
@@ -241,7 +262,7 @@ public sealed class FlowExecutionTests
         var execution = Start(Flow(Read("read", null)));
 
         // Act
-        execution.Complete(JsonValue.Create(new string('x', FlowExecution.MaxVariableBytes)), T0);
+        execution.Complete(JsonValue.Create(new string('x', 64 * 1024)), T0);
 
         // Assert
         execution.State.ShouldBe(FlowExecutionState.Failed);
@@ -279,8 +300,12 @@ public sealed class FlowExecutionTests
         int queued,
         FlowAdmission expected)
     {
+        // Arrange
+        var graph = FlowGraph.Create(
+            Json($$"""{"executionMode": "{{mode.ToString().ToLowerInvariant()}}", "nodes": [{"id": "t", "type": "trigger"}]}"""));
+
         // Act
-        var admission = FlowDefinition.Admit(mode, running, queued);
+        var admission = graph.Admit(running, queued);
 
         // Assert
         admission.ShouldBe(expected);
@@ -290,13 +315,13 @@ public sealed class FlowExecutionTests
     public void Create_ShouldReadTheExecutionModeAndTriggers_WhenTheSpecIsValid()
     {
         // Act
-        var definition = FlowDefinition.Create(
+        var definition = FlowGraph.Create(
             Json(
                 """
                 {"executionMode": "parallel", "nodes": [
                   {"id": "t", "type": "trigger", "schedule": {"cron": "0 * * * *", "maxLateness": "5m"}, "next": "w"},
                   {"id": "w", "type": "write", "dataPoint": {"device": "d", "name": "on"}, "value": true, "timeout": "2s",
-                   "retry": {"attempts": 2, "delay": "100ms"}}]}
+                   "retry": {"times": 2, "delay": "100ms"}}]}
                 """));
 
         // Assert

@@ -113,24 +113,43 @@ internal sealed class PostgresFlowExecutions(NpgsqlDataSource database) : IFlowE
         return await IdsAsync(command, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<string>> ListCancellingAsync(CancellationToken cancellationToken = default)
+    {
+        await using var command = database.CreateCommand(
+            "SELECT namespace || '/' || flow || '/' || id FROM flow_executions " +
+            "WHERE cancel_requested AND finished_at IS NULL");
+        var keys = new List<string>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            keys.Add(reader.GetString(0));
+        }
+
+        return keys;
+    }
+
     public async Task<FlowExecutionPage> PageAsync(
         string @namespace,
         string flow,
+        string? filter,
+        FlowExecutionOrder order,
+        bool descending,
         int offset,
         int limit,
         CancellationToken cancellationToken = default)
     {
-        const string filter = "namespace = @namespace AND flow = @flow";
-        await using var count = database.CreateCommand($"SELECT count(*) FROM flow_executions WHERE {filter}");
-        count.Parameters.AddWithValue("namespace", @namespace);
-        count.Parameters.AddWithValue("flow", flow);
+        const string where = "namespace = @namespace AND flow = @flow AND (@q::text IS NULL OR lower(state) = lower(@q) " +
+                             "OR strpos(trigger_node, @q) > 0 OR strpos(coalesce(current_node, ''), @q) > 0)";
+        await using var count = database.CreateCommand($"SELECT count(*) FROM flow_executions WHERE {where}");
+        Filter(count, @namespace, flow, filter);
         var total = Convert.ToInt32(await count.ExecuteScalarAsync(cancellationToken));
 
+        var column = order == FlowExecutionOrder.FinishedAt ? "finished_at" : "started_at";
+        var direction = descending ? "DESC" : "ASC";
         await using var page = database.CreateCommand(
-            $"SELECT {Columns} FROM flow_executions WHERE {filter} " +
-            "ORDER BY started_at DESC, id DESC OFFSET @offset LIMIT @limit");
-        page.Parameters.AddWithValue("namespace", @namespace);
-        page.Parameters.AddWithValue("flow", flow);
+            $"SELECT {Columns} FROM flow_executions WHERE {where} " +
+            $"ORDER BY {column} {direction} NULLS LAST, id {direction} OFFSET @offset LIMIT @limit");
+        Filter(page, @namespace, flow, filter);
         page.Parameters.AddWithValue("offset", offset);
         page.Parameters.AddWithValue("limit", limit);
 
@@ -149,6 +168,13 @@ internal sealed class PostgresFlowExecutions(NpgsqlDataSource database) : IFlowE
         command.Parameters.AddWithValue("keep", keep);
         command.Parameters.AddWithValue("cutoff", finishedBefore.ToUniversalTime());
         await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static void Filter(NpgsqlCommand command, string @namespace, string flow, string? filter)
+    {
+        command.Parameters.AddWithValue("namespace", @namespace);
+        command.Parameters.AddWithValue("flow", flow);
+        command.Parameters.AddWithValue("q", NpgsqlDbType.Text, Nullable(filter));
     }
 
     private static void Scope(NpgsqlCommand command, string @namespace, string flow, Guid flowUid)

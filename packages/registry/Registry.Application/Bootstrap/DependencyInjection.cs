@@ -28,6 +28,8 @@ public static class DependencyInjection
 
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IResourceKind, SecretKind>());
         builder.Services.TryAddSingleton<IIntegrationSchemas, NoIntegrations>();
+        builder.Services.TryAddSingleton<DeviceSurfaces>();
+        builder.Services.TryAddSingleton<AssetSources>();
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IResourceKind, ConnectionKind>());
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IResourceKind, DeviceKind>());
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IResourceKind, AssetTypeKind>());

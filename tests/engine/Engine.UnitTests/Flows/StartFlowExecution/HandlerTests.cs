@@ -4,10 +4,10 @@ using Coderynx.Functional.Results.Errors;
 using Core.Domain.Authorization;
 using Engine.Application.Authorization;
 using Engine.Application.Flows;
-using Engine.Application.Flows.RunFlow;
+using Engine.Application.Flows.StartFlowExecution;
 using Xunit;
 
-namespace Engine.UnitTests.Flows.RunFlow;
+namespace Engine.UnitTests.Flows.StartFlowExecution;
 
 public sealed class HandlerTests
 {
@@ -29,18 +29,18 @@ public sealed class HandlerTests
 
         // Assert
         result.Error.ShouldBe(refusal);
-        await flows.DidNotReceiveWithAnyArgs().RunAsync(default!, default!, default, default, Ct);
+        await flows.DidNotReceiveWithAnyArgs().StartAsync(default!, default!, default, default, Ct);
     }
 
     [Fact]
     public async Task HandleAsync_ShouldRunTheTriggerWithThePayload_WhenTheCallerIsAnEngineer()
     {
         // Arrange
-        var run = new FlowRun(Guid.NewGuid(), false);
+        var run = new ExecutionStart(Guid.NewGuid(), false);
         var grants = Substitute.For<IRoleGrants>();
         grants.RequireRoleAsync(Arg.Any<Guid>(), "acme", NamespaceRole.Engineer, Ct).Returns(Result.Updated());
         var flows = Substitute.For<IFlowRuntime>();
-        flows.RunAsync("acme", "cooling", "manual", Payload, Ct).Returns(Result.Found(run));
+        flows.StartAsync("acme", "cooling", "manual", Payload, Ct).Returns(Result.Found(run));
         var handler = new Handler(grants, flows);
 
         // Act

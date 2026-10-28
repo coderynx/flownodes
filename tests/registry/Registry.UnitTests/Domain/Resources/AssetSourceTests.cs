@@ -20,7 +20,7 @@ public sealed class AssetSourceTests
             """);
 
         // Act
-        var errors = new AssetKind(new LampCatalog()).Validate(spec, Snapshot(Hub(), Bulb("bulb-1")));
+        var errors = new AssetKind(LampCatalog.Sources()).Validate(spec, Snapshot(Hub(), Bulb("bulb-1")));
 
         // Assert
         errors.ShouldBeEmpty();
@@ -61,7 +61,7 @@ public sealed class AssetSourceTests
             $$"""{"dataPoints": [{"name": "light", "type": "{{type}}", "writable": {{writable.ToString().ToLowerInvariant()}}, "source": {{source}}}]}""");
 
         // Act
-        var errors = new AssetKind(new LampCatalog()).Validate(spec, Snapshot(Hub(), Bulb("bulb-1"))).ToList();
+        var errors = new AssetKind(LampCatalog.Sources()).Validate(spec, Snapshot(Hub(), Bulb("bulb-1"))).ToList();
 
         // Assert
         errors.ShouldContain(error => error.Path == path);
@@ -79,7 +79,7 @@ public sealed class AssetSourceTests
             """);
 
         // Act
-        var errors = new AssetKind(new LampCatalog()).Validate(spec, Snapshot());
+        var errors = new AssetKind(LampCatalog.Sources()).Validate(spec, Snapshot());
 
         // Assert
         errors.ShouldBeEmpty();
@@ -103,7 +103,7 @@ public sealed class AssetSourceTests
                """);
 
         // Act
-        var errors = new AssetKind(new LampCatalog()).Validate(spec, Snapshot()).ToList();
+        var errors = new AssetKind(LampCatalog.Sources()).Validate(spec, Snapshot()).ToList();
 
         // Assert
         errors.ShouldContain(error => error.Path == path.Replace("dataPoints[1]", "dataPoints[1]"));
@@ -121,7 +121,7 @@ public sealed class AssetSourceTests
             """);
 
         // Act
-        var errors = new AssetKind(new LampCatalog()).Validate(spec, Snapshot()).ToList();
+        var errors = new AssetKind(LampCatalog.Sources()).Validate(spec, Snapshot()).ToList();
 
         // Assert
         errors.ShouldContain(error => error.Path == "spec.dataPoints[0].source");
@@ -140,7 +140,7 @@ public sealed class AssetSourceTests
             Widgets.Json("""{"dataPoints": [{"name": "light", "type": "number", "writable": true}]}"""));
 
         // Act
-        var errors = new AssetKind(new LampCatalog()).Validate(spec, Snapshot(Hub(), Bulb("bulb-1"), room));
+        var errors = new AssetKind(LampCatalog.Sources()).Validate(spec, Snapshot(Hub(), Bulb("bulb-1"), room));
 
         // Assert
         errors.ShouldBeEmpty();
@@ -153,7 +153,7 @@ public sealed class AssetSourceTests
         var spec = Widgets.Json("""{"sources": {"light": {"device": "bulb-1", "dataPoint": "brightness"}}}""");
 
         // Act
-        var errors = new AssetKind(new LampCatalog()).Validate(spec, Snapshot(Hub(), Bulb("bulb-1"))).ToList();
+        var errors = new AssetKind(LampCatalog.Sources()).Validate(spec, Snapshot(Hub(), Bulb("bulb-1"))).ToList();
 
         // Assert
         errors.ShouldContain(error => error.Path == "spec.sources.light");
@@ -188,7 +188,7 @@ public sealed class AssetSourceTests
             """);
 
         // Act
-        var references = new AssetKind(new LampCatalog()).References(spec).ToList();
+        var references = new AssetKind(LampCatalog.Sources()).References(spec).ToList();
 
         // Assert
         references.ShouldBe(
