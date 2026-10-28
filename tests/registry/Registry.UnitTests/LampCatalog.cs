@@ -1,13 +1,18 @@
 using System.Text.Json;
 using Core.Application.Integrations;
+using Registry.Application.Resources;
 
 namespace Registry.UnitTests;
 
 /// <summary>
-/// An Integration for tests only: <c>acme.lamp</c> has the Device Type <c>Bulb</c>, addressed by an integer id.
+/// An Integration for tests only: <c>acme.lamp</c> has the Device Type <c>Bulb</c>, addressed by an integer id, with
+/// the Action <c>blink</c> and the Event <c>burnt</c>.
 /// </summary>
 internal sealed class LampCatalog : IIntegrationSchemas
 {
+    public static DeviceSurfaces Surfaces() => new(new LampCatalog());
+    public static AssetSources Sources() => new(Surfaces());
+
     public IntegrationSchema? Find(string id) =>
         id == "acme.lamp"
             ? new IntegrationSchema(
@@ -17,12 +22,14 @@ internal sealed class LampCatalog : IIntegrationSchemas
                         "Bulb",
                         address => Check(address, "id", JsonValueKind.Number),
                         config => Check(config, null, JsonValueKind.Undefined),
-                        (_, _) =>
-                        [
-                            new DeviceDataPointSchema("brightness", "number", true),
-                            new DeviceDataPointSchema("level", "number", false),
-                            new DeviceDataPointSchema("on", "bool", true)
-                        ])
+                        (_, _) => new DeviceSurfaceSchema(
+                            [
+                                new DeviceDataPointSchema("brightness", "number", true),
+                                new DeviceDataPointSchema("level", "number", false),
+                                new DeviceDataPointSchema("on", "bool", true)
+                            ],
+                            ["blink"],
+                            ["burnt"]))
                 ])
             : null;
 

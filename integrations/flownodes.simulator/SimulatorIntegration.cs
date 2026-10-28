@@ -19,14 +19,16 @@ internal sealed class SimulatorIntegration : IIntegration
             ConfigSchema.Empty,
             (_, _) => new DeviceSurface(
                 [new DataPointDefinition("temperature", DataPointType.Number, Unit: "°C", Min: -50, Max: 150)],
-                [new ActionDefinition("set", true), new ActionDefinition("fail")])),
+                [new ActionDefinition("set", true), new ActionDefinition("fail")],
+                [])),
         new(
             SimulatedConnection.Switch,
             Address,
             ConfigSchema.Empty,
             (_, _) => new DeviceSurface(
                 [new DataPointDefinition("on", DataPointType.Bool, true)],
-                [new ActionDefinition("toggle")]))
+                [new ActionDefinition("toggle")],
+                [new EventDefinition(SimulatedConnection.Toggled)]))
     ];
 
     public void ConfigureServices(IServiceCollection services)

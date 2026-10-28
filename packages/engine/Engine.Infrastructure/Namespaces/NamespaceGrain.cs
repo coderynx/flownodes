@@ -1,6 +1,7 @@
 using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.Devices;
+using Engine.Infrastructure.Flows;
 using Microsoft.Extensions.Options;
 
 namespace Engine.Infrastructure.Namespaces;
@@ -14,6 +15,7 @@ internal sealed class NamespaceGrain(
     private const string ConnectionKind = "Connection";
     private const string AssetTypeKind = "AssetType";
     private const string AssetKind = "Asset";
+    private const string FlowKind = "Flow";
     private IDisposable? _resyncTimer;
     private IDisposable? _pingTimer;
 
@@ -137,6 +139,9 @@ internal sealed class NamespaceGrain(
             case AssetKind:
                 await Asset(name).ApplyAsync(uid, generation, seq, spec);
                 break;
+            case FlowKind:
+                await Flow(name).ApplyAsync(uid, generation, seq, spec);
+                break;
             default:
                 await Device(name).ApplyAsync(uid, generation, seq, spec);
                 break;
@@ -167,6 +172,9 @@ internal sealed class NamespaceGrain(
             case AssetKind:
                 await Asset(name).DeleteAsync(uid, seq);
                 break;
+            case FlowKind:
+                await Flow(name).DeleteAsync(uid, seq);
+                break;
             default:
                 await Device(name).DeleteAsync(uid, seq);
                 break;
@@ -192,6 +200,9 @@ internal sealed class NamespaceGrain(
     private IAssetGrain Asset(string name) =>
         GrainFactory.GetGrain<IAssetGrain>($"{this.GetPrimaryKeyString()}/{name}");
 
+    private IFlowGrain Flow(string name) =>
+        GrainFactory.GetGrain<IFlowGrain>($"{this.GetPrimaryKeyString()}/{name}");
+
     private IDeviceGrain Device(string name) =>
         GrainFactory.GetGrain<IDeviceGrain>($"{this.GetPrimaryKeyString()}/{name}");
 
@@ -215,6 +226,9 @@ internal sealed class NamespaceGrain(
                     case AssetKind:
                         await Asset(member.Name).PingAsync();
                         break;
+                    case FlowKind:
+                        await Flow(member.Name).PingAsync();
+                        break;
                     default:
                         await Device(member.Name).PingAsync();
                         break;
@@ -231,6 +245,7 @@ internal sealed class NamespaceGrain(
         kind switch
         {
             ConnectionKind or AssetTypeKind => 0,
+            FlowKind => 2,
             _ => 1
         };
 }

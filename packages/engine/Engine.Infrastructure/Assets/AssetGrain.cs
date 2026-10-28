@@ -4,6 +4,7 @@ using Engine.Infrastructure.Alarms;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.DataPoints;
 using Engine.Infrastructure.Devices;
+using Engine.Infrastructure.Flows;
 using Engine.Infrastructure.Resources;
 using Flownodes.Sdk;
 using Microsoft.Extensions.Logging;
@@ -33,6 +34,8 @@ internal sealed class AssetGrain(
     private IDisposable? _alarmTimer;
     private string _persistedPending = "";
     private bool _alarmsAnnounced;
+    private readonly Dictionary<IFlowWatcher, HashSet<string>> _watchers = [];
+    private readonly Dictionary<string, string?> _watchedValues = [];
 
     public override async Task OnActivateAsync(CancellationToken cancellationToken)
     {
@@ -108,6 +111,7 @@ internal sealed class AssetGrain(
         Refresh();
         await SyncDevicesAsync();
         await SyncAlarmsAsync(true);
+        NotifyWatchers();
         await ReportStatusAsync();
     }
 
@@ -117,6 +121,7 @@ internal sealed class AssetGrain(
         {
             _feeds[device] = feed;
             await SyncAlarmsAsync(false);
+            NotifyWatchers();
         }
 
         await ReportStatusAsync();
@@ -169,8 +174,36 @@ internal sealed class AssetGrain(
         values.State.Written[dataPoint] = new WrittenValue(document.RootElement.GetRawText(), DateTimeOffset.UtcNow);
         await values.WriteStateAsync();
         await SyncAlarmsAsync(false);
+        NotifyWatchers();
 
         return CallResult.Success();
+    }
+
+    public Task<WatchResult> WatchDataPointAsync(IFlowWatcher watcher, string dataPoint)
+    {
+        var point = _points.FirstOrDefault(candidate => candidate.Name == dataPoint);
+        if (!IsLive || point is null)
+        {
+            return Task.FromResult(WatchResult.Missing);
+        }
+
+        if (!_watchers.TryGetValue(watcher, out var watched))
+        {
+            _watchers[watcher] = watched = [];
+        }
+
+        watched.Add(dataPoint);
+        var snapshot = Snapshot(point, Evaluate(point, []));
+        _watchedValues.TryAdd(dataPoint, snapshot.Value);
+
+        return Task.FromResult(new WatchResult(true, snapshot));
+    }
+
+    public Task UnwatchAsync(IFlowWatcher watcher)
+    {
+        _watchers.Remove(watcher);
+
+        return Task.CompletedTask;
     }
 
     protected override JsonElement BuildStatus()
@@ -305,6 +338,26 @@ internal sealed class AssetGrain(
             JsonSerializer.Serialize(result),
             quality,
             inputs.Where(input => input.Timestamp is not null).Min(input => input.Timestamp));
+    }
+
+    private void NotifyWatchers()
+    {
+        var names = _watchers.Values.SelectMany(watched => watched).ToHashSet();
+        foreach (var point in _points.Where(point => names.Contains(point.Name)))
+        {
+            var snapshot = Snapshot(point, Evaluate(point, []));
+            if (_watchedValues.TryGetValue(point.Name, out var known) && known == snapshot.Value)
+            {
+                continue;
+            }
+
+            _watchedValues[point.Name] = snapshot.Value;
+            var watchers = _watchers.Where(entry => entry.Value.Contains(point.Name)).Select(entry => entry.Key);
+            foreach (var watcher in watchers)
+            {
+                watcher.DataPointChangedAsync("Asset", ResourceName, snapshot).Ignore();
+            }
+        }
     }
 
     private void Refresh() => _points = AssetDataPoint.Merge(_assetType?.DataPoints ?? [], Spec);

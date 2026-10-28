@@ -16,6 +16,7 @@ public static class NamespaceMessageHandler
     private const string DeviceKind = "Device";
     private const string AssetTypeKind = "AssetType";
     private const string AssetKind = "Asset";
+    private const string FlowKind = "Flow";
 
     /// <summary>
     /// Handles a Resource applied. A Namespace is applied to its grain; a Connection, Device, Asset Type or Asset goes
@@ -29,7 +30,7 @@ public static class NamespaceMessageHandler
         message.Kind switch
         {
             NamespaceKind => grains.GetGrain<INamespaceGrain>(message.Name).ApplyAsync(message.Uid, message.Seq),
-            ConnectionKind or DeviceKind or AssetTypeKind or AssetKind => grains
+            ConnectionKind or DeviceKind or AssetTypeKind or AssetKind or FlowKind => grains
                 .GetGrain<INamespaceGrain>(message.Namespace)
                 .ResourceAppliedAsync(
                     message.Kind,
@@ -53,7 +54,7 @@ public static class NamespaceMessageHandler
         message.Kind switch
         {
             NamespaceKind => grains.GetGrain<INamespaceGrain>(message.Name).DeleteAsync(message.Uid, message.Seq),
-            ConnectionKind or DeviceKind or AssetTypeKind or AssetKind => grains
+            ConnectionKind or DeviceKind or AssetTypeKind or AssetKind or FlowKind => grains
                 .GetGrain<INamespaceGrain>(message.Namespace)
                 .ResourceDeletedAsync(message.Kind, message.Name, message.Uid, message.Seq),
             _ => grains.GetGrain<INamespaceGrain>(message.Namespace).ObserveAsync(message.Seq)

@@ -16,6 +16,9 @@ internal sealed class GrainConnectionEvents(IConnectionGrain grain, long runtime
     public void Value(string device, string dataPoint, JsonElement value, DateTimeOffset timestamp, Quality quality) =>
         Send(grain.RuntimeValueAsync(runtime, device, dataPoint, value.GetRawText(), timestamp, (int)quality));
 
+    public void Event(string device, string name, JsonElement payload, DateTimeOffset timestamp) =>
+        Send(grain.RuntimeEventAsync(runtime, device, name, payload.GetRawText(), timestamp));
+
     public void DeviceState(string device, DeviceState state) =>
         Send(grain.RuntimeDeviceStateAsync(runtime, device, (int)state));
 

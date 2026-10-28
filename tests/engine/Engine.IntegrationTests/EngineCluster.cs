@@ -3,10 +3,12 @@ using Core.Contracts.Resources;
 using Engine.Application.Alarms;
 using Engine.Application.Assets;
 using Engine.Application.Devices;
+using Engine.Application.Flows;
 using Engine.Infrastructure.Alarms;
 using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.Devices;
+using Engine.Infrastructure.Flows;
 using Engine.Infrastructure.Integrations;
 using Engine.Infrastructure.Messaging;
 using Engine.Infrastructure.Namespaces;
@@ -38,14 +40,23 @@ public sealed class EngineCluster : IAsyncDisposable
     public IDeviceRuntime Devices => _cluster.GetSiloServiceProvider().GetRequiredService<IDeviceRuntime>();
     public IAssetRuntime Assets => _cluster.GetSiloServiceProvider().GetRequiredService<IAssetRuntime>();
     public IAlarmRuntime Alarms => _cluster.GetSiloServiceProvider().GetRequiredService<IAlarmRuntime>();
+    public IFlowRuntime Flows => _cluster.GetSiloServiceProvider().GetRequiredService<IFlowRuntime>();
+    internal IFlowExecutions FlowExecutions =>
+        _cluster.GetSiloServiceProvider().GetRequiredService<IFlowExecutions>();
     public RecordingRegistry Registry => _cluster.GetSiloServiceProvider().GetRequiredService<RecordingRegistry>();
 
     public static async Task<EngineCluster> StartAsync(
         TimeSpan? resyncPeriod = null,
         string? alarmDatabase = null,
-        TimeSpan? reconnectBackoff = null)
+        TimeSpan? reconnectBackoff = null,
+        string? flowDatabase = null)
     {
         var builder = new TestClusterBuilder(1);
+        if (flowDatabase is not null)
+        {
+            builder.Properties["FlowDatabase"] = flowDatabase;
+        }
+
         if (alarmDatabase is not null)
         {
             builder.Properties["AlarmDatabase"] = alarmDatabase;
@@ -145,6 +156,20 @@ public sealed class EngineCluster : IAsyncDisposable
             return new PostgresAlarmHistory(database);
         }
 
+        private static void AddFlows(IServiceCollection services, string? connectionString)
+        {
+            if (connectionString is null)
+            {
+                return;
+            }
+
+            var database = NpgsqlDataSource.Create(connectionString);
+            new FlowExecutionSchema(database).StartAsync(CancellationToken.None).GetAwaiter().GetResult();
+            services.AddSingleton<IFlowExecutions>(new PostgresFlowExecutions(database));
+            services.AddSingleton<IFlowRuntime, GrainFlowRuntime>();
+            services.Configure<FlowGrainOptions>(options => options.StatusInterval = TimeSpan.FromMilliseconds(50));
+        }
+
         public void Configure(ISiloBuilder siloBuilder)
         {
             var resyncPeriod = TimeSpan.Parse(
@@ -185,6 +210,7 @@ public sealed class EngineCluster : IAsyncDisposable
                 services.AddSingleton<IAssetRuntime, GrainAssetRuntime>();
                 services.AddSingleton<IAlarmRuntime, GrainAlarmRuntime>();
                 services.AddSingleton<IAlarmHistory>(AlarmHistoryFor(siloBuilder.Configuration["AlarmDatabase"]));
+                AddFlows(services, siloBuilder.Configuration["FlowDatabase"]);
                 services.AddSingleton<RecordingRegistry>();
                 services.AddSingleton<IRegistryRequests>(provider => provider.GetRequiredService<RecordingRegistry>());
             });

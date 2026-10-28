@@ -1,10 +1,9 @@
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Registry.Domain.Resources;
 
 namespace Registry.Application.Resources;
 
-internal static partial class AlarmDeclarations
+internal static class AlarmDeclarations
 {
     private static readonly string[] Fields =
         ["name", "dataPoint", "operator", "value", "for", "deadband", "priority", "message"];
@@ -115,9 +114,9 @@ internal static partial class AlarmDeclarations
             yield return new SpecError($"{path}.value", problem);
         }
 
-        if (alarm.TryGetProperty("for", out var duration) && !IsPositiveDuration(duration))
+        if (alarm.TryGetProperty("for", out var duration) && !Durations.IsPositive(duration))
         {
-            yield return new SpecError($"{path}.for", "Must be a positive duration such as 500ms, 10s, 5m or 1h.");
+            yield return new SpecError($"{path}.for", Durations.Hint);
         }
 
         if (alarm.TryGetProperty("deadband", out var deadband))
@@ -144,10 +143,6 @@ internal static partial class AlarmDeclarations
         }
     }
 
-    private static bool IsPositiveDuration(JsonElement duration) =>
-        duration.ValueKind == JsonValueKind.String && Duration().IsMatch(duration.GetString()!) &&
-        duration.GetString()!.Any(c => c is >= '1' and <= '9');
-
     private static string? Mismatch(Declaration dataPoint, JsonElement value) =>
         dataPoint.Type switch
         {
@@ -163,7 +158,4 @@ internal static partial class AlarmDeclarations
 
     private static string? Text(JsonElement spec, string name) =>
         spec.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
-
-    [GeneratedRegex(@"^\d+(ms|s|m|h)$")]
-    private static partial Regex Duration();
 }

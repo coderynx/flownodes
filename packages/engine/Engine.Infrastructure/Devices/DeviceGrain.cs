@@ -2,6 +2,7 @@ using System.Text.Json;
 using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.DataPoints;
+using Engine.Infrastructure.Flows;
 using Engine.Infrastructure.Integrations;
 using Engine.Infrastructure.Resources;
 using Flownodes.Sdk;
@@ -26,6 +27,7 @@ internal sealed class DeviceGrain(
     private string? _problem;
     private DeviceState? _deviceState;
     private readonly HashSet<string> _subscribers = [];
+    private readonly Dictionary<IFlowWatcher, HashSet<string>> _watchers = [];
     private string? _registeredWith;
 
     public override async Task OnActivateAsync(CancellationToken cancellationToken)
@@ -115,7 +117,60 @@ internal sealed class DeviceGrain(
         {
             _readings[dataPoint] = new Reading(value, (Quality)quality, timestamp);
             Notify();
+            if (known?.Value != value)
+            {
+                NotifyWatchers(DataPointKey(dataPoint));
+            }
         }
+
+        return Task.CompletedTask;
+    }
+
+    public Task EventReportedAsync(string name, string payload, DateTimeOffset timestamp)
+    {
+        var declared = _surface?.Events.Any(candidate => candidate.Name == name) == true;
+        if (!IsLive || !declared)
+        {
+            return Task.CompletedTask;
+        }
+
+        foreach (var watcher in Watching(EventKey(name)))
+        {
+            watcher.EventReportedAsync(ResourceName, name, payload, timestamp).Ignore();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<WatchResult> WatchDataPointAsync(IFlowWatcher watcher, string dataPoint)
+    {
+        var missing = _surface is { } surface && surface.DataPoints.All(candidate => candidate.Name != dataPoint);
+        if (!IsLive || missing)
+        {
+            return Task.FromResult(WatchResult.Missing);
+        }
+
+        Watch(watcher, DataPointKey(dataPoint));
+
+        return Task.FromResult(new WatchResult(true, Snapshots().FirstOrDefault(point => point.Name == dataPoint)));
+    }
+
+    public Task<bool> WatchEventAsync(IFlowWatcher watcher, string name)
+    {
+        var missing = _surface is { } surface && surface.Events.All(candidate => candidate.Name != name);
+        if (!IsLive || missing)
+        {
+            return Task.FromResult(false);
+        }
+
+        Watch(watcher, EventKey(name));
+
+        return Task.FromResult(true);
+    }
+
+    public Task UnwatchAsync(IFlowWatcher watcher)
+    {
+        _watchers.Remove(watcher);
 
         return Task.CompletedTask;
     }
@@ -198,6 +253,36 @@ internal sealed class DeviceGrain(
         foreach (var asset in _subscribers)
         {
             GrainFactory.GetGrain<IAssetGrain>($"{Namespace}/{asset}").DeviceChangedAsync(ResourceName, feed).Ignore();
+        }
+    }
+
+    private static string DataPointKey(string name) => $"dataPoint:{name}";
+    private static string EventKey(string name) => $"event:{name}";
+
+    private void Watch(IFlowWatcher watcher, string key)
+    {
+        if (!_watchers.TryGetValue(watcher, out var keys))
+        {
+            _watchers[watcher] = keys = [];
+        }
+
+        keys.Add(key);
+    }
+
+    private IEnumerable<IFlowWatcher> Watching(string key) =>
+        [.. _watchers.Where(entry => entry.Value.Contains(key)).Select(entry => entry.Key)];
+
+    private void NotifyWatchers(string key)
+    {
+        var snapshot = Snapshots().FirstOrDefault(point => DataPointKey(point.Name) == key);
+        if (snapshot is null)
+        {
+            return;
+        }
+
+        foreach (var watcher in Watching(key))
+        {
+            watcher.DataPointChangedAsync("Device", ResourceName, snapshot).Ignore();
         }
     }
 

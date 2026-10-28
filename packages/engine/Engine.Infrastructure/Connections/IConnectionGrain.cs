@@ -31,6 +31,9 @@ internal interface IConnectionGrain : IGrainWithStringKey
         int quality);
 
     [OneWay]
+    Task RuntimeEventAsync(long runtime, string device, string name, string payload, DateTimeOffset timestamp);
+
+    [OneWay]
     Task RuntimeDeviceStateAsync(long runtime, string device, int deviceState);
 
     [OneWay]

@@ -142,7 +142,7 @@ public sealed class AlarmConditionTests
             Resource("AssetType", "train", $$"""{"dataPoints": [{{Pressure}}], "alarms": [{{Low}}]}"""));
 
         // Act
-        var errors = new AssetKind(new LampCatalog()).Validate(spec, snapshot);
+        var errors = new AssetKind(LampCatalog.Sources()).Validate(spec, snapshot);
 
         // Assert
         errors.ShouldBeEmpty();
@@ -158,7 +158,7 @@ public sealed class AlarmConditionTests
             Resource("AssetType", "train", $$"""{"dataPoints": [{{Pressure}}], "alarms": [{{Low}}]}"""));
 
         // Act
-        var errors = new AssetKind(new LampCatalog()).Validate(spec, snapshot).ToList();
+        var errors = new AssetKind(LampCatalog.Sources()).Validate(spec, snapshot).ToList();
 
         // Assert
         errors.ShouldContain(error => error.Path == "spec.alarms[0].name");
@@ -173,7 +173,7 @@ public sealed class AlarmConditionTests
         var snapshot = Snapshot(Resource("AssetType", "train", $$"""{"dataPoints": [{{Pressure}}]}"""));
 
         // Act
-        var errors = new AssetKind(new LampCatalog()).Validate(spec, snapshot).ToList();
+        var errors = new AssetKind(LampCatalog.Sources()).Validate(spec, snapshot).ToList();
 
         // Assert
         errors.ShouldContain(error => error.Path == "spec.alarms[0].dataPoint");
@@ -186,7 +186,7 @@ public sealed class AlarmConditionTests
         var spec = Widgets.Json($$"""{"dataPoints": [{{Pressure}}], "alarms": [{{Low}}]}""");
 
         // Act
-        var errors = new AssetKind(new LampCatalog()).Validate(spec, Snapshot());
+        var errors = new AssetKind(LampCatalog.Sources()).Validate(spec, Snapshot());
 
         // Assert
         errors.ShouldBeEmpty();

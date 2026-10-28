@@ -5,6 +5,7 @@ using Engine.Application.Alarms;
 using Engine.Application.Assets;
 using Engine.Application.Authorization;
 using Engine.Application.Devices;
+using Engine.Application.Flows;
 using Engine.Application.Installations;
 using Engine.Application.Integrations;
 using Engine.Infrastructure.Alarms;
@@ -12,6 +13,7 @@ using Engine.Infrastructure.Assets;
 using Engine.Infrastructure.Authorization;
 using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.Devices;
+using Engine.Infrastructure.Flows;
 using Engine.Infrastructure.Installations;
 using Engine.Infrastructure.Integrations;
 using Engine.Infrastructure.Namespaces;
@@ -88,6 +90,10 @@ public static class DependencyInjection
         builder.Services.AddHostedService<AlarmSchema>();
         builder.Services.AddHostedService<AlarmRetention>();
         builder.Services.AddSingleton<IAlarmHistory, PostgresAlarmHistory>();
+        builder.Services.AddHostedService<FlowExecutionSchema>();
+        builder.Services.AddHostedService<FlowExecutionRetention>();
+        builder.Services.AddHostedService<FlowCancellationSweep>();
+        builder.Services.AddSingleton<IFlowExecutions, PostgresFlowExecutions>();
 
         builder.UseOrleans(silo =>
         {
@@ -121,11 +127,13 @@ public static class DependencyInjection
         builder.Services.Configure<AssetTypeGrainOptions>(
             builder.Configuration.GetSection(AssetTypeGrainOptions.Section));
         builder.Services.Configure<DeviceGrainOptions>(builder.Configuration.GetSection(DeviceGrainOptions.Section));
+        builder.Services.Configure<FlowGrainOptions>(builder.Configuration.GetSection(FlowGrainOptions.Section));
         builder.Services.AddSingleton<IStatusReporter, WolverineStatusReporter>();
         builder.Services.AddSingleton<IRoleGrants, GrainRoleGrants>();
         builder.Services.AddSingleton<IDeviceRuntime, GrainDeviceRuntime>();
         builder.Services.AddSingleton<IAssetRuntime, GrainAssetRuntime>();
         builder.Services.AddSingleton<IAlarmRuntime, GrainAlarmRuntime>();
+        builder.Services.AddSingleton<IFlowRuntime, GrainFlowRuntime>();
     }
 
     private static void AddMessaging(IHostApplicationBuilder builder)
