@@ -31,6 +31,14 @@ public sealed record DeviceSurfaceSchema(
     IReadOnlyList<string> Events);
 
 /// <summary>
+/// What a Connection offers of its own, the Actions and Events of the External Services it reaches, as far as the
+/// Registry needs it to validate a reference to it (ADR-0011).
+/// </summary>
+/// <param name="Actions">The names of its Actions.</param>
+/// <param name="Events">The names of its Events.</param>
+public sealed record ConnectionSurfaceSchema(IReadOnlyList<string> Actions, IReadOnlyList<string> Events);
+
+/// <summary>
 /// What the Registry needs to know about a Device Type of an installed Integration to validate a Device (ADR-0010).
 /// </summary>
 /// <param name="Name">The name of the Device Type.</param>
@@ -47,9 +55,11 @@ public sealed record DeviceTypeSchema(
 /// What the Registry needs to know about an installed Integration to validate a Connection (ADR-0009).
 /// </summary>
 /// <param name="ValidateConfig">Checks a Connection's <c>config</c>.</param>
+/// <param name="Surface">Derives what a Connection offers of its own from its <c>config</c> (ADR-0011).</param>
 /// <param name="DeviceTypes">The Device Types the Integration defines.</param>
 public sealed record IntegrationSchema(
     Func<JsonElement, IReadOnlyList<SchemaProblem>> ValidateConfig,
+    Func<JsonElement, ConnectionSurfaceSchema> Surface,
     IReadOnlyList<DeviceTypeSchema> DeviceTypes);
 
 /// <summary>

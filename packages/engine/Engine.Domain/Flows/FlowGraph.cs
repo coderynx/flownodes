@@ -156,10 +156,19 @@ public sealed class FlowGraph
             : new DataPointRef(DataPointOwner.Device, Text(target, "device")!, name);
     }
 
-    private static MemberRef? Member(JsonElement node, string field) =>
-        node.TryGetProperty(field, out var target)
-            ? new MemberRef(target.GetProperty("device").GetString()!, target.GetProperty("name").GetString()!)
-            : null;
+    private static MemberRef? Member(JsonElement node, string field)
+    {
+        if (!node.TryGetProperty(field, out var target))
+        {
+            return null;
+        }
+
+        var name = target.GetProperty("name").GetString()!;
+
+        return Text(target, "connection") is { } connection
+            ? new MemberRef(MemberOwner.Connection, connection, name)
+            : new MemberRef(MemberOwner.Device, Text(target, "device")!, name);
+    }
 
     private static Comparison? Comparison(JsonElement node, string field) =>
         node.TryGetProperty(field, out var comparison)

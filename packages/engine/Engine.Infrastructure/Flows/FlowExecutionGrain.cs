@@ -61,14 +61,19 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
         }
     }
 
-    public async Task EventReportedAsync(string device, string name, string payload, DateTimeOffset timestamp)
+    public async Task EventReportedAsync(
+        string kind,
+        string resource,
+        string name,
+        string payload,
+        DateTimeOffset timestamp)
     {
         if (_execution is not { State: FlowExecutionState.Waiting, Node: WaitNode { Event: { } wanted } })
         {
             return;
         }
 
-        if (wanted.Device == device && wanted.Name == name)
+        if (wanted == new MemberRef(Enum.Parse<MemberOwner>(kind), resource, name))
         {
             var arrived = new JsonObject
             {
@@ -183,10 +188,7 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
                     ? execution.Variable(from)?.ToJsonString() ?? "{}"
                     : invoke.Parameters;
                 var invocation = execution.InvocationId;
-                await CallAsync(
-                    execution,
-                    invoke.Policy,
-                    () => Device(invoke.Action.Device).InvokeAsync(invoke.Action.Name, parameters, invocation));
+                await CallAsync(execution, invoke.Policy, () => InvokeAsync(invoke.Action, parameters, invocation));
                 break;
             case BranchNode:
                 execution.Branch(DateTimeOffset.UtcNow);
@@ -262,6 +264,11 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
             : CallResult.Success(Readings.From(point).ToJsonString());
     }
 
+    private Task<CallResult> InvokeAsync(MemberRef action, string parameters, string invocation) =>
+        action.Owner == MemberOwner.Connection
+            ? Connection(action.Resource).InvokeAsync(null, action.Name, parameters, invocation)
+            : Device(action.Resource).InvokeAsync(action.Name, parameters, invocation);
+
     private Task<CallResult> WriteAsync(DataPointRef target, string value) =>
         target.Owner == DataPointOwner.Asset
             ? Asset(target.Resource).WriteAsync(target.Name, value)
@@ -312,7 +319,7 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
         var source = execution.Node switch
         {
             WaitNode { Until: { } until } => (until.DataPoint.Owner.ToString(), until.DataPoint.Resource),
-            WaitNode { Event: { } wanted } => (nameof(DataPointOwner.Device), wanted.Device),
+            WaitNode { Event: { } wanted } => (wanted.Owner.ToString(), wanted.Resource),
             _ => ((string, string)?)null
         };
         if (_watching != source)
@@ -338,11 +345,12 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
                     ? waiting => waiting.Complete(Readings.From(snapshot), DateTimeOffset.UtcNow)
                     : null;
             case WaitNode { Event: { } wanted }:
-                _watching = ("Device", wanted.Device);
+                _watching = (wanted.Owner.ToString(), wanted.Resource);
+                var watched = wanted.Owner == MemberOwner.Connection
+                    ? await Connection(wanted.Resource).WatchEventAsync(me, wanted.Name)
+                    : await Device(wanted.Resource).WatchEventAsync(me, wanted.Name);
 
-                return await Device(wanted.Device).WatchEventAsync(me, wanted.Name)
-                    ? null
-                    : Missing($"Device '{wanted.Device}' has no Event '{wanted.Name}'.");
+                return watched ? null : Missing($"{wanted.Owner} '{wanted.Resource}' has no Event '{wanted.Name}'.");
             default:
                 return null;
         }
@@ -381,7 +389,12 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
         var me = this.AsReference<IFlowWatcher>();
         try
         {
-            await (kind == nameof(DataPointOwner.Asset) ? Asset(name).UnwatchAsync(me) : Device(name).UnwatchAsync(me));
+            await (kind switch
+            {
+                nameof(DataPointOwner.Asset) => Asset(name).UnwatchAsync(me),
+                nameof(MemberOwner.Connection) => Connection(name).UnwatchAsync(me),
+                _ => Device(name).UnwatchAsync(me)
+            });
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -391,4 +404,7 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
 
     private IAssetGrain Asset(string name) => GrainFactory.GetGrain<IAssetGrain>($"{Namespace}/{name}");
     private IDeviceGrain Device(string name) => GrainFactory.GetGrain<IDeviceGrain>($"{Namespace}/{name}");
+
+    private IConnectionGrain Connection(string name) =>
+        GrainFactory.GetGrain<IConnectionGrain>($"{Namespace}/{name}");
 }

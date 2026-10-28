@@ -6,17 +6,19 @@ namespace Registry.UnitTests;
 
 /// <summary>
 /// An Integration for tests only: <c>acme.lamp</c> has the Device Type <c>Bulb</c>, addressed by an integer id, with
-/// the Action <c>blink</c> and the Event <c>burnt</c>.
+/// the Action <c>blink</c> and the Event <c>burnt</c>. Its Connections reach a weather service with the Action
+/// <c>forecast</c> and the Event <c>outage</c>.
 /// </summary>
 internal sealed class LampCatalog : IIntegrationSchemas
 {
-    public static DeviceSurfaces Surfaces() => new(new LampCatalog());
+    public static Surfaces Surfaces() => new(new LampCatalog());
     public static AssetSources Sources() => new(Surfaces());
 
     public IntegrationSchema? Find(string id) =>
         id == "acme.lamp"
             ? new IntegrationSchema(
                 config => Check(config, "host", JsonValueKind.String),
+                _ => new ConnectionSurfaceSchema(["forecast"], ["outage"]),
                 [
                     new DeviceTypeSchema(
                         "Bulb",

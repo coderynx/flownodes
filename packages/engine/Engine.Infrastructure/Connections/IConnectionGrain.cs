@@ -1,3 +1,4 @@
+using Engine.Infrastructure.Flows;
 using Orleans.Concurrency;
 
 namespace Engine.Infrastructure.Connections;
@@ -10,7 +11,9 @@ internal interface IConnectionGrain : IGrainWithStringKey
     Task<ConnectionInfo> RegisterDeviceAsync(DeviceRegistration device);
     Task UnregisterDeviceAsync(string name);
     Task<CallResult> WriteAsync(string device, string dataPoint, string value);
-    Task<CallResult> InvokeAsync(string device, string action, string parameters, string invocationId);
+    Task<CallResult> InvokeAsync(string? device, string action, string parameters, string invocationId);
+    Task<bool> WatchEventAsync(IFlowWatcher watcher, string name);
+    Task UnwatchAsync(IFlowWatcher watcher);
 
     [OneWay]
     Task RuntimeConnectingAsync(long runtime);
@@ -31,7 +34,7 @@ internal interface IConnectionGrain : IGrainWithStringKey
         int quality);
 
     [OneWay]
-    Task RuntimeEventAsync(long runtime, string device, string name, string payload, DateTimeOffset timestamp);
+    Task RuntimeEventAsync(long runtime, string? device, string name, string payload, DateTimeOffset timestamp);
 
     [OneWay]
     Task RuntimeDeviceStateAsync(long runtime, string device, int deviceState);

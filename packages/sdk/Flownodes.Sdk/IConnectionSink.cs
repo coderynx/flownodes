@@ -87,13 +87,14 @@ public interface IConnectionSink
         Quality quality = Quality.Good);
 
     /// <summary>
-    /// Reports an Event of a Device. The host drops one its Device Type does not declare.
+    /// Reports an Event of a Device, or one of the Connection's own. The host drops one that the Device Type, or the
+    /// Connection's <see cref="IIntegration.Surface"/>, does not declare.
     /// </summary>
-    /// <param name="device">The name of the Device.</param>
+    /// <param name="device">The name of the Device, or <see langword="null"/> for an Event of the Connection.</param>
     /// <param name="name">The name of the Event.</param>
     /// <param name="payload">What the Event carries, as JSON.</param>
     /// <param name="timestamp">When it happened.</param>
-    void ReportEvent(string device, string name, JsonElement payload, DateTimeOffset timestamp);
+    void ReportEvent(string? device, string name, JsonElement payload, DateTimeOffset timestamp);
 
     /// <summary>
     /// Reports whether a declared Device was found.

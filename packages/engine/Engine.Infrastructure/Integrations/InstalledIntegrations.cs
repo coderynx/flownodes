@@ -27,6 +27,7 @@ internal sealed class InstalledIntegrations(
         Find(id) is { } loaded
             ? new IntegrationSchema(
                 config => Problems(loaded.Integration.ConnectionConfig, config),
+                config => Schema(loaded.Integration.Surface(config)),
                 [
                     .. loaded.Integration.DeviceTypes.Select(deviceType => new DeviceTypeSchema(
                         deviceType.Name,
@@ -35,6 +36,9 @@ internal sealed class InstalledIntegrations(
                         (address, config) => Schema(deviceType.Surface(address, config))))
                 ])
             : null;
+
+    private static ConnectionSurfaceSchema Schema(ConnectionSurface surface) =>
+        new([.. surface.Actions.Select(action => action.Name)], [.. surface.Events.Select(@event => @event.Name)]);
 
     private static DeviceSurfaceSchema Schema(DeviceSurface surface) =>
         new(

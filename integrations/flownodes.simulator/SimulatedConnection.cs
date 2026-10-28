@@ -9,6 +9,10 @@ internal sealed class SimulatedConnection(TimeProvider time, int units, IConnect
     public const string Thermometer = "Thermometer";
     public const string Switch = "Switch";
     public const string Toggled = "toggled";
+    public const string Forecast = "forecast";
+    public const string Announce = "announce";
+    public const string Announced = "announced";
+    private const double ForecastTemperature = 18;
     private const double InitialTemperature = 20;
     private readonly ConcurrentDictionary<string, DeviceBinding> _devices = new();
     private readonly ConcurrentDictionary<string, bool> _switches = new();
@@ -54,12 +58,17 @@ internal sealed class SimulatedConnection(TimeProvider time, int units, IConnect
     }
 
     public Task<JsonElement> InvokeAsync(
-        string device,
+        string? device,
         string action,
         JsonElement parameters,
         string invocationId,
         CancellationToken cancellationToken)
     {
+        if (device is null)
+        {
+            return Task.FromResult(InvokeOwn(action, parameters));
+        }
+
         switch (action)
         {
             case "set":
@@ -82,6 +91,24 @@ internal sealed class SimulatedConnection(TimeProvider time, int units, IConnect
     }
 
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+    private JsonElement InvokeOwn(string action, JsonElement parameters)
+    {
+        switch (action)
+        {
+            case Forecast:
+                var city = parameters.GetProperty("city").GetString();
+
+                return JsonSerializer.SerializeToElement(new { city, temperature = ForecastTemperature });
+            case Announce:
+                sink.ReportEvent(null, Announced, parameters, time.GetUtcNow());
+
+                return JsonSerializer.SerializeToElement(new { });
+            default:
+                throw new InvalidOperationException($"The simulated connection has no Action '{action}'.");
+        }
+    }
+
     private static int Id(DeviceBinding device) => device.Address.GetProperty("id").GetInt32();
 
     private void Publish(DeviceBinding device)

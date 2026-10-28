@@ -136,7 +136,7 @@ internal sealed class DeviceGrain(
 
         foreach (var watcher in Watching(EventKey(name)))
         {
-            watcher.EventReportedAsync(ResourceName, name, payload, timestamp).Ignore();
+            watcher.EventReportedAsync("Device", ResourceName, name, payload, timestamp).Ignore();
         }
 
         return Task.CompletedTask;

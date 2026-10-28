@@ -31,6 +31,22 @@ internal sealed class SimulatorIntegration : IIntegration
                 [new EventDefinition(SimulatedConnection.Toggled)]))
     ];
 
+    public ConnectionSurface Surface(JsonElement config) =>
+        new(
+            [
+                new ActionDefinition(
+                    SimulatedConnection.Forecast,
+                    true,
+                    Schema("""{"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}"""),
+                    Schema(
+                        """
+                        {"type": "object",
+                         "properties": {"city": {"type": "string"}, "temperature": {"type": "number"}}}
+                        """)),
+                new ActionDefinition(SimulatedConnection.Announce, Parameters: Schema("""{"type": "object"}"""))
+            ],
+            [new EventDefinition(SimulatedConnection.Announced, Schema("""{"type": "object"}"""))]);
+
     public void ConfigureServices(IServiceCollection services)
     {
     }
@@ -40,4 +56,6 @@ internal sealed class SimulatorIntegration : IIntegration
             services.GetRequiredService<TimeProvider>(),
             config.TryGetProperty("units", out var units) ? units.GetInt32() : 0,
             sink);
+
+    private static JsonElement Schema(string json) => JsonDocument.Parse(json).RootElement.Clone();
 }

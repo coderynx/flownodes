@@ -4,9 +4,22 @@ using Registry.Domain.Resources;
 
 namespace Registry.Application.Resources;
 
-internal sealed class DeviceSurfaces(IIntegrationSchemas integrations)
+internal sealed class Surfaces(IIntegrationSchemas integrations)
 {
-    public DeviceSurfaceSchema? Find(NamespaceSnapshot @namespace, string deviceName)
+    public ConnectionSurfaceSchema? Connection(NamespaceSnapshot @namespace, string connectionName)
+    {
+        if (@namespace.Find(ConnectionKind.KindName, connectionName) is not { } connection ||
+            Integration(connection) is not { } integration)
+        {
+            return null;
+        }
+
+        var config = connection.TryGetProperty("config", out var given) ? given : ConnectionKind.EmptyObject;
+
+        return integration.ValidateConfig(config).Count > 0 ? null : integration.Surface(config);
+    }
+
+    public DeviceSurfaceSchema? Device(NamespaceSnapshot @namespace, string deviceName)
     {
         if (@namespace.Find(DeviceKind.KindName, deviceName) is not { } device ||
             DeviceType(@namespace, device) is not { } deviceType)
@@ -28,6 +41,9 @@ internal sealed class DeviceSurfaces(IIntegrationSchemas integrations)
         return deviceType.Surface(address, config);
     }
 
+    private IntegrationSchema? Integration(JsonElement connection) =>
+        Text(connection, "integration") is { } integrationId ? integrations.Find(integrationId) : null;
+
     private DeviceTypeSchema? DeviceType(NamespaceSnapshot @namespace, JsonElement device)
     {
         if (Text(device, "connection") is not { } connectionName ||
@@ -36,14 +52,9 @@ internal sealed class DeviceSurfaces(IIntegrationSchemas integrations)
             return null;
         }
 
-        if (Text(connection, "integration") is not { } integrationId)
-        {
-            return null;
-        }
-
         var typeName = Text(device, "type");
 
-        return integrations.Find(integrationId)?.DeviceTypes.FirstOrDefault(candidate => candidate.Name == typeName);
+        return Integration(connection)?.DeviceTypes.FirstOrDefault(candidate => candidate.Name == typeName);
     }
 
     private static string? Text(JsonElement spec, string name) =>
