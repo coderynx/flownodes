@@ -13,7 +13,6 @@ public abstract record FlowNode(string Id, string? Next)
     /// Gets the Node that follows when this one fails; none to end the Flow Execution <c>Failed</c>.
     /// </summary>
     public virtual string? Error => null;
-
     /// <summary>
     /// Gets the variable the Node keeps its value in; none to keep nothing.
     /// </summary>
@@ -53,7 +52,6 @@ public sealed record ReadNode(string Id, string? Next, CallPolicy Policy, DataPo
 {
     /// <inheritdoc />
     public override string? Error => Policy.Error;
-
     /// <inheritdoc />
     public override string? Into => Keep;
 }
@@ -100,7 +98,6 @@ public sealed record InvokeNode(
 {
     /// <inheritdoc />
     public override string? Error => Policy.Error;
-
     /// <inheritdoc />
     public override string? Into => Keep;
 }
@@ -113,8 +110,7 @@ public sealed record InvokeNode(
 /// <param name="If">The comparison.</param>
 /// <param name="Then">The Node that follows when the comparison holds; none to end.</param>
 /// <param name="Else">The Node that follows otherwise; none to end.</param>
-public sealed record BranchNode(string Id, string From, Comparison If, string? Then, string? Else)
-    : FlowNode(Id, null);
+public sealed record BranchNode(string Id, string From, Comparison If, string? Then, string? Else) : FlowNode(Id, null);
 
 /// <summary>
 /// A Node that waits for a duration, for a Data Point condition or for an Event, the last two within a timeout.
@@ -145,7 +141,6 @@ public sealed record WaitNode(
 {
     /// <inheritdoc />
     public override string? Error => ErrorEdge;
-
     /// <inheritdoc />
     public override string? Into => Keep;
 }

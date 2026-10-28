@@ -10,7 +10,6 @@ namespace Registry.Application.Resources;
 /// </summary>
 internal sealed class AssetSources(DeviceSurfaces surfaces)
 {
-
     private static readonly string[] Operations = ["sum", "min", "max", "average"];
 
     private static Dictionary<string, Declaration> First(IEnumerable<Declaration> declarations) =>

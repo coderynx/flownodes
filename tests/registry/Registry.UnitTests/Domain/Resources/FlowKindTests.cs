@@ -51,7 +51,9 @@ public sealed class FlowKindTests
     [Theory]
     [InlineData("""{"nodes": [], "extra": 1}""", "spec.extra")]
     [InlineData("""{"limits": {"steps": 0}, "nodes": [{"id": "a", "type": "trigger"}]}""", "spec.limits.steps")]
-    [InlineData("""{"limits": {"executions": 101}, "nodes": [{"id": "a", "type": "trigger"}]}""", "spec.limits.executions")]
+    [InlineData(
+        """{"limits": {"executions": 101}, "nodes": [{"id": "a", "type": "trigger"}]}""",
+        "spec.limits.executions")]
     [InlineData("""{"limits": {"forever": 1}, "nodes": [{"id": "a", "type": "trigger"}]}""", "spec.limits.forever")]
     [InlineData("""{"nodes": []}""", "spec.nodes")]
     [InlineData("""{}""", "spec.nodes")]
@@ -72,23 +74,33 @@ public sealed class FlowKindTests
     [InlineData(
         """{"nodes": [{"id": "a", "type": "trigger", "dataPoint": {"asset": "x", "device": "y", "name": "z"}}]}""",
         "spec.nodes[0].dataPoint")]
-    [InlineData("""{"nodes": [{"id": "a", "type": "trigger", "dataPoint": {"asset": "x"}}]}""", "spec.nodes[0].dataPoint.name")]
-    [InlineData("""{"nodes": [{"id": "a", "type": "trigger", "when": {"operator": ">", "value": 1}}]}""", "spec.nodes[0].when")]
+    [InlineData(
+        """{"nodes": [{"id": "a", "type": "trigger", "dataPoint": {"asset": "x"}}]}""",
+        "spec.nodes[0].dataPoint.name")]
+    [InlineData(
+        """{"nodes": [{"id": "a", "type": "trigger", "when": {"operator": ">", "value": 1}}]}""",
+        "spec.nodes[0].when")]
     [InlineData(
         """{"nodes": [{"id": "a", "type": "trigger", "dataPoint": {"asset": "x", "name": "y"}, "when": {"operator": "~", "value": 1}}]}""",
         "spec.nodes[0].when.operator")]
     [InlineData(
         """{"nodes": [{"id": "a", "type": "trigger", "dataPoint": {"asset": "x", "name": "y"}, "when": {"operator": ">"}}]}""",
         "spec.nodes[0].when.value")]
-    [InlineData("""{"nodes": [{"id": "a", "type": "trigger", "event": {"asset": "x", "name": "y"}}]}""", "spec.nodes[0].event.device")]
-    [InlineData("""{"nodes": [{"id": "a", "type": "trigger", "schedule": {"cron": "61 * * * *"}}]}""", "spec.nodes[0].schedule.cron")]
+    [InlineData(
+        """{"nodes": [{"id": "a", "type": "trigger", "event": {"asset": "x", "name": "y"}}]}""",
+        "spec.nodes[0].event.device")]
+    [InlineData(
+        """{"nodes": [{"id": "a", "type": "trigger", "schedule": {"cron": "61 * * * *"}}]}""",
+        "spec.nodes[0].schedule.cron")]
     [InlineData(
         """{"nodes": [{"id": "a", "type": "trigger", "schedule": {"cron": "* * * * *", "timeZone": "Mars/Olympus"}}]}""",
         "spec.nodes[0].schedule.timeZone")]
     [InlineData(
         """{"nodes": [{"id": "a", "type": "trigger", "schedule": {"cron": "* * * * *", "maxLateness": "soon"}}]}""",
         "spec.nodes[0].schedule.maxLateness")]
-    [InlineData("""{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "read"}]}""", "spec.nodes[1].dataPoint")]
+    [InlineData(
+        """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "read"}]}""",
+        "spec.nodes[1].dataPoint")]
     [InlineData(
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "read", "dataPoint": {"asset": "x", "name": "y"}, "into": "trigger"}]}""",
         "spec.nodes[1].into")]
@@ -119,7 +131,9 @@ public sealed class FlowKindTests
     [InlineData(
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "branch", "if": {"from": "x", "operator": "==", "value": 1}, "next": "t"}]}""",
         "spec.nodes[1].next")]
-    [InlineData("""{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "wait"}]}""", "spec.nodes[1]")]
+    [InlineData(
+        """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "wait"}]}""",
+        "spec.nodes[1]")]
     [InlineData(
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "wait", "event": {"device": "x", "name": "y"}}]}""",
         "spec.nodes[1].timeout")]
@@ -152,9 +166,7 @@ public sealed class FlowKindTests
 
         // Assert
         references.Select(reference => (reference.Kind, reference.Name))
-            .ShouldBe(
-                [("Asset", "room"), ("Device", "button"), ("Device", "fan"), ("Device", "thermostat")],
-                true);
+            .ShouldBe([("Asset", "room"), ("Device", "button"), ("Device", "fan"), ("Device", "thermostat")], true);
         references.ShouldContain(reference => reference.Path == "spec.nodes[0].dataPoint.asset");
     }
 
@@ -180,9 +192,15 @@ public sealed class FlowKindTests
     }
 
     [Theory]
-    [InlineData("""{"id": "a", "type": "read", "dataPoint": {"asset": "room", "name": "speed"}}""", "spec.nodes[1].dataPoint.name")]
-    [InlineData("""{"id": "a", "type": "read", "dataPoint": {"device": "bulb", "name": "speed"}}""", "spec.nodes[1].dataPoint.name")]
-    [InlineData("""{"id": "a", "type": "invoke", "action": {"device": "bulb", "name": "explode"}}""", "spec.nodes[1].action.name")]
+    [InlineData(
+        """{"id": "a", "type": "read", "dataPoint": {"asset": "room", "name": "speed"}}""",
+        "spec.nodes[1].dataPoint.name")]
+    [InlineData(
+        """{"id": "a", "type": "read", "dataPoint": {"device": "bulb", "name": "speed"}}""",
+        "spec.nodes[1].dataPoint.name")]
+    [InlineData(
+        """{"id": "a", "type": "invoke", "action": {"device": "bulb", "name": "explode"}}""",
+        "spec.nodes[1].action.name")]
     [InlineData(
         """{"id": "a", "type": "wait", "timeout": "1m", "event": {"device": "bulb", "name": "sang"}}""",
         "spec.nodes[1].event.name")]
@@ -214,7 +232,8 @@ public sealed class FlowKindTests
                 new SnapshotResource(
                     "Asset",
                     ResourceName.Create("room"),
-                    Widgets.Json("""{"assetType": "office", "dataPoints": [{"name": "temperature", "type": "number"}]}""")),
+                    Widgets.Json(
+                        """{"assetType": "office", "dataPoints": [{"name": "temperature", "type": "number"}]}""")),
                 new SnapshotResource(
                     "Connection",
                     ResourceName.Create("hub"),

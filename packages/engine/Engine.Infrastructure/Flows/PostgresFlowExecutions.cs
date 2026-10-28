@@ -138,8 +138,9 @@ internal sealed class PostgresFlowExecutions(NpgsqlDataSource database) : IFlowE
         int limit,
         CancellationToken cancellationToken = default)
     {
-        const string where = "namespace = @namespace AND flow = @flow AND (@q::text IS NULL OR lower(state) = lower(@q) " +
-                             "OR strpos(trigger_node, @q) > 0 OR strpos(coalesce(current_node, ''), @q) > 0)";
+        const string where =
+            "namespace = @namespace AND flow = @flow AND (@q::text IS NULL OR lower(state) = lower(@q) " +
+            "OR strpos(trigger_node, @q) > 0 OR strpos(coalesce(current_node, ''), @q) > 0)";
         await using var count = database.CreateCommand($"SELECT count(*) FROM flow_executions WHERE {where}");
         Filter(count, @namespace, flow, filter);
         var total = Convert.ToInt32(await count.ExecuteScalarAsync(cancellationToken));

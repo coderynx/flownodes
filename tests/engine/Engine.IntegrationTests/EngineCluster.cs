@@ -41,10 +41,8 @@ public sealed class EngineCluster : IAsyncDisposable
     public IAssetRuntime Assets => _cluster.GetSiloServiceProvider().GetRequiredService<IAssetRuntime>();
     public IAlarmRuntime Alarms => _cluster.GetSiloServiceProvider().GetRequiredService<IAlarmRuntime>();
     public IFlowRuntime Flows => _cluster.GetSiloServiceProvider().GetRequiredService<IFlowRuntime>();
-
     internal IFlowExecutions FlowExecutions =>
         _cluster.GetSiloServiceProvider().GetRequiredService<IFlowExecutions>();
-
     public RecordingRegistry Registry => _cluster.GetSiloServiceProvider().GetRequiredService<RecordingRegistry>();
 
     public static async Task<EngineCluster> StartAsync(

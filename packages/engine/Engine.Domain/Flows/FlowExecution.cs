@@ -23,112 +23,90 @@ public sealed class FlowExecution
     /// Gets the id of the Flow Execution.
     /// </summary>
     public required Guid Id { get; init; }
-
     /// <summary>
     /// Gets the Namespace of its Flow.
     /// </summary>
     public required string Namespace { get; init; }
-
     /// <summary>
     /// Gets the name of its Flow.
     /// </summary>
     public required string Flow { get; init; }
-
     /// <summary>
     /// Gets the <c>uid</c> of the Flow it belongs to; a re-created Flow has another.
     /// </summary>
     public required Guid FlowUid { get; init; }
-
     /// <summary>
     /// Gets the Generation of the Flow it runs.
     /// </summary>
     public required long Generation { get; init; }
-
     /// <summary>
     /// Gets the Spec of that Generation, as JSON text.
     /// </summary>
     public required string Spec { get; init; }
-
     /// <summary>
     /// Gets the id of the trigger Node that started it.
     /// </summary>
     public required string Trigger { get; init; }
-
     /// <summary>
     /// Gets when it started.
     /// </summary>
     public required DateTimeOffset StartedAt { get; init; }
-
     /// <summary>
     /// Gets where it is.
     /// </summary>
     public FlowExecutionState State { get; private set; }
-
     /// <summary>
     /// Gets the Node it is at; none once it has finished.
     /// </summary>
     public string? CurrentNode { get; private set; }
-
     /// <summary>
     /// Gets how many Nodes it has completed, its trigger included.
     /// </summary>
     public int Steps { get; private set; }
-
     /// <summary>
     /// Gets when the wait it is in ends; none when it is not waiting.
     /// </summary>
     public DateTimeOffset? Deadline { get; private set; }
-
     /// <summary>
     /// Gets how late past its deadline its last wait continued; none when no wait was late.
     /// </summary>
     public TimeSpan? Lateness { get; private set; }
-
     /// <summary>
     /// Gets why it failed or was dropped; none otherwise.
     /// </summary>
     public FlowExecutionError? Error { get; private set; }
-
     /// <summary>
     /// Gets whether it has been asked to stop at its next checkpoint.
     /// </summary>
     public bool CancelRequested { get; private set; }
-
     /// <summary>
     /// Gets when it last moved.
     /// </summary>
     public DateTimeOffset UpdatedAt { get; private set; }
-
     /// <summary>
     /// Gets when it finished; none while it runs or waits.
     /// </summary>
     public DateTimeOffset? FinishedAt { get; private set; }
-
     /// <summary>
     /// Gets how many times it has completed each Node.
     /// </summary>
     public IReadOnlyDictionary<string, int> Visits => _visits;
-
     /// <summary>
     /// Gets its variables as a JSON object.
     /// </summary>
     public string Variables => _variables.ToJsonString();
-
     /// <summary>
     /// Gets whether it has finished, whatever the outcome.
     /// </summary>
     public bool IsFinished => FinishedAt is not null;
-
     /// <summary>
     /// Gets the graph of Nodes it runs.
     /// </summary>
     public FlowGraph Graph => _graph ??= FlowGraph.Create(JsonDocument.Parse(Spec).RootElement);
-
     /// <summary>
     /// Gets the Node it is at; none once it has finished.
     /// </summary>
     public FlowNode? Node => CurrentNode is { } id ? Graph.Node(id) : null;
-
     /// <summary>
     /// Gets the id an Action call from the current Node carries, which stays the same until the Node completes, so a
     /// call repeated after a failover can be recognised (ADR-0003).
@@ -260,8 +238,8 @@ public sealed class FlowExecution
             current = current switch
             {
                 JsonObject node => node[segment],
-                JsonArray list when int.TryParse(segment, CultureInfo.InvariantCulture, out var index) &&
-                                    index >= 0 && index < list.Count => list[index],
+                JsonArray list when int.TryParse(segment, CultureInfo.InvariantCulture, out var index) && index >= 0 &&
+                                    index < list.Count => list[index],
                 _ => null
             };
         }

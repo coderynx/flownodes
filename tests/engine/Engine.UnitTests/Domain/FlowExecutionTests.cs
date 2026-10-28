@@ -221,7 +221,8 @@ public sealed class FlowExecutionTests
     {
         // Arrange
         var execution = Start(
-            Flow("""{"id": "read", "type": "branch", "if": {"from": "trigger.value", "operator": ">", "value": 0}, "then": "read"}"""));
+            Flow(
+                """{"id": "read", "type": "branch", "if": {"from": "trigger.value", "operator": ">", "value": 0}, "then": "read"}"""));
 
         // Act
         while (!execution.IsFinished)
@@ -302,7 +303,8 @@ public sealed class FlowExecutionTests
     {
         // Arrange
         var graph = FlowGraph.Create(
-            Json($$"""{"executionMode": "{{mode.ToString().ToLowerInvariant()}}", "nodes": [{"id": "t", "type": "trigger"}]}"""));
+            Json(
+                $$"""{"executionMode": "{{mode.ToString().ToLowerInvariant()}}", "nodes": [{"id": "t", "type": "trigger"}]}"""));
 
         // Act
         var admission = graph.Admit(running, queued);

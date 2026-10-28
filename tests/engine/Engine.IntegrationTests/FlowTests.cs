@@ -84,9 +84,7 @@ public sealed class FlowTests(PostgresFixture postgres)
         await using var engine = await StartAsync();
 
         // Act
-        await ApplyFlowAsync(
-            engine,
-            """{"id": "start", "type": "trigger", "schedule": {"cron": "* * * * * *"}}""");
+        await ApplyFlowAsync(engine, """{"id": "start", "type": "trigger", "schedule": {"cron": "* * * * * *"}}""");
 
         // Assert
         var executions = await FinishedAsync(engine, 2);
@@ -359,8 +357,7 @@ public sealed class FlowTests(PostgresFixture postgres)
         await engine.FlowExecutions.PurgeAsync(now.AddDays(-7), 2, Ct);
 
         // Assert
-        var kept = (await ListAsync(engine))
-            .Select(execution => (int)Math.Round((now - execution.StartedAt).TotalDays))
+        var kept = (await ListAsync(engine)).Select(execution => (int)Math.Round((now - execution.StartedAt).TotalDays))
             .ToList();
         kept.ShouldBe([1, 10], true);
     }
@@ -449,8 +446,8 @@ public sealed class FlowTests(PostgresFixture postgres)
             "room",
             """{"dataPoints": [{"name": "target", "type": "number"}]}""",
             5);
-        await Until(async () => (await engine.Devices.ListDataPointsAsync("acme", "lamp", Ct)).Value
-            .Any(point => point.Value is not null));
+        await Until(async () =>
+            (await engine.Devices.ListDataPointsAsync("acme", "lamp", Ct)).Value.Any(point => point.Value is not null));
 
         return engine;
     }
@@ -502,13 +499,11 @@ public sealed class FlowTests(PostgresFixture postgres)
     }
 
     private static async Task<int?> TargetAsync(EngineCluster engine) =>
-        (await engine.Assets.ListDataPointsAsync("acme", "room", Ct)).Value
-        .Single(point => point.Name == "target")
+        (await engine.Assets.ListDataPointsAsync("acme", "room", Ct)).Value.Single(point => point.Name == "target")
         .Value?.GetInt32();
 
     private static async Task<bool?> LampAsync(EngineCluster engine) =>
-        (await engine.Devices.ListDataPointsAsync("acme", "lamp", Ct)).Value
-        .Single(point => point.Name == "on")
+        (await engine.Devices.ListDataPointsAsync("acme", "lamp", Ct)).Value.Single(point => point.Name == "on")
         .Value?.GetBoolean();
 
     private static async Task<IReadOnlyList<FlowExecution>> ListAsync(EngineCluster engine) =>

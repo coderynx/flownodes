@@ -82,7 +82,6 @@ internal sealed class FlowExecutionGrain(IFlowExecutions executions, ILogger<Flo
 
     private Guid Id => Guid.Parse(this.GetPrimaryKeyString().Split('/')[2]);
     private string Namespace => this.GetPrimaryKeyString().Split('/')[0];
-
     private async Task<FlowExecution?> LoadAsync() => _execution ??= await executions.FindAsync(Id);
 
     private async Task ResumeAsync(Action<FlowExecution> resume)

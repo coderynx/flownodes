@@ -154,9 +154,7 @@ internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
             return null;
         }
 
-        var type = Text(asset, "assetType") is { } typeName
-            ? @namespace.Find(AssetTypeKind.KindName, typeName)
-            : null;
+        var type = Text(asset, "assetType") is { } typeName ? @namespace.Find(AssetTypeKind.KindName, typeName) : null;
 
         var inherited = type is { } declaring ? DataPointDeclarations.Names(declaring) : [];
 
@@ -178,17 +176,12 @@ internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
         };
     }
 
-    private static IEnumerable<SpecError> ValidateNode(
-        JsonElement node,
-        string path,
-        Dictionary<string, string?> types)
+    private static IEnumerable<SpecError> ValidateNode(JsonElement node, string path, Dictionary<string, string?> types)
     {
         var type = Text(node, "type");
         if (type is null || !Fields.TryGetValue(type, out var allowed))
         {
-            yield return new SpecError(
-                $"{path}.type",
-                $"Required, as one of {string.Join(", ", Fields.Keys)}.");
+            yield return new SpecError($"{path}.type", $"Required, as one of {string.Join(", ", Fields.Keys)}.");
 
             yield break;
         }
@@ -431,7 +424,12 @@ internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
         if (!node.TryGetProperty("dataPoint", out var target))
         {
             return required
-                ? [new SpecError($"{path}.dataPoint", "Required, as an asset or device and the name of its Data Point.")]
+                ?
+                [
+                    new SpecError(
+                        $"{path}.dataPoint",
+                        "Required, as an asset or device and the name of its Data Point.")
+                ]
                 : [];
         }
 
@@ -449,9 +447,7 @@ internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
     {
         if (!node.TryGetProperty(field, out var target))
         {
-            return required
-                ? [new SpecError($"{path}.{field}", "Required, as a device and a name.")]
-                : [];
+            return required ? [new SpecError($"{path}.{field}", "Required, as a device and a name.")] : [];
         }
 
         var errors = Member(target, $"{path}.{field}", ["device"]).ToList();

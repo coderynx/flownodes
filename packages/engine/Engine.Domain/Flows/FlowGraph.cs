@@ -25,12 +25,10 @@ public sealed class FlowGraph
     /// Gets the Flow's Execution Mode.
     /// </summary>
     public ExecutionMode Mode { get; }
-
     /// <summary>
     /// Gets the Flow's limits, each defaulted when its Spec leaves it out.
     /// </summary>
     public FlowLimits Limits { get; }
-
     /// <summary>
     /// Gets the Flow's triggers, in the order the Spec lists them.
     /// </summary>

@@ -19,7 +19,6 @@ public sealed record Comparison
     /// Gets the operator: one of <c>&lt;</c>, <c>&lt;=</c>, <c>&gt;</c>, <c>&gt;=</c>, <c>==</c> and <c>!=</c>.
     /// </summary>
     public string Operator { get; }
-
     /// <summary>
     /// Gets the constant to compare against, as JSON text.
     /// </summary>
@@ -64,8 +63,9 @@ public sealed record Comparison
         (reading.ValueKind, threshold.ValueKind) switch
         {
             (JsonValueKind.Number, JsonValueKind.Number) => reading.GetDouble().CompareTo(threshold.GetDouble()),
-            (JsonValueKind.String, JsonValueKind.String) =>
-                string.CompareOrdinal(reading.GetString(), threshold.GetString()),
+            (JsonValueKind.String, JsonValueKind.String) => string.CompareOrdinal(
+                reading.GetString(),
+                threshold.GetString()),
             (JsonValueKind.True or JsonValueKind.False, JsonValueKind.True or JsonValueKind.False) =>
                 reading.GetBoolean() == threshold.GetBoolean() ? 0 : null,
             _ => null

@@ -424,8 +424,7 @@ internal sealed class FlowGrain(
 
     private async Task StartQueuedAsync()
     {
-        while (flowState.State.Queue.Count > 0 &&
-               Graph.Admit(_active.Count, 0) == FlowAdmission.Start)
+        while (flowState.State.Queue.Count > 0 && Graph.Admit(_active.Count, 0) == FlowAdmission.Start)
         {
             var next = flowState.State.Queue[0];
             flowState.State.Queue.RemoveAt(0);
