@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Flownodes.Sdk;
 
 /// <summary>
@@ -55,13 +57,20 @@ public sealed record DataPointDefinition(
 /// </summary>
 /// <param name="Name">A flat DNS-label name, such as <c>reboot</c>.</param>
 /// <param name="SafeToRepeat">Whether calling it again with the same invocation id is harmless.</param>
-public sealed record ActionDefinition(string Name, bool SafeToRepeat = false);
+/// <param name="Parameters">The JSON Schema of its parameters, if the Integration publishes one.</param>
+/// <param name="Result">The JSON Schema of its result, if the Integration publishes one.</param>
+public sealed record ActionDefinition(
+    string Name,
+    bool SafeToRepeat = false,
+    JsonElement? Parameters = null,
+    JsonElement? Result = null);
 
 /// <summary>
-/// An Event a Device can report, which can trigger a Flow.
+/// An Event a Device or Connection can report, which can trigger a Flow.
 /// </summary>
 /// <param name="Name">A flat DNS-label name, such as <c>pressed</c>.</param>
-public sealed record EventDefinition(string Name);
+/// <param name="Payload">The JSON Schema of its payload, if the Integration publishes one.</param>
+public sealed record EventDefinition(string Name, JsonElement? Payload = null);
 
 /// <summary>
 /// What a Device offers, derived from its Spec by its Device Type (ADR-0010).
@@ -73,3 +82,11 @@ public sealed record DeviceSurface(
     IReadOnlyList<DataPointDefinition> DataPoints,
     IReadOnlyList<ActionDefinition> Actions,
     IReadOnlyList<EventDefinition> Events);
+
+/// <summary>
+/// What a Connection offers of its own: the Actions and Events of the External Services it reaches, which never have
+/// Data Points (ADR-0011).
+/// </summary>
+/// <param name="Actions">Its Actions.</param>
+/// <param name="Events">Its Events.</param>
+public sealed record ConnectionSurface(IReadOnlyList<ActionDefinition> Actions, IReadOnlyList<EventDefinition> Events);

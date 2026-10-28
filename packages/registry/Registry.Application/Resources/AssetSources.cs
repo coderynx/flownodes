@@ -8,7 +8,7 @@ namespace Registry.Application.Resources;
 /// The rules for where an Asset Data Point gets its value (ADR-0002, ADR-0010): mapped from a Device Data Point,
 /// computed from other Data Points of the Asset, or, without a source, written by a Flow.
 /// </summary>
-internal sealed class AssetSources(DeviceSurfaces surfaces)
+internal sealed class AssetSources(Surfaces surfaces)
 {
     private static readonly string[] Operations = ["sum", "min", "max", "average"];
 
@@ -380,9 +380,9 @@ internal sealed class AssetSources(DeviceSurfaces surfaces)
     private static string? Text(JsonElement spec, string name) =>
         spec.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
 
-    private sealed record Context(NamespaceSnapshot Namespace, DeviceSurfaces Surfaces)
+    private sealed record Context(NamespaceSnapshot Namespace, Surfaces Surfaces)
     {
         public IReadOnlyList<DeviceDataPointSchema>? Surface(string deviceName) =>
-            Surfaces.Find(Namespace, deviceName)?.DataPoints;
+            Surfaces.Device(Namespace, deviceName)?.DataPoints;
     }
 }

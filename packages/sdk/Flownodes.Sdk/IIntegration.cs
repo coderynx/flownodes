@@ -23,6 +23,15 @@ public interface IIntegration
     IReadOnlyList<DeviceType> DeviceTypes { get; }
 
     /// <summary>
+    /// Derives the Actions and Events a Connection offers of its own, those of the External Services it reaches, from
+    /// its configuration. It runs while a Manifest is applied, so it must be synchronous, deterministic and free of
+    /// I/O (ADR-0011).
+    /// </summary>
+    /// <param name="config">The Connection's <c>config</c>, which passed <see cref="ConnectionConfig"/>.</param>
+    /// <returns>What the Connection offers; empty lists when it reaches no External Service.</returns>
+    ConnectionSurface Surface(JsonElement config);
+
+    /// <summary>
     /// Registers the Integration's own services in its private container.
     /// </summary>
     /// <remarks>

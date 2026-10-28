@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Engine.Domain.Flows;
 using Engine.Infrastructure.Assets;
+using Engine.Infrastructure.Connections;
 using Engine.Infrastructure.Devices;
 using Engine.Infrastructure.Resources;
 using Microsoft.Extensions.Logging;
@@ -157,15 +158,20 @@ internal sealed class FlowGrain(
         }
     }
 
-    public async Task EventReportedAsync(string device, string name, string payload, DateTimeOffset timestamp)
+    public async Task EventReportedAsync(
+        string kind,
+        string resource,
+        string name,
+        string payload,
+        DateTimeOffset timestamp)
     {
         if (!IsLive)
         {
             return;
         }
 
-        foreach (var trigger in Graph.Triggers.Where(candidate =>
-                     candidate.Event is { } wanted && wanted.Device == device && wanted.Name == name))
+        var reported = new MemberRef(Enum.Parse<MemberOwner>(kind), resource, name);
+        foreach (var trigger in Graph.Triggers.Where(candidate => candidate.Event == reported))
         {
             await FireAsync(
                 trigger.Id,
@@ -260,10 +266,11 @@ internal sealed class FlowGrain(
 
                 if (trigger.Event is { } wantedEvent)
                 {
-                    wanted.Add(("Device", wantedEvent.Device));
-                    if (!await Device(wantedEvent.Device).WatchEventAsync(me, wantedEvent.Name))
+                    var owner = wantedEvent.Owner.ToString();
+                    wanted.Add((owner, wantedEvent.Resource));
+                    if (!await WatchEventAsync(wantedEvent, me))
                     {
-                        _missing.Add($"Event '{wantedEvent.Name}' of Device '{wantedEvent.Device}'");
+                        _missing.Add($"Event '{wantedEvent.Name}' of {owner} '{wantedEvent.Resource}'");
                     }
                 }
             }
@@ -285,9 +292,12 @@ internal sealed class FlowGrain(
         {
             try
             {
-                await (kind == nameof(DataPointOwner.Asset)
-                    ? Asset(name).UnwatchAsync(me)
-                    : Device(name).UnwatchAsync(me));
+                await (kind switch
+                {
+                    nameof(DataPointOwner.Asset) => Asset(name).UnwatchAsync(me),
+                    nameof(MemberOwner.Connection) => Connection(name).UnwatchAsync(me),
+                    _ => Device(name).UnwatchAsync(me)
+                });
             }
             catch (Exception exception) when (exception is not OutOfMemoryException)
             {
@@ -305,6 +315,14 @@ internal sealed class FlowGrain(
 
     private IAssetGrain Asset(string name) => GrainFactory.GetGrain<IAssetGrain>($"{Namespace}/{name}");
     private IDeviceGrain Device(string name) => GrainFactory.GetGrain<IDeviceGrain>($"{Namespace}/{name}");
+
+    private IConnectionGrain Connection(string name) =>
+        GrainFactory.GetGrain<IConnectionGrain>($"{Namespace}/{name}");
+
+    private Task<bool> WatchEventAsync(MemberRef wanted, IFlowWatcher me) =>
+        wanted.Owner == MemberOwner.Connection
+            ? Connection(wanted.Resource).WatchEventAsync(me, wanted.Name)
+            : Device(wanted.Resource).WatchEventAsync(me, wanted.Name);
 
     private async Task OnReadingAsync(string kind, string resource, DataPointSnapshot snapshot, bool initial)
     {

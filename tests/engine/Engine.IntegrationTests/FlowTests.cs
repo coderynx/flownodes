@@ -122,6 +122,95 @@ public sealed class FlowTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Flow_ShouldWriteTheResultToAnAsset_WhenItInvokesAnActionOfAnExternalService()
+    {
+        // Arrange
+        await using var engine = await StartAsync();
+        await ApplyFlowAsync(
+            engine,
+            Manual,
+            """
+            {"id": "first", "type": "invoke", "action": {"connection": "sim", "name": "forecast"},
+             "parameters": {"city": "Rome"}, "into": "weather", "next": "copy"}
+            """,
+            """
+            {"id": "copy", "type": "write", "dataPoint": {"asset": "room", "name": "target"},
+             "from": "weather.temperature"}
+            """);
+
+        // Act
+        await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
+
+        // Assert
+        await Until(async () => await TargetAsync(engine) == 18);
+        var execution = (await FinishedAsync(engine, 1)).Single();
+        execution.State.ShouldBe(FlowExecutionState.Succeeded);
+        execution.Variable("weather.city")!.GetValue<string>().ShouldBe("Rome");
+    }
+
+    [Fact]
+    public async Task Flow_ShouldRunWithTheEventPayload_WhenAnExternalServiceReportsTheEvent()
+    {
+        // Arrange
+        await using var engine = await StartAsync();
+        await ApplyFlowAsync(
+            engine,
+            6,
+            1,
+            "parallel",
+            Announce("kick"),
+            """
+            {"id": "heard", "type": "trigger", "event": {"connection": "sim", "name": "announced"}, "next": "copy"}
+            """,
+            """{"id": "copy", "type": "write", "dataPoint": {"asset": "room", "name": "target"}, "from": "trigger.payload.value"}""");
+
+        // Act
+        await engine.Flows.StartAsync("acme", "cooling", "kick", Json("{}"), Ct);
+
+        // Assert
+        await Until(async () => await TargetAsync(engine) == 4);
+        var executions = await FinishedAsync(engine, 2);
+        executions.ShouldAllBe(execution => execution.State == FlowExecutionState.Succeeded);
+        executions.Single(execution => execution.Trigger == "heard").Variable("trigger.event")!.GetValue<string>()
+            .ShouldBe("announced");
+    }
+
+    [Fact]
+    public async Task Flow_ShouldContinueWithThePayload_WhenTheExternalServiceEventItWaitsForArrives()
+    {
+        // Arrange
+        await using var engine = await StartAsync();
+        await ApplyFlowAsync(
+            engine,
+            6,
+            1,
+            "parallel",
+            """{"id": "start", "type": "trigger", "next": "first"}""",
+            """
+            {"id": "first", "type": "wait", "timeout": "30s", "into": "heard", "next": "copy",
+             "event": {"connection": "sim", "name": "announced"}}
+            """,
+            """{"id": "copy", "type": "write", "dataPoint": {"asset": "room", "name": "target"}, "from": "heard.payload.value"}""",
+            Announce("kick"));
+        var run = await engine.Flows.StartAsync("acme", "cooling", "start", Json("{}"), Ct);
+        await Until(async () => await StateAsync(engine, run.Value.Execution!.Value) == FlowExecutionState.Waiting);
+
+        // Act
+        await Until(async () =>
+        {
+            await engine.Flows.StartAsync("acme", "cooling", "kick", Json("{}"), Ct);
+            await Task.Delay(200, Ct);
+
+            return await TargetAsync(engine) == 4;
+        });
+
+        // Assert
+        var execution = await GetAsync(engine, run.Value.Execution!.Value);
+        execution.State.ShouldBe(FlowExecutionState.Succeeded);
+        execution.Variable("heard.event")!.GetValue<string>().ShouldBe("announced");
+    }
+
+    [Fact]
     public async Task Flow_ShouldResumeItsWait_WhenEveryGrainIsDeactivated()
     {
         // Arrange
@@ -472,6 +561,13 @@ public sealed class FlowTests(PostgresFixture postgres)
             seq,
             generation);
     }
+
+    private static string Announce(string trigger) =>
+        $$$"""
+           {"id": "{{{trigger}}}", "type": "trigger", "next": "{{{trigger}}}-call"},
+           {"id": "{{{trigger}}}-call", "type": "invoke", "action": {"connection": "sim", "name": "announce"},
+            "parameters": {"value": 4}}
+           """;
 
     private static string WriteLamp(string id, string value) =>
         $$"""{"id": "{{id}}", "type": "write", "dataPoint": {"device": "lamp", "name": "on"}, "value": {{value}}}""";

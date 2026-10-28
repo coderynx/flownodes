@@ -78,7 +78,7 @@ public sealed record WriteNode(
 }
 
 /// <summary>
-/// A Node that invokes an Action of a Device and may keep its result.
+/// A Node that invokes an Action of a Device or a Connection and may keep its result.
 /// </summary>
 /// <param name="Id">The id of the Node.</param>
 /// <param name="Next">The Node that follows.</param>
@@ -170,11 +170,28 @@ public enum DataPointOwner
 public sealed record DataPointRef(DataPointOwner Owner, string Resource, string Name);
 
 /// <summary>
-/// An Action or Event of a Device, by name.
+/// Whether an Action or Event belongs to a Device or to a Connection, for the External Services it reaches.
 /// </summary>
-/// <param name="Device">The name of the Device.</param>
+public enum MemberOwner
+{
+    /// <summary>
+    /// An Action or Event of a Device.
+    /// </summary>
+    Device,
+
+    /// <summary>
+    /// An Action or Event of a Connection (ADR-0011).
+    /// </summary>
+    Connection
+}
+
+/// <summary>
+/// An Action or Event of a Device or a Connection, by name.
+/// </summary>
+/// <param name="Owner">Whether it belongs to a Device or a Connection.</param>
+/// <param name="Resource">The name of the Device or Connection.</param>
 /// <param name="Name">The name of the Action or Event.</param>
-public sealed record MemberRef(string Device, string Name);
+public sealed record MemberRef(MemberOwner Owner, string Resource, string Name);
 
 /// <summary>
 /// A condition on a Data Point that a wait holds out for.

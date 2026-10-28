@@ -34,6 +34,33 @@ public sealed class ConnectionAndDeviceTests
     }
 
     [Fact]
+    public async Task Connection_ShouldReportTheExternalServiceSchemas_WhenItIsApplied()
+    {
+        // Arrange
+        await using var engine = await EngineCluster.StartAsync();
+
+        // Act
+        await engine.ApplyAsync("acme", "Connection", "sim", Simulator, 2);
+
+        // Assert
+        var status = await engine.Status.WaitForAsync(
+            "acme",
+            "Connection",
+            "sim",
+            status => RecordingStatus.Reason(status) == "Connected",
+            Ct);
+        var forecast = status.GetProperty("actions")
+            .EnumerateArray()
+            .Single(action => action.GetProperty("name").GetString() == "forecast");
+        forecast.GetProperty("parameters").GetProperty("required")[0].GetString().ShouldBe("city");
+        forecast.GetProperty("result").GetProperty("properties").TryGetProperty("temperature", out _).ShouldBeTrue();
+        status.GetProperty("events")
+            .EnumerateArray()
+            .Select(@event => @event.GetProperty("name").GetString())
+            .ShouldBe(["announced"]);
+    }
+
+    [Fact]
     public async Task Connection_ShouldReportIntegrationMissing_WhenTheIntegrationIsNotInstalled()
     {
         // Arrange

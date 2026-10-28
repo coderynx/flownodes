@@ -5,7 +5,7 @@ using Registry.Domain.Resources;
 
 namespace Registry.Application.Resources;
 
-internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
+internal sealed partial class FlowKind(Surfaces surfaces) : IResourceKind
 {
     public const string KindName = "Flow";
     private static readonly string[] Modes = ["single", "restart", "queue", "parallel"];
@@ -13,6 +13,12 @@ internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
     private static readonly string[] Edges = ["next", "error", "then", "else", "timedOut"];
     private static readonly string[] Reserved = ["trigger", "error"];
     private static readonly string[] Calls = ["next", "error", "timeout", "retry"];
+    private static readonly string[] ActionAndEventOwners = ["device", "connection"];
+
+    private static readonly (string Kind, string Field)[] ReferencedOwners =
+    [
+        (AssetKind.KindName, "asset"), (DeviceKind.KindName, "device"), (ConnectionKind.KindName, "connection")
+    ];
 
     private static readonly Dictionary<string, string[]> Fields = new()
     {
@@ -106,7 +112,7 @@ internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
             };
             foreach (var (target, at) in targets)
             {
-                foreach (var (kind, field) in new[] { (AssetKind.KindName, "asset"), (DeviceKind.KindName, "device") })
+                foreach (var (kind, field) in ReferencedOwners)
                 {
                     if (Text(target, field) is { } name && seen.Add((kind, name)))
                     {
@@ -138,9 +144,12 @@ internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
             return null;
         }
 
-        var (owner, offered) = Text(target, "asset") is { } asset
-            ? ($"Asset '{asset}'", AssetDataPoints(asset, @namespace))
-            : ($"Device '{Text(target, "device")}'", DeviceMembers(Text(target, "device"), member, @namespace));
+        var (owner, offered) = (Text(target, "asset"), Text(target, "connection")) switch
+        {
+            ({ } asset, _) => ($"Asset '{asset}'", AssetDataPoints(asset, @namespace)),
+            (_, { } connection) => ($"Connection '{connection}'", ConnectionMembers(connection, member, @namespace)),
+            _ => ($"Device '{Text(target, "device")}'", DeviceMembers(Text(target, "device"), member, @namespace))
+        };
 
         return offered is null || offered.Contains(name)
             ? null
@@ -161,9 +170,24 @@ internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
         return [.. DataPointDeclarations.Names(asset), .. inherited];
     }
 
+    private HashSet<string>? ConnectionMembers(string connection, string member, NamespaceSnapshot @namespace)
+    {
+        if (surfaces.Connection(@namespace, connection) is not { } surface)
+        {
+            return null;
+        }
+
+        return member switch
+        {
+            "Event" => [.. surface.Events],
+            "Action" => [.. surface.Actions],
+            _ => null
+        };
+    }
+
     private HashSet<string>? DeviceMembers(string? device, string member, NamespaceSnapshot @namespace)
     {
-        if (device is null || surfaces.Find(@namespace, device) is not { } surface)
+        if (device is null || surfaces.Device(@namespace, device) is not { } surface)
         {
             return null;
         }
@@ -216,7 +240,7 @@ internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
             "read" => Call(node, path).Concat(DataPoint(node, path, true)).Concat(Into(node, path)),
             "write" => Call(node, path).Concat(DataPoint(node, path, true)).Concat(ValueOrFrom(node, path, "value")),
             "invoke" => Call(node, path)
-                .Concat(DeviceMember(node, "action", path, true))
+                .Concat(OwnedMember(node, "action", path, true))
                 .Concat(Parameters(node, path))
                 .Concat(Into(node, path)),
             "branch" => Comparison(node, "if", path, true),
@@ -264,7 +288,7 @@ internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
             yield return new SpecError(path, "A trigger takes at most one of dataPoint, event and schedule.");
         }
 
-        foreach (var error in DataPoint(node, path, false).Concat(DeviceMember(node, "event", path, false)))
+        foreach (var error in DataPoint(node, path, false).Concat(OwnedMember(node, "event", path, false)))
         {
             yield return error;
         }
@@ -331,7 +355,7 @@ internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
             "for" when !Durations.IsPositive(node.GetProperty("for")) => [new SpecError($"{path}.for", Durations.Hint)],
             "for" => [],
             "until" => Until(node, path),
-            _ => DeviceMember(node, "event", path, true)
+            _ => OwnedMember(node, "event", path, true)
         };
         foreach (var error in errors)
         {
@@ -443,17 +467,20 @@ internal sealed partial class FlowKind(DeviceSurfaces surfaces) : IResourceKind
         return errors;
     }
 
-    private static IEnumerable<SpecError> DeviceMember(JsonElement node, string field, string path, bool required)
+    private static IEnumerable<SpecError> OwnedMember(JsonElement node, string field, string path, bool required)
     {
         if (!node.TryGetProperty(field, out var target))
         {
-            return required ? [new SpecError($"{path}.{field}", "Required, as a device and a name.")] : [];
+            return required
+                ? [new SpecError($"{path}.{field}", "Required, as a device or connection and a name.")]
+                : [];
         }
 
-        var errors = Member(target, $"{path}.{field}", ["device"]).ToList();
-        if (target.ValueKind == JsonValueKind.Object && Text(target, "device") is null)
+        var errors = Member(target, $"{path}.{field}", ActionAndEventOwners).ToList();
+        var owners = ActionAndEventOwners.Count(owner => Text(target, owner) is not null);
+        if (target.ValueKind == JsonValueKind.Object && owners != 1)
         {
-            errors.Add(new SpecError($"{path}.{field}.device", "Required, as the name of a Device."));
+            errors.Add(new SpecError($"{path}.{field}", "Takes exactly one of device and connection."));
         }
 
         return errors;

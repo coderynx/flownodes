@@ -9,5 +9,5 @@ internal interface IFlowWatcher : IGrainWithStringKey
     Task DataPointChangedAsync(string kind, string resource, DataPointSnapshot snapshot);
 
     [OneWay]
-    Task EventReportedAsync(string device, string name, string payload, DateTimeOffset timestamp);
+    Task EventReportedAsync(string kind, string resource, string name, string payload, DateTimeOffset timestamp);
 }

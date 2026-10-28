@@ -9,7 +9,7 @@ internal interface IConnectionEvents
     void Connectivity(Connectivity connectivity, string? message);
     void Failed(string message);
     void Value(string device, string dataPoint, JsonElement value, DateTimeOffset timestamp, Quality quality);
-    void Event(string device, string name, JsonElement payload, DateTimeOffset timestamp);
+    void Event(string? device, string name, JsonElement payload, DateTimeOffset timestamp);
     void DeviceState(string device, DeviceState state);
     void Discoveries(IReadOnlyList<Discovery> discoveries);
 }

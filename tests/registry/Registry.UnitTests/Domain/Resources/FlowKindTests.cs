@@ -88,7 +88,13 @@ public sealed class FlowKindTests
         "spec.nodes[0].when.value")]
     [InlineData(
         """{"nodes": [{"id": "a", "type": "trigger", "event": {"asset": "x", "name": "y"}}]}""",
-        "spec.nodes[0].event.device")]
+        "spec.nodes[0].event")]
+    [InlineData(
+        """{"nodes": [{"id": "a", "type": "trigger", "event": {"device": "x", "connection": "y", "name": "z"}}]}""",
+        "spec.nodes[0].event")]
+    [InlineData(
+        """{"nodes": [{"id": "a", "type": "trigger", "dataPoint": {"connection": "x", "name": "y"}}]}""",
+        "spec.nodes[0].dataPoint.connection")]
     [InlineData(
         """{"nodes": [{"id": "a", "type": "trigger", "schedule": {"cron": "61 * * * *"}}]}""",
         "spec.nodes[0].schedule.cron")]
@@ -121,7 +127,7 @@ public sealed class FlowKindTests
         "spec.nodes[1].from")]
     [InlineData(
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "invoke", "action": {"asset": "x", "name": "y"}}]}""",
-        "spec.nodes[1].action.device")]
+        "spec.nodes[1].action")]
     [InlineData(
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "invoke", "action": {"device": "x", "name": "y"}, "parameters": 1}]}""",
         "spec.nodes[1].parameters")]
@@ -191,6 +197,43 @@ public sealed class FlowKindTests
         errors.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Validate_ShouldAcceptTheNames_WhenTheReferencedConnectionOffersThem()
+    {
+        // Arrange
+        var spec = Widgets.Json(
+            """
+            {"nodes": [
+              {"id": "t", "type": "trigger", "event": {"connection": "hub", "name": "outage"}, "next": "a"},
+              {"id": "a", "type": "invoke", "action": {"connection": "hub", "name": "forecast"}, "next": "b"},
+              {"id": "b", "type": "wait", "timeout": "1m", "event": {"connection": "hub", "name": "outage"}}]}
+            """);
+
+        // Act
+        var errors = new FlowKind(LampCatalog.Surfaces()).Validate(spec, Offering());
+
+        // Assert
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void References_ShouldListTheConnection_WhenANodeNamesItsAction()
+    {
+        // Arrange
+        var spec = Widgets.Json(
+            """
+            {"nodes": [{"id": "t", "type": "trigger", "next": "a"},
+              {"id": "a", "type": "invoke", "action": {"connection": "hub", "name": "forecast"}}]}
+            """);
+
+        // Act
+        var references = new FlowKind(LampCatalog.Surfaces()).References(spec).ToList();
+
+        // Assert
+        references.ShouldHaveSingleItem()
+            .ShouldBe(new SpecReference("Connection", "hub", "spec.nodes[1].action.connection"));
+    }
+
     [Theory]
     [InlineData(
         """{"id": "a", "type": "read", "dataPoint": {"asset": "room", "name": "speed"}}""",
@@ -203,6 +246,12 @@ public sealed class FlowKindTests
         "spec.nodes[1].action.name")]
     [InlineData(
         """{"id": "a", "type": "wait", "timeout": "1m", "event": {"device": "bulb", "name": "sang"}}""",
+        "spec.nodes[1].event.name")]
+    [InlineData(
+        """{"id": "a", "type": "invoke", "action": {"connection": "hub", "name": "explode"}}""",
+        "spec.nodes[1].action.name")]
+    [InlineData(
+        """{"id": "a", "type": "wait", "timeout": "1m", "event": {"connection": "hub", "name": "sang"}}""",
         "spec.nodes[1].event.name")]
     [InlineData(
         """{"id": "a", "type": "wait", "timeout": "1m", "until": {"dataPoint": {"asset": "room", "name": "speed"}, "operator": ">", "value": 1}}""",

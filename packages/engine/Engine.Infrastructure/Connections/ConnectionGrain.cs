@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Engine.Infrastructure.Devices;
+using Engine.Infrastructure.Flows;
 using Engine.Infrastructure.Integrations;
 using Engine.Infrastructure.Resources;
 using Flownodes.Sdk;
@@ -27,6 +28,8 @@ internal sealed class ConnectionGrain(
     private string? _message;
     private string _discoveries = "[]";
     private string? _integration;
+    private ConnectionSurface? _surface;
+    private readonly Dictionary<IFlowWatcher, HashSet<string>> _watchers = [];
 
     public override async Task OnActivateAsync(CancellationToken cancellationToken)
     {
@@ -127,8 +130,14 @@ internal sealed class ConnectionGrain(
         }
     }
 
-    public async Task<CallResult> InvokeAsync(string device, string action, string parameters, string invocationId)
+    public async Task<CallResult> InvokeAsync(string? device, string action, string parameters, string invocationId)
     {
+        var offered = IsLive && _surface?.Actions.Any(candidate => candidate.Name == action) == true;
+        if (device is null && !offered)
+        {
+            return CallResult.Failure("NotFound", $"The Connection has no Action '{action}'.");
+        }
+
         if (_runtime is null || !Info().IsUp)
         {
             return CallResult.Failure("ConnectionNotReady", "The Connection is not connected.");
@@ -151,6 +160,30 @@ internal sealed class ConnectionGrain(
         {
             return Fail(exception, "action");
         }
+    }
+
+    public Task<bool> WatchEventAsync(IFlowWatcher watcher, string name)
+    {
+        if (!IsLive || _surface?.Events.Any(candidate => candidate.Name == name) != true)
+        {
+            return Task.FromResult(false);
+        }
+
+        if (!_watchers.TryGetValue(watcher, out var names))
+        {
+            _watchers[watcher] = names = [];
+        }
+
+        names.Add(name);
+
+        return Task.FromResult(true);
+    }
+
+    public Task UnwatchAsync(IFlowWatcher watcher)
+    {
+        _watchers.Remove(watcher);
+
+        return Task.CompletedTask;
     }
 
     public Task RuntimeConnectingAsync(long runtime) => OnRuntimeAsync(runtime, ConnectionPhase.Connecting, null);
@@ -180,10 +213,30 @@ internal sealed class ConnectionGrain(
         return Task.CompletedTask;
     }
 
-    public Task RuntimeEventAsync(long runtime, string device, string name, string payload, DateTimeOffset timestamp) =>
-        runtime == _runtimeId && _devices.ContainsKey(device)
-            ? Grain(device).EventReportedAsync(name, payload, timestamp)
-            : Task.CompletedTask;
+    public Task RuntimeEventAsync(long runtime, string? device, string name, string payload, DateTimeOffset timestamp)
+    {
+        if (runtime != _runtimeId)
+        {
+            return Task.CompletedTask;
+        }
+
+        if (device is not null)
+        {
+            return _devices.ContainsKey(device)
+                ? Grain(device).EventReportedAsync(name, payload, timestamp)
+                : Task.CompletedTask;
+        }
+
+        if (_surface?.Events.Any(candidate => candidate.Name == name) == true)
+        {
+            foreach (var watcher in _watchers.Where(entry => entry.Value.Contains(name)).Select(entry => entry.Key))
+            {
+                watcher.EventReportedAsync("Connection", ResourceName, name, payload, timestamp).Ignore();
+            }
+        }
+
+        return Task.CompletedTask;
+    }
 
     public Task RuntimeDeviceStateAsync(long runtime, string device, int deviceState)
     {
@@ -232,7 +285,15 @@ internal sealed class ConnectionGrain(
                     }
                 },
                 connectivity = _phase == ConnectionPhase.Unknown ? "Connecting" : _phase.ToString(),
-                discoveries = UndeclaredDiscoveries()
+                discoveries = UndeclaredDiscoveries(),
+                actions = (_surface?.Actions ?? []).Select(action => new
+                {
+                    name = action.Name,
+                    safeToRepeat = action.SafeToRepeat,
+                    parameters = action.Parameters,
+                    result = action.Result
+                }),
+                events = (_surface?.Events ?? []).Select(@event => new { name = @event.Name, payload = @event.Payload })
             },
             Web);
     }
@@ -292,6 +353,7 @@ internal sealed class ConnectionGrain(
         var spec = Spec;
         _integration = spec.GetProperty("integration").GetString()!;
         _message = null;
+        _surface = null;
         var config = spec.TryGetProperty("config", out var given) ? given : Parse("{}");
         var loaded = integrations.Find(_integration);
         if (loaded is null)
@@ -306,6 +368,7 @@ internal sealed class ConnectionGrain(
         }
         else
         {
+            _surface = loaded.Integration.Surface(config);
             _runtimeId++;
             _phase = ConnectionPhase.Connecting;
             _runtime = new ConnectionRuntime(

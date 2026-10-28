@@ -47,16 +47,19 @@ public interface IConnection : IAsyncDisposable
     Task WriteAsync(string device, string dataPoint, JsonElement value, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Invokes an Action on a Device.
+    /// Invokes an Action on a Device, or one the Connection offers of its own.
     /// </summary>
-    /// <param name="device">The name of the Device.</param>
+    /// <param name="device">
+    /// The name of the Device, or <see langword="null"/> for an Action of the Connection, from its
+    /// <see cref="IIntegration.Surface"/>.
+    /// </param>
     /// <param name="action">The name of the Action.</param>
     /// <param name="parameters">The parameters as JSON.</param>
     /// <param name="invocationId">Identifies the call, so a repeat can be recognised.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <returns>The result as JSON.</returns>
     Task<JsonElement> InvokeAsync(
-        string device,
+        string? device,
         string action,
         JsonElement parameters,
         string invocationId,

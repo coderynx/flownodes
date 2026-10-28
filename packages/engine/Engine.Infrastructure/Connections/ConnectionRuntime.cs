@@ -29,7 +29,7 @@ internal sealed class ConnectionRuntime(
         Task.Run(() => Connected().WriteAsync(device, dataPoint, value, cancellationToken), cancellationToken);
 
     public Task<JsonElement> InvokeAsync(
-        string device,
+        string? device,
         string action,
         JsonElement parameters,
         string invocationId,
@@ -161,7 +161,7 @@ internal sealed class ConnectionRuntime(
             }
         }
 
-        public void ReportEvent(string device, string name, JsonElement payload, DateTimeOffset timestamp)
+        public void ReportEvent(string? device, string name, JsonElement payload, DateTimeOffset timestamp)
         {
             if (!Ended)
             {
