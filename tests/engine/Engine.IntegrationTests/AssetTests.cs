@@ -30,6 +30,32 @@ public sealed class AssetTests
     }
 
     [Fact]
+    public async Task Asset_ShouldReportItsCurrentStatusUnderTheHighestStatusSeq_WhenItsStateWriteIsSlow()
+    {
+        // Arrange
+        await using var engine = await EngineCluster.StartAsync(
+            storageDelay: TimeSpan.FromSeconds(1),
+            slowResource: "train-1");
+        var asset = engine.Asset("acme", "train-1");
+        var uid = EngineCluster.ResourceUid("Asset", "train-1");
+
+        // Act
+        var firstApplied = asset.ApplyAsync(uid, 1, 2, Train1);
+        await Task.Delay(TimeSpan.FromMilliseconds(300), Ct);
+        await asset.ApplyAsync(uid, 2, 3, Train1);
+        await firstApplied;
+        await Wait.UntilAsync(
+            () => Task.FromResult(engine.Status.Reports("acme", "Asset", "train-1").Count >= 2 ? "reported" : null),
+            Ct);
+        await Task.Delay(TimeSpan.FromSeconds(1), Ct);
+
+        // Assert
+        var reports = engine.Status.Reports("acme", "Asset", "train-1");
+        reports.Select(report => report.Seq).ShouldBeUnique();
+        reports.OrderBy(report => report.Seq).Select(report => report.Generation).ShouldBe([1L, 2L]);
+    }
+
+    [Fact]
     public async Task Asset_ShouldReportAssetTypeMissing_WhenItsAssetTypeIsNotThere()
     {
         // Arrange

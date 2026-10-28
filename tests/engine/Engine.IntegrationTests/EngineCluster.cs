@@ -16,6 +16,8 @@ using Engine.Infrastructure.Resources;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
+using Orleans.Runtime.Hosting;
+using Orleans.Storage;
 using Orleans.TestingHost;
 
 namespace Engine.IntegrationTests;
@@ -49,7 +51,9 @@ public sealed class EngineCluster : IAsyncDisposable
         TimeSpan? resyncPeriod = null,
         string? alarmDatabase = null,
         TimeSpan? reconnectBackoff = null,
-        string? flowDatabase = null)
+        string? flowDatabase = null,
+        TimeSpan? storageDelay = null,
+        string? slowResource = null)
     {
         var builder = new TestClusterBuilder(1);
         if (flowDatabase is not null)
@@ -65,6 +69,12 @@ public sealed class EngineCluster : IAsyncDisposable
         if (reconnectBackoff is not null)
         {
             builder.Properties["ReconnectBackoff"] = reconnectBackoff.Value.ToString();
+        }
+
+        if (storageDelay is not null)
+        {
+            builder.Properties["StorageDelay"] = storageDelay.Value.ToString();
+            builder.Properties["SlowResource"] = slowResource ?? "";
         }
 
         builder.Properties["ResyncPeriod"] = (resyncPeriod ?? TimeSpan.FromMinutes(15)).ToString();
@@ -108,6 +118,9 @@ public sealed class EngineCluster : IAsyncDisposable
 
     public static Guid ResourceUid(string kind, string name) =>
         new(System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes($"{kind}/{name}")));
+
+    internal IAssetGrain Asset(string @namespace, string name) =>
+        _cluster.GrainFactory.GetGrain<IAssetGrain>($"{@namespace}/{name}");
 
     internal INamespaceGrain Namespace(string name) => _cluster.GrainFactory.GetGrain<INamespaceGrain>(name);
 
@@ -179,7 +192,18 @@ public sealed class EngineCluster : IAsyncDisposable
                 ? TimeSpan.Parse(given, System.Globalization.CultureInfo.InvariantCulture)
                 : TimeSpan.FromMilliseconds(100);
 
-            siloBuilder.AddMemoryGrainStorageAsDefault();
+            if (siloBuilder.Configuration["StorageDelay"] is { } delay)
+            {
+                var storage = new SlowStorage(
+                    TimeSpan.Parse(delay, System.Globalization.CultureInfo.InvariantCulture),
+                    siloBuilder.Configuration["SlowResource"]!);
+                siloBuilder.ConfigureServices(services => services.AddGrainStorage("Default", (_, _) => storage));
+            }
+            else
+            {
+                siloBuilder.AddMemoryGrainStorageAsDefault();
+            }
+
             siloBuilder.UseInMemoryReminderService();
             siloBuilder.ConfigureServices(services =>
             {
@@ -214,6 +238,53 @@ public sealed class EngineCluster : IAsyncDisposable
                 services.AddSingleton<RecordingRegistry>();
                 services.AddSingleton<IRegistryRequests>(provider => provider.GetRequiredService<RecordingRegistry>());
             });
+        }
+    }
+
+    private sealed class SlowStorage(TimeSpan delay, string resource) : IGrainStorage
+    {
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<(GrainId, string), object?> _states = new();
+
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<(GrainId, string), long>
+            _statusSeqs = new();
+
+        public Task ReadStateAsync<T>(string stateName, GrainId grainId, IGrainState<T> grainState)
+        {
+            if (_states.TryGetValue((grainId, stateName), out var held))
+            {
+                grainState.State = (T)held!;
+                grainState.RecordExists = true;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private bool IsStatusFlush<T>(string stateName, GrainId grainId, T state) =>
+            state is ResourceState written && written.StatusSeq > _statusSeqs.GetValueOrDefault((grainId, stateName)) &&
+            grainId.ToString().EndsWith($"/{resource}");
+
+        public async Task WriteStateAsync<T>(string stateName, GrainId grainId, IGrainState<T> grainState)
+        {
+            if (IsStatusFlush(stateName, grainId, grainState.State))
+            {
+                await Task.Delay(delay);
+            }
+
+            _states[(grainId, stateName)] = grainState.State;
+            if (grainState.State is ResourceState persisted)
+            {
+                _statusSeqs[(grainId, stateName)] = persisted.StatusSeq;
+            }
+
+            grainState.RecordExists = true;
+        }
+
+        public Task ClearStateAsync<T>(string stateName, GrainId grainId, IGrainState<T> grainState)
+        {
+            _states.TryRemove((grainId, stateName), out _);
+            grainState.RecordExists = false;
+
+            return Task.CompletedTask;
         }
     }
 
