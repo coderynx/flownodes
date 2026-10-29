@@ -1,9 +1,11 @@
+using Core.Application.Authorization;
 using Core.Contracts.Identity;
 using Core.Contracts.Resources;
 using Core.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Registry.Application.Database;
 using Registry.Application.Secrets;
@@ -27,7 +29,7 @@ public static class DependencyInjection
     /// <summary>
     /// Registers the shared infrastructure, the Registry's Postgres database, the messaging that carries its
     /// Resource messages to the other modules and the messaging that brings it Identity's Role Grants and the
-    /// Engine's resync requests and Status reports.
+    /// Engine's resync requests and Status reports. On start, it asks Identity to publish every User again.
     /// </summary>
     /// <remarks>
     /// The <c>Flownodes:InstallationKey</c> setting, a base64 256-bit key, encrypts the values of Secrets.
@@ -86,7 +88,11 @@ public static class DependencyInjection
                 options.PublishMessage<UserEnabled>().ToPostgresqlQueue(IdentityQueue);
                 options.PublishMessage<UserDeleted>().ToPostgresqlQueue(IdentityQueue);
                 options.PublishMessage<UserRenamed>().ToPostgresqlQueue(IdentityQueue);
+                options.PublishMessage<UserAccessPublished>().ToPostgresqlQueue(IdentityQueue);
                 options.ListenToPostgresqlQueue(IdentityQueue).Sequential();
             });
+
+        builder.Services.TryAddSingleton<IUserAccessResync, WolverineUserAccessResync>();
+        builder.Services.AddHostedService<ResyncUsersOnStart>();
     }
 }

@@ -20,4 +20,17 @@ internal static class UserMessages
     public static UserEnabled ToEnabled(this User user) => new(user.Id, user.Seq);
     public static UserDeleted ToDeleted(this User user) => new(user.Id, user.Seq);
     public static UserRenamed ToRenamed(this User user) => new(user.Id, user.Username.Value, user.Seq);
+
+    public static UserAccessPublished ToAccessPublished(this User user) =>
+        new(
+            user.Id,
+            user.Username.Value,
+            user.IsDisabled,
+            false,
+            user.IsAdministrator,
+            [.. user.RoleGrants.Select(grant => new PublishedRoleGrant(grant.Namespace, grant.Role.ToString()))],
+            user.Seq);
+
+    public static UserAccessPublished ToAccessPublished(this DeletedUser user) =>
+        new(user.Id, null, false, true, false, [], user.Seq);
 }

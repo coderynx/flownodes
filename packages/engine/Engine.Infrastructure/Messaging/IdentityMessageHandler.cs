@@ -7,7 +7,8 @@ namespace Engine.Infrastructure.Messaging;
 
 // HACK: public and documented only because Wolverine discovers handlers among public types; nothing calls it.
 /// <summary>
-/// Hands Identity's messages about Role Grants and disabled or deleted Users to the User's grain (ADR-0026).
+/// Hands Identity's messages about Role Grants, disabled or deleted Users and resynced Users to the User's grain
+/// (ADR-0026).
 /// </summary>
 [StickyHandler("engine-identity")]
 public static class IdentityMessageHandler
@@ -58,4 +59,22 @@ public static class IdentityMessageHandler
     /// <returns>A task that completes when the grain has handled the message.</returns>
     public static Task Handle(UserDeleted message, IGrainFactory grains) =>
         grains.GetGrain<IUserAccessGrain>(message.UserId).DeleteAsync(message.Seq);
+
+    /// <summary>
+    /// Handles the whole state of a User, published on a resync.
+    /// </summary>
+    /// <param name="message">Identity's message.</param>
+    /// <param name="grains">Orleans' grain factory.</param>
+    /// <returns>A task that completes when the grain has handled the message.</returns>
+    public static Task Handle(UserAccessPublished message, IGrainFactory grains) =>
+        grains.GetGrain<IUserAccessGrain>(message.UserId)
+            .ReplaceAsync(
+                message.IsDisabled,
+                message.IsDeleted,
+                [
+                    .. message.Grants.Select(grant => new GrantState(
+                        grant.Namespace,
+                        Enum.Parse<NamespaceRole>(grant.Role)))
+                ],
+                message.Seq);
 }

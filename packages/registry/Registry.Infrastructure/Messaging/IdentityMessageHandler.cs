@@ -91,4 +91,14 @@ public static class IdentityMessageHandler
     /// <returns>A task that completes when the message is handled.</returns>
     public static Task Handle(UserRenamed message, ISender sender, CancellationToken cancellationToken) =>
         sender.SendAsync(new Command(message), cancellationToken);
+
+    /// <summary>
+    /// Handles the whole state of a User, published on a resync.
+    /// </summary>
+    /// <param name="message">Identity's message.</param>
+    /// <param name="sender">The Registry's mediator.</param>
+    /// <param name="cancellationToken">Cancels the handling.</param>
+    /// <returns>A task that completes when the message is handled.</returns>
+    public static Task Handle(UserAccessPublished message, ISender sender, CancellationToken cancellationToken) =>
+        sender.SendAsync(new Command(message), cancellationToken);
 }

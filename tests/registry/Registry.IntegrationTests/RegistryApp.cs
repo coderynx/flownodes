@@ -41,6 +41,7 @@ public sealed class RegistryApp : IAsyncDisposable
     public HttpClient Anonymous { get; }
     public IServiceProvider Services => _app.Services;
     public ResourceMessages Messages => _app.Services.GetRequiredService<ResourceMessages>();
+    public IdentityRequests IdentityRequests => _app.Services.GetRequiredService<IdentityRequests>();
 
     public static async Task<RegistryApp> StartAsync(PostgresFixture postgres)
     {
@@ -57,6 +58,7 @@ public sealed class RegistryApp : IAsyncDisposable
         builder.AddPresentation();
 
         builder.Services.AddSingleton<ResourceMessages>();
+        builder.Services.AddSingleton<IdentityRequests>();
         builder.Services.AddSingleton<IResourceKind, WidgetKind>();
         builder.Services.ConfigureWolverine(options =>
         {
@@ -90,6 +92,14 @@ public sealed class RegistryApp : IAsyncDisposable
         var userId = Guid.NewGuid();
         _users[username] = userId;
         await PublishAsync(new UserRenamed(userId, username, NextSeq(userId)));
+
+        return userId;
+    }
+
+    public Guid UnreportedUser(string username)
+    {
+        var userId = Guid.NewGuid();
+        _users[username] = userId;
 
         return userId;
     }

@@ -82,6 +82,19 @@ namespace Identity.Infrastructure.Database.Migrations
                     b.ToTable("personal_access_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("Identity.Domain.Users.DeletedUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("Seq")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("deleted_users", (string)null);
+                });
+
             modelBuilder.Entity("Identity.Domain.Users.RoleGrant", b =>
                 {
                     b.Property<Guid>("UserId")

@@ -1,3 +1,4 @@
+using Core.Contracts.Identity;
 using Core.Contracts.Resources;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,7 +14,9 @@ internal sealed class ResyncOnStart(IServiceScopeFactory scopes) : IHostedLifecy
     public async Task StartedAsync(CancellationToken cancellationToken)
     {
         await using var scope = scopes.CreateAsyncScope();
-        await scope.ServiceProvider.GetRequiredService<IMessageBus>().PublishAsync(new NamespacesResyncRequested());
+        var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
+        await bus.PublishAsync(new NamespacesResyncRequested());
+        await bus.PublishAsync(new UsersResyncRequested());
     }
 
     public Task StoppingAsync(CancellationToken cancellationToken) => Task.CompletedTask;

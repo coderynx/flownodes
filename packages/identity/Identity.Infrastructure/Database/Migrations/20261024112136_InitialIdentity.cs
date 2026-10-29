@@ -30,6 +30,18 @@ namespace Identity.Infrastructure.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "deleted_users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Seq = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_deleted_users", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "known_namespaces",
                 columns: table => new
                 {
@@ -267,6 +279,9 @@ namespace Identity.Infrastructure.Database.Migrations
         {
             migrationBuilder.DropTable(
                 name: "DataProtectionKeys");
+
+            migrationBuilder.DropTable(
+                name: "deleted_users");
 
             migrationBuilder.DropTable(
                 name: "known_namespaces");

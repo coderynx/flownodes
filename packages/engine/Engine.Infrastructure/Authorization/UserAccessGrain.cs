@@ -34,12 +34,23 @@ internal sealed class UserAccessGrain(
                 current.Grants.Clear();
             });
 
+    public Task ReplaceAsync(bool disabled, bool deleted, IReadOnlyList<GrantState> grants, long seq) =>
+        ChangeAsync(
+            seq,
+            current =>
+            {
+                current.Disabled = disabled;
+                current.Deleted = deleted;
+                current.Grants = deleted ? [] : [.. grants.Distinct()];
+            });
+
     public Task<UserAccessSnapshot> GetAsync()
     {
         var current = state.State;
-        var isActive = current.Seq > 0 && current is { Disabled: false, Deleted: false };
+        var isKnown = current.Seq > 0;
+        var isActive = isKnown && current is { Disabled: false, Deleted: false };
 
-        return Task.FromResult(new UserAccessSnapshot(isActive, [.. current.Grants]));
+        return Task.FromResult(new UserAccessSnapshot(isActive, [.. current.Grants], isKnown));
     }
 
     private async Task ChangeAsync(long seq, Action<UserAccessState> change)

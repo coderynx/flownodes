@@ -72,4 +72,9 @@ public static class IdentityMessageHandler
     {
         messages.Add(message);
     }
+
+    public static void Handle(UserAccessPublished message, IdentityMessages messages)
+    {
+        messages.Add(message);
+    }
 }

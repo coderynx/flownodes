@@ -174,6 +174,39 @@ public sealed class UserAccess
         }
     }
 
+    /// <summary>
+    /// Replaces the whole replica with the state Identity published on a resync, dropping every role it does not list.
+    /// </summary>
+    /// <param name="username">The User's username; <see langword="null"/> keeps the one recorded.</param>
+    /// <param name="isDisabled">Whether the User is disabled.</param>
+    /// <param name="isDeleted">Whether Identity deleted the User.</param>
+    /// <param name="isAdministrator">Whether the User holds the Administrator role.</param>
+    /// <param name="grants">The Operator and Engineer roles the User holds, per Namespace.</param>
+    /// <param name="seq">The number of Identity's message.</param>
+    public void Replace(
+        string? username,
+        bool isDisabled,
+        bool isDeleted,
+        bool isAdministrator,
+        IEnumerable<(string Namespace, NamespaceRole Role)> grants,
+        long seq)
+    {
+        if (!Advance(seq))
+        {
+            return;
+        }
+
+        Username = username ?? Username;
+        IsDisabled = isDisabled;
+        IsDeleted = isDeleted;
+        IsAdministrator = !isDeleted && isAdministrator;
+        _grants.Clear();
+        if (!isDeleted)
+        {
+            _grants.AddRange(grants.Distinct().Select(grant => NamespaceGrant.Create(grant.Namespace, grant.Role)));
+        }
+    }
+
     private bool Advance(long seq)
     {
         if (seq <= LastSeq)

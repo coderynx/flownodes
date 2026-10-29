@@ -4,6 +4,7 @@ using Identity.Application;
 using Identity.Application.Security;
 using Identity.Application.Users.DeleteUser;
 using Identity.Domain.Tokens;
+using Identity.Domain.Users;
 using Xunit;
 
 namespace Identity.UnitTests.Users.DeleteUser;
@@ -126,5 +127,22 @@ public sealed class HandlerTests
         TestDoubles.Published(database).ShouldBe([new UserDeleted(alice.Id, 2)]);
         await _revoker.Received(1).RevokeAllAsync(alice.Id, Ct);
         await database.Received(1).SaveChangesAsync(Ct);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldKeepATombstoneWithTheFinalSeq_WhenTheUserIsDeleted()
+    {
+        // Arrange
+        var administrator = TestDoubles.Administrator();
+        var alice = TestDoubles.Disabled(TestDoubles.Member("alice"));
+        var database = TestDoubles.Database([administrator, alice]);
+        var handler = new Handler(database, TestDoubles.Checks(database), _revoker);
+
+        // Act
+        await handler.HandleAsync(new Command(administrator.Id, alice.Id), Ct);
+
+        // Assert
+        database.DeletedUsers.Received(1)
+            .Add(Arg.Is<DeletedUser>(deleted => deleted.Id == alice.Id && deleted.Seq == 2));
     }
 }

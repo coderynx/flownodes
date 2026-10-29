@@ -1,3 +1,4 @@
+using Core.Contracts.Identity;
 using Core.Contracts.Resources;
 using Core.Infrastructure.Security;
 using Identity.Application;
@@ -27,6 +28,7 @@ namespace Identity.Infrastructure.Bootstrap;
 public static class DependencyInjection
 {
     private const string ResourceQueue = "identity-resources";
+    private const string UserQueue = "identity-users";
     private const int MinimumPasswordLength = 12;
     private const int MaxFailedAccessAttempts = 5;
 
@@ -169,6 +171,9 @@ public static class DependencyInjection
                 options.PublishMessage<ResourceApplied>().ToPostgresqlQueue(ResourceQueue);
                 options.PublishMessage<ResourceDeleted>().ToPostgresqlQueue(ResourceQueue);
                 options.ListenToPostgresqlQueue(ResourceQueue).Sequential();
+
+                options.PublishMessage<UsersResyncRequested>().ToPostgresqlQueue(UserQueue);
+                options.ListenToPostgresqlQueue(UserQueue).Sequential();
             });
     }
 }

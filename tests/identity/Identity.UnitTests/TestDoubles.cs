@@ -31,15 +31,18 @@ internal static class TestDoubles
     public static IIdentityDbContext Database(
         IEnumerable<User> users,
         IEnumerable<PersonalAccessToken>? tokens = null,
-        IEnumerable<KnownNamespace>? namespaces = null)
+        IEnumerable<KnownNamespace>? namespaces = null,
+        IEnumerable<DeletedUser>? deletedUsers = null)
     {
         var database = Substitute.For<IIdentityDbContext>();
         var userSet = users.ToList().BuildMockDbSet();
         var tokenSet = (tokens ?? []).ToList().BuildMockDbSet();
         var namespaceSet = (namespaces ?? []).ToList().BuildMockDbSet();
+        var deletedUserSet = (deletedUsers ?? []).ToList().BuildMockDbSet();
         database.Users.Returns(userSet);
         database.PersonalAccessTokens.Returns(tokenSet);
         database.KnownNamespaces.Returns(namespaceSet);
+        database.DeletedUsers.Returns(deletedUserSet);
 
         return database;
     }

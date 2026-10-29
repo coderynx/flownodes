@@ -11,6 +11,7 @@ internal sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> opti
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<RoleGrant> RoleGrants => Set<RoleGrant>();
+    public DbSet<DeletedUser> DeletedUsers => Set<DeletedUser>();
     public DbSet<PersonalAccessToken> PersonalAccessTokens => Set<PersonalAccessToken>();
     public DbSet<KnownNamespace> KnownNamespaces => Set<KnownNamespace>();
     public DbSet<SigningKey> SigningKeys => Set<SigningKey>();

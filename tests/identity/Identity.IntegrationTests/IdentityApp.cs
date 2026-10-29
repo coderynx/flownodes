@@ -78,6 +78,7 @@ public sealed partial class IdentityApp : IAsyncDisposable
             options.PublishMessage<UserEnabled>().ToPostgresqlQueue("identity-test");
             options.PublishMessage<UserDeleted>().ToPostgresqlQueue("identity-test");
             options.PublishMessage<UserRenamed>().ToPostgresqlQueue("identity-test");
+            options.PublishMessage<UserAccessPublished>().ToPostgresqlQueue("identity-test");
             options.ListenToPostgresqlQueue("identity-test");
         });
 
