@@ -142,9 +142,15 @@ internal sealed class Handler(
             return Outcome(entry, ApplyAction.Unchanged, existing.Generation, []);
         }
 
-        var created = Namespace.Create(entry.Namespace);
+        var predecessor = state.FindDeletedNamespace(entry.Namespace);
+        var created = predecessor is null ? Namespace.Create(entry.Namespace) : Namespace.Recreate(predecessor);
         if (!dryRun)
         {
+            if (predecessor is not null)
+            {
+                database.DeletedNamespaces.Remove(predecessor);
+            }
+
             database.Namespaces.Add(created);
             await database.PublishAsync(created.ToApplied());
             await revisions.RecordAsync(Revision.Applied(created, author, time.GetUtcNow()), cancellationToken);

@@ -4,7 +4,7 @@ Managing several Installations from one place, and building apps for a domain, b
 
 ## Consequences
 
-- The built-in web UI ships in v1 alongside `flowctl` and covers every Viewer, Operator and Engineer task within one Installation; it builds and renders no apps. `flowctl`, the Web API and the web UI are never locked out in favour of a Control Center.
+- The built-in web UI ships in v1 alongside `flowctl` and covers every Viewer, Operator, Engineer and Administrator task within one Installation, so nothing after first-run setup needs `flowctl`; it builds and renders no apps. `flowctl`, the Web API and the web UI are never locked out in favour of a Control Center.
 - The Control Center changes an Installation the way any client does: it applies Manifests to a Namespace in it. Distributing an Asset Type to many Installations means applying it to a named Namespace in each one; nothing is shared across Namespaces (ADR-0005). Long-term history stays with Integrations to external databases, not in the Control Center.
 - Each Installation generates a permanent identifier when it first starts. The Control Center addresses an object by Installation, Namespace, Kind and name.
 - The Installation opens the link to the Control Center, so a site needs no inbound port. An Administrator enrols an Installation by entering a one-time join token issued by the Control Center, which carries its address. An Installation has at most one Control Center. The link is an installation-wide setting managed by an Administrator, not a Resource, so rebuilding an Installation from its Manifests never enrols it anywhere. When the link drops, the Control Center's view goes stale and the Installation carries on.

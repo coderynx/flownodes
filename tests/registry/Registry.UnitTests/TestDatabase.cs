@@ -21,8 +21,10 @@ internal static class TestDatabase
         var userSet = (users ?? []).BuildMockDbSet();
         var revisionSet = (revisions ?? []).BuildMockDbSet();
         var secretValueSet = (secretValues ?? []).BuildMockDbSet();
+        var deletedNamespaceSet = new List<DeletedNamespace>().BuildMockDbSet();
         database.SecretValues.Returns(secretValueSet);
         database.Namespaces.Returns(namespaceSet);
+        database.DeletedNamespaces.Returns(deletedNamespaceSet);
         database.Resources.Returns(resourceSet);
         database.UserAccess.Returns(userSet);
         database.Revisions.Returns(revisionSet);

@@ -5,6 +5,7 @@ namespace Engine.IntegrationTests;
 public sealed class NamespaceGrainTests
 {
     private const string Simulator = """{"integration": "flownodes.simulator", "config": {"units": 2}}""";
+    private const string Doors = """{"dataPoints": [{"name": "doors", "type": "bool"}]}""";
     private static readonly Guid Uid = Guid.NewGuid();
 
     [Fact]
@@ -196,12 +197,69 @@ public sealed class NamespaceGrainTests
         await engine.Registry.WaitForResyncsAsync("acme", 1, Ct);
 
         // Act
-        await grain.ApplyAsync(Guid.NewGuid(), 1);
+        await grain.ApplyAsync(Guid.NewGuid(), 3);
         await engine.DeactivateAllAsync();
 
         // Assert
         await engine.Registry.WaitForResyncsAsync("acme", 2, Ct);
         engine.Registry.Resyncs("acme").ShouldBeGreaterThanOrEqualTo(2);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_ShouldTearDownTheOldMembersAndRequestResync_WhenANewerUidArrivesWithoutTheDelete()
+    {
+        // Arrange
+        await using var engine = await EngineCluster.StartAsync();
+        await engine.ApplyAsync("acme", "Asset", "train-1", Doors, 2);
+        await engine.Registry.WaitForResyncsAsync("acme", 1, Ct);
+        (await engine.Asset("acme", "train-1").GetDataPointsAsync()).ShouldNotBeNull();
+
+        // Act
+        await engine.Namespace("acme").ApplyAsync(Guid.NewGuid(), 3);
+
+        // Assert
+        (await engine.Asset("acme", "train-1").GetDataPointsAsync()).ShouldBeNull();
+        await engine.Registry.WaitForResyncsAsync("acme", 2, Ct);
+        engine.Registry.Resyncs("acme").ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_ShouldIgnoreTheOldIncarnation_WhenItArrivesAfterTheNewOne()
+    {
+        // Arrange
+        await using var engine = await EngineCluster.StartAsync();
+        var grain = engine.Namespace("acme");
+        var recreated = Guid.NewGuid();
+        await grain.ApplyAsync(Uid, 1);
+        await grain.ApplyAsync(recreated, 3);
+        await grain.ResourceAppliedAsync("Asset", "train-1", Guid.NewGuid(), 1, 4, Doors);
+
+        // Act
+        await grain.ApplyAsync(Uid, 2);
+
+        // Assert
+        (await engine.Asset("acme", "train-1").GetDataPointsAsync()).ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task ResourceAppliedAsync_ShouldApplyTheNewResource_WhenItsNamespaceWasDeletedAndCreatedAgain()
+    {
+        // Arrange
+        await using var engine = await EngineCluster.StartAsync();
+        var grain = engine.Namespace("acme");
+        await grain.ApplyAsync(Uid, 1);
+        await grain.ResourceAppliedAsync("Asset", "train-1", Guid.NewGuid(), 1, 2, Doors);
+        await grain.ResourceDeletedAsync("Asset", "train-1", Guid.NewGuid(), 3);
+        await grain.DeleteAsync(Uid, 4);
+        await grain.ApplyAsync(Guid.NewGuid(), 5);
+        var recreated = Guid.NewGuid();
+
+        // Act
+        await grain.ResourceAppliedAsync("Asset", "train-1", recreated, 1, 6, Doors);
+
+        // Assert
+        await Wait.UntilValueAsync(() => engine.Status.LatestUid("acme", "Asset", "train-1"), Ct);
+        engine.Status.LatestUid("acme", "Asset", "train-1").ShouldBe(recreated);
     }
 
     [Fact]
