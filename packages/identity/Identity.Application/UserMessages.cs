@@ -32,5 +32,5 @@ internal static class UserMessages
             user.Seq);
 
     public static UserAccessPublished ToAccessPublished(this DeletedUser user) =>
-        new(user.Id, null, false, true, false, [], user.Seq);
+        new(user.Id, Username: null, IsDisabled: false, IsDeleted: true, IsAdministrator: false, Grants: [], user.Seq);
 }

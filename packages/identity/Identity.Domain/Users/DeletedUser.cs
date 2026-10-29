@@ -13,7 +13,7 @@ public sealed class DeletedUser
     /// <summary>
     /// Gets the immutable id the User had.
     /// </summary>
-    public Guid Id { get; private set; }
+    public required Guid Id { get; init; }
     /// <summary>
     /// Gets the sequence number of the deletion message, the last published about the User.
     /// </summary>

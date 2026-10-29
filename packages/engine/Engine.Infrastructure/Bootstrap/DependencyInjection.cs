@@ -166,5 +166,6 @@ public static class DependencyInjection
             });
 
         builder.Services.AddHostedService<ResyncOnStart>();
+        builder.Services.AddHostedService<ResyncUsersOnStart>();
     }
 }
