@@ -15,6 +15,10 @@ public interface IIdentityDbContext
     /// </summary>
     DbSet<User> Users { get; }
     /// <summary>
+    /// Gets the tombstones of deleted Users.
+    /// </summary>
+    DbSet<DeletedUser> DeletedUsers { get; }
+    /// <summary>
     /// Gets the Personal Access Tokens.
     /// </summary>
     DbSet<PersonalAccessToken> PersonalAccessTokens { get; }

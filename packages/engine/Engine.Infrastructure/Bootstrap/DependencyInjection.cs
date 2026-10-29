@@ -1,3 +1,4 @@
+using Core.Application.Authorization;
 using Core.Application.Integrations;
 using Core.Contracts.Identity;
 using Core.Contracts.Resources;
@@ -21,6 +22,7 @@ using Engine.Infrastructure.Orleans;
 using Engine.Infrastructure.Resources;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Npgsql;
 using Orleans.Dashboard;
@@ -130,6 +132,8 @@ public static class DependencyInjection
         builder.Services.Configure<FlowGrainOptions>(builder.Configuration.GetSection(FlowGrainOptions.Section));
         builder.Services.AddSingleton<IStatusReporter, WolverineStatusReporter>();
         builder.Services.AddSingleton<IRoleGrants, GrainRoleGrants>();
+        builder.Services.TryAddSingleton<IUserAccessResync, WolverineUserAccessResync>();
+        Core.Application.Bootstrap.DependencyInjection.AddUnknownCallerResync(builder);
         builder.Services.AddSingleton<IDeviceRuntime, GrainDeviceRuntime>();
         builder.Services.AddSingleton<IAssetRuntime, GrainAssetRuntime>();
         builder.Services.AddSingleton<IAlarmRuntime, GrainAlarmRuntime>();
@@ -157,9 +161,11 @@ public static class DependencyInjection
                 options.PublishMessage<UserDisabled>().ToPostgresqlQueue(IdentityQueue);
                 options.PublishMessage<UserEnabled>().ToPostgresqlQueue(IdentityQueue);
                 options.PublishMessage<UserDeleted>().ToPostgresqlQueue(IdentityQueue);
+                options.PublishMessage<UserAccessPublished>().ToPostgresqlQueue(IdentityQueue);
                 options.ListenToPostgresqlQueue(IdentityQueue).Sequential();
             });
 
         builder.Services.AddHostedService<ResyncOnStart>();
+        builder.Services.AddHostedService<ResyncUsersOnStart>();
     }
 }

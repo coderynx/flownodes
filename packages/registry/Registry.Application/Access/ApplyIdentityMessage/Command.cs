@@ -45,6 +45,18 @@ internal sealed class Handler(IUserAccessProjection projection) : IRequestHandle
             case UserRenamed renamed:
                 await Apply(renamed.UserId, user => user.Rename(renamed.Username, renamed.Seq));
                 break;
+            case UserAccessPublished published:
+                var grants = published.Grants.Select(grant => (grant.Namespace, Role(grant.Role))).ToList();
+                await Apply(
+                    published.UserId,
+                    user => user.Replace(
+                        published.Username,
+                        published.IsDisabled,
+                        published.IsDeleted,
+                        published.IsAdministrator,
+                        grants,
+                        published.Seq));
+                break;
         }
 
         return Result.Updated();

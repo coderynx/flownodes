@@ -181,6 +181,95 @@ public sealed class HandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ShouldReplaceTheWholeReplica_WhenMessageIsUserAccessPublished()
+    {
+        // Arrange
+        var user = UserAccess.Create(Guid.NewGuid());
+        user.Rename("olive", 1);
+        user.GrantRole("acme", NamespaceRole.Operator, 2);
+        user.GrantRole("globex", NamespaceRole.Engineer, 3);
+        user.Disable(4);
+        var database = TestDatabase.Create(users: [user]);
+        var handler = new Handler(new UserAccessProjection(database));
+
+        // Act
+        await handler.HandleAsync(
+            new Command(new UserAccessPublished(user.Id, "oliver", false, false, true, [new("acme", "Engineer")], 9)),
+            Ct);
+
+        // Assert
+        user.Username.ShouldBe("oliver");
+        user.IsDisabled.ShouldBeFalse();
+        user.IsAdministrator.ShouldBeTrue();
+        user.Grants.Select(grant => (grant.Namespace, grant.Role)).ShouldBe([("acme", NamespaceRole.Engineer)]);
+        user.LastSeq.ShouldBe(9);
+        await ((IUserAccessSource)database).Received(1).SaveChangesAsync(Ct);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldStartReplica_WhenUserAccessPublishedIsAboutAnUnknownUser()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var database = TestDatabase.Create();
+        var handler = new Handler(new UserAccessProjection(database));
+
+        // Act
+        await handler.HandleAsync(
+            new Command(new UserAccessPublished(userId, "olive", false, false, false, [new("acme", "Operator")], 3)),
+            Ct);
+
+        // Assert
+        database.UserAccess.Received(1)
+            .Add(Arg.Is<UserAccess>(user => user.Id == userId && user.Holds("acme", NamespaceRole.Operator)));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldDeleteUserButKeepUsername_WhenUserAccessPublishedIsADeletedUser()
+    {
+        // Arrange
+        var user = UserAccess.Create(Guid.NewGuid());
+        user.Rename("olive", 1);
+        user.GrantRole("acme", NamespaceRole.Operator, 2);
+        var database = TestDatabase.Create(users: [user]);
+        var handler = new Handler(new UserAccessProjection(database));
+
+        // Act
+        await handler.HandleAsync(new Command(new UserAccessPublished(user.Id, null, false, true, false, [], 4)), Ct);
+
+        // Assert
+        user.IsDeleted.ShouldBeTrue();
+        user.IsActive.ShouldBeFalse();
+        user.Grants.ShouldBeEmpty();
+        user.Username.ShouldBe("olive");
+    }
+
+    [Theory]
+    [InlineData(2)]
+    [InlineData(3)]
+    public async Task HandleAsync_ShouldChangeNothing_WhenUserAccessPublishedIsNotNewerThanLastApplied(long seq)
+    {
+        // Arrange
+        var user = UserAccess.Create(Guid.NewGuid());
+        user.Rename("olive", 1);
+        user.GrantRole("acme", NamespaceRole.Operator, 3);
+        var database = TestDatabase.Create(users: [user]);
+        var handler = new Handler(new UserAccessProjection(database));
+
+        // Act
+        await handler.HandleAsync(
+            new Command(new UserAccessPublished(user.Id, "oliver", true, false, true, [], seq)),
+            Ct);
+
+        // Assert
+        user.Username.ShouldBe("olive");
+        user.IsDisabled.ShouldBeFalse();
+        user.IsAdministrator.ShouldBeFalse();
+        user.Holds("acme", NamespaceRole.Operator).ShouldBeTrue();
+        user.LastSeq.ShouldBe(3);
+    }
+
+    [Fact]
     public async Task HandleAsync_ShouldReturnUpdatedWithoutSaving_WhenMessageIsNotAnIdentityMessage()
     {
         // Arrange

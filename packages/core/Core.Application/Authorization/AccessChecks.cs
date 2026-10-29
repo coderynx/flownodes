@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Core.Application.Authorization;
 
-internal sealed class AccessChecks(IUserAccessSource source) : IAccessChecks
+internal sealed class AccessChecks(IUserAccessSource source, UnknownCallerResync resync) : IAccessChecks
 {
     public async Task<Result<UserAccess>> RequireAdministratorAsync(
         Guid callerId,
@@ -58,6 +58,11 @@ internal sealed class AccessChecks(IUserAccessSource source) : IAccessChecks
         var caller = await source.UserAccess.AsNoTracking()
             .Include(user => user.Grants)
             .SingleOrDefaultAsync(user => user.Id == callerId, cancellationToken);
+
+        if (caller is null)
+        {
+            await resync.RequestAsync(callerId, cancellationToken);
+        }
 
         return caller is { IsActive: true } ? Result.Found(caller) : AccessErrors.Unauthenticated();
     }

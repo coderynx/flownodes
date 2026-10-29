@@ -9,10 +9,12 @@ internal interface IUserAccessGrain : IGrainWithGuidKey
     Task DisableAsync(long seq);
     Task EnableAsync(long seq);
     Task DeleteAsync(long seq);
+    Task ReplaceAsync(bool disabled, bool deleted, IReadOnlyList<GrantState> grants, long seq);
     Task<UserAccessSnapshot> GetAsync();
 }
 
 [GenerateSerializer]
 internal sealed record UserAccessSnapshot(
     [property: Id(0)] bool IsActive,
-    [property: Id(1)] IReadOnlyList<GrantState> Grants);
+    [property: Id(1)] IReadOnlyList<GrantState> Grants,
+    [property: Id(2)] bool IsKnown);

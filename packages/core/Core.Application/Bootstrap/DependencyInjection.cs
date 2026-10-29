@@ -47,7 +47,9 @@ public static class DependencyInjection
     /// Role Grants in the module's database.
     /// </summary>
     /// <remarks>
-    /// The host has one set of checks, so only one module registers them.
+    /// The host has one set of checks, so only one module registers them. A check asks Identity to publish a caller
+    /// the replica has no record of through <see cref="UnknownCallerResync"/>, so the module registers its own
+    /// <see cref="IUserAccessResync"/>.
     /// </remarks>
     /// <typeparam name="TSource">The module's database, which holds its replica of Role Grants.</typeparam>
     /// <param name="builder">The host the module is being added to.</param>
@@ -55,8 +57,25 @@ public static class DependencyInjection
         where TSource : class, IUserAccessSource
     {
         builder.Services.TryAddScoped<IAccessChecks>(services => new AccessChecks(
-            services.GetRequiredService<TSource>()));
+            services.GetRequiredService<TSource>(),
+            services.GetRequiredService<UnknownCallerResync>()));
         builder.Services.TryAddScoped<IUserAccessProjection>(services => new UserAccessProjection(
             services.GetRequiredService<TSource>()));
+        AddUnknownCallerResync(builder);
+    }
+
+    /// <summary>
+    /// Registers <see cref="UnknownCallerResync"/>, which asks Identity to publish a caller the module's replica has no
+    /// record of.
+    /// </summary>
+    /// <remarks>
+    /// The host has one, so every module that calls this shares it. The module registers its own
+    /// <see cref="IUserAccessResync"/>.
+    /// </remarks>
+    /// <param name="builder">The host the module is being added to.</param>
+    public static void AddUnknownCallerResync(this IHostApplicationBuilder builder)
+    {
+        builder.Services.TryAddSingleton(TimeProvider.System);
+        builder.Services.TryAddSingleton<UnknownCallerResync>();
     }
 }

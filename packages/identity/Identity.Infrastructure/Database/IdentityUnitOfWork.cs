@@ -10,6 +10,7 @@ namespace Identity.Infrastructure.Database;
 internal sealed class IdentityUnitOfWork(IDbContextOutbox<IdentityDbContext> outbox) : IIdentityDbContext
 {
     public DbSet<User> Users => outbox.DbContext.Users;
+    public DbSet<DeletedUser> DeletedUsers => outbox.DbContext.DeletedUsers;
     public DbSet<PersonalAccessToken> PersonalAccessTokens => outbox.DbContext.PersonalAccessTokens;
     public DbSet<KnownNamespace> KnownNamespaces => outbox.DbContext.KnownNamespaces;
 

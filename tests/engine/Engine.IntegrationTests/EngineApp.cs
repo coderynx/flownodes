@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text.Json;
+using Core.Application.Authorization;
 using Core.Contracts.Identity;
 using Core.Contracts.Resources;
 using Engine.Application.Authorization;
@@ -34,18 +35,21 @@ public sealed class EngineApp : IAsyncDisposable
     private readonly TestIdentity _identity;
     private readonly Dictionary<Guid, long> _seqs = [];
 
-    private EngineApp(WebApplication app, TestIdentity identity)
+    private EngineApp(WebApplication app, TestIdentity identity, RecordingUserAccessResync resync)
     {
         _app = app;
         _identity = identity;
+        Resync = resync;
         Anonymous = app.GetTestClient();
     }
 
     public HttpClient Anonymous { get; }
+    public RecordingUserAccessResync Resync { get; }
 
     public static async Task<EngineApp> StartAsync(string? alarmDatabase = null, string environment = "Production")
     {
         var identity = await TestIdentity.StartAsync();
+        var resync = new RecordingUserAccessResync();
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = environment });
         builder.WebHost.UseTestServer();
         builder.Host.UseDefaultServiceProvider(options => options.ValidateOnBuild = false);
@@ -67,6 +71,9 @@ public sealed class EngineApp : IAsyncDisposable
             silo.ConfigureServices(services =>
             {
                 services.AddSingleton<IRoleGrants, GrainRoleGrants>();
+                services.AddSingleton<IUserAccessResync>(resync);
+                services.AddSingleton(TimeProvider.System);
+                services.AddSingleton<UnknownCallerResync>();
                 services.AddSingleton<IInstalledIntegrations, NoIntegrations>();
                 services.AddSingleton<IInstallationIdentity, FixedInstallation>();
             });
@@ -77,7 +84,7 @@ public sealed class EngineApp : IAsyncDisposable
         app.UseInfrastructure();
         await app.StartAsync();
 
-        return new EngineApp(app, identity);
+        return new EngineApp(app, identity, resync);
     }
 
     public Task GrantAsync(Guid userId, string role, string @namespace) =>
@@ -91,6 +98,8 @@ public sealed class EngineApp : IAsyncDisposable
 
     public Task DeleteAsync(Guid userId) =>
         IdentityMessageHandler.Handle(new UserDeleted(userId, NextSeq(userId)), Grains);
+
+    public Task PublishAccessAsync(UserAccessPublished message) => IdentityMessageHandler.Handle(message, Grains);
 
     public async Task ApplyAsync(string @namespace, string kind, string name, string spec, long seq)
     {

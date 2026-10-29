@@ -2,6 +2,7 @@ using Coderynx.Functional.Results;
 using Coderynx.MediatorKit.Abstractions;
 using Identity.Application.Database;
 using Identity.Application.Security;
+using Identity.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Application.Users.DeleteUser;
@@ -45,6 +46,7 @@ internal sealed class Handler(IIdentityDbContext database, ICallerChecks checks,
 
         user.Delete();
         database.Users.Remove(user);
+        database.DeletedUsers.Add(DeletedUser.Create(user));
 
         await database.PublishAsync(user.ToDeleted());
         await database.SaveChangesAsync(cancellationToken);
