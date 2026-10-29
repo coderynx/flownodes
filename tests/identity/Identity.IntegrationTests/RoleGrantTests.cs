@@ -285,6 +285,38 @@ public sealed class RoleGrantTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task ResourceDeleted_ShouldKeepTheNamespaceAndItsGrants_WhenItIsAboutAnEarlierIncarnation()
+    {
+        // Arrange
+        await using var app = await IdentityApp.StartAsync(postgres);
+        var administrator = await app.AdministratorAsync(Ct);
+        var alice = await IdentityApp.CreateUserAsync(administrator, "alice", AlicePassword, Ct);
+        var earlier = Guid.NewGuid();
+        await app.InvokeAsync(Applied("acme", earlier, 1), Ct);
+        await app.InvokeAsync(new ResourceDeleted("acme", "Namespace", "acme", earlier, 1, 2), Ct);
+        await app.InvokeAsync(Applied("acme", Guid.NewGuid(), 3), Ct);
+        (await administrator.PostAsJsonAsync(
+            Grants,
+            new { userId = alice, role = "Engineer", @namespace = "acme" },
+            Ct)).StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // Act
+        await app.InvokeAsync(new ResourceDeleted("acme", "Namespace", "acme", earlier, 1, 4), Ct);
+
+        // Assert
+        (await administrator.PostAsJsonAsync(
+            Grants,
+            new { userId = alice, role = "Operator", @namespace = "acme" },
+            Ct)).StatusCode.ShouldBe(HttpStatusCode.Created);
+        await app.Messages.WaitForAsync<RoleGranted>(m => m.UserId == alice && m.Role == "Operator", Ct);
+        app.Messages.Received.OfType<RoleRevoked>().ShouldNotContain(message => message.Namespace == "acme");
+        var user = (await administrator.GetFromJsonAsync<UserList>(Users, Ct))!.Items.Single(u => u.Id == alice);
+        user.RoleGrants.ShouldBe(
+            [new RoleGrantBody("acme", "Engineer"), new RoleGrantBody("acme", "Operator")],
+            ignoreOrder: true);
+    }
+
+    [Fact]
     public async Task DisableUser_ShouldPublishUserDisabledAndRevokeTokens_WhenAnAdministratorDisablesTheUser()
     {
         // Arrange

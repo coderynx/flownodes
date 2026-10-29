@@ -238,6 +238,8 @@ public sealed class HandlerTests
             { "Administrator", "default", Errors.NamespaceNotAllowed() },
             { "Wizard", "default", Errors.InvalidRole("Wizard") },
             { null, "default", Errors.InvalidRole(string.Empty) },
+            { "1", "default", Errors.InvalidRole("1") },
+            { "2", "default", Errors.InvalidRole("2") },
             { "7", "default", Errors.InvalidRole("7") },
             { "Operator, Engineer", "default", Errors.InvalidRole("Operator, Engineer") }
         };
