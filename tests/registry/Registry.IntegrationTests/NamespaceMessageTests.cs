@@ -79,13 +79,16 @@ public sealed class NamespaceMessageTests(PostgresFixture postgres)
 
         // Assert
         await app.Messages.WaitForAppliedCountAsync("acme", 3, Ct);
-        var deleted = await app.Messages.WaitForDeletedAsync("acme", Ct);
+        await app.Messages.WaitForDeletedCountAsync("acme", 2, Ct);
         var seqs = app.Messages.Received.OfType<Core.Contracts.Resources.ResourceApplied>()
             .Where(applied => applied.Name == "acme")
             .Select(applied => applied.Seq)
+            .Concat(
+                app.Messages.Received.OfType<Core.Contracts.Resources.ResourceDeleted>()
+                    .Where(deleted => deleted.Name == "acme")
+                    .Select(deleted => deleted.Seq))
             .Order();
-        deleted.Seq.ShouldBe(2);
-        seqs.ShouldBe([1, 3, 5]);
+        seqs.ShouldBe([1, 2, 3, 4, 5]);
     }
 
     [Fact]
