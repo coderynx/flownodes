@@ -140,11 +140,7 @@ internal sealed class FlowGrain(
         }
 
         _active.Remove(execution);
-        if (flowState.State.Last is not { } last || last.FinishedAt <= finishedAt)
-        {
-            flowState.State.Last = new LastResult(execution, state, finishedAt);
-            await flowState.WriteStateAsync();
-        }
+        await KeepNewestAsync(new LastResult(execution, state, finishedAt));
 
         await StartQueuedAsync();
         await ReportStatusAsync();
@@ -218,10 +214,26 @@ internal sealed class FlowGrain(
     {
         _active.Clear();
         _active.UnionWith(await executions.ListActiveAsync(Namespace, ResourceName, State.Uid));
+        if (await executions.FindLastResultAsync(Namespace, ResourceName, State.Uid) is { } last)
+        {
+            await KeepNewestAsync(last);
+        }
+
         await WatchAsync();
         await StartSchedulesAsync();
         await StartQueuedAsync();
         await ReportStatusAsync();
+    }
+
+    private async Task KeepNewestAsync(LastResult candidate)
+    {
+        if (flowState.State.Last == candidate || flowState.State.Last?.FinishedAt > candidate.FinishedAt)
+        {
+            return;
+        }
+
+        flowState.State.Last = candidate;
+        await flowState.WriteStateAsync();
     }
 
     private void Forget()

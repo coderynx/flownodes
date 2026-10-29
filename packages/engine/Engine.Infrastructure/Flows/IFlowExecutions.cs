@@ -14,6 +14,12 @@ internal interface IFlowExecutions
         Guid flowUid,
         CancellationToken cancellationToken = default);
 
+    Task<LastResult?> FindLastResultAsync(
+        string @namespace,
+        string flow,
+        Guid flowUid,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Guid>> RequestCancelAsync(
         string @namespace,
         string flow,
