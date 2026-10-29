@@ -50,13 +50,47 @@ public sealed class NamespaceTests
     }
 
     [Fact]
+    public void Delete_ShouldKeepTheSeqOfTheDeletionMessage_WhenNamespaceIsNotDefault()
+    {
+        // Arrange
+        var @namespace = Namespace.Create(NamespaceName.Create("acme"));
+        @namespace.NextSeq();
+
+        // Act
+        var deleted = @namespace.Delete();
+
+        // Assert
+        deleted.Name.ShouldBe(@namespace.Name);
+        deleted.Seq.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Recreate_ShouldContinueThePredecessorsSeqWithANewUid_WhenNameWasDeleted()
+    {
+        // Arrange
+        var first = Namespace.Create(NamespaceName.Create("acme"));
+        first.NextSeq();
+        var deleted = first.Delete();
+
+        // Act
+        var second = Namespace.Recreate(deleted);
+
+        // Assert
+        second.Name.ShouldBe(first.Name);
+        second.Generation.ShouldBe(1);
+        second.Seq.ShouldBe(4);
+        second.Uid.ShouldNotBe(first.Uid);
+        second.NextSeq().ShouldBe(5);
+    }
+
+    [Fact]
     public void Delete_ShouldThrowInvalidOperationException_WhenNamespaceIsDefault()
     {
         // Arrange
         var created = Namespace.Create(NamespaceName.Create(NamespaceName.Default));
 
         // Act
-        var act = created.Delete;
+        var act = () => created.Delete();
 
         // Assert
         act.ShouldThrow<InvalidOperationException>();

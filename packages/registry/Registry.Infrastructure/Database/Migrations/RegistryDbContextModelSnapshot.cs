@@ -51,6 +51,20 @@ namespace Registry.Infrastructure.Database.Migrations
                     b.ToTable("user_access", (string)null);
                 });
 
+            modelBuilder.Entity("Registry.Domain.Namespaces.DeletedNamespace", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(63)
+                        .HasColumnType("character varying(63)");
+
+                    b.Property<long>("Seq")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("deleted_namespaces", (string)null);
+                });
+
             modelBuilder.Entity("Registry.Domain.Namespaces.Namespace", b =>
                 {
                     b.Property<string>("Name")

@@ -32,30 +32,36 @@ internal sealed class NamespaceGrain(
     public async Task ApplyAsync(Guid uid, long seq)
     {
         var current = state.State;
-        var isStale = current.Deleted ? current.Uid == uid : seq <= current.Seq;
-        if (isStale)
+        if (seq <= current.Seq)
         {
             return;
         }
 
-        var previous = current.Deleted ? 0 : current.Seq;
-        var wasDeleted = current.Deleted;
+        var replaced = IsLive && current.Uid != uid;
+        if (replaced)
+        {
+            foreach (var member in current.Members.OrderByDescending(member => PingOrder(member.Kind)).ToList())
+            {
+                await DeleteMemberAsync(member, Guid.Empty, current.Seq + 1);
+            }
+        }
+
         state.State = new NamespaceState
         {
             Uid = uid,
             Seq = seq,
-            Members = wasDeleted ? [] : current.Members
+            Members = replaced ? [] : current.Members
         };
         await state.WriteStateAsync();
 
         await this.RegisterOrUpdateReminder(ReminderName, options.Value.ReminderPeriod, options.Value.ReminderPeriod);
-        if (wasDeleted)
+        if (current.Deleted)
         {
             StartResyncTimer();
             StartPingTimer();
         }
 
-        if (seq > previous + 1)
+        if (replaced || seq > current.Seq + 1)
         {
             await registry.ResyncNamespaceAsync(this.GetPrimaryKeyString(), CancellationToken.None);
         }
@@ -156,29 +162,13 @@ internal sealed class NamespaceGrain(
         }
 
         await ObserveAsync(seq);
-        if (state.State.Members.Remove(new Member(kind, name)))
+        var member = new Member(kind, name);
+        if (state.State.Members.Remove(member))
         {
             await state.WriteStateAsync();
         }
 
-        switch (kind)
-        {
-            case ConnectionKind:
-                await Connection(name).DeleteAsync(uid, seq);
-                break;
-            case AssetTypeKind:
-                await AssetType(name).DeleteAsync(uid, seq);
-                break;
-            case AssetKind:
-                await Asset(name).DeleteAsync(uid, seq);
-                break;
-            case FlowKind:
-                await Flow(name).DeleteAsync(uid, seq);
-                break;
-            default:
-                await Device(name).DeleteAsync(uid, seq);
-                break;
-        }
+        await DeleteMemberAsync(member, uid, seq);
     }
 
     public Task WakeAsync() =>
@@ -208,6 +198,16 @@ internal sealed class NamespaceGrain(
 
     private IDeviceGrain Device(string name) =>
         GrainFactory.GetGrain<IDeviceGrain>($"{this.GetPrimaryKeyString()}/{name}");
+
+    private Task DeleteMemberAsync(Member member, Guid uid, long seq) =>
+        member.Kind switch
+        {
+            ConnectionKind => Connection(member.Name).DeleteAsync(uid, seq),
+            AssetTypeKind => AssetType(member.Name).DeleteAsync(uid, seq),
+            AssetKind => Asset(member.Name).DeleteAsync(uid, seq),
+            FlowKind => Flow(member.Name).DeleteAsync(uid, seq),
+            _ => Device(member.Name).DeleteAsync(uid, seq)
+        };
 
     private void StartPingTimer() =>
         _pingTimer ??= this.RegisterGrainTimer(PingMembersAsync, options.Value.PingPeriod, options.Value.PingPeriod);

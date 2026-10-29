@@ -11,12 +11,18 @@ internal sealed class ManifestState
 {
     private readonly KindCatalog _catalog;
     private readonly List<Namespace> _namespaces;
+    private readonly List<DeletedNamespace> _deletedNamespaces;
     private readonly List<Resource> _resources;
 
-    private ManifestState(KindCatalog catalog, List<Namespace> namespaces, List<Resource> resources)
+    private ManifestState(
+        KindCatalog catalog,
+        List<Namespace> namespaces,
+        List<DeletedNamespace> deletedNamespaces,
+        List<Resource> resources)
     {
         _catalog = catalog;
         _namespaces = namespaces;
+        _deletedNamespaces = deletedNamespaces;
         _resources = resources;
     }
 
@@ -41,14 +47,20 @@ internal sealed class ManifestState
             return Errors.NamespaceNotFound(missing.Namespace.Value);
         }
 
+        var deletedNamespaces = await database.DeletedNamespaces
+            .Where(@namespace => namespaceNames.Contains(@namespace.Name))
+            .ToListAsync(cancellationToken);
         var resources = await database.Resources.Where(resource => namespaceNames.Contains(resource.Namespace))
             .ToListAsync(cancellationToken);
 
-        return Result.Found(new ManifestState(catalog, namespaces, resources));
+        return Result.Found(new ManifestState(catalog, namespaces, deletedNamespaces, resources));
     }
 
     public Namespace? FindNamespace(NamespaceName name) =>
         _namespaces.Find(@namespace => @namespace.Name == name);
+
+    public DeletedNamespace? FindDeletedNamespace(NamespaceName name) =>
+        _deletedNamespaces.Find(@namespace => @namespace.Name == name);
 
     public Resource? FindResource(ManifestEntry entry) => _resources.Find(entry.Is);
 

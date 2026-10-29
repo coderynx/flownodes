@@ -9,6 +9,7 @@ namespace Registry.Infrastructure.Database;
 internal sealed class RegistryDbContext(DbContextOptions<RegistryDbContext> options) : DbContext(options)
 {
     public DbSet<Namespace> Namespaces => Set<Namespace>();
+    public DbSet<DeletedNamespace> DeletedNamespaces => Set<DeletedNamespace>();
     public DbSet<Resource> Resources => Set<Resource>();
     public DbSet<Revision> Revisions => Set<Revision>();
     public DbSet<SecretValue> SecretValues => Set<SecretValue>();

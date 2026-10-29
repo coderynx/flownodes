@@ -13,7 +13,7 @@ using Registry.Infrastructure.Database;
 namespace Registry.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(RegistryDbContext))]
-    [Migration("20261025200618_InitialRegistry")]
+    [Migration("20261029143517_InitialRegistry")]
     partial class InitialRegistry
     {
         /// <inheritdoc />
@@ -52,6 +52,20 @@ namespace Registry.Infrastructure.Database.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("user_access", (string)null);
+                });
+
+            modelBuilder.Entity("Registry.Domain.Namespaces.DeletedNamespace", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(63)
+                        .HasColumnType("character varying(63)");
+
+                    b.Property<long>("Seq")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("deleted_namespaces", (string)null);
                 });
 
             modelBuilder.Entity("Registry.Domain.Namespaces.Namespace", b =>

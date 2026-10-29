@@ -65,6 +65,7 @@ internal sealed class FlowGrain(
 
     public async Task DeleteAsync(Guid uid, long seq)
     {
+        var heldUid = State.Uid;
         if (!await TombstoneAsync(uid, seq))
         {
             return;
@@ -72,7 +73,7 @@ internal sealed class FlowGrain(
 
         StopSchedules();
         await UnwatchAsync(_watched.ToList());
-        await CancelExecutionsAsync(uid);
+        await CancelExecutionsAsync(heldUid);
         _active.Clear();
         await flowState.ClearStateAsync();
         DeactivateOnIdle();

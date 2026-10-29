@@ -142,7 +142,7 @@ internal sealed class ResourceDeletion(
         foreach (var entry in entries.Where(entry => entry.IsNamespace))
         {
             var @namespace = state.FindNamespace(entry.Namespace)!;
-            @namespace.Delete();
+            database.DeletedNamespaces.Add(@namespace.Delete());
             database.Namespaces.Remove(@namespace);
             await database.PublishAsync(@namespace.ToDeleted());
             await revisions.RecordAsync(Revision.Tombstone(@namespace, author, now), cancellationToken);

@@ -16,6 +16,10 @@ public interface IApplicationDbContext : IUserAccessSource
     /// </summary>
     DbSet<Namespace> Namespaces { get; }
     /// <summary>
+    /// Gets what the Registry keeps of each deleted Namespace whose name has not been reused since.
+    /// </summary>
+    DbSet<DeletedNamespace> DeletedNamespaces { get; }
+    /// <summary>
     /// Gets the namespaced Resources the Registry stores.
     /// </summary>
     DbSet<Resource> Resources { get; }

@@ -22,12 +22,21 @@ public sealed class ResourceMessages
     public async Task<NamespacesListed> WaitForListedAsync(CancellationToken cancellationToken) =>
         await WaitForAsync<NamespacesListed>(_ => true, cancellationToken);
 
-    public async Task WaitForAppliedCountAsync(string name, int count, CancellationToken cancellationToken)
+    public Task WaitForAppliedCountAsync(string name, int count, CancellationToken cancellationToken) =>
+        WaitForCountAsync<ResourceApplied>(applied => applied.Name == name, count, cancellationToken);
+
+    public Task WaitForDeletedCountAsync(string name, int count, CancellationToken cancellationToken) =>
+        WaitForCountAsync<ResourceDeleted>(deleted => deleted.Name == name, count, cancellationToken);
+
+    private async Task WaitForCountAsync<TMessage>(
+        Func<TMessage, bool> match,
+        int count,
+        CancellationToken cancellationToken)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(30));
 
-        while (_received.OfType<ResourceApplied>().Count(applied => applied.Name == name) < count)
+        while (_received.OfType<TMessage>().Count(match) < count)
         {
             await Task.Delay(TimeSpan.FromMilliseconds(100), timeout.Token);
         }

@@ -49,14 +49,15 @@ public sealed class Namespace
     /// </summary>
     /// <param name="name">The name of the new Namespace.</param>
     /// <returns>The new Namespace.</returns>
-    public static Namespace Create(NamespaceName name) =>
-        new()
-        {
-            Name = name,
-            Uid = Guid.NewGuid(),
-            Generation = 1,
-            Seq = 1
-        };
+    public static Namespace Create(NamespaceName name) => Incarnate(name, 1);
+
+    /// <summary>
+    /// Creates a Namespace again under the name of a deleted one, at Generation 1 and the sequence number after its
+    /// predecessor's deletion message, so every message about the new Namespace is newer than any about the old one.
+    /// </summary>
+    /// <param name="predecessor">What the Registry kept of the deleted Namespace.</param>
+    /// <returns>The new Namespace.</returns>
+    public static Namespace Recreate(DeletedNamespace predecessor) => Incarnate(predecessor.Name, predecessor.Seq + 1);
 
     /// <summary>
     /// Advances the sequence number for a message about a Resource in the Namespace.
@@ -82,8 +83,9 @@ public sealed class Namespace
     /// <summary>
     /// Advances the sequence number to the one the deletion message carries.
     /// </summary>
+    /// <returns>What the Registry keeps of the Namespace once it is deleted.</returns>
     /// <exception cref="InvalidOperationException">The Namespace is the <c>default</c> Namespace.</exception>
-    public void Delete()
+    public DeletedNamespace Delete()
     {
         if (Name.IsDefault)
         {
@@ -91,5 +93,16 @@ public sealed class Namespace
         }
 
         Seq++;
+
+        return DeletedNamespace.Create(Name, Seq);
     }
+
+    private static Namespace Incarnate(NamespaceName name, long seq) =>
+        new()
+        {
+            Name = name,
+            Uid = Guid.NewGuid(),
+            Generation = 1,
+            Seq = seq
+        };
 }

@@ -13,6 +13,18 @@ namespace Registry.Infrastructure.Database.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "deleted_namespaces",
+                columns: table => new
+                {
+                    Name = table.Column<string>(type: "character varying(63)", maxLength: 63, nullable: false),
+                    Seq = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_deleted_namespaces", x => x.Name);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "namespaces",
                 columns: table => new
                 {
@@ -151,6 +163,9 @@ namespace Registry.Infrastructure.Database.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "deleted_namespaces");
+
             migrationBuilder.DropTable(
                 name: "resources");
 

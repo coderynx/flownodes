@@ -10,6 +10,7 @@ namespace Registry.Infrastructure.Database;
 internal sealed class RegistryUnitOfWork(IDbContextOutbox<RegistryDbContext> outbox) : IApplicationDbContext
 {
     public DbSet<Namespace> Namespaces => outbox.DbContext.Namespaces;
+    public DbSet<DeletedNamespace> DeletedNamespaces => outbox.DbContext.DeletedNamespaces;
     public DbSet<Resource> Resources => outbox.DbContext.Resources;
     public DbSet<UserAccess> UserAccess => outbox.DbContext.UserAccess;
     public DbSet<Revision> Revisions => outbox.DbContext.Revisions;
