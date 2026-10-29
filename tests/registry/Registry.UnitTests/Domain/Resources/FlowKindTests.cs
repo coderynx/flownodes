@@ -61,6 +61,7 @@ public sealed class FlowKindTests
     [InlineData("""{"nodes": [{"id": "a", "type": "read", "dataPoint": {"asset": "x", "name": "y"}}]}""", "spec.nodes")]
     [InlineData("""{"nodes": [{"id": "a", "type": "trigger"}, {"id": "a", "type": "trigger"}]}""", "spec.nodes[1].id")]
     [InlineData("""{"nodes": [{"id": "Bad Id", "type": "trigger"}]}""", "spec.nodes[0].id")]
+    [InlineData("""{"nodes": [{"id": "a\n", "type": "trigger"}]}""", "spec.nodes[0].id")]
     [InlineData("""{"nodes": [{"id": "t", "type": "trigger"}, {"id": "a", "type": "loop"}]}""", "spec.nodes[1].type")]
     [InlineData("""{"nodes": [{"id": "a", "type": "trigger", "next": "nowhere"}]}""", "spec.nodes[0].next")]
     [InlineData(
@@ -114,6 +115,12 @@ public sealed class FlowKindTests
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "read", "dataPoint": {"asset": "x", "name": "y"}, "timeout": "0s"}]}""",
         "spec.nodes[1].timeout")]
     [InlineData(
+        """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "read", "dataPoint": {"asset": "x", "name": "y"}, "timeout": "5s\n"}]}""",
+        "spec.nodes[1].timeout")]
+    [InlineData(
+        """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "read", "dataPoint": {"asset": "x", "name": "y"}, "into": "fan\n"}]}""",
+        "spec.nodes[1].into")]
+    [InlineData(
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "read", "dataPoint": {"asset": "x", "name": "y"}, "retry": {"times": -1}}]}""",
         "spec.nodes[1].retry.times")]
     [InlineData(
@@ -124,6 +131,9 @@ public sealed class FlowKindTests
         "spec.nodes[1]")]
     [InlineData(
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "write", "dataPoint": {"asset": "x", "name": "y"}, "from": "a..b"}]}""",
+        "spec.nodes[1].from")]
+    [InlineData(
+        """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "write", "dataPoint": {"asset": "x", "name": "y"}, "from": "trigger.value\n"}]}""",
         "spec.nodes[1].from")]
     [InlineData(
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "invoke", "action": {"asset": "x", "name": "y"}}]}""",

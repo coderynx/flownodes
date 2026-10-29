@@ -28,6 +28,7 @@ public sealed class IntegrationIdTests
     [InlineData("flownodes..mqtt")]
     [InlineData("-flownodes.mqtt")]
     [InlineData("flownodes.mqtt-")]
+    [InlineData("flownodes.mqtt\n")]
     public void TryCreate_ShouldRefuse_WhenTheIdIsNotVendorQualified(string? raw)
     {
         // Act

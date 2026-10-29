@@ -36,6 +36,6 @@ public sealed partial record IntegrationId
     /// <inheritdoc/>
     public override string ToString() => Value;
 
-    [GeneratedRegex(@"^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)+$")]
+    [GeneratedRegex(@"^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)+\z")]
     private static partial Regex Pattern();
 }

@@ -122,6 +122,6 @@ public sealed partial class SecretKind : IResourceKind
     /// <inheritdoc />
     public IEnumerable<SpecReference> References(JsonElement spec) => [];
 
-    [GeneratedRegex("^[A-Za-z0-9._-]{1,253}$")]
+    [GeneratedRegex(@"^[A-Za-z0-9._-]{1,253}\z")]
     private static partial Regex KeyName();
 }
