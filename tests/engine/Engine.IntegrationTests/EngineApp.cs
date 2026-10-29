@@ -11,12 +11,14 @@ using Engine.Application.Integrations;
 using Engine.Domain.Installations;
 using Engine.Domain.Integrations;
 using Engine.Infrastructure.Authorization;
+using Engine.Infrastructure.Bootstrap;
 using Engine.Infrastructure.Messaging;
 using Engine.Presentation.Bootstrap;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Orleans.Dashboard;
 
 namespace Engine.IntegrationTests;
 
@@ -41,11 +43,12 @@ public sealed class EngineApp : IAsyncDisposable
 
     public HttpClient Anonymous { get; }
 
-    public static async Task<EngineApp> StartAsync(string? alarmDatabase = null)
+    public static async Task<EngineApp> StartAsync(string? alarmDatabase = null, string environment = "Production")
     {
         var identity = await TestIdentity.StartAsync();
-        var builder = WebApplication.CreateBuilder();
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = environment });
         builder.WebHost.UseTestServer();
+        builder.Host.UseDefaultServiceProvider(options => options.ValidateOnBuild = false);
         builder.Configuration["Flownodes:Identity:Authority"] = identity.Address.ToString();
         builder.Configuration["ResyncPeriod"] = TimeSpan.FromMinutes(15).ToString();
         if (alarmDatabase is not null)
@@ -53,11 +56,13 @@ public sealed class EngineApp : IAsyncDisposable
             builder.Configuration["AlarmDatabase"] = alarmDatabase;
         }
 
+        builder.Services.AddHealthChecks();
         builder.AddApplication();
         builder.AddPresentation();
         builder.UseOrleans(silo =>
         {
             silo.UseLocalhostClustering(FreePort(), FreePort());
+            silo.AddDashboard(_ => { });
             new EngineCluster.SiloConfigurator().Configure(silo);
             silo.ConfigureServices(services =>
             {
@@ -69,6 +74,7 @@ public sealed class EngineApp : IAsyncDisposable
 
         var app = builder.Build();
         app.UsePresentation();
+        app.UseInfrastructure();
         await app.StartAsync();
 
         return new EngineApp(app, identity);
