@@ -29,7 +29,7 @@ public sealed class RecordingRegistry(IGrainFactory grains) : IRegistryRequests
                     seq,
                     JsonDocument.Parse(spec).RootElement));
 
-    public Task ListNamespacesAsync(CancellationToken cancellationToken)
+    public Task RequestNamespaceListAsync(CancellationToken cancellationToken)
     {
         var listed = new NamespacesListed([.. _held.Keys]);
         _ = Task.Run(() => NamespaceMessageHandler.Handle(listed, grains), CancellationToken.None);

@@ -262,15 +262,19 @@ public sealed class NamespaceGrainTests
 
         // Act
         engine.Registry.Hold("acme", "Connection", "sim", Simulator, 2);
+        engine.Registry.Hold("globex", "Connection", "sim", Simulator, 2);
 
         // Assert
-        var status = await engine.Status.WaitForAsync(
-            "acme",
-            "Connection",
-            "sim",
-            status => RecordingStatus.Reason(status) == "Connected",
-            Ct);
-        status.GetProperty("connectivity").GetString().ShouldBe("Connected");
+        foreach (var @namespace in new[] { "acme", "globex" })
+        {
+            var status = await engine.Status.WaitForAsync(
+                @namespace,
+                "Connection",
+                "sim",
+                status => RecordingStatus.Reason(status) == "Connected",
+                Ct);
+            status.GetProperty("connectivity").GetString().ShouldBe("Connected");
+        }
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

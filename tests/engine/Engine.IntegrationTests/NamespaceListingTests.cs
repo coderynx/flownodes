@@ -11,7 +11,7 @@ public sealed class NamespaceListingTests
     private static readonly TimeSpan Interval = TimeSpan.FromMinutes(5);
 
     [Fact]
-    public async Task Listing_ShouldRequestTheNamespaces_WhenItStarts()
+    public async Task StartAsync_ShouldRequestTheNamespaces_WhenItStarts()
     {
         // Arrange
         var registry = new CountingRegistry(failures: 0);
@@ -27,7 +27,7 @@ public sealed class NamespaceListingTests
     }
 
     [Fact]
-    public async Task Listing_ShouldRequestTheNamespacesAgain_WhenOneIntervalPasses()
+    public async Task StartAsync_ShouldRequestTheNamespacesAgain_WhenOneIntervalPasses()
     {
         // Arrange
         var registry = new CountingRegistry(failures: 0);
@@ -46,10 +46,29 @@ public sealed class NamespaceListingTests
     }
 
     [Fact]
-    public async Task Listing_ShouldKeepRequesting_WhenARequestThrows()
+    public async Task StartAsync_ShouldKeepRequesting_WhenARequestThrows()
     {
         // Arrange
         var registry = new CountingRegistry(failures: 1);
+        var time = new FakeTimeProvider();
+        using var listing = Listing(registry, time);
+        await listing.StartAsync(Ct);
+        await registry.WaitForListsAsync(1, Ct);
+
+        // Act
+        time.Advance(Interval);
+
+        // Assert
+        await registry.WaitForListsAsync(2, Ct);
+        await listing.StopAsync(Ct);
+        registry.Lists.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task StartAsync_ShouldKeepRequesting_WhenARequestTimesOut()
+    {
+        // Arrange
+        var registry = new CountingRegistry(failures: 1, new TaskCanceledException("The request timed out."));
         var time = new FakeTimeProvider();
         using var listing = Listing(registry, time);
         await listing.StartAsync(Ct);
@@ -73,14 +92,14 @@ public sealed class NamespaceListingTests
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private sealed class CountingRegistry(int failures) : IRegistryRequests
+    private sealed class CountingRegistry(int failures, Exception? failure = null) : IRegistryRequests
     {
         private int _lists;
         public int Lists => _lists;
 
-        public Task ListNamespacesAsync(CancellationToken cancellationToken) =>
+        public Task RequestNamespaceListAsync(CancellationToken cancellationToken) =>
             Interlocked.Increment(ref _lists) <= failures
-                ? Task.FromException(new InvalidOperationException("The Registry could not be reached."))
+                ? Task.FromException(failure ?? new InvalidOperationException("The Registry could not be reached."))
                 : Task.CompletedTask;
 
         public Task ResyncNamespaceAsync(string name, CancellationToken cancellationToken) => Task.CompletedTask;

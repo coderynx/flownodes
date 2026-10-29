@@ -17,8 +17,8 @@ internal sealed class Handler(IApplicationDbContext database) : IRequestHandler<
         Query request,
         CancellationToken cancellationToken = default)
     {
-        var namespaces = await database.Namespaces.AsNoTracking().ToListAsync(cancellationToken);
+        var names = await database.Namespaces.Select(@namespace => @namespace.Name).ToListAsync(cancellationToken);
 
-        return Result.Found<IReadOnlyList<string>>([.. namespaces.Select(@namespace => @namespace.Name.Value)]);
+        return Result.Found<IReadOnlyList<string>>([.. names.Select(name => name.Value)]);
     }
 }

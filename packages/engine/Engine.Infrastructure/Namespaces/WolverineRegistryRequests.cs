@@ -6,7 +6,7 @@ namespace Engine.Infrastructure.Namespaces;
 
 internal sealed class WolverineRegistryRequests(IServiceScopeFactory scopes) : IRegistryRequests
 {
-    public Task ListNamespacesAsync(CancellationToken cancellationToken) =>
+    public Task RequestNamespaceListAsync(CancellationToken cancellationToken) =>
         PublishAsync(new NamespacesListRequested());
 
     public Task ResyncNamespaceAsync(string name, CancellationToken cancellationToken) =>

@@ -17,9 +17,10 @@ internal sealed class NamespaceListing(
         {
             try
             {
-                await registry.ListNamespacesAsync(stoppingToken);
+                await registry.RequestNamespaceListAsync(stoppingToken);
             }
-            catch (Exception exception) when (exception is not (OperationCanceledException or OutOfMemoryException))
+            catch (Exception exception) when (!stoppingToken.IsCancellationRequested &&
+                                              exception is not OutOfMemoryException)
             {
                 logger.LogWarning(exception, "The Namespaces could not be requested from the Registry");
             }
