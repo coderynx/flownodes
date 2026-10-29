@@ -5,6 +5,7 @@ using Core.Contracts.Identity;
 using JasperFx.CodeGeneration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Registry.Application.Bootstrap;
@@ -214,6 +215,13 @@ public sealed class RegistryApp : IAsyncDisposable
         }
 
         return status;
+    }
+
+    public async Task DeleteEveryNamespaceAsync(CancellationToken cancellationToken)
+    {
+        await using var database = NpgsqlDataSource.Create(_app.Configuration.GetConnectionString("registry")!);
+        await using var command = database.CreateCommand("DELETE FROM namespaces");
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public Task PublishAsync<TMessage>(TMessage message) where TMessage : notnull =>

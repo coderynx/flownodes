@@ -29,7 +29,7 @@ public static class DependencyInjection
     /// <summary>
     /// Registers the shared infrastructure, the Registry's Postgres database, the messaging that carries its
     /// Resource messages to the other modules and the messaging that brings it Identity's Role Grants and the
-    /// Engine's resync requests and Status reports. On start, it asks Identity to publish every User again.
+    /// Engine's list and resync requests and Status reports. On start, it asks Identity to publish every User again.
     /// </summary>
     /// <remarks>
     /// The <c>Flownodes:InstallationKey</c> setting, a base64 256-bit key, encrypts the values of Secrets.
@@ -73,10 +73,12 @@ public static class DependencyInjection
             {
                 options.PublishMessage<ResourceApplied>().ToPostgresqlQueue(ResourceQueue);
                 options.PublishMessage<ResourceDeleted>().ToPostgresqlQueue(ResourceQueue);
+                options.PublishMessage<NamespacesListed>().ToPostgresqlQueue(ResourceQueue);
 
                 options.Discovery.IncludeAssembly(typeof(IdentityMessageHandler).Assembly);
 
-                options.PublishMessage<NamespacesResyncRequested>().ToPostgresqlQueue(EngineQueue);
+                options.PublishMessage<NamespacesListRequested>().ToPostgresqlQueue(EngineQueue);
+                options.PublishMessage<NamespaceResyncRequested>().ToPostgresqlQueue(EngineQueue);
                 options.PublishMessage<StatusReported>().ToPostgresqlQueue(EngineQueue);
                 options.ListenToPostgresqlQueue(EngineQueue).Sequential();
 

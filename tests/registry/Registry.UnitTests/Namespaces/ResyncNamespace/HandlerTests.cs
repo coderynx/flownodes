@@ -1,28 +1,12 @@
 using Core.Contracts.Resources;
-using Registry.Application.Namespaces.ResyncNamespaces;
+using Registry.Application.Namespaces.ResyncNamespace;
 using Registry.Domain.Namespaces;
 using Xunit;
 
-namespace Registry.UnitTests.Namespaces.ResyncNamespaces;
+namespace Registry.UnitTests.Namespaces.ResyncNamespace;
 
 public sealed class HandlerTests
 {
-    [Fact]
-    public async Task HandleAsync_ShouldPublishEveryNamespace_WhenNoNameIsGiven()
-    {
-        // Arrange
-        var database = TestDatabase.Create(
-            [Namespace.Create(NamespaceName.Create("acme")), Namespace.Create(NamespaceName.Create("globex"))]);
-        var handler = new Handler(database);
-
-        // Act
-        await handler.HandleAsync(new Command(null), Ct);
-
-        // Assert
-        await database.Received(1).PublishAsync(Arg.Is<ResourceApplied>(message => message.Name == "acme"));
-        await database.Received(1).PublishAsync(Arg.Is<ResourceApplied>(message => message.Name == "globex"));
-    }
-
     [Fact]
     public async Task HandleAsync_ShouldPublishOnlyThatNamespace_WhenNameIsGiven()
     {
@@ -75,6 +59,20 @@ public sealed class HandlerTests
 
         // Act
         await handler.HandleAsync(new Command("Not Valid!"), Ct);
+
+        // Assert
+        await database.DidNotReceive().PublishAsync(Arg.Any<ResourceApplied>());
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldPublishNothing_WhenNamespaceDoesNotExist()
+    {
+        // Arrange
+        var database = TestDatabase.Create([Namespace.Create(NamespaceName.Create("acme"))]);
+        var handler = new Handler(database);
+
+        // Act
+        await handler.HandleAsync(new Command("ghost"), Ct);
 
         // Assert
         await database.DidNotReceive().PublishAsync(Arg.Any<ResourceApplied>());
