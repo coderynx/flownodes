@@ -133,6 +133,9 @@ public sealed class FlowKindTests
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "write", "dataPoint": {"asset": "x", "name": "y"}, "from": "a..b"}]}""",
         "spec.nodes[1].from")]
     [InlineData(
+        """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "write", "dataPoint": {"asset": "x", "name": "y"}, "from": "trigger.value\n"}]}""",
+        "spec.nodes[1].from")]
+    [InlineData(
         """{"nodes": [{"id": "t", "type": "trigger", "next": "a"}, {"id": "a", "type": "invoke", "action": {"asset": "x", "name": "y"}}]}""",
         "spec.nodes[1].action")]
     [InlineData(
