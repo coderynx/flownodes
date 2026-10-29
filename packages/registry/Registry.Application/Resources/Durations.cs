@@ -11,6 +11,6 @@ internal static partial class Durations
         duration.ValueKind == JsonValueKind.String && Pattern().IsMatch(duration.GetString()!) &&
         duration.GetString()!.Any(c => c is >= '1' and <= '9');
 
-    [GeneratedRegex(@"^\d+(ms|s|m|h)$")]
+    [GeneratedRegex(@"^\d+(ms|s|m|h)\z")]
     private static partial Regex Pattern();
 }

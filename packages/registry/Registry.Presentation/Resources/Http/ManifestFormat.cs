@@ -172,6 +172,6 @@ internal static partial class ManifestFormat
                 : ScalarStyle.DoubleQuoted
         };
 
-    [GeneratedRegex(@"^[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?$")]
+    [GeneratedRegex(@"^[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?\z")]
     private static partial Regex Number();
 }

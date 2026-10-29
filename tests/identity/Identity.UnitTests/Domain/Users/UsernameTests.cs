@@ -27,6 +27,7 @@ public sealed class UsernameTests
     [InlineData("alice/smith")]
     [InlineData("alicé")]
     [InlineData("alice\tsmith")]
+    [InlineData("alice\n")]
     public void TryCreate_ShouldRejectTheText_WhenItIsNotAUsername(string? raw)
     {
         // Act

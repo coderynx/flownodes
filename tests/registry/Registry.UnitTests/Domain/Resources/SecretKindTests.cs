@@ -28,6 +28,7 @@ public sealed class SecretKindTests
     [InlineData("""{"data": {"password": 1}}""", "spec.data.password")]
     [InlineData("""{"data": {"password": ""}}""", "spec.data.password")]
     [InlineData("""{"data": {"bad key": "x"}}""", "spec.data.bad key")]
+    [InlineData("""{"data": {"key\n": "x"}}""", "spec.data.key\n")]
     [InlineData("""{"data": {"a": "x"}, "extra": 1}""", "spec.extra")]
     public void Validate_ShouldReportThePath_WhenTheSpecIsInvalid(string json, string path)
     {

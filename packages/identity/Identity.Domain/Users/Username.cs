@@ -55,6 +55,6 @@ public sealed partial record Username
     /// <inheritdoc/>
     public override string ToString() => Value;
 
-    [GeneratedRegex("^[A-Za-z0-9._@-]+$")]
+    [GeneratedRegex(@"^[A-Za-z0-9._@-]+\z")]
     private static partial Regex Allowed();
 }

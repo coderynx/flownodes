@@ -37,6 +37,7 @@ public sealed class NamespaceNameTests
     [InlineData("dotted.name")]
     [InlineData("white space")]
     [InlineData(" acme")]
+    [InlineData("acme\n")]
     [InlineData(TooLong)]
     public void TryCreate_ShouldReturnFalse_WhenRawIsNotADnsLabel(string? raw)
     {
