@@ -69,7 +69,7 @@ public sealed class HandlerTests
         // Assert
         bystander.RoleGrants.Count.ShouldBe(1);
         bystander.Seq.ShouldBe(1);
-        database.ReceivedCalls().ShouldNotContain(call => call.GetMethodInfo().Name == "PublishAsync");
+        TestDoubles.Published(database).ShouldBeEmpty();
     }
 
     [Theory]
@@ -92,7 +92,7 @@ public sealed class HandlerTests
         database.KnownNamespaces.DidNotReceiveWithAnyArgs().Remove(null!);
         holder.RoleGrants.Select(grant => (grant.Namespace, grant.Role)).ShouldBe([("acme", Role.Engineer)]);
         holder.Seq.ShouldBe(1);
-        database.ReceivedCalls().ShouldNotContain(call => call.GetMethodInfo().Name == "PublishAsync");
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 
@@ -112,7 +112,7 @@ public sealed class HandlerTests
         database.KnownNamespaces.DidNotReceiveWithAnyArgs().Remove(null!);
         holder.RoleGrants.Select(grant => (grant.Namespace, grant.Role)).ShouldBe([("acme", Role.Engineer)]);
         holder.Seq.ShouldBe(1);
-        database.ReceivedCalls().ShouldNotContain(call => call.GetMethodInfo().Name == "PublishAsync");
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 
@@ -154,7 +154,7 @@ public sealed class HandlerTests
         result.Success.Kind.ShouldBe(SuccessKind.Found);
         holder.RoleGrants.Count.ShouldBe(1);
         database.KnownNamespaces.DidNotReceiveWithAnyArgs().Remove(null!);
-        database.ReceivedCalls().ShouldNotContain(call => call.GetMethodInfo().Name == "PublishAsync");
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 }
