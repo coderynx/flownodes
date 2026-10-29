@@ -20,7 +20,7 @@ Configuration works the way it does in Kubernetes. You `apply` Manifests with th
 
 Assets form a tree. An Asset can be a one-off, like your living room, or an instance of an Asset Type, so a fleet of 50 identical trains is configured once.
 
-Devices come from Connections to Integrations. Integrations are plugins with their own release cycle, separate from Flownodes itself. Once a Device exists, you attach it to an Asset. Each Asset exposes its own Data Points, and Flows and dashboards read those rather than the Device directly, so replacing a sensor doesn't break them. Every value carries a Quality and a timestamp.
+Devices come from Connections to Integrations. Integrations are plugins with their own release cycle, separate from Flownodes itself. Once a Device exists, you attach it to an Asset. Each Asset exposes its own Data Points, and Flows and the web UI read those rather than the Device directly, so replacing a sensor doesn't break them. Every value carries a Quality and a timestamp.
 
 External Services, such as a weather API, a ticketing system or a webhook, are never modelled as Devices. They expose Actions and Events, and Flows carry their data to Assets.
 
