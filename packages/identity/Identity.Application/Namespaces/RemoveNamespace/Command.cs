@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Identity.Application.Namespaces.RemoveNamespace;
 
 /// <summary>
-/// Forgets a Namespace the Registry deleted and drops every Role Grant in it.
+/// Forgets a Namespace the Registry deleted and drops every Role Grant in it, unless the deletion is about an
+/// earlier incarnation or is not newer than the last message applied.
 /// </summary>
 /// <param name="Name">The name of the Namespace.</param>
 /// <param name="Uid">The identifier of the incarnation that was deleted.</param>
@@ -26,8 +27,13 @@ internal sealed class Handler(IIdentityDbContext database) : IRequestHandler<Com
         var known = await database.KnownNamespaces.SingleOrDefaultAsync(
             candidate => candidate.Name == request.Name,
             cancellationToken);
-        if (known is not null && known.IsDeletedBy(request.Uid, request.Seq))
+        if (known is not null)
         {
+            if (!known.IsDeletedBy(request.Uid, request.Seq))
+            {
+                return Result.Found();
+            }
+
             database.KnownNamespaces.Remove(known);
         }
 

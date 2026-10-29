@@ -69,17 +69,18 @@ public sealed class HandlerTests
         // Assert
         bystander.RoleGrants.Count.ShouldBe(1);
         bystander.Seq.ShouldBe(1);
-        database.ReceivedCalls().ShouldNotContain(call => call.GetMethodInfo().Name == "PublishAsync");
+        TestDoubles.Published(database).ShouldBeEmpty();
     }
 
     [Theory]
     [InlineData(1)]
     [InlineData(0)]
-    public async Task HandleAsync_ShouldKeepTheNamespace_WhenTheDeletionIsNotNewer(long seq)
+    public async Task HandleAsync_ShouldKeepTheNamespaceAndItsGrants_WhenTheDeletionIsNotNewer(long seq)
     {
         // Arrange
+        var holder = NamespaceDoubles.UserWith("alice", ("acme", Role.Engineer));
         var known = KnownNamespace.Create("acme", NamespaceDoubles.Uid, 1);
-        var database = TestDoubles.Database([], namespaces: [known]);
+        var database = TestDoubles.Database([holder], namespaces: [known]);
         var handler = new Handler(database);
 
         // Act
@@ -89,14 +90,19 @@ public sealed class HandlerTests
 
         // Assert
         database.KnownNamespaces.DidNotReceiveWithAnyArgs().Remove(null!);
+        holder.RoleGrants.Select(grant => (grant.Namespace, grant.Role)).ShouldBe([("acme", Role.Engineer)]);
+        holder.Seq.ShouldBe(1);
+        TestDoubles.Published(database).ShouldBeEmpty();
+        await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldKeepTheNamespace_WhenTheDeletionIsAboutAnEarlierIncarnation()
+    public async Task HandleAsync_ShouldKeepTheNamespaceAndItsGrants_WhenTheDeletionIsAboutAnEarlierIncarnation()
     {
         // Arrange
+        var holder = NamespaceDoubles.UserWith("alice", ("acme", Role.Engineer));
         var known = KnownNamespace.Create("acme", NamespaceDoubles.Uid, 1);
-        var database = TestDoubles.Database([], namespaces: [known]);
+        var database = TestDoubles.Database([holder], namespaces: [known]);
         var handler = new Handler(database);
 
         // Act
@@ -104,10 +110,14 @@ public sealed class HandlerTests
 
         // Assert
         database.KnownNamespaces.DidNotReceiveWithAnyArgs().Remove(null!);
+        holder.RoleGrants.Select(grant => (grant.Namespace, grant.Role)).ShouldBe([("acme", Role.Engineer)]);
+        holder.Seq.ShouldBe(1);
+        TestDoubles.Published(database).ShouldBeEmpty();
+        await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldStillDropTheGrants_WhenTheNamespaceIsNotKnown()
+    public async Task HandleAsync_ShouldDropTheOrphanedGrants_WhenTheNamespaceIsNotKnown()
     {
         // Arrange
         var holder = NamespaceDoubles.UserWith("alice", ("acme", Role.Engineer));
@@ -144,7 +154,7 @@ public sealed class HandlerTests
         result.Success.Kind.ShouldBe(SuccessKind.Found);
         holder.RoleGrants.Count.ShouldBe(1);
         database.KnownNamespaces.DidNotReceiveWithAnyArgs().Remove(null!);
-        database.ReceivedCalls().ShouldNotContain(call => call.GetMethodInfo().Name == "PublishAsync");
+        TestDoubles.Published(database).ShouldBeEmpty();
         await database.DidNotReceiveWithAnyArgs().SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 }

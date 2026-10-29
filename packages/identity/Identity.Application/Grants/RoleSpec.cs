@@ -16,10 +16,12 @@ internal sealed record RoleSpec(bool IsAdministrator, Role Role, string Namespac
                 : Errors.NamespaceNotAllowed();
         }
 
-        if (!Enum.TryParse<Role>(role, true, out var parsed) || !Enum.IsDefined(parsed))
+        if (role is null || !Enum.GetNames<Role>().Contains(role, StringComparer.OrdinalIgnoreCase))
         {
             return Errors.InvalidRole(role ?? string.Empty);
         }
+
+        var parsed = Enum.Parse<Role>(role, true);
 
         return string.IsNullOrEmpty(@namespace)
             ? Errors.NamespaceRequired(parsed.ToString())

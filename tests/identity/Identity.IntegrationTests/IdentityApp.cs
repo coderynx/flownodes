@@ -224,6 +224,9 @@ public sealed partial class IdentityApp : IAsyncDisposable
     public Task PublishAsync<TMessage>(TMessage message) where TMessage : notnull =>
         _app.Services.GetRequiredService<IMessageBus>().PublishAsync(message).AsTask();
 
+    public Task InvokeAsync<TMessage>(TMessage message, CancellationToken cancellationToken) where TMessage : notnull =>
+        _app.Services.GetRequiredService<IMessageBus>().InvokeAsync(message, cancellationToken);
+
     public async ValueTask DisposeAsync()
     {
         Client.Dispose();
