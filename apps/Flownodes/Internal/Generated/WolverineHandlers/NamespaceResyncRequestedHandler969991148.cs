@@ -4,13 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Internal.Generated.WolverineHandlers
 {
-    // START: NamespacesResyncRequestedHandler1762265185
+    // START: NamespaceResyncRequestedHandler969991148
     [global::System.CodeDom.Compiler.GeneratedCode("JasperFx", "1.0.0")]
-    public sealed class NamespacesResyncRequestedHandler1762265185 : Wolverine.Runtime.Handlers.MessageHandler
+    public sealed class NamespaceResyncRequestedHandler969991148 : Wolverine.Runtime.Handlers.MessageHandler
     {
         private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _serviceScopeFactory;
 
-        public NamespacesResyncRequestedHandler1762265185(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory serviceScopeFactory)
+        public NamespaceResyncRequestedHandler969991148(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory serviceScopeFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
         }
@@ -22,17 +22,17 @@ namespace Internal.Generated.WolverineHandlers
             // This service has been marked as requiring service location independent of Wolverine's ability to use constructor injection of everything else
             var sender = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Coderynx.MediatorKit.Abstractions.ISender>(serviceScope.ServiceProvider);
             // The actual message body
-            var namespacesResyncRequested = (Core.Contracts.Resources.NamespacesResyncRequested)context.Envelope.Message;
+            var namespaceResyncRequested = (Core.Contracts.Resources.NamespaceResyncRequested)context.Envelope.Message;
 
             System.Diagnostics.Activity.Current?.SetTag("message.handler", "Registry.Infrastructure.Messaging.EngineMessageHandler");
             System.Diagnostics.Activity.Current?.SetTag("handler.type", "Registry.Infrastructure.Messaging.EngineMessageHandler");
             
             // The actual message execution
-            await Registry.Infrastructure.Messaging.EngineMessageHandler.Handle(namespacesResyncRequested, sender, cancellation).ConfigureAwait(false);
+            await Registry.Infrastructure.Messaging.EngineMessageHandler.Handle(namespaceResyncRequested, sender, cancellation).ConfigureAwait(false);
         }
     }
 
-    // END: NamespacesResyncRequestedHandler1762265185
+    // END: NamespaceResyncRequestedHandler969991148
     
     
 }

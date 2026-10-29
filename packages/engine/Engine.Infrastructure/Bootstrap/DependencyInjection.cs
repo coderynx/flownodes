@@ -41,8 +41,9 @@ public static class DependencyInjection
 
     /// <summary>
     /// Registers the shared infrastructure, makes this Silo a member of the Orleans cluster, clustered, persisted and
-    /// reminded on Postgres, connects it to the Registry's Resource messages and loads the Integrations installed with
-    /// the deployment from the directory in <c>Flownodes:Integrations:Directory</c>.
+    /// reminded on Postgres, connects it to the Registry's Resource messages, asks the Registry for its Namespaces when
+    /// it starts and every <c>Flownodes:Engine:NamespaceList:Interval</c> (5 minutes by default), and loads the
+    /// Integrations installed with the deployment from the directory in <c>Flownodes:Integrations:Directory</c>.
     /// </summary>
     /// <param name="builder">The host the Engine is being added to.</param>
     /// <exception cref="InvalidOperationException">
@@ -123,6 +124,9 @@ public static class DependencyInjection
         builder.Services.Configure<NamespaceGrainOptions>(
             builder.Configuration.GetSection(NamespaceGrainOptions.Section));
         builder.Services.AddSingleton<IRegistryRequests, WolverineRegistryRequests>();
+        builder.Services.Configure<NamespaceListOptions>(
+            builder.Configuration.GetSection(NamespaceListOptions.Section));
+        builder.Services.TryAddSingleton(TimeProvider.System);
         builder.Services.Configure<ConnectionGrainOptions>(
             builder.Configuration.GetSection(ConnectionGrainOptions.Section));
         builder.Services.Configure<AssetGrainOptions>(builder.Configuration.GetSection(AssetGrainOptions.Section));
@@ -154,6 +158,7 @@ public static class DependencyInjection
 
                 options.PublishMessage<ResourceApplied>().ToPostgresqlQueue(ResourceQueue);
                 options.PublishMessage<ResourceDeleted>().ToPostgresqlQueue(ResourceQueue);
+                options.PublishMessage<NamespacesListed>().ToPostgresqlQueue(ResourceQueue);
                 options.ListenToPostgresqlQueue(ResourceQueue).Sequential();
 
                 options.PublishMessage<RoleGranted>().ToPostgresqlQueue(IdentityQueue);
@@ -165,7 +170,7 @@ public static class DependencyInjection
                 options.ListenToPostgresqlQueue(IdentityQueue).Sequential();
             });
 
-        builder.Services.AddHostedService<ResyncOnStart>();
+        builder.Services.AddHostedService<NamespaceListing>();
         builder.Services.AddHostedService<ResyncUsersOnStart>();
     }
 }

@@ -181,6 +181,9 @@ internal sealed class NamespaceGrain(
         }
     }
 
+    public Task WakeAsync() =>
+        IsLive ? Task.CompletedTask : registry.ResyncNamespaceAsync(this.GetPrimaryKeyString(), CancellationToken.None);
+
     public Task ReceiveReminder(string reminderName, TickStatus status) => Task.CompletedTask;
 
     private void StartResyncTimer() =>

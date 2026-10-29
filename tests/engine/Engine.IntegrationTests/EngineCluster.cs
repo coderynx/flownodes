@@ -14,6 +14,7 @@ using Engine.Infrastructure.Messaging;
 using Engine.Infrastructure.Namespaces;
 using Engine.Infrastructure.Resources;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
 using Orleans.Runtime.Hosting;
@@ -53,7 +54,8 @@ public sealed class EngineCluster : IAsyncDisposable
         TimeSpan? reconnectBackoff = null,
         string? flowDatabase = null,
         TimeSpan? storageDelay = null,
-        string? slowResource = null)
+        string? slowResource = null,
+        TimeSpan? listInterval = null)
     {
         var builder = new TestClusterBuilder(1);
         if (flowDatabase is not null)
@@ -78,6 +80,7 @@ public sealed class EngineCluster : IAsyncDisposable
         }
 
         builder.Properties["ResyncPeriod"] = (resyncPeriod ?? TimeSpan.FromMinutes(15)).ToString();
+        builder.Properties["ListInterval"] = (listInterval ?? TimeSpan.FromMinutes(5)).ToString();
         builder.AddSiloBuilderConfigurator<SiloConfigurator>();
         var cluster = builder.Build();
         await cluster.DeployAsync();
@@ -188,6 +191,9 @@ public sealed class EngineCluster : IAsyncDisposable
             var resyncPeriod = TimeSpan.Parse(
                 siloBuilder.Configuration["ResyncPeriod"]!,
                 System.Globalization.CultureInfo.InvariantCulture);
+            var listInterval = TimeSpan.Parse(
+                siloBuilder.Configuration["ListInterval"] ?? TimeSpan.FromMinutes(5).ToString(),
+                System.Globalization.CultureInfo.InvariantCulture);
             var reconnectBackoff = siloBuilder.Configuration["ReconnectBackoff"] is { } given
                 ? TimeSpan.Parse(given, System.Globalization.CultureInfo.InvariantCulture)
                 : TimeSpan.FromMilliseconds(100);
@@ -237,6 +243,9 @@ public sealed class EngineCluster : IAsyncDisposable
                 AddFlows(services, siloBuilder.Configuration["FlowDatabase"]);
                 services.AddSingleton<RecordingRegistry>();
                 services.AddSingleton<IRegistryRequests>(provider => provider.GetRequiredService<RecordingRegistry>());
+                services.Configure<NamespaceListOptions>(options => options.Interval = listInterval);
+                services.TryAddSingleton(TimeProvider.System);
+                services.AddHostedService<NamespaceListing>();
             });
         }
     }

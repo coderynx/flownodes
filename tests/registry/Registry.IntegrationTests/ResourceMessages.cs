@@ -19,6 +19,9 @@ public sealed class ResourceMessages
     public async Task<ResourceDeleted> WaitForDeletedAsync(string name, CancellationToken cancellationToken) =>
         await WaitForAsync<ResourceDeleted>(deleted => deleted.Name == name, cancellationToken);
 
+    public async Task<NamespacesListed> WaitForListedAsync(CancellationToken cancellationToken) =>
+        await WaitForAsync<NamespacesListed>(_ => true, cancellationToken);
+
     public async Task WaitForAppliedCountAsync(string name, int count, CancellationToken cancellationToken)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -56,6 +59,11 @@ public static class ResourceMessageHandler
     }
 
     public static void Handle(ResourceDeleted message, ResourceMessages messages)
+    {
+        messages.Add(message);
+    }
+
+    public static void Handle(NamespacesListed message, ResourceMessages messages)
     {
         messages.Add(message);
     }

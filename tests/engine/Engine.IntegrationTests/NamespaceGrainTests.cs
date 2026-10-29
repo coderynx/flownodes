@@ -4,6 +4,7 @@ namespace Engine.IntegrationTests;
 
 public sealed class NamespaceGrainTests
 {
+    private const string Simulator = """{"integration": "flownodes.simulator", "config": {"units": 2}}""";
     private static readonly Guid Uid = Guid.NewGuid();
 
     [Fact]
@@ -201,6 +202,79 @@ public sealed class NamespaceGrainTests
         // Assert
         await engine.Registry.WaitForResyncsAsync("acme", 2, Ct);
         engine.Registry.Resyncs("acme").ShouldBeGreaterThanOrEqualTo(2);
+    }
+
+    [Fact]
+    public async Task WakeAsync_ShouldRequestResync_WhenGrainHasNoState()
+    {
+        // Arrange
+        await using var engine = await EngineCluster.StartAsync();
+        var grain = engine.Namespace("acme");
+
+        // Act
+        await grain.WakeAsync();
+
+        // Assert
+        await engine.Registry.WaitForResyncsAsync("acme", 2, Ct);
+        engine.Registry.Resyncs("acme").ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task WakeAsync_ShouldRequestResync_WhenNamespaceIsDeleted()
+    {
+        // Arrange
+        await using var engine = await EngineCluster.StartAsync();
+        var grain = engine.Namespace("acme");
+        await grain.ApplyAsync(Uid, 1);
+        await grain.DeleteAsync(Uid, 2);
+        await engine.Registry.WaitForResyncsAsync("acme", 1, Ct);
+
+        // Act
+        await grain.WakeAsync();
+
+        // Assert
+        await engine.Registry.WaitForResyncsAsync("acme", 2, Ct);
+        engine.Registry.Resyncs("acme").ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task WakeAsync_ShouldNotRequestResync_WhenGrainIsLive()
+    {
+        // Arrange
+        await using var engine = await EngineCluster.StartAsync();
+        var grain = engine.Namespace("acme");
+        await grain.ApplyAsync(Uid, 1);
+        await engine.Registry.WaitForResyncsAsync("acme", 1, Ct);
+
+        // Act
+        await grain.WakeAsync();
+
+        // Assert
+        await grain.ApplyAsync(Uid, 2);
+        engine.Registry.Resyncs("acme").ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Engine_ShouldApplyEveryNamespaceTheRegistryHolds_WhenItsStorageIsEmpty()
+    {
+        // Arrange
+        await using var engine = await EngineCluster.StartAsync(listInterval: TimeSpan.FromMilliseconds(200));
+
+        // Act
+        engine.Registry.Hold("acme", "Connection", "sim", Simulator, 2);
+        engine.Registry.Hold("globex", "Connection", "sim", Simulator, 2);
+
+        // Assert
+        foreach (var @namespace in new[] { "acme", "globex" })
+        {
+            var status = await engine.Status.WaitForAsync(
+                @namespace,
+                "Connection",
+                "sim",
+                status => RecordingStatus.Reason(status) == "Connected",
+                Ct);
+            status.GetProperty("connectivity").GetString().ShouldBe("Connected");
+        }
     }
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

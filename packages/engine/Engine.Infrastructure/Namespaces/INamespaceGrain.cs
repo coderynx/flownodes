@@ -7,4 +7,5 @@ internal interface INamespaceGrain : IGrainWithStringKey
     Task ObserveAsync(long seq);
     Task ResourceAppliedAsync(string kind, string name, Guid uid, long generation, long seq, string spec);
     Task ResourceDeletedAsync(string kind, string name, Guid uid, long seq);
+    Task WakeAsync();
 }

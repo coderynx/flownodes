@@ -6,7 +6,7 @@ namespace Engine.Infrastructure.Messaging;
 
 // HACK: public and documented only because Wolverine discovers handlers among public types; nothing calls it.
 /// <summary>
-/// Hands the Registry's Resource messages to the Namespace's grain (ADR-0014).
+/// Hands the Registry's Resource messages and Namespace lists to the Namespace grains (ADR-0014).
 /// </summary>
 [StickyHandler("engine-resources")]
 public static class NamespaceMessageHandler
@@ -59,4 +59,19 @@ public static class NamespaceMessageHandler
                 .ResourceDeletedAsync(message.Kind, message.Name, message.Uid, message.Seq),
             _ => grains.GetGrain<INamespaceGrain>(message.Namespace).ObserveAsync(message.Seq)
         };
+
+    /// <summary>
+    /// Handles the Registry's list of Namespaces by waking the grain of each, so one without live state asks for a
+    /// resync.
+    /// </summary>
+    /// <param name="message">The Registry's message.</param>
+    /// <param name="grains">Orleans' grain factory.</param>
+    /// <returns>A task that completes when every grain is awake.</returns>
+    public static async Task Handle(NamespacesListed message, IGrainFactory grains)
+    {
+        foreach (var name in message.Names)
+        {
+            await grains.GetGrain<INamespaceGrain>(name).WakeAsync();
+        }
+    }
 }
