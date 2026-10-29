@@ -125,6 +125,9 @@ public sealed class EngineCluster : IAsyncDisposable
     internal IAssetGrain Asset(string @namespace, string name) =>
         _cluster.GrainFactory.GetGrain<IAssetGrain>($"{@namespace}/{name}");
 
+    internal IFlowGrain Flow(string @namespace, string name) =>
+        _cluster.GrainFactory.GetGrain<IFlowGrain>($"{@namespace}/{name}");
+
     internal INamespaceGrain Namespace(string name) => _cluster.GrainFactory.GetGrain<INamespaceGrain>(name);
 
     public async Task<bool> HasReminderAsync(string name)

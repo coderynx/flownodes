@@ -98,6 +98,25 @@ internal sealed class PostgresFlowExecutions(NpgsqlDataSource database) : IFlowE
         return await IdsAsync(command, cancellationToken);
     }
 
+    public async Task<LastResult?> FindLastResultAsync(
+        string @namespace,
+        string flow,
+        Guid flowUid,
+        CancellationToken cancellationToken = default)
+    {
+        await using var command = database.CreateCommand(
+            "SELECT id, state, finished_at FROM flow_executions " +
+            "WHERE namespace = @namespace AND flow = @flow AND flow_uid = @flow_uid AND finished_at IS NOT NULL " +
+            "AND state <> @dropped ORDER BY finished_at DESC, id DESC LIMIT 1");
+        Scope(command, @namespace, flow, flowUid);
+        command.Parameters.AddWithValue("dropped", nameof(FlowExecutionState.Dropped));
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        return await reader.ReadAsync(cancellationToken)
+            ? new LastResult(reader.GetGuid(0), reader.GetString(1), reader.GetFieldValue<DateTimeOffset>(2))
+            : null;
+    }
+
     public async Task<IReadOnlyList<Guid>> RequestCancelAsync(
         string @namespace,
         string flow,

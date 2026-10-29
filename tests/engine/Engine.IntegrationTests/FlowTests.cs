@@ -431,6 +431,143 @@ public sealed class FlowTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task Flow_ShouldReportTheLastResult_WhenTheFinishNeverReachesTheFlow()
+    {
+        // Arrange
+        await using var engine = await StartAsync();
+        await ApplyFlowAsync(engine, Manual, Pause("first", "\"1h\""));
+        var finished = Finished(FlowExecutionState.Failed, DateTimeOffset.UtcNow);
+        await engine.FlowExecutions.SaveAsync(finished, Ct);
+
+        // Act
+        await engine.Flow("acme", "cooling").PingAsync();
+
+        // Assert
+        var status = await engine.Status.WaitForAsync(
+            "acme",
+            "Flow",
+            "cooling",
+            status => status.GetProperty("lastResult").ValueKind != JsonValueKind.Null,
+            Ct);
+        status.GetProperty("activeExecutions").GetInt32().ShouldBe(0);
+        status.GetProperty("lastResult").GetProperty("execution").GetGuid().ShouldBe(finished.Id);
+        status.GetProperty("lastResult").GetProperty("state").GetString().ShouldBe("failed");
+    }
+
+    [Fact]
+    public async Task Flow_ShouldKeepTheLastRealResult_WhenADroppedTriggerFinishesLater()
+    {
+        // Arrange
+        await using var engine = await StartAsync();
+        await ApplyFlowAsync(engine, Manual, Pause("first", "\"1h\""));
+        var now = DateTimeOffset.UtcNow;
+        var succeeded = Finished(FlowExecutionState.Succeeded, now.AddMinutes(-1));
+        await engine.FlowExecutions.SaveAsync(succeeded, Ct);
+        await engine.FlowExecutions.SaveAsync(Finished(FlowExecutionState.Dropped, now), Ct);
+
+        // Act
+        await engine.Flow("acme", "cooling").PingAsync();
+
+        // Assert
+        var status = await engine.Status.WaitForAsync(
+            "acme",
+            "Flow",
+            "cooling",
+            status => status.GetProperty("lastResult").ValueKind != JsonValueKind.Null,
+            Ct);
+        status.GetProperty("lastResult").GetProperty("execution").GetGuid().ShouldBe(succeeded.Id);
+    }
+
+    [Fact]
+    public async Task Flow_ShouldKeepTheNewerLastResult_WhenASyncFindsAnOlderFinishedExecution()
+    {
+        // Arrange
+        await using var engine = await StartAsync();
+        await ApplyFlowAsync(engine, Manual, Pause("first", "\"1h\""));
+        var now = DateTimeOffset.UtcNow;
+        var newer = Guid.NewGuid();
+        var flow = engine.Flow("acme", "cooling");
+        await flow.ExecutionFinishedAsync(EngineCluster.ResourceUid("Flow", "cooling"), newer, "Succeeded", now);
+        await engine.FlowExecutions.SaveAsync(Finished(FlowExecutionState.Failed, now.AddMinutes(-1)), Ct);
+
+        // Act
+        await flow.PingAsync();
+
+        // Assert
+        await engine.Flows.StartAsync("acme", "cooling", null, Json("{}"), Ct);
+        var status = await engine.Status.WaitForAsync(
+            "acme",
+            "Flow",
+            "cooling",
+            status => status.GetProperty("activeExecutions").GetInt32() == 1,
+            Ct);
+        status.GetProperty("lastResult").GetProperty("execution").GetGuid().ShouldBe(newer);
+    }
+
+    [Fact]
+    public async Task FindLastResultAsync_ShouldReturnTheNewestFinished_WhenOthersAreDroppedUnfinishedOrOfAnotherUid()
+    {
+        // Arrange
+        await using var engine = await StartAsync();
+        var uid = EngineCluster.ResourceUid("Flow", "cooling");
+        var now = DateTimeOffset.UtcNow;
+        var newest = Finished(FlowExecutionState.Cancelled, now.AddMinutes(-1));
+        var running = FlowExecution.Start(
+            Guid.NewGuid(),
+            "acme",
+            "cooling",
+            uid,
+            1,
+            """{"nodes": [{"id": "start", "type": "trigger", "next": "hold"}, {"id": "hold", "type": "wait", "for": "1h"}]}""",
+            "start",
+            null,
+            now);
+        var stored = new[]
+        {
+            Finished(FlowExecutionState.Succeeded, now.AddMinutes(-3)), newest,
+            Finished(FlowExecutionState.Dropped, now), running, Dropped(now)
+        };
+        foreach (var execution in stored)
+        {
+            await engine.FlowExecutions.SaveAsync(execution, Ct);
+        }
+
+        await engine.FlowExecutions.SaveAsync(Finished(FlowExecutionState.Succeeded, now, flowUid: Guid.NewGuid()), Ct);
+
+        // Act
+        var last = await engine.FlowExecutions.FindLastResultAsync("acme", "cooling", uid, Ct);
+
+        // Assert
+        last.ShouldNotBeNull();
+        last.Execution.ShouldBe(newest.Id);
+        last.State.ShouldBe("Cancelled");
+    }
+
+    [Fact]
+    public async Task FindLastResultAsync_ShouldPickTheHighestId_WhenTwoFinishAtTheSameInstant()
+    {
+        // Arrange
+        await using var engine = await StartAsync();
+        var at = DateTimeOffset.UtcNow;
+        var higher = Guid.Parse("f0000000-0000-0000-0000-000000000000");
+        await engine.FlowExecutions.SaveAsync(Finished(FlowExecutionState.Succeeded, at, higher), Ct);
+        await engine.FlowExecutions.SaveAsync(
+            Finished(FlowExecutionState.Failed, at, Guid.Parse("0f000000-0000-0000-0000-000000000000")),
+            Ct);
+
+        // Act
+        var last = await engine.FlowExecutions.FindLastResultAsync(
+            "acme",
+            "cooling",
+            EngineCluster.ResourceUid("Flow", "cooling"),
+            Ct);
+
+        // Assert
+        last.ShouldNotBeNull();
+        last.Execution.ShouldBe(higher);
+    }
+
+    [Fact]
     public async Task PurgeAsync_ShouldKeepTheNewestAndTheRecent_WhenExecutionsAreOld()
     {
         // Arrange
@@ -522,6 +659,33 @@ public sealed class FlowTests(PostgresFixture postgres)
             "Busy",
             "Dropped.",
             at);
+
+    private static FlowExecution Finished(
+        FlowExecutionState state,
+        DateTimeOffset at,
+        Guid? id = null,
+        Guid? flowUid = null) =>
+        FlowExecution.Restore(
+            new FlowExecutionCheckpoint(
+                id ?? Guid.NewGuid(),
+                "acme",
+                "cooling",
+                flowUid ?? EngineCluster.ResourceUid("Flow", "cooling"),
+                1,
+                """{"nodes": [{"id": "start", "type": "trigger"}]}""",
+                "start",
+                state,
+                null,
+                "{}",
+                "{}",
+                1,
+                null,
+                null,
+                null,
+                false,
+                at,
+                at,
+                at));
 
     private async Task<EngineCluster> StartAsync()
     {
