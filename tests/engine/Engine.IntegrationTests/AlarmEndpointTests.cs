@@ -135,26 +135,29 @@ public sealed class AlarmEndpointTests(PostgresFixture postgres)
         alarm.GetProperty("acknowledgementComment").GetString().ShouldBe("on it");
     }
 
-    [Fact]
-    public async Task AcknowledgeAlarm_ShouldTellTheCallersApart_WhenTheAcknowledgementEndedTheAlarm()
+    [Theory]
+    [InlineData("ada", HttpStatusCode.NoContent)]
+    [InlineData("grace", HttpStatusCode.Conflict)]
+    public async Task AcknowledgeAlarm_ShouldAnswerByWhoAcknowledged_WhenTheAcknowledgementEndedTheAlarm(
+        string caller,
+        HttpStatusCode expected)
     {
         // Arrange
         var connectionString = await postgres.CreateDatabaseAsync();
         await using var app = await EngineApp.StartAsync(connectionString);
         var (first, firstClient) = await app.MemberAsync("Operator", "acme");
-        var (_, second) = await app.MemberAsync("Operator", "acme", "grace");
-        var ended = Alarm.Raise("train", Low(), Now);
+        var (_, secondClient) = await app.MemberAsync("Operator", "acme", "grace");
+        var ended = Alarm.Raise("train", LowPressure(), Now);
         ended.Clear(Now.AddMinutes(1));
         ended.Acknowledge(first, "ada", "done", Now.AddMinutes(2));
         await History(connectionString).UpsertAsync("acme", [ended], Ct);
+        var client = caller == "ada" ? firstClient : secondClient;
 
         // Act
-        var repeat = await firstClient.PostAsync($"{Api}/alarms/{ended.Id}/acknowledge", null, Ct);
-        var other = await second.PostAsync($"{Api}/alarms/{ended.Id}/acknowledge", null, Ct);
+        var response = await client.PostAsync($"{Api}/alarms/{ended.Id}/acknowledge", null, Ct);
 
         // Assert
-        repeat.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        other.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        response.StatusCode.ShouldBe(expected);
     }
 
     [Fact]
@@ -194,7 +197,7 @@ public sealed class AlarmEndpointTests(PostgresFixture postgres)
         var connectionString = await postgres.CreateDatabaseAsync();
         await using var app = await EngineApp.StartAsync(connectionString);
         var (_, operatorClient) = await app.MemberAsync("Operator", "acme");
-        var retired = Alarm.Raise("train", Low(), Now);
+        var retired = Alarm.Raise("train", LowPressure(), Now);
         retired.Retire(Now.AddMinutes(1));
         await History(connectionString).UpsertAsync("acme", [retired], Ct);
 
@@ -208,25 +211,41 @@ public sealed class AlarmEndpointTests(PostgresFixture postgres)
     [Theory]
     [InlineData("Operator")]
     [InlineData("Engineer")]
-    public async Task GetAlarm_ShouldReturnAnEndedAlarmThenNotFound_WhenItIsPurged(string role)
+    public async Task GetAlarm_ShouldReturnAnEndedAlarm_WhenTheCallerHoldsAnyRole(string role)
     {
         // Arrange
         var connectionString = await postgres.CreateDatabaseAsync();
         await using var app = await EngineApp.StartAsync(connectionString);
         var (_, member) = await app.MemberAsync(role, "acme");
-        var retired = Alarm.Raise("train", Low(), Now);
+        var retired = Alarm.Raise("train", LowPressure(), Now);
         retired.Retire(Now.AddMinutes(1));
-        var history = History(connectionString);
-        await history.UpsertAsync("acme", [retired], Ct);
+        await History(connectionString).UpsertAsync("acme", [retired], Ct);
 
         // Act
         var found = await member.GetFromJsonAsync<JsonElement>($"{Api}/alarms/{retired.Id}", Ct);
-        await history.PurgeAsync(Now.AddDays(1), Ct);
-        var purged = await member.GetAsync($"{Api}/alarms/{retired.Id}", Ct);
 
         // Assert
         found.GetProperty("state").GetString().ShouldBe("retired");
-        purged.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetAlarm_ShouldReturnNotFound_WhenTheAlarmWasPurged()
+    {
+        // Arrange
+        var connectionString = await postgres.CreateDatabaseAsync();
+        await using var app = await EngineApp.StartAsync(connectionString);
+        var (_, operatorClient) = await app.MemberAsync("Operator", "acme");
+        var retired = Alarm.Raise("train", LowPressure(), Now);
+        retired.Retire(Now.AddMinutes(1));
+        var history = History(connectionString);
+        await history.UpsertAsync("acme", [retired], Ct);
+        await history.PurgeAsync(Now.AddDays(1), Ct);
+
+        // Act
+        var response = await operatorClient.GetAsync($"{Api}/alarms/{retired.Id}", Ct);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -251,7 +270,7 @@ public sealed class AlarmEndpointTests(PostgresFixture postgres)
         var connectionString = await postgres.CreateDatabaseAsync();
         await using var app = await EngineApp.StartAsync(connectionString);
         var (_, outsider) = await app.MemberAsync("Operator", "other");
-        var alarm = Alarm.Raise("train", Low(), Now);
+        var alarm = Alarm.Raise("train", LowPressure(), Now);
         await History(connectionString).UpsertAsync("acme", [alarm], Ct);
 
         // Act
@@ -307,13 +326,13 @@ public sealed class AlarmEndpointTests(PostgresFixture postgres)
         var connectionString = await postgres.CreateDatabaseAsync();
         await using var app = await EngineApp.StartAsync(connectionString);
         var (user, operatorClient) = await app.MemberAsync("Operator", "acme");
-        var active = Alarm.Raise("critical-active", Low(AlarmPriority.Critical), Now);
-        var cleared = Alarm.Raise("low-cleared", Low(AlarmPriority.Low), Now);
+        var active = Alarm.Raise("critical-active", LowPressure(AlarmPriority.Critical), Now);
+        var cleared = Alarm.Raise("low-cleared", LowPressure(AlarmPriority.Low), Now);
         cleared.Clear(Now.AddMinutes(1));
-        var ended = Alarm.Raise("low-ended", Low(AlarmPriority.Low), Now);
+        var ended = Alarm.Raise("low-ended", LowPressure(AlarmPriority.Low), Now);
         ended.Clear(Now.AddMinutes(1));
         ended.Acknowledge(user, "ada", null, Now.AddMinutes(2));
-        var retired = Alarm.Raise("low-retired-while-active", Low(AlarmPriority.Low), Now);
+        var retired = Alarm.Raise("low-retired-while-active", LowPressure(AlarmPriority.Low), Now);
         retired.Retire(Now.AddMinutes(1));
         await History(connectionString).UpsertAsync("acme", [active, cleared, ended, retired], Ct);
 
@@ -429,7 +448,7 @@ public sealed class AlarmEndpointTests(PostgresFixture postgres)
     private static PostgresAlarmHistory History(string connectionString) =>
         new(NpgsqlDataSource.Create(connectionString));
 
-    private static AlarmCondition Low(AlarmPriority priority = AlarmPriority.High) =>
+    private static AlarmCondition LowPressure(AlarmPriority priority = AlarmPriority.High) =>
         new("low", "pressure", "<", "3", null, null, priority, "Brake pressure below 3 bar");
 
     private static async Task<Guid> RaiseAsync(EngineApp app, HttpClient client)

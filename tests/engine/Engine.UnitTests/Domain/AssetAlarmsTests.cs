@@ -235,6 +235,39 @@ public sealed class AssetAlarmsTests
     }
 
     [Fact]
+    public void State_ShouldFollowTheLifecycle_WhenAnAlarmIsClearedAndAcknowledged()
+    {
+        // Arrange
+        var alarms = Watching(Low());
+        var raised = alarms.Evaluate(Reads(2.5), T0).Single();
+        var whenRaised = raised.State;
+        alarms.Evaluate(Reads(4), T0.AddSeconds(1));
+        var whenCleared = raised.State;
+
+        // Act
+        alarms.Acknowledge(raised.Id, Operator, "ada", null, T0.AddSeconds(2));
+
+        // Assert
+        whenRaised.ShouldBe(AlarmState.Active);
+        whenCleared.ShouldBe(AlarmState.Cleared);
+        raised.State.ShouldBe(AlarmState.Ended);
+    }
+
+    [Fact]
+    public void State_ShouldBeRetired_WhenAnActiveAlarmIsRetired()
+    {
+        // Arrange
+        var alarms = Watching(Low());
+        var raised = alarms.Evaluate(Reads(2.5), T0).Single();
+
+        // Act
+        alarms.RetireAll(T0.AddSeconds(1));
+
+        // Assert
+        raised.State.ShouldBe(AlarmState.Retired);
+    }
+
+    [Fact]
     public void Acknowledge_ShouldFindNothing_WhenNoLiveAlarmHasTheId()
     {
         // Arrange
