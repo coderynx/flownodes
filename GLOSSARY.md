@@ -27,8 +27,12 @@ A named, typed value with a current value, which can be read-only or writable, s
 _Avoid_: Signal, Point, Property, Channel, Tag, Entity
 
 **Quality**:
-The trustworthiness of a Data Point value: good, uncertain or bad. Every value carries a Quality and a source timestamp, and a value derived from a bad one is itself bad.
+The trustworthiness of a Data Point value: good, uncertain or bad. Every value carries a Quality and a source timestamp, and a value derived from a bad one is itself bad. A value kept from before a restart is bad until its Device reports again.
 _Avoid_: Status, validity, health
+
+**Data Point History**:
+The bounded, recent values of one Data Point, each with its Quality and source timestamp. It is for looking back over a short period and is not long-term storage.
+_Avoid_: Trend, historian, time series, log
 
 **Asset Data Point**:
 A Data Point that belongs to an Asset and describes the real-world thing independently of the hardware measuring it. Its value is mapped from a Device Data Point, computed from other Data Points, or written by a Flow. Writing to one mapped to a writable Device Data Point writes through to the Device.
