@@ -13,6 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Aspire.Hosting.JavaScript" />
       <PackageReference Include="Aspire.Hosting.Orleans" />
       <PackageReference Include="Aspire.Hosting.PostgreSQL" />
     </ItemGroup>

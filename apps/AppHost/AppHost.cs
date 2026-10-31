@@ -29,6 +29,10 @@ internal sealed class AppHost
             .WithGrainStorage("Default", engineDb)
             .WithReminders(engineDb);
 
+        var webClient = builder.AddViteApp(
+            "web-client",
+            Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "..", "packages", "web", "Web.Client")));
+
         var flownodes = builder.AddProject<Flownodes>("flownodes", launchProfileName: "https")
             .WithReference(engineDb)
             .WaitFor(engineDb)
@@ -37,8 +41,10 @@ internal sealed class AppHost
             .WaitFor(registryDb)
             .WithReference(identityDb)
             .WaitFor(identityDb)
+            .WaitFor(webClient)
             .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName)
             .WithEnvironment("Flownodes__InstallationKey", installationKey)
+            .WithEnvironment("Flownodes__Web__DevServer", webClient.GetEndpoint("http"))
             .WithEnvironment(
                 "Flownodes__Integrations__Directory",
                 Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "..", "artifacts", "integrations")))

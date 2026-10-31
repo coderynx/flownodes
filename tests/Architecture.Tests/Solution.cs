@@ -8,6 +8,7 @@ internal static class Solution
     public static readonly string[] Layers = ["Contracts", "Domain", "Application", "Infrastructure", "Presentation"];
     public const string Core = "core";
     public const string Sdk = "sdk";
+    public const string Web = "web";
     private static readonly string[] Ignored = ["bin", "obj", "node_modules"];
 
     public static string Root()
@@ -38,7 +39,7 @@ internal static class Solution
     public static IReadOnlyList<ModuleProject> ModuleProjects() =>
         Directory.EnumerateFiles(Path.Combine(Root(), "packages"), "*.csproj", SearchOption.AllDirectories)
             .Select(ModuleProject.From)
-            .Where(project => project.Module != Sdk)
+            .Where(project => project.Module is not (Sdk or Web))
             .ToList();
 
     public static IReadOnlyList<string> ProjectReferences(string project) =>

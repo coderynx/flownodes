@@ -35,7 +35,7 @@ jobs:
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Build
-        run: dotnet build Flownodes.slnx
+        run: dotnet build Flownodes.slnx -p:SkipWebClient=true
 
       - name: Unit and architecture tests
         run: |
@@ -78,11 +78,47 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', 'dotnet-tools.json', 'global.json') }}
           restore-keys: nuget-${{ runner.os }}-
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: packages/web/Web.Client/package.json
+
       - name: Build
         run: dotnet build ${{ matrix.project }}
 
       - name: Integration tests
         run: dotnet test --project ${{ matrix.project }} --no-build --output Detailed
+
+  web-client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: packages/web/Web.Client
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: packages/web/Web.Client/package.json
+          cache: npm
+          cache-dependency-path: packages/web/Web.Client/package-lock.json
+
+      - run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
 
   # The repository is public, so the whole history is scanned: a secret removed in a later commit is still published.
   secrets:

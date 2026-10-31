@@ -15,6 +15,7 @@ You need:
 
 - The .NET SDK version pinned in [`global.json`](global.json).
 - Docker, for Postgres in local runs and integration tests.
+- Node.js 24 or later, to build the web UI. `-p:SkipWebClient=true` skips that step for a backend-only build.
 
 Run Flownodes locally through the Aspire AppHost:
 

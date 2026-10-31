@@ -5,6 +5,7 @@
         <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     </PropertyGroup>
     <ItemGroup>
+        <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.6.2" />
         <PackageVersion Include="Aspire.Hosting.Orleans" Version="13.6.2" />
         <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.6.2" />
         <PackageVersion Include="Coderynx.Functional" Version="1.8.0" />
@@ -50,6 +51,7 @@
         <PackageVersion Include="WolverineFx.EntityFrameworkCore" Version="6.51.3" />
         <PackageVersion Include="WolverineFx.Postgresql" Version="6.51.3" />
         <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.51.3" />
+        <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
         <PackageVersion Include="xunit.v3" Version="4.0.2" />
         <PackageVersion Include="YamlDotNet" Version="18.1.0" />
     </ItemGroup>

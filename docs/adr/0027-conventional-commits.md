@@ -3,7 +3,7 @@
 Every commit on `main` is one pull request, and its subject is a Conventional Commit: `<type>[(scope)][!]: <description>`. The history reads as a list of changes by kind, and a changelog and version tool can be added at the first public release without rewriting anything.
 
 - **Types**: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore` and `revert`. There is no `style`: `scripts/format.sh` owns layout (ADR-0022).
-- **Scopes**: optional, from a fixed list: `core`, `engine`, `identity`, `registry`, `sdk`, `flowctl`, `host`, `integrations` and `deps`.
+- **Scopes**: optional, from a fixed list: `core`, `engine`, `identity`, `registry`, `sdk`, `flowctl`, `host`, `integrations`, `web` and `deps`.
 - **Subject**: at most 72 characters, no trailing period. The description is an imperative sentence, and Glossary terms keep their capitals.
 - **Breaking changes**: `!` and a `BREAKING CHANGE:` footer are valid but not required before the first public release, because the pre-release rule is to change the API, the Manifests, the SDK and the schema without ceremony. From the first public release on, a breaking change to any of them carries one of them.
 - **Merging**: squash only. We rejected keeping merge commits, because their subjects cannot be Conventional and every branch commit would need to be. The pull request title is the subject and the pull request body is the commit body, so merge commits and rebase merges are off. Commits on a branch need not be tidy.

@@ -24,6 +24,8 @@ internal sealed class Program
         Engine.Infrastructure.Bootstrap.DependencyInjection.AddInfrastructure(builder);
         Engine.Presentation.Bootstrap.DependencyInjection.AddPresentation(builder);
 
+        Web.Bootstrap.DependencyInjection.AddWeb(builder);
+
         var app = builder.Build();
 
         app.UseHttpsRedirection();
@@ -36,6 +38,8 @@ internal sealed class Program
 
         Engine.Infrastructure.Bootstrap.HostConfiguration.UseInfrastructure(app);
         Engine.Presentation.Bootstrap.HostConfiguration.UsePresentation(app);
+
+        Web.Bootstrap.HostConfiguration.UseWeb(app);
 
         return await app.RunJasperFxCommands(args);
     }
