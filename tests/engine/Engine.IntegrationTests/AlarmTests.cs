@@ -1,3 +1,4 @@
+using Coderynx.Functional.Results.Errors;
 using Engine.Domain.Alarms;
 using Xunit;
 
@@ -93,13 +94,13 @@ public sealed class AlarmTests(PostgresFixture postgres)
         var raised = await RaisedAsync(engine);
 
         // Act
-        var result = await engine.Alarms.AcknowledgeAsync("acme", raised.Id, Operator, "looking", Ct);
+        var result = await engine.Alarms.AcknowledgeAsync("acme", raised.Id, Operator, "ada", "looking", Ct);
         await WriteAsync(engine, 4);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
         await Until(async () => (await LiveAsync(engine)).Count == 0);
-        var row = (await engine.Alarms.HistoryAsync("acme", "train", null, null, 0, 10, Ct)).Items.Single();
+        var row = (await engine.Alarms.HistoryAsync("acme", "train", null, null, null, null, 0, 10, Ct)).Items.Single();
         row.IsEnded.ShouldBeTrue();
         row.Outcome.ShouldBe(AlarmOutcome.Ended);
         row.AcknowledgedBy.ShouldBe(Operator);
@@ -119,31 +120,32 @@ public sealed class AlarmTests(PostgresFixture postgres)
         await Eventually(engine, alarm => alarm.IsCleared);
 
         // Act
-        await engine.Alarms.AcknowledgeAsync("acme", first.Id, Operator, null, Ct);
+        await engine.Alarms.AcknowledgeAsync("acme", first.Id, Operator, "ada", null, Ct);
         await WriteAsync(engine, 2);
 
         // Assert
         var second = await Eventually(engine, alarm => alarm.Id != first.Id);
         second.ActiveCount.ShouldBe(1);
-        var page = await engine.Alarms.HistoryAsync("acme", "train", null, null, 0, 10, Ct);
+        var page = await engine.Alarms.HistoryAsync("acme", "train", null, null, null, null, 0, 10, Ct);
         page.Total.ShouldBe(2);
     }
 
     [Fact]
-    public async Task AcknowledgeAsync_ShouldChangeNothing_WhenTheAlarmIsAlreadyAcknowledged()
+    public async Task AcknowledgeAsync_ShouldConflictAndChangeNothing_WhenAnotherUserAlreadyAcknowledged()
     {
         // Arrange
         await using var engine = await StartAsync();
         await engine.ApplyAsync("acme", "Asset", "train", Train(Low()), 2);
         await WriteAsync(engine, 2.5);
         var raised = await RaisedAsync(engine);
-        await engine.Alarms.AcknowledgeAsync("acme", raised.Id, Operator, "first", Ct);
+        await engine.Alarms.AcknowledgeAsync("acme", raised.Id, Operator, "ada", "first", Ct);
 
         // Act
-        var result = await engine.Alarms.AcknowledgeAsync("acme", raised.Id, Guid.NewGuid(), "second", Ct);
+        var result = await engine.Alarms.AcknowledgeAsync("acme", raised.Id, Guid.NewGuid(), "grace", "second", Ct);
 
         // Assert
-        result.IsSuccess.ShouldBeTrue();
+        result.Error.Kind.ShouldBe(ErrorKind.Conflict);
+        result.Error.Message.ShouldContain("ada");
         var alarm = (await LiveAsync(engine)).Single();
         alarm.AcknowledgedBy.ShouldBe(Operator);
         alarm.AcknowledgementComment.ShouldBe("first");
@@ -156,7 +158,7 @@ public sealed class AlarmTests(PostgresFixture postgres)
         await using var engine = await StartAsync();
 
         // Act
-        var result = await engine.Alarms.AcknowledgeAsync("acme", Guid.NewGuid(), Operator, null, Ct);
+        var result = await engine.Alarms.AcknowledgeAsync("acme", Guid.NewGuid(), Operator, "ada", null, Ct);
 
         // Assert
         result.IsFailure.ShouldBeTrue();
@@ -176,7 +178,7 @@ public sealed class AlarmTests(PostgresFixture postgres)
 
         // Assert
         await Until(async () => (await LiveAsync(engine)).Count == 0);
-        var row = (await engine.Alarms.HistoryAsync("acme", "train", null, null, 0, 10, Ct)).Items.Single();
+        var row = (await engine.Alarms.HistoryAsync("acme", "train", null, null, null, null, 0, 10, Ct)).Items.Single();
         row.Outcome.ShouldBe(AlarmOutcome.Retired);
         row.IsAcknowledged.ShouldBeFalse();
     }
@@ -212,7 +214,7 @@ public sealed class AlarmTests(PostgresFixture postgres)
 
         // Assert
         await Until(async () => (await engine.Alarms.ListLiveAsync("acme", Ct)).Count == 0);
-        var row = (await engine.Alarms.HistoryAsync("acme", "train", null, null, 0, 10, Ct)).Items.Single();
+        var row = (await engine.Alarms.HistoryAsync("acme", "train", null, null, null, null, 0, 10, Ct)).Items.Single();
         row.Outcome.ShouldBe(AlarmOutcome.Retired);
     }
 

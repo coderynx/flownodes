@@ -24,6 +24,10 @@ public sealed class Alarm
     /// </summary>
     public required string Condition { get; init; }
     /// <summary>
+    /// Gets the name of the Data Point of the Alarm Condition that raised it; none when a Flow raised it.
+    /// </summary>
+    public string? DataPoint { get; init; }
+    /// <summary>
     /// Gets what made the Alarm Condition raise it, so a change of it retires the Alarm.
     /// </summary>
     public required string Trigger { get; init; }
@@ -52,6 +56,10 @@ public sealed class Alarm
     /// </summary>
     public Guid? AcknowledgedBy { get; private set; }
     /// <summary>
+    /// Gets the username of the User who acknowledged it, as it was at that moment.
+    /// </summary>
+    public string? AcknowledgedByName { get; private set; }
+    /// <summary>
     /// Gets the comment that came with the acknowledgement.
     /// </summary>
     public string? AcknowledgementComment { get; private set; }
@@ -79,6 +87,16 @@ public sealed class Alarm
     /// Gets a value indicating whether it has ended or been retired.
     /// </summary>
     public bool IsEnded => EndedAt is not null;
+    /// <summary>
+    /// Gets where it is in its lifecycle.
+    /// </summary>
+    public AlarmState State =>
+        Outcome switch
+        {
+            AlarmOutcome.Ended => AlarmState.Ended,
+            AlarmOutcome.Retired => AlarmState.Retired,
+            _ => IsCleared ? AlarmState.Cleared : AlarmState.Active
+        };
 
     /// <summary>
     /// Raises an Alarm, active and unacknowledged.
@@ -93,6 +111,7 @@ public sealed class Alarm
             Id = Guid.NewGuid(),
             Asset = asset,
             Condition = condition.Name,
+            DataPoint = condition.DataPoint,
             Trigger = condition.Trigger,
             RaisedAt = now,
             Priority = condition.Priority,
@@ -106,6 +125,7 @@ public sealed class Alarm
     /// <param name="id">The id of the Alarm.</param>
     /// <param name="asset">The name of the Asset.</param>
     /// <param name="condition">The name of the Alarm Condition.</param>
+    /// <param name="dataPoint">The name of the Data Point of the Alarm Condition, if one raised it.</param>
     /// <param name="trigger">What made the Alarm Condition raise it.</param>
     /// <param name="raisedAt">When it was first raised.</param>
     /// <param name="priority">Its Alarm Priority.</param>
@@ -113,6 +133,7 @@ public sealed class Alarm
     /// <param name="activeCount">How many times it has become active.</param>
     /// <param name="acknowledgedAt">When it was acknowledged, if it was.</param>
     /// <param name="acknowledgedBy">Who acknowledged it.</param>
+    /// <param name="acknowledgedByName">The username of who acknowledged it, as it was at that moment.</param>
     /// <param name="acknowledgementComment">The comment on the acknowledgement.</param>
     /// <param name="clearedAt">When it cleared, if it has.</param>
     /// <param name="endedAt">When it ended, if it has.</param>
@@ -122,6 +143,7 @@ public sealed class Alarm
         Guid id,
         string asset,
         string condition,
+        string? dataPoint,
         string trigger,
         DateTimeOffset raisedAt,
         AlarmPriority priority,
@@ -129,6 +151,7 @@ public sealed class Alarm
         int activeCount,
         DateTimeOffset? acknowledgedAt,
         Guid? acknowledgedBy,
+        string? acknowledgedByName,
         string? acknowledgementComment,
         DateTimeOffset? clearedAt,
         DateTimeOffset? endedAt,
@@ -138,6 +161,7 @@ public sealed class Alarm
             Id = id,
             Asset = asset,
             Condition = condition,
+            DataPoint = dataPoint,
             Trigger = trigger,
             RaisedAt = raisedAt,
             Priority = priority,
@@ -145,6 +169,7 @@ public sealed class Alarm
             ActiveCount = activeCount,
             AcknowledgedAt = acknowledgedAt,
             AcknowledgedBy = acknowledgedBy,
+            AcknowledgedByName = acknowledgedByName,
             AcknowledgementComment = acknowledgementComment,
             ClearedAt = clearedAt,
             EndedAt = endedAt,
@@ -189,10 +214,11 @@ public sealed class Alarm
     /// Records an Operator's acknowledgement. A cleared Alarm ends. Acknowledging again changes nothing.
     /// </summary>
     /// <param name="by">The id of the User who acknowledges.</param>
+    /// <param name="byName">The username of the User who acknowledges.</param>
     /// <param name="comment">An optional comment.</param>
     /// <param name="now">The time of the acknowledgement.</param>
     /// <returns><see langword="true"/> when the Alarm was not acknowledged before.</returns>
-    public bool Acknowledge(Guid by, string? comment, DateTimeOffset now)
+    public bool Acknowledge(Guid by, string byName, string? comment, DateTimeOffset now)
     {
         if (IsAcknowledged)
         {
@@ -201,6 +227,7 @@ public sealed class Alarm
 
         AcknowledgedAt = now;
         AcknowledgedBy = by;
+        AcknowledgedByName = byName;
         AcknowledgementComment = comment;
         if (IsCleared)
         {

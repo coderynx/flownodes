@@ -24,7 +24,7 @@ public sealed class AlarmHistoryTests(PostgresFixture postgres)
         await history.PurgeAsync(Now.AddDays(-30), Ct);
 
         // Assert
-        var page = await history.PageAsync("acme", null, null, null, 0, 10, Ct);
+        var page = await history.PageAsync("acme", null, null, null, null, null, 0, 10, Ct);
         page.Items.Select(alarm => alarm.Asset).Order().ShouldBe(["live", "recent"]);
     }
 
@@ -40,10 +40,19 @@ public sealed class AlarmHistoryTests(PostgresFixture postgres)
         await history.UpsertAsync("other", [Alarm.Raise("a", Condition(), Now.AddHours(3))], Ct);
 
         // Act
-        var everything = await history.PageAsync("acme", null, null, null, 0, 10, Ct);
-        var second_page = await history.PageAsync("acme", null, null, null, 1, 1, Ct);
-        var assetA = await history.PageAsync("acme", "a", null, null, 0, 10, Ct);
-        var window = await history.PageAsync("acme", null, Now.AddMinutes(30), Now.AddHours(1.5), 0, 10, Ct);
+        var everything = await history.PageAsync("acme", null, null, null, null, null, 0, 10, Ct);
+        var second_page = await history.PageAsync("acme", null, null, null, null, null, 1, 1, Ct);
+        var assetA = await history.PageAsync("acme", "a", null, null, null, null, 0, 10, Ct);
+        var window = await history.PageAsync(
+            "acme",
+            null,
+            Now.AddMinutes(30),
+            Now.AddHours(1.5),
+            null,
+            null,
+            0,
+            10,
+            Ct);
 
         // Assert
         everything.Items.Select(alarm => alarm.Id).ShouldBe([third.Id, second.Id, first.Id]);
@@ -65,12 +74,13 @@ public sealed class AlarmHistoryTests(PostgresFixture postgres)
 
         // Act
         alarm.Clear(Now.AddMinutes(1));
-        alarm.Acknowledge(user, "done", Now.AddMinutes(2));
+        alarm.Acknowledge(user, "ada", "done", Now.AddMinutes(2));
         await history.UpsertAsync("acme", [alarm], Ct);
 
         // Assert
-        var row = (await history.PageAsync("acme", null, null, null, 0, 10, Ct)).Items.Single();
+        var row = (await history.PageAsync("acme", null, null, null, null, null, 0, 10, Ct)).Items.Single();
         row.AcknowledgedBy.ShouldBe(user);
+        row.AcknowledgedByName.ShouldBe("ada");
         row.AcknowledgementComment.ShouldBe("done");
         row.ClearedAt.ShouldBe(Now.AddMinutes(1));
         row.AcknowledgedAt.ShouldBe(Now.AddMinutes(2));

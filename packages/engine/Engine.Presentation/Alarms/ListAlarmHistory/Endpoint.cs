@@ -29,6 +29,8 @@ internal sealed class Endpoint : IEndpoint
                             request.Asset,
                             request.From,
                             request.To,
+                            request.Priority,
+                            request.State,
                             request.Offset,
                             request.Limit),
                         cancellationToken);
@@ -39,6 +41,7 @@ internal sealed class Endpoint : IEndpoint
                 })
             .WithName("ListAlarmHistory")
             .Produces<Response>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
@@ -48,6 +51,8 @@ internal sealed class Endpoint : IEndpoint
         [FromQuery] string? Asset,
         [FromQuery] DateTimeOffset? From,
         [FromQuery] DateTimeOffset? To,
+        [FromQuery] string? Priority,
+        [FromQuery] string? State,
         [FromQuery] int Offset = 0,
         [FromQuery] int Limit = 50);
 

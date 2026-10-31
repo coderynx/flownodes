@@ -3,6 +3,7 @@ using Coderynx.Functional.Results.Errors;
 using Engine.Application.Alarms;
 using Engine.Application.Alarms.ListAlarmHistory;
 using Engine.Application.Authorization;
+using Engine.Domain.Alarms;
 using Xunit;
 
 namespace Engine.UnitTests.Alarms.ListAlarmHistory;
@@ -22,11 +23,14 @@ public sealed class HandlerTests
         var handler = new Handler(grants, alarms);
 
         // Act
-        var result = await handler.HandleAsync(new Query(Guid.NewGuid(), "acme", null, null, null, 0, 50), Ct);
+        var result = await handler.HandleAsync(
+            new Query(Guid.NewGuid(), "acme", null, null, null, null, null, 0, 50),
+            Ct);
 
         // Assert
         result.Error.ShouldBe(refusal);
-        await alarms.DidNotReceiveWithAnyArgs().HistoryAsync(default!, default, default, default, 0, 0, Ct);
+        await alarms.DidNotReceiveWithAnyArgs()
+            .HistoryAsync(default!, default, default, default, default, default, 0, 0, Ct);
     }
 
     [Theory]
@@ -43,14 +47,61 @@ public sealed class HandlerTests
         var grants = Substitute.For<IRoleGrants>();
         grants.RequireMemberAsync(caller, "acme", Ct).Returns(Result.Updated());
         var alarms = Substitute.For<IAlarmRuntime>();
-        alarms.HistoryAsync("acme", "train", null, null, expectedOffset, expectedLimit, Ct)
+        alarms.HistoryAsync("acme", "train", null, null, null, null, expectedOffset, expectedLimit, Ct)
             .Returns(new AlarmHistoryPage([], 0));
         var handler = new Handler(grants, alarms);
 
         // Act
-        var result = await handler.HandleAsync(new Query(caller, "acme", "train", null, null, offset, limit), Ct);
+        var result = await handler.HandleAsync(
+            new Query(caller, "acme", "train", null, null, null, null, offset, limit),
+            Ct);
 
         // Assert
         result.IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldFilterByPriorityAndState_WhenBothAreGiven()
+    {
+        // Arrange
+        var caller = Guid.NewGuid();
+        var grants = Substitute.For<IRoleGrants>();
+        grants.RequireMemberAsync(caller, "acme", Ct).Returns(Result.Updated());
+        var alarms = Substitute.For<IAlarmRuntime>();
+        alarms.HistoryAsync("acme", null, null, null, AlarmPriority.Critical, AlarmState.Retired, 0, 50, Ct)
+            .Returns(new AlarmHistoryPage([], 0));
+        var handler = new Handler(grants, alarms);
+
+        // Act
+        var result = await handler.HandleAsync(
+            new Query(caller, "acme", null, null, null, "critical", "retired", 0, 50),
+            Ct);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("urgent", null, "alarm.unknown_priority")]
+    [InlineData("2", null, "alarm.unknown_priority")]
+    [InlineData(null, "gone", "alarm.unknown_state")]
+    public async Task HandleAsync_ShouldRefuseTheFilter_WhenItsValueIsUnknown(
+        string? priority,
+        string? state,
+        string expectedCode)
+    {
+        // Arrange
+        var caller = Guid.NewGuid();
+        var grants = Substitute.For<IRoleGrants>();
+        grants.RequireMemberAsync(caller, "acme", Ct).Returns(Result.Updated());
+        var alarms = Substitute.For<IAlarmRuntime>();
+        var handler = new Handler(grants, alarms);
+
+        // Act
+        var result = await handler.HandleAsync(new Query(caller, "acme", null, null, null, priority, state, 0, 50), Ct);
+
+        // Assert
+        result.Error.Kind.ShouldBe(ErrorKind.InvalidInput);
+        result.Error.Code.ShouldBe(expectedCode);
     }
 }

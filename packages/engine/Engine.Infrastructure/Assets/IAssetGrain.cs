@@ -19,7 +19,7 @@ internal interface IAssetGrain : IGrainWithStringKey
     Task<IReadOnlyList<DataPointSnapshot>?> GetDataPointsAsync();
     Task<CallResult> WriteAsync(string dataPoint, string value);
     Task<IReadOnlyList<AlarmSnapshot>?> GetAlarmsAsync();
-    Task<bool> AcknowledgeAsync(Guid id, Guid by, string? comment);
+    Task<AlarmSnapshot?> AcknowledgeAsync(Guid id, Guid by, string byName, string? comment);
     Task<WatchResult> WatchDataPointAsync(IFlowWatcher watcher, string dataPoint);
     Task UnwatchAsync(IFlowWatcher watcher);
 }

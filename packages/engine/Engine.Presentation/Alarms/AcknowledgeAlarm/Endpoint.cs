@@ -22,7 +22,12 @@ internal sealed class Endpoint : IEndpoint
                     CancellationToken cancellationToken, [FromBody] Body? body = null) =>
                 {
                     var result = await sender.SendAsync(
-                        new Command(caller.CallerId(), request.Namespace, request.Id, body?.Comment),
+                        new Command(
+                            caller.CallerId(),
+                            caller.FindFirstValue("name"),
+                            request.Namespace,
+                            request.Id,
+                            body?.Comment),
                         cancellationToken);
 
                     return result.Match(() => Results.NoContent(), error => error.ToProblem());
@@ -31,7 +36,8 @@ internal sealed class Endpoint : IEndpoint
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
     }
 
     internal sealed record Request([FromRoute] string Namespace, [FromRoute] Guid Id);

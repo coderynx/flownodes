@@ -178,16 +178,17 @@ public sealed class AssetAlarms
     /// </summary>
     /// <param name="id">The id of the Alarm.</param>
     /// <param name="by">The id of the User who acknowledges.</param>
+    /// <param name="byName">The username of the User who acknowledges.</param>
     /// <param name="comment">An optional comment.</param>
     /// <param name="now">The time of the acknowledgement.</param>
     /// <returns>
     /// The Alarm, or <see langword="null"/> when this Asset has no live Alarm with that id. An Alarm already
     /// acknowledged is returned unchanged.
     /// </returns>
-    public Alarm? Acknowledge(Guid id, Guid by, string? comment, DateTimeOffset now)
+    public Alarm? Acknowledge(Guid id, Guid by, string byName, string? comment, DateTimeOffset now)
     {
         var alarm = _live.Values.FirstOrDefault(candidate => candidate.Id == id);
-        if (alarm?.Acknowledge(by, comment, now) == true && alarm.IsEnded)
+        if (alarm?.Acknowledge(by, byName, comment, now) == true && alarm.IsEnded)
         {
             _live.Remove(alarm.Condition);
         }
