@@ -73,7 +73,7 @@ export const kindSection: Record<string, Section> = {
 
 // Alarms are the one piece of live state the prototype mutates, so acknowledging
 // one moves every variant's badge.
-export const AlarmsContext = createContext<{ list: Alarm[]; acknowledge: (id: string) => void }>(null!);
+export const AlarmsContext = createContext<{ list: Alarm[]; acknowledge: (id: string, comment?: string) => void }>(null!);
 export const useAlarms = () => useContext(AlarmsContext);
 
 export function openAlarmCount(list: Alarm[]) {

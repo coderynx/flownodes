@@ -10,6 +10,7 @@ import "@fontsource/atkinson-hyperlegible-next/600.css";
 import "@fontsource/atkinson-hyperlegible-next/700.css";
 import "@fontsource/atkinson-hyperlegible-mono/400.css";
 import "./variant-c.css";
+import { AlarmsPage } from "./AlarmViews";
 import { Gate, useAccess } from "./access";
 import { findAsset, installation, recentChanges, type Alarm, type AssetNode, type ResourceRow } from "./data";
 import {
@@ -161,7 +162,7 @@ function ObjectPage({
 }
 
 function AlarmList({ alarms, nav, showAsset }: { alarms: Alarm[]; nav: Nav; showAsset?: boolean }) {
-  const { canOperate } = useAccess();
+  const { canAcknowledge } = useAccess();
   const { acknowledge } = useAlarms();
   if (alarms.length === 0) return <p className="empty">No Alarms. Abnormal situations on this Asset show up here.</p>;
   return (
@@ -198,8 +199,8 @@ function AlarmList({ alarms, nav, showAsset }: { alarms: Alarm[]; nav: Nav; show
             <td className="num">{a.raised}</td>
             <td className="end">
               {!a.acknowledged && (
-                <Gate allowed={canOperate} need="Operator">
-                  <button className="btn" disabled={!canOperate} onClick={() => acknowledge(a.id)}>
+                <Gate allowed={canAcknowledge} need="Operator">
+                  <button className="btn" disabled={!canAcknowledge} onClick={() => acknowledge(a.id)}>
                     Acknowledge
                   </button>
                 </Gate>
@@ -695,7 +696,7 @@ function Palette({ nav, close, setNamespace }: { nav: Nav; close: () => void; se
 
 function RecentChanges() {
   const access = useAccess();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const visible = recentChanges.filter((c) =>
     c.namespace === null ? access.canAdminister : access.persona.grants[c.namespace] !== undefined,
   );
@@ -791,7 +792,7 @@ export function VariantC({ nav, setNamespace }: { nav: Nav; setNamespace: (ns: s
       </p>
     );
   else if (nav.place.section === "assets" && path) main = <AssetPage path={path} nav={nav} />;
-  else if (nav.place.section === "alarms") main = <ObjectPage kind="Namespace" title="Alarms" tabs={[{ key: "x", label: "", body: <AlarmList alarms={list} nav={nav} showAsset /> }]} />;
+  else if (nav.place.section === "alarms") main = <AlarmsPage nav={nav} />;
   else if (nav.place.section === "apply") main = <ObjectPage kind="Configure" title="Apply a Manifest" tabs={[{ key: "x", label: "", body: <ApplyPage /> }]} />;
   else if (nav.place.resource) main = <ResourcePage kind={nav.place.resource.kind} name={nav.place.resource.name} nav={nav} />;
   else if (sectionKind[nav.place.section]) main = <KindPage section={nav.place.section} nav={nav} />;
@@ -847,7 +848,7 @@ export function VariantC({ nav, setNamespace }: { nav: Nav; setNamespace: (ns: s
           {mode === "installation" && <NavGroup items={access.canAdminister ? installationSections : ["installation"]} nav={nav} />}
         </aside>
         <main className="workspace">{main}</main>
-        {mode === "operate" && access.canRead && !choosing && (
+        {mode === "operate" && access.canRead && !choosing && nav.place.section !== "alarms" && (
           <aside className="rail" aria-label="Alarms in this Namespace">
             <h2>Alarms</h2>
             {list.filter((a) => !a.acknowledged || a.active).length === 0 && <p className="empty">Nothing abnormal.</p>}

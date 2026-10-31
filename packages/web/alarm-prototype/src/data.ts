@@ -201,59 +201,28 @@ export const assetTrees: Record<string, AssetNode[]> = {
   ],
 };
 
+// PROTOTYPE (#105): the fields of AlarmDto, plus three derived ones the #104 shell reads.
+export type AlarmState = "active" | "cleared" | "ended" | "retired";
+
 export interface Alarm {
   id: string;
   asset: string;
+  condition: string;
   message: string;
   priority: Priority;
+  state: AlarmState;
+  raisedAt: number;
+  activeCount: number;
+  acknowledgedAt: number | null;
+  // The API returns a User id here. The prototype shows a name, which the API can't give yet.
+  acknowledgedBy: string | null;
+  acknowledgementComment: string | null;
+  clearedAt: number | null;
+  endedAt: number | null;
   active: boolean;
   acknowledged: boolean;
   raised: string;
 }
-
-export const alarms: Record<string, Alarm[]> = {
-  "rail-depot": [
-    {
-      id: "a1",
-      asset: "train-101-car-1-brakes",
-      message: "Brake pressure below 3 bar for 10 s",
-      priority: "critical",
-      active: true,
-      acknowledged: false,
-      raised: "14:01:55",
-    },
-    {
-      id: "a2",
-      asset: "wash-bay",
-      message: "Water level below 70 %",
-      priority: "low",
-      active: true,
-      acknowledged: true,
-      raised: "11:20:03",
-    },
-    {
-      id: "a3",
-      asset: "train-102-car-2",
-      message: "Cabin temperature above 26 °C",
-      priority: "medium",
-      active: false,
-      acknowledged: false,
-      raised: "09:12:40",
-    },
-  ],
-  "plant-north": [
-    {
-      id: "b1",
-      asset: "press-1",
-      message: "Oil temperature above 70 °C",
-      priority: "high",
-      active: true,
-      acknowledged: false,
-      raised: "13:58:10",
-    },
-  ],
-  default: [],
-};
 
 export interface ResourceRow {
   kind: string;

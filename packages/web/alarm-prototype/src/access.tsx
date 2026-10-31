@@ -11,6 +11,7 @@ export interface Access {
   gating: Gating;
   canRead: boolean;
   canOperate: boolean;
+  canAcknowledge: boolean;
   canEngineer: boolean;
   canAdminister: boolean;
   visibleNamespaces: string[];
@@ -24,6 +25,8 @@ export function computeAccess(persona: Persona, namespace: string | null, gating
     gating,
     canRead: roles.length > 0,
     canOperate: roles.includes("Operator"),
+    // Follows AcknowledgeAlarm/Command.cs, which also admits an Engineer; the glossary says Operator only.
+    canAcknowledge: roles.includes("Operator") || roles.includes("Engineer"),
     canEngineer: roles.includes("Engineer"),
     canAdminister: persona.administrator,
     visibleNamespaces: persona.administrator ? namespaces : namespaces.filter((n) => persona.grants[n]),
