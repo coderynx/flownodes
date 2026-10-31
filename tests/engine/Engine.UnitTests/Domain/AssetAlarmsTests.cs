@@ -166,7 +166,7 @@ public sealed class AssetAlarmsTests
         // Arrange
         var alarms = Watching(Low());
         var raised = alarms.Evaluate(Reads(2.5), T0).Single();
-        alarms.Acknowledge(raised.Id, Operator, "on it", T0.AddSeconds(1));
+        alarms.Acknowledge(raised.Id, Operator, "ada", "on it", T0.AddSeconds(1));
 
         // Act
         alarms.Evaluate(Reads(4), T0.AddSeconds(2));
@@ -186,12 +186,13 @@ public sealed class AssetAlarmsTests
         alarms.Evaluate(Reads(4), T0.AddSeconds(1));
 
         // Act
-        var acknowledged = alarms.Acknowledge(raised.Id, Operator, "gone", T0.AddSeconds(2));
+        var acknowledged = alarms.Acknowledge(raised.Id, Operator, "ada", "gone", T0.AddSeconds(2));
 
         // Assert
         acknowledged.ShouldBeSameAs(raised);
         raised.IsEnded.ShouldBeTrue();
         raised.AcknowledgedBy.ShouldBe(Operator);
+        raised.AcknowledgedByName.ShouldBe("ada");
         raised.AcknowledgementComment.ShouldBe("gone");
         raised.AcknowledgedAt.ShouldBe(T0.AddSeconds(2));
         alarms.Live.ShouldBeEmpty();
@@ -204,7 +205,7 @@ public sealed class AssetAlarmsTests
         var alarms = Watching(Low());
         var first = alarms.Evaluate(Reads(2.5), T0).Single();
         alarms.Evaluate(Reads(4), T0.AddSeconds(1));
-        alarms.Acknowledge(first.Id, Operator, null, T0.AddSeconds(2));
+        alarms.Acknowledge(first.Id, Operator, "ada", null, T0.AddSeconds(2));
 
         // Act
         var changed = alarms.Evaluate(Reads(2), T0.AddSeconds(3));
@@ -221,15 +222,49 @@ public sealed class AssetAlarmsTests
         // Arrange
         var alarms = Watching(Low());
         var raised = alarms.Evaluate(Reads(2.5), T0).Single();
-        alarms.Acknowledge(raised.Id, Operator, "first", T0.AddSeconds(1));
+        alarms.Acknowledge(raised.Id, Operator, "ada", "first", T0.AddSeconds(1));
 
         // Act
-        alarms.Acknowledge(raised.Id, Guid.NewGuid(), "second", T0.AddSeconds(2));
+        alarms.Acknowledge(raised.Id, Guid.NewGuid(), "grace", "second", T0.AddSeconds(2));
 
         // Assert
         raised.AcknowledgedBy.ShouldBe(Operator);
+        raised.AcknowledgedByName.ShouldBe("ada");
         raised.AcknowledgementComment.ShouldBe("first");
         raised.AcknowledgedAt.ShouldBe(T0.AddSeconds(1));
+    }
+
+    [Fact]
+    public void State_ShouldFollowTheLifecycle_WhenAnAlarmIsClearedAndAcknowledged()
+    {
+        // Arrange
+        var alarms = Watching(Low());
+        var raised = alarms.Evaluate(Reads(2.5), T0).Single();
+        var whenRaised = raised.State;
+        alarms.Evaluate(Reads(4), T0.AddSeconds(1));
+        var whenCleared = raised.State;
+
+        // Act
+        alarms.Acknowledge(raised.Id, Operator, "ada", null, T0.AddSeconds(2));
+
+        // Assert
+        whenRaised.ShouldBe(AlarmState.Active);
+        whenCleared.ShouldBe(AlarmState.Cleared);
+        raised.State.ShouldBe(AlarmState.Ended);
+    }
+
+    [Fact]
+    public void State_ShouldBeRetired_WhenAnActiveAlarmIsRetired()
+    {
+        // Arrange
+        var alarms = Watching(Low());
+        var raised = alarms.Evaluate(Reads(2.5), T0).Single();
+
+        // Act
+        alarms.RetireAll(T0.AddSeconds(1));
+
+        // Assert
+        raised.State.ShouldBe(AlarmState.Retired);
     }
 
     [Fact]
@@ -239,7 +274,7 @@ public sealed class AssetAlarmsTests
         var alarms = Watching(Low());
 
         // Act
-        var found = alarms.Acknowledge(Guid.NewGuid(), Operator, null, T0);
+        var found = alarms.Acknowledge(Guid.NewGuid(), Operator, "ada", null, T0);
 
         // Assert
         found.ShouldBeNull();

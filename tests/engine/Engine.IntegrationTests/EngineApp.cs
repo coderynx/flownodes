@@ -125,19 +125,19 @@ public sealed class EngineApp : IAsyncDisposable
             Grains);
     }
 
-    public async Task<(Guid Id, HttpClient Client)> MemberAsync(string role, string @namespace)
+    public async Task<(Guid Id, HttpClient Client)> MemberAsync(string role, string @namespace, string? name = "ada")
     {
         var userId = Guid.NewGuid();
         await GrantAsync(userId, role, @namespace);
 
-        return (userId, SignedIn(userId));
+        return (userId, SignedIn(userId, name));
     }
 
-    public HttpClient SignedIn(Guid userId)
+    public HttpClient SignedIn(Guid userId, string? name = "ada")
     {
         var client = _app.GetTestClient();
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", _identity.IssueToken(userId));
+            new AuthenticationHeaderValue("Bearer", _identity.IssueToken(userId, name));
 
         return client;
     }

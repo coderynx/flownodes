@@ -17,7 +17,7 @@ namespace Engine.Infrastructure.Assets;
 internal sealed class AssetGrain(
     [PersistentState("asset")] IPersistentState<ResourceState> state,
     [PersistentState("assetvalues")] IPersistentState<AssetValues> values,
-    [PersistentState("assetalarms")] IPersistentState<AlarmState> alarmState,
+    [PersistentState("assetalarms")] IPersistentState<AssetAlarmState> alarmState,
     IAlarmHistory history,
     IStatusReporter reporter,
     IOptions<AssetGrainOptions> options,
@@ -31,6 +31,7 @@ internal sealed class AssetGrain(
     private AssetAlarms? _alarms;
     private readonly Dictionary<Guid, Alarm> _unrecorded = [];
     private readonly SemaphoreSlim _alarmWrite = new(1, 1);
+    private readonly SemaphoreSlim _acknowledging = new(1, 1);
     private IDisposable? _alarmTimer;
     private string _persistedPending = "";
     private bool _alarmsAnnounced;
@@ -130,17 +131,25 @@ internal sealed class AssetGrain(
     public Task<IReadOnlyList<AlarmSnapshot>?> GetAlarmsAsync() =>
         Task.FromResult<IReadOnlyList<AlarmSnapshot>?>(IsLive ? [.. Alarms.Live.Select(AlarmSnapshot.From)] : null);
 
-    public async Task<bool> AcknowledgeAsync(Guid id, Guid by, string? comment)
+    public async Task<AlarmSnapshot?> AcknowledgeAsync(Guid id, Guid by, string byName, string? comment)
     {
-        var alarm = IsLive ? Alarms.Acknowledge(id, by, comment, DateTimeOffset.UtcNow) : null;
-        if (alarm is null)
+        await _acknowledging.WaitAsync();
+        try
         {
-            return false;
+            var alarm = IsLive ? Alarms.Acknowledge(id, by, byName, comment, DateTimeOffset.UtcNow) : null;
+            if (alarm is null)
+            {
+                return null;
+            }
+
+            await CommitAlarmsAsync([alarm]);
+
+            return AlarmSnapshot.From(alarm);
         }
-
-        await CommitAlarmsAsync([alarm]);
-
-        return true;
+        finally
+        {
+            _acknowledging.Release();
+        }
     }
 
     public Task<IReadOnlyList<DataPointSnapshot>?> GetDataPointsAsync() =>
@@ -469,7 +478,7 @@ internal sealed class AssetGrain(
         await _alarmWrite.WaitAsync();
         try
         {
-            alarmState.State = AlarmState.From(Alarms);
+            alarmState.State = AssetAlarmState.From(Alarms);
             _persistedPending = pending;
             var rows = _unrecorded.Values.ToList();
             _unrecorded.Clear();

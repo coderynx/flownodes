@@ -84,7 +84,7 @@ public sealed class TestIdentity : IAsyncDisposable
         return new TestIdentity(app, key, address);
     }
 
-    public string IssueToken(Guid userId)
+    public string IssueToken(Guid userId, string? name)
     {
         var descriptor = new SecurityTokenDescriptor
         {
@@ -93,7 +93,8 @@ public sealed class TestIdentity : IAsyncDisposable
             Subject = new System.Security.Claims.ClaimsIdentity(
             [
                 new System.Security.Claims.Claim("sub", userId.ToString()),
-                new System.Security.Claims.Claim("jti", Guid.NewGuid().ToString())
+                new System.Security.Claims.Claim("jti", Guid.NewGuid().ToString()),
+                .. name is null ? [] : new[] { new System.Security.Claims.Claim("name", name) }
             ]),
             Expires = DateTime.UtcNow.AddMinutes(10),
             SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.RsaSha256)

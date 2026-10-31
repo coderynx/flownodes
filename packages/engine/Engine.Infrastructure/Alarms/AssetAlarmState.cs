@@ -3,12 +3,12 @@ using Engine.Domain.Alarms;
 namespace Engine.Infrastructure.Alarms;
 
 [GenerateSerializer]
-internal sealed class AlarmState
+internal sealed class AssetAlarmState
 {
     [Id(0)] public List<AlarmSnapshot> Live { get; set; } = [];
     [Id(1)] public Dictionary<string, HoldingSnapshot> Pending { get; set; } = [];
 
-    public static AlarmState From(AssetAlarms alarms) =>
+    public static AssetAlarmState From(AssetAlarms alarms) =>
         new()
         {
             Live = [.. alarms.Live.Select(AlarmSnapshot.From)],
@@ -42,7 +42,9 @@ internal sealed record AlarmSnapshot(
     [property: Id(8)] DateTimeOffset? AcknowledgedAt,
     [property: Id(9)] Guid? AcknowledgedBy,
     [property: Id(10)] string? AcknowledgementComment,
-    [property: Id(11)] DateTimeOffset? ClearedAt)
+    [property: Id(11)] DateTimeOffset? ClearedAt,
+    [property: Id(12)] string? DataPoint,
+    [property: Id(13)] string? AcknowledgedByName)
 {
     public static AlarmSnapshot From(Alarm alarm) =>
         new(
@@ -57,13 +59,16 @@ internal sealed record AlarmSnapshot(
             alarm.AcknowledgedAt,
             alarm.AcknowledgedBy,
             alarm.AcknowledgementComment,
-            alarm.ClearedAt);
+            alarm.ClearedAt,
+            alarm.DataPoint,
+            alarm.AcknowledgedByName);
 
     public Alarm ToAlarm() =>
         Alarm.Restore(
             Id,
             Asset,
             Condition,
+            DataPoint,
             Trigger,
             RaisedAt,
             (AlarmPriority)Priority,
@@ -71,6 +76,7 @@ internal sealed record AlarmSnapshot(
             ActiveCount,
             AcknowledgedAt,
             AcknowledgedBy,
+            AcknowledgedByName,
             AcknowledgementComment,
             ClearedAt,
             null,

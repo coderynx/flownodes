@@ -15,17 +15,16 @@ internal sealed class DiscardingAlarmHistory : IAlarmHistory
     public Task<IReadOnlyList<Alarm>> ListLiveAsync(string @namespace, CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<Alarm>>([]);
 
-    public Task<string?> FindLiveAssetAsync(
-        string @namespace,
-        Guid id,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult<string?>(null);
+    public Task<Alarm?> FindAsync(string @namespace, Guid id, CancellationToken cancellationToken = default) =>
+        Task.FromResult<Alarm?>(null);
 
     public Task<AlarmHistoryPage> PageAsync(
         string @namespace,
         string? asset,
         DateTimeOffset? from,
         DateTimeOffset? to,
+        AlarmPriority? priority,
+        AlarmState? state,
         int offset,
         int limit,
         CancellationToken cancellationToken = default) => Task.FromResult(new AlarmHistoryPage([], 0));
