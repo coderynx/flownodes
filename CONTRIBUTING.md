@@ -53,7 +53,7 @@ dotnet build Flownodes.slnx
 dotnet test --solution Flownodes.slnx
 ```
 
-Both must pass, and CI runs them again on every pull request. Keep each pull request focused on one change, link the issue it resolves, and explain what changed and why.
+Both must pass, and CI runs them again on every pull request that changes more than Markdown. Keep each pull request focused on one change, link the issue it resolves, and explain what changed and why.
 
 ## License
 
