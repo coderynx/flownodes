@@ -29,7 +29,10 @@
        a deleted bundle after a rename. It is listed again here, or the build serves nothing or fails. -->
   <Target Name="BuildWebClient" BeforeTargets="ResolveProjectStaticWebAssets" Condition="'$(SkipWebClient)' != 'true'"
           Inputs="@(WebClientInput)" Outputs="wwwroot/index.html">
-    <Exec Command="npm ci" WorkingDirectory="$(WebClientDirectory)" />
+    <!-- HACK: npm ci deletes node_modules, which a running Vite dev server serves its dependencies from, and the AppHost
+         starts Vite before an IDE builds the host. -->
+    <Exec Command="npm ci" WorkingDirectory="$(WebClientDirectory)" Condition="!Exists('$(WebClientDirectory)node_modules')" />
+    <Exec Command="npm install" WorkingDirectory="$(WebClientDirectory)" Condition="Exists('$(WebClientDirectory)node_modules')" />
     <Exec Command="npm run build" WorkingDirectory="$(WebClientDirectory)" />
     <ItemGroup>
       <Content Remove="wwwroot/**" />
