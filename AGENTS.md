@@ -40,7 +40,7 @@ Also run a module's integration tests when the commit changes its Infrastructure
 dotnet test --project tests/<module>/<Module>.IntegrationTests
 ```
 
-CI runs the whole suite.
+CI runs the whole suite, except on pull requests that change only Markdown.
 
 ## Agent skills
 
