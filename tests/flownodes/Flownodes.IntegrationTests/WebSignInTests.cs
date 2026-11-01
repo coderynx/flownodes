@@ -47,6 +47,40 @@ public sealed class WebSignInTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task SignIn_ShouldStillReturnToThePageAskedFor_WhenTheSignInCookiesExpiredOnIdentitysPage()
+    {
+        // Arrange
+        await using var host = await SignInHost.StartAsync(postgres);
+        using var browser = host.NewBrowser();
+        var page = await browser.GetAsync("/bff/signin?returnUrl=%2Falarms%2F7", Ct);
+        browser.ForgetSignInCookies();
+
+        // Act
+        var response = await browser.SubmitSignInPageAsync(page, "?handler=Setup", Setup(host), Ct);
+
+        // Assert
+        response.RequestMessage!.RequestUri!.PathAndQuery.ShouldBe("/alarms/7");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        browser.SessionCookie.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task SignIn_ShouldFailInsteadOfLooping_WhenTheBrowserRefusesTheSignInCookies()
+    {
+        // Arrange
+        await using var host = await SignInHost.StartAsync(postgres);
+        using var browser = new Browser(host.Address) { RefusesSignInCookies = true };
+        var page = await browser.GetAsync("/bff/signin", Ct);
+
+        // Act
+        var response = await browser.SubmitSignInPageAsync(page, "?handler=Setup", Setup(host), Ct);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+        browser.SessionCookie.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task Session_ShouldReturnUnauthorized_WhenThereIsNoCookie()
     {
         // Arrange

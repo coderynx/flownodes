@@ -111,6 +111,7 @@ public static class DependencyInjection
                     options.SignedOutCallbackPath = "/bff/signout-callback";
                     options.Scope.Remove("profile");
                     options.Scope.Add(OpenIdConnectScope.OfflineAccess);
+                    options.Events.OnRemoteFailure = SignInRestart.RestartOnceAsync;
                     options.Events.OnTicketReceived = context =>
                     {
                         context.Properties!.IsPersistent = true;

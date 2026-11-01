@@ -22,9 +22,18 @@ public sealed partial class Browser : IDisposable
         };
     }
 
+    public bool RefusesSignInCookies { get; init; }
     public List<string> SessionCookieHeaders { get; } = [];
     public string? SessionCookie => _cookies.GetValueOrDefault(SessionCookieName);
     public void ForgetSessionCookie() => _cookies.Remove(SessionCookieName);
+
+    public void ForgetSignInCookies()
+    {
+        foreach (var name in _cookies.Keys.Where(IsSignInCookie).ToList())
+        {
+            _cookies.Remove(name);
+        }
+    }
 
     public Task<HttpResponseMessage> GetAsync(string path, CancellationToken ct) =>
         SendAsync(new HttpRequestMessage(HttpMethod.Get, path), ct);
@@ -92,6 +101,11 @@ public sealed partial class Browser : IDisposable
     private void Remember(string header)
     {
         var pair = header.Split(';')[0].Split('=', 2);
+        if (RefusesSignInCookies && IsSignInCookie(pair[0]))
+        {
+            return;
+        }
+
         if (pair[0] == SessionCookieName)
         {
             SessionCookieHeaders.Add(header);
@@ -106,6 +120,11 @@ public sealed partial class Browser : IDisposable
             _cookies[pair[0]] = pair[1];
         }
     }
+
+    private static bool IsSignInCookie(string name) =>
+        name.StartsWith(".AspNetCore.Correlation.", StringComparison.Ordinal) || name.StartsWith(
+            ".AspNetCore.OpenIdConnect.Nonce.",
+            StringComparison.Ordinal);
 
     [GeneratedRegex("""name="__RequestVerificationToken"[^>]*value="(?<value>[^"]+)""")]
     private static partial Regex AntiforgeryToken();
