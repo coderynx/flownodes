@@ -32,7 +32,7 @@ internal static class TokenEndpoint
         var principal = new ClaimsPrincipal(identity);
         principal.SetScopes(scopes);
         principal.SetDestinations(claim =>
-            claim.Type is Claims.Subject or Claims.Name ? [Destinations.AccessToken] : []);
+            claim.Type is Claims.Subject or Claims.Name ? [Destinations.AccessToken, Destinations.IdentityToken] : []);
 
         return principal;
     }
@@ -52,7 +52,7 @@ internal static class TokenEndpoint
         var request = http.GetOpenIddictServerRequest() ??
                       throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-        if (request.IsDeviceCodeGrantType() || request.IsRefreshTokenGrantType())
+        if (IsReissue(request))
         {
             return await ReissueAsync(http, sender, ct);
         }
@@ -64,6 +64,9 @@ internal static class TokenEndpoint
 
         return Reject(Errors.UnsupportedGrantType, "This grant type is not supported.");
     }
+
+    private static bool IsReissue(OpenIddictRequest request) =>
+        request.IsAuthorizationCodeGrantType() || request.IsDeviceCodeGrantType() || request.IsRefreshTokenGrantType();
 
     private static async Task<IResult> ReissueAsync(HttpContext http, ISender sender, CancellationToken ct)
     {

@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Web.IntegrationTests;
 
-public sealed partial class StaticFilesTests
+public sealed partial class StaticFilesTests(PostgresFixture postgres)
 {
     private const string RootElement = "<div id=\"root\">";
 
@@ -15,7 +15,7 @@ public sealed partial class StaticFilesTests
     public async Task ClientRoute_ShouldServeIndexHtml_WhenReloaded(string path)
     {
         // Arrange
-        await using var app = await WebApp.StartAsync();
+        await using var app = await WebApp.StartAsync(postgres);
 
         // Act
         var response = await app.Client.GetStringAsync(path, TestContext.Current.CancellationToken);
@@ -29,7 +29,7 @@ public sealed partial class StaticFilesTests
     {
         // Arrange
         var cancellation = TestContext.Current.CancellationToken;
-        await using var app = await WebApp.StartAsync(requireAuthentication: true);
+        await using var app = await WebApp.StartAsync(postgres, requireAuthentication: true);
         var html = await app.Client.GetStringAsync("/alarms/7", cancellation);
 
         // Act
@@ -44,7 +44,7 @@ public sealed partial class StaticFilesTests
     public async Task ClientRoute_ShouldRequireRevalidation_WhenServingIndexHtml()
     {
         // Arrange
-        await using var app = await WebApp.StartAsync();
+        await using var app = await WebApp.StartAsync(postgres);
 
         // Act
         var response = await app.Client.GetAsync("/alarms/7", TestContext.Current.CancellationToken);
@@ -57,7 +57,7 @@ public sealed partial class StaticFilesTests
     public async Task BuiltScript_ShouldBeServed_WhenIndexHtmlLinksIt()
     {
         // Arrange
-        await using var app = await WebApp.StartAsync();
+        await using var app = await WebApp.StartAsync(postgres);
         var html = await app.Client.GetStringAsync("/", TestContext.Current.CancellationToken);
 
         // Act
@@ -78,7 +78,7 @@ public sealed partial class StaticFilesTests
     public async Task UnknownPath_ShouldReturnNotFound_WhenItIsNotAClientRoute(string path)
     {
         // Arrange
-        await using var app = await WebApp.StartAsync();
+        await using var app = await WebApp.StartAsync(postgres);
 
         // Act
         var response = await app.Client.GetAsync(path, TestContext.Current.CancellationToken);
@@ -91,7 +91,7 @@ public sealed partial class StaticFilesTests
     public async Task KnownApiPath_ShouldReturnMethodNotAllowed_WhenTheMethodIsWrong()
     {
         // Arrange
-        await using var app = await WebApp.StartAsync();
+        await using var app = await WebApp.StartAsync(postgres);
 
         // Act
         var response = await app.Client.PostAsync("/api/v1/known", null, TestContext.Current.CancellationToken);
@@ -104,7 +104,7 @@ public sealed partial class StaticFilesTests
     public async Task ClientRoute_ShouldServeIndexHtml_WhenOnlyPrefixedWithApi()
     {
         // Arrange
-        await using var app = await WebApp.StartAsync();
+        await using var app = await WebApp.StartAsync(postgres);
 
         // Act
         var response = await app.Client.GetStringAsync("/apikeys", TestContext.Current.CancellationToken);

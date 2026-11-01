@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Npgsql;
 using Web.Bootstrap;
 
 namespace Web.IntegrationTests;
@@ -18,6 +19,7 @@ public sealed class WebApp : IAsyncDisposable
     public HttpClient Client { get; }
 
     public static async Task<WebApp> StartAsync(
+        PostgresFixture postgres,
         string? devServer = null,
         string? environment = null,
         bool requireAuthentication = false)
@@ -28,6 +30,9 @@ public sealed class WebApp : IAsyncDisposable
         builder.WebHost.UseStaticWebAssets();
         builder.Logging.ClearProviders();
         builder.Configuration["Flownodes:Web:DevServer"] = devServer;
+        builder.Configuration["ConnectionStrings:web"] = await postgres.CreateDatabaseAsync();
+        builder.Configuration["Flownodes:Identity:Authority"] = "https://127.0.0.1:1/";
+        builder.Configuration["Flownodes:InstallationKey"] = Convert.ToBase64String(new byte[32]);
         builder.AddWeb();
 
         if (requireAuthentication)
@@ -46,7 +51,6 @@ public sealed class WebApp : IAsyncDisposable
         }
 
         app.MapGet("/api/v1/known", () => "known");
-        app.MapGet("/bff/session", () => "session");
         app.MapGet("/signin", () => "signin");
         app.UseWeb();
 
@@ -59,5 +63,6 @@ public sealed class WebApp : IAsyncDisposable
     {
         Client.Dispose();
         await _app.DisposeAsync();
+        NpgsqlConnection.ClearAllPools();
     }
 }

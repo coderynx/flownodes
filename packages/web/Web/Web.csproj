@@ -10,6 +10,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Caching.Postgres" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="Yarp.ReverseProxy" />
   </ItemGroup>
 
@@ -17,14 +25,15 @@
     <WebClientInput Include="$(WebClientDirectory)**" Exclude="$(WebClientDirectory)node_modules/**" />
   </ItemGroup>
 
-  <!-- HACK: wwwroot is empty when MSBuild evaluates a clean tree, so the files the client build produces must join
-       Content here or the first build serves nothing. -->
+  <!-- HACK: MSBuild evaluates wwwroot before the client build rewrites it, so Content holds nothing on a clean tree and
+       a deleted bundle after a rename. It is listed again here, or the build serves nothing or fails. -->
   <Target Name="BuildWebClient" BeforeTargets="ResolveProjectStaticWebAssets" Condition="'$(SkipWebClient)' != 'true'"
           Inputs="@(WebClientInput)" Outputs="wwwroot/index.html">
     <Exec Command="npm ci" WorkingDirectory="$(WebClientDirectory)" />
     <Exec Command="npm run build" WorkingDirectory="$(WebClientDirectory)" />
     <ItemGroup>
-      <Content Include="wwwroot/**" Exclude="@(Content)" />
+      <Content Remove="wwwroot/**" />
+      <Content Include="wwwroot/**" />
     </ItemGroup>
   </Target>
 

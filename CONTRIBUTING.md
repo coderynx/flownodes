@@ -53,7 +53,15 @@ dotnet build Flownodes.slnx
 dotnet test --solution Flownodes.slnx
 ```
 
-Both must pass, and CI runs them again on every pull request that changes more than Markdown. Keep each pull request focused on one change, link the issue it resolves, and explain what changed and why.
+Both must pass, and CI runs them again on every pull request that changes more than Markdown. CI also runs the Playwright journeys through the real host, which you can run with Docker and Node.js after `npx playwright install chromium`:
+
+```sh
+cd tests/web/Web.EndToEndTests
+npm ci
+npm test
+```
+
+Keep each pull request focused on one change, link the issue it resolves, and explain what changed and why.
 
 ## License
 

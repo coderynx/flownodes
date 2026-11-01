@@ -30,6 +30,8 @@ internal sealed class Program
 
         app.UseHttpsRedirection();
 
+        Web.Bootstrap.HostConfiguration.UseWebSession(app);
+
         Registry.Infrastructure.Bootstrap.HostConfiguration.UseInfrastructure(app);
         Registry.Presentation.Bootstrap.HostConfiguration.UsePresentation(app);
 

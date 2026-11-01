@@ -65,6 +65,7 @@ jobs:
           ConnectionStrings__registry: Host=localhost;Database=ci
           ConnectionStrings__identity: Host=localhost;Database=ci
           ConnectionStrings__engine: Host=localhost;Database=ci
+          ConnectionStrings__web: Host=localhost;Database=ci
           Flownodes__InstallationKey: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
         run: |
           dotnet run --project apps/Flownodes --no-build -- codegen write
@@ -137,6 +138,46 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  web-end-to-end:
+    needs: plan
+    if: needs.plan.outputs.run_code_jobs == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: tests/web/Web.EndToEndTests
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', 'dotnet-tools.json', 'global.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: tests/web/Web.EndToEndTests/package.json
+          cache: npm
+          cache-dependency-path: tests/web/Web.EndToEndTests/package-lock.json
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Playwright tests
+        run: npm test
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: tests/web/Web.EndToEndTests/test-results
 
   # The repository is public, so the whole history is scanned: a secret removed in a later commit is still published.
   secrets:
