@@ -117,8 +117,13 @@ public static class DependencyInjection
             .AddServer(server =>
             {
                 server.SetTokenEndpointUris("connect/token")
+                    .SetAuthorizationEndpointUris("connect/authorize")
+                    .SetEndSessionEndpointUris("connect/endsession")
+                    .SetRevocationEndpointUris("connect/revoke")
                     .SetDeviceAuthorizationEndpointUris("connect/device")
                     .SetEndUserVerificationEndpointUris("connect/verify")
+                    .AllowAuthorizationCodeFlow()
+                    .RequireProofKeyForCodeExchange()
                     .AllowDeviceAuthorizationFlow()
                     .AllowRefreshTokenFlow()
                     .AllowTokenExchangeFlow()
@@ -151,6 +156,8 @@ public static class DependencyInjection
 
                 var aspNetCore = server.UseAspNetCore()
                     .EnableTokenEndpointPassthrough()
+                    .EnableAuthorizationEndpointPassthrough()
+                    .EnableEndSessionEndpointPassthrough()
                     .EnableEndUserVerificationEndpointPassthrough();
                 if (allowInsecure)
                 {

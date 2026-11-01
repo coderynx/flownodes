@@ -16,6 +16,7 @@ internal sealed class AppHost
         var engineDb = postgres.AddDatabase("engine");
         var registryDb = postgres.AddDatabase("registry");
         var identityDb = postgres.AddDatabase("identity");
+        var webDb = postgres.AddDatabase("web");
         var installationKey = builder.AddParameter(
             "installation-key",
             new InstallationKeyDefault(),
@@ -41,6 +42,8 @@ internal sealed class AppHost
             .WaitFor(registryDb)
             .WithReference(identityDb)
             .WaitFor(identityDb)
+            .WithReference(webDb)
+            .WaitFor(webDb)
             .WaitFor(webClient)
             .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName)
             .WithEnvironment("Flownodes__InstallationKey", installationKey)

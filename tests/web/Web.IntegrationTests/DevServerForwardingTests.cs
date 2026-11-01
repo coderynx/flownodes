@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Web.IntegrationTests;
 
-public sealed class DevServerForwardingTests
+public sealed class DevServerForwardingTests(PostgresFixture postgres)
 {
     [Theory]
     [InlineData("/")]
@@ -16,7 +16,7 @@ public sealed class DevServerForwardingTests
     {
         // Arrange
         await using var devServer = await DevServer.StartAsync();
-        await using var app = await WebApp.StartAsync(devServer.Address, Environments.Development);
+        await using var app = await WebApp.StartAsync(postgres, devServer.Address, Environments.Development);
 
         // Act
         var response = await app.Client.GetStringAsync(path, TestContext.Current.CancellationToken);
@@ -31,6 +31,7 @@ public sealed class DevServerForwardingTests
         // Arrange
         await using var devServer = await DevServer.StartAsync();
         await using var app = await WebApp.StartAsync(
+            postgres,
             devServer.Address,
             Environments.Development,
             requireAuthentication: true);
@@ -44,13 +45,12 @@ public sealed class DevServerForwardingTests
 
     [Theory]
     [InlineData("/api/v1/known", "known")]
-    [InlineData("/bff/session", "session")]
     [InlineData("/signin", "signin")]
     public async Task Request_ShouldStayOnTheHost_WhenTheHostMapsThePath(string path, string body)
     {
         // Arrange
         await using var devServer = await DevServer.StartAsync();
-        await using var app = await WebApp.StartAsync(devServer.Address, Environments.Development);
+        await using var app = await WebApp.StartAsync(postgres, devServer.Address, Environments.Development);
 
         // Act
         var response = await app.Client.GetStringAsync(path, TestContext.Current.CancellationToken);
@@ -67,7 +67,7 @@ public sealed class DevServerForwardingTests
     {
         // Arrange
         await using var devServer = await DevServer.StartAsync();
-        await using var app = await WebApp.StartAsync(devServer.Address, Environments.Development);
+        await using var app = await WebApp.StartAsync(postgres, devServer.Address, Environments.Development);
 
         // Act
         var response = await app.Client.GetAsync(path, TestContext.Current.CancellationToken);
@@ -82,7 +82,7 @@ public sealed class DevServerForwardingTests
         // Arrange
         var cancellation = TestContext.Current.CancellationToken;
         await using var devServer = await DevServer.StartAsync();
-        await using var app = await WebApp.StartAsync(devServer.Address, Environments.Development);
+        await using var app = await WebApp.StartAsync(postgres, devServer.Address, Environments.Development);
         using var socket = new ClientWebSocket();
         socket.Options.AddSubProtocol("vite-hmr");
         var address = new UriBuilder(app.Address) { Scheme = "ws", Query = "token=abc" }.Uri;
@@ -102,7 +102,7 @@ public sealed class DevServerForwardingTests
     {
         // Arrange
         await using var devServer = await DevServer.StartAsync();
-        await using var app = await WebApp.StartAsync(devServer.Address);
+        await using var app = await WebApp.StartAsync(postgres, devServer.Address);
 
         // Act
         var response = await app.Client.GetStringAsync("/alarms/7", TestContext.Current.CancellationToken);

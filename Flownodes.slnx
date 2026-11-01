@@ -53,6 +53,9 @@
     <Project Path="tests/identity/Identity.IntegrationTests/Identity.IntegrationTests.csproj" />
     <Project Path="tests/identity/Identity.UnitTests/Identity.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tests/flownodes/">
+    <Project Path="tests/flownodes/Flownodes.IntegrationTests/Flownodes.IntegrationTests.csproj" />
+  </Folder>
   <Folder Name="/tests/registry/">
     <Project Path="tests/registry/Registry.IntegrationTests/Registry.IntegrationTests.csproj" />
     <Project Path="tests/registry/Registry.UnitTests/Registry.UnitTests.csproj" />

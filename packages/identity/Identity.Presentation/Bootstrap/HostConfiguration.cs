@@ -20,6 +20,8 @@ public static class HostConfiguration
 
         app.MapRazorPages();
         app.MapTokenEndpoint();
+        app.MapAuthorizationEndpoint();
+        app.MapEndSessionEndpoint();
         app.MapEndpoints(typeof(HostConfiguration).Assembly);
     }
 }

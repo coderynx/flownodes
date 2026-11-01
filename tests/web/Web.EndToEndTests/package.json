@@ -1,0 +1,16 @@
+{
+  "name": "web-end-to-end-tests",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "pretest": "dotnet publish ../../../apps/Flownodes -o ../../../artifacts/e2e-host",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^24.0.0"
+  }
+}
