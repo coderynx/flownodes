@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
+    <WebClientDirectory>$(MSBuildProjectDirectory)/../Web.Client/</WebClientDirectory>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Yarp.ReverseProxy" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <WebClientInput Include="$(WebClientDirectory)**" Exclude="$(WebClientDirectory)node_modules/**" />
+  </ItemGroup>
+
+  <!-- HACK: wwwroot is empty when MSBuild evaluates a clean tree, so the files the client build produces must join
+       Content here or the first build serves nothing. -->
+  <Target Name="BuildWebClient" BeforeTargets="ResolveProjectStaticWebAssets" Condition="'$(SkipWebClient)' != 'true'"
+          Inputs="@(WebClientInput)" Outputs="wwwroot/index.html">
+    <Exec Command="npm ci" WorkingDirectory="$(WebClientDirectory)" />
+    <Exec Command="npm run build" WorkingDirectory="$(WebClientDirectory)" />
+    <ItemGroup>
+      <Content Include="wwwroot/**" Exclude="@(Content)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

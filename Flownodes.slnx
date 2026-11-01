@@ -36,6 +36,9 @@
     <Project Path="packages/registry/Registry.Infrastructure/Registry.Infrastructure.csproj" />
     <Project Path="packages/registry/Registry.Presentation/Registry.Presentation.csproj" />
   </Folder>
+  <Folder Name="/packages/web/">
+    <Project Path="packages/web/Web/Web.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" />
   </Folder>
@@ -53,5 +56,8 @@
   <Folder Name="/tests/registry/">
     <Project Path="tests/registry/Registry.IntegrationTests/Registry.IntegrationTests.csproj" />
     <Project Path="tests/registry/Registry.UnitTests/Registry.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/web/">
+    <Project Path="tests/web/Web.IntegrationTests/Web.IntegrationTests.csproj" />
   </Folder>
 </Solution>

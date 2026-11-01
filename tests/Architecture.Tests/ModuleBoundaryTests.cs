@@ -74,6 +74,19 @@ public sealed partial class ModuleBoundaryTests
         references.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Web_ShouldReferenceNoProject_WhenUnderPackages()
+    {
+        // Arrange
+        var project = Path.Combine(Solution.Root(), "packages/web/Web/Web.csproj");
+
+        // Act
+        var references = Solution.ProjectReferences(project);
+
+        // Assert
+        references.ShouldBeEmpty();
+    }
+
     [Theory]
     [InlineData("engine", "Application", "engine", "Domain")]
     [InlineData("engine", "Infrastructure", "engine", "Application")]
@@ -186,6 +199,6 @@ public sealed partial class ModuleBoundaryTests
     private static ModuleProject Project(string module, string layer) =>
         new($"packages/{module}/{module}.{layer}/{module}.{layer}.csproj", $"{module}.{layer}", module, layer);
 
-    [GeneratedRegex(@"\b\w+\.(Domain|Application|Infrastructure|Presentation)\.(?!Bootstrap\b)")]
+    [GeneratedRegex(@"\b(\w+\.(Domain|Application|Infrastructure|Presentation)|(?<![.""])Web)\.(?!Bootstrap\b)")]
     private static partial Regex BeyondBootstrap();
 }

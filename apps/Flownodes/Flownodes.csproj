@@ -11,6 +11,7 @@
       <ProjectReference Include="..\..\packages\engine\Engine.Application\Engine.Application.csproj" />
       <ProjectReference Include="..\..\packages\engine\Engine.Infrastructure\Engine.Infrastructure.csproj" />
       <ProjectReference Include="..\..\packages\engine\Engine.Presentation\Engine.Presentation.csproj" />
+      <ProjectReference Include="..\..\packages\web\Web\Web.csproj" />
     </ItemGroup>
 
     <ItemGroup>

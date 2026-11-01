@@ -43,12 +43,14 @@ cd flownodes
 dotnet run --project apps/AppHost
 ```
 
-This starts the whole system through the .NET Aspire AppHost. To build and run the tests:
+This starts the whole system through the .NET Aspire AppHost, with the web UI on the host's origin. To build and run the tests:
 
 ```sh
 dotnet build Flownodes.slnx
 dotnet test --solution Flownodes.slnx
 ```
+
+Building needs Node.js 24 or later, for the web UI. A backend-only build skips it with `-p:SkipWebClient=true`. An Installation never needs Node.js.
 
 ## Architecture
 
@@ -58,6 +60,8 @@ Flownodes is a .NET modular monolith, orchestrated locally with Aspire. It has f
 - Engine runs on Microsoft Orleans. It reconciles Resources into live state, talks to Devices and External Services, and runs Flows.
 - Identity issues tokens and handles sign-in.
 - Core holds the plumbing the other modules share.
+
+The `Web` package serves the web UI, a React single-page app, from the host's origin.
 
 ## Contributing
 

@@ -5,7 +5,7 @@
 set -euo pipefail
 
 types='feat|fix|docs|refactor|perf|test|build|ci|chore|revert'
-scopes='core|engine|identity|registry|sdk|flowctl|host|integrations|deps'
+scopes='core|engine|identity|registry|sdk|flowctl|host|integrations|web|deps'
 subject="${1-}"
 
 if [[ ! "$subject" =~ ^($types)(\(($scopes)\))?!?:\ [^[:space:]] ]]; then
